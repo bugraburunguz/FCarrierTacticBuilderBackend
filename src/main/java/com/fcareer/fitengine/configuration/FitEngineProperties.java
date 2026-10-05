@@ -67,6 +67,7 @@ public class FitEngineProperties {
         private int lengthyMinStrength = 65;
         private int lengthyMinStrengthMinusAgility = 4;
         private int lengthyMinAcceleration = 40;
+        private int lengthyMaxAgility = 65;
     }
 
     @Getter

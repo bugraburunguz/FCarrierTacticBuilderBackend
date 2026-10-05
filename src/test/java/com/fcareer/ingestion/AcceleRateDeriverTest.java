@@ -43,20 +43,28 @@ class AcceleRateDeriverTest {
 
     @Test
     void lengthyNeedsHeightStrengthLeadAndMinimumAcceleration() {
-        assertThat(deriver.derive(194, MEN, attrs(66, 93, 81))).contains(AcceleRate.LENGTHY);
-        assertThat(deriver.derive(180, MEN, attrs(66, 93, 81))).contains(AcceleRate.CONTROLLED);
+        assertThat(deriver.derive(194, MEN, attrs(60, 93, 81))).contains(AcceleRate.LENGTHY);
+        assertThat(deriver.derive(180, MEN, attrs(60, 93, 81))).contains(AcceleRate.CONTROLLED);
         assertThat(deriver.derive(194, MEN, attrs(90, 93, 81))).contains(AcceleRate.CONTROLLED);
         assertThat(deriver.derive(194, MEN, attrs(40, 90, 39))).contains(AcceleRate.CONTROLLED);
     }
 
     @Test
     void womenUseTheirOwnHeightThresholds() {
-        Optional<AcceleRate> woman = deriver.derive(170, WOMEN, attrs(60, 70, 70));
-        Optional<AcceleRate> man = deriver.derive(170, MEN, attrs(60, 70, 70));
+        Optional<AcceleRate> woman = deriver.derive(170, WOMEN, attrs(55, 70, 70));
+        Optional<AcceleRate> man = deriver.derive(170, MEN, attrs(55, 70, 70));
 
         assertThat(woman).contains(AcceleRate.LENGTHY);
         assertThat(man).contains(AcceleRate.CONTROLLED);
         assertThat(deriver.derive(160, WOMEN, attrs(90, 60, 90))).contains(AcceleRate.EXPLOSIVE);
         assertThat(deriver.derive(170, WOMEN, attrs(90, 60, 90))).contains(AcceleRate.CONTROLLED);
+    }
+
+    @Test
+    void matchesLiveEditorReferencePlayers() {
+        assertThat(deriver.derive(187, MEN, attrs(69, 81, 65))).contains(AcceleRate.CONTROLLED);
+        assertThat(deriver.derive(169, MEN, attrs(82, 68, 82))).contains(AcceleRate.EXPLOSIVE);
+        assertThat(deriver.derive(182, MEN, attrs(93, 77, 97))).contains(AcceleRate.EXPLOSIVE);
+        assertThat(deriver.derive(195, MEN, attrs(66, 93, 81))).contains(AcceleRate.CONTROLLED);
     }
 }

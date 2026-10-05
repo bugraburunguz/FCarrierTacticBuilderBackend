@@ -35,6 +35,7 @@ public class AcceleRateDeriver {
             return Optional.of(AcceleRate.EXPLOSIVE);
         }
         if (heightCm >= lengthyMinHeight && strength >= config.getLengthyMinStrength()
+                && agility <= config.getLengthyMaxAgility()
                 && strength - agility >= config.getLengthyMinStrengthMinusAgility()
                 && acceleration >= config.getLengthyMinAcceleration()) {
             return Optional.of(AcceleRate.LENGTHY);
