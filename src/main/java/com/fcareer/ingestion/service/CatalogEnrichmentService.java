@@ -35,6 +35,8 @@ public class CatalogEnrichmentService {
     private static final String PLAYER_ID = "playerid";
     private static final String HEIGHT = "height";
     private static final String WEIGHT = "weight";
+    private static final String RUN_STYLE_1 = "runningcode1";
+    private static final String RUN_STYLE_2 = "runningcode2";
     private static final int MIN_HEIGHT_CM = 140;
     private static final int MAX_HEIGHT_CM = 225;
     private static final int MIN_WEIGHT_KG = 40;
@@ -85,6 +87,11 @@ public class CatalogEnrichmentService {
             basePlayerRepository.save(player);
             updated++;
             PlayerRatingEntity rating = ratings.get(player.getId());
+            if (Objects.nonNull(rating)) {
+                rating.setRunStyle1((short) measure[2]);
+                rating.setRunStyle2((short) measure[3]);
+                playerRatingRepository.save(rating);
+            }
             if (Objects.nonNull(rating) && Objects.nonNull(player.getHeightCm())) {
                 rating.setAccelerate(acceleRateDeriver.derive(player.getHeightCm().intValue(), player.getGender(),
                         ratingAttrAccessor.read(rating)).map(AcceleRate::name).orElse(null));
@@ -106,6 +113,8 @@ public class CatalogEnrichmentService {
             int idIndex = header.indexOf(PLAYER_ID);
             int heightIndex = header.indexOf(HEIGHT);
             int weightIndex = header.indexOf(WEIGHT);
+            int run1Index = header.indexOf(RUN_STYLE_1);
+            int run2Index = header.indexOf(RUN_STYLE_2);
             if (idIndex < 0 || heightIndex < 0) {
                 throw new ImportParseException("columns playerid and height are required");
             }
@@ -121,7 +130,9 @@ public class CatalogEnrichmentService {
                 }
                 measures.put(id, new int[]{
                         inRange(parse(cells, heightIndex), MIN_HEIGHT_CM, MAX_HEIGHT_CM),
-                        weightIndex < 0 ? 0 : inRange(parse(cells, weightIndex), MIN_WEIGHT_KG, MAX_WEIGHT_KG)});
+                        weightIndex < 0 ? 0 : inRange(parse(cells, weightIndex), MIN_WEIGHT_KG, MAX_WEIGHT_KG),
+                        run1Index < 0 ? 0 : inRange(parse(cells, run1Index), 0, 255),
+                        run2Index < 0 ? 0 : inRange(parse(cells, run2Index), 0, 255)});
             }
         } catch (IOException e) {
             log.error("Enrichment file unreadable", e);

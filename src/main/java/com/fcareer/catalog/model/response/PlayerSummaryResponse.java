@@ -28,6 +28,7 @@ public class PlayerSummaryResponse {
     private Integer weakFoot;
     private Integer skillMoves;
     private String accelerate;
+    private Integer runStyle;
     private Integer potential;
     private Long valueEur;
     private boolean valuationEstimated;

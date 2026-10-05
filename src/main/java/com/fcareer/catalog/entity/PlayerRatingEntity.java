@@ -41,6 +41,8 @@ public class PlayerRatingEntity {
     private List<String> positions;
 
     private String accelerate;
+    private Short runStyle1 = 0;
+    private Short runStyle2 = 0;
     private Short weakFoot;
     private Short skillMoves;
     private Short intlReputation;

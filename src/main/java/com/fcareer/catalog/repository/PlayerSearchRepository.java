@@ -36,7 +36,7 @@ public class PlayerSearchRepository {
     private static final String SELECT = """
             SELECT b.id AS id, b.full_name AS name, b.dob AS dob, b.gender AS gender, b.preferred_foot AS foot,
                    r.overall AS overall, r.positions AS positions, r.weak_foot AS weak_foot, r.skill_moves AS skill_moves,
-                   c.id AS club_id, c.name AS club, l.name AS league, n.name AS nationality, r.accelerate AS accelerate,
+                   c.id AS club_id, c.name AS club, l.name AS league, n.name AS nationality, r.accelerate AS accelerate, r.run_style1 AS run_style,
                    v.potential AS potential, v.value_eur AS value_eur, (v.id IS NOT NULL) AS estimated
             """;
     private static final String AGE_YEARS = "EXTRACT(YEAR FROM age(b.dob))";
@@ -180,6 +180,7 @@ public class PlayerSearchRepository {
                 .weakFoot(nullableInt(rs, "weak_foot"))
                 .skillMoves(nullableInt(rs, "skill_moves"))
                 .accelerate(rs.getString("accelerate"))
+                .runStyle(nullableInt(rs, "run_style"))
                 .potential(nullableInt(rs, "potential"))
                 .valueEur(nullableLong(rs, "value_eur"))
                 .valuationEstimated(rs.getBoolean("estimated"))
