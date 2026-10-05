@@ -1,5 +1,7 @@
 package com.fcareer.catalog.controller;
 
+import com.fcareer.auth.security.AuthUser;
+import com.fcareer.career.service.CareerService;
 import com.fcareer.catalog.mapper.PlayerMapper;
 import com.fcareer.catalog.model.request.PlayerSearchRequest;
 import com.fcareer.catalog.model.response.PlayerDetailResponse;
@@ -8,6 +10,7 @@ import com.fcareer.catalog.service.PlayerService;
 import com.fcareer.common.exception.InvalidTacticException;
 import com.fcareer.common.model.PageResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,9 +36,14 @@ public class PlayerController {
     private static final Set<String> RESERVED_BOUNDS = Set.of("ovr", "pot", "value", "age", "wf", "sm");
 
     private final PlayerService playerService;
+    private final CareerService careerService;
 
     @GetMapping
     public PageResponse<PlayerSummaryResponse> search(
+            @AuthenticationPrincipal AuthUser user,
+            @RequestParam(name = "career", required = false) Long careerId,
+            @RequestParam(name = "team", required = false) Integer teamId,
+            @RequestParam(name = "free_agent", required = false, defaultValue = "false") boolean freeAgent,
             @RequestParam(name = "gv", required = false) Short gameVersionId,
             @RequestParam(name = "q", required = false) String query,
             @RequestParam(name = "pos", required = false) List<String> positions,
@@ -60,6 +68,9 @@ public class PlayerController {
             @RequestParam(name = "page", required = false, defaultValue = "0") int page,
             @RequestParam(name = "size", required = false, defaultValue = "0") int size,
             @RequestParam Map<String, String> allParams) {
+        if (careerId != null) {
+            careerService.requireOwned(user == null ? null : user.id(), careerId);
+        }
         Map<String, Integer> attrMin = new HashMap<>();
         Map<String, Integer> attrMax = new HashMap<>();
         allParams.forEach((key, value) -> collectAttrBound(key, value, attrMin, attrMax));
@@ -82,6 +93,9 @@ public class PlayerController {
                 .skillMovesMin(skillMovesMin)
                 .foot(foot)
                 .clubId(clubId)
+                .careerId(careerId)
+                .teamId(teamId)
+                .freeAgent(freeAgent)
                 .leagueId(leagueId)
                 .nationalityId(nationalityId)
                 .gender(gender)

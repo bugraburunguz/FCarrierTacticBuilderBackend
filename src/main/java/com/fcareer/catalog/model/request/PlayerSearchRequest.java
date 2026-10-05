@@ -37,6 +37,9 @@ public class PlayerSearchRequest {
     private Integer potentialMin;
     private Long valueMax;
     private Integer clubId;
+    private Long careerId;
+    private Integer teamId;
+    private boolean freeAgent;
     private Integer leagueId;
     private Integer nationalityId;
     private Short gender;

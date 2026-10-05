@@ -27,6 +27,8 @@ public class PlayerSearchRepository {
     private static final String FROM = """
              FROM player_rating r
              JOIN base_player b ON b.id = r.base_player_id
+             LEFT JOIN career_player_data cpd ON cpd.base_player_id = r.base_player_id AND cpd.career_id = CAST(:careerId AS BIGINT)
+             LEFT JOIN career_team ct ON ct.career_id = cpd.career_id AND ct.team_id = cpd.team_id
              LEFT JOIN club c ON c.id = r.club_id
              LEFT JOIN league l ON l.id = c.league_id
              LEFT JOIN nationality n ON n.id = b.nationality_id
@@ -35,16 +37,16 @@ public class PlayerSearchRepository {
             """;
     private static final String SELECT = """
             SELECT b.id AS id, b.full_name AS name, b.dob AS dob, b.gender AS gender, b.preferred_foot AS foot,
-                   r.overall AS overall, r.positions AS positions, r.weak_foot AS weak_foot, r.skill_moves AS skill_moves,
-                   c.id AS club_id, c.name AS club, l.name AS league, n.name AS nationality, r.accelerate AS accelerate, r.run_style1 AS run_style,
-                   v.potential AS potential, v.value_eur AS value_eur, (v.id IS NOT NULL) AS estimated
+                   COALESCE(cpd.overall, r.overall) AS overall, r.positions AS positions, r.weak_foot AS weak_foot, r.skill_moves AS skill_moves,
+                   c.id AS club_id, COALESCE(ct.name, c.name) AS club, COALESCE(ct.league_name, l.name) AS league, n.name AS nationality, r.accelerate AS accelerate, r.run_style1 AS run_style,
+                   COALESCE(cpd.potential, v.potential) AS potential, v.value_eur AS value_eur, (cpd.base_player_id IS NULL AND v.id IS NOT NULL) AS estimated
             """;
     private static final String AGE_YEARS = "EXTRACT(YEAR FROM age(b.dob))";
     private static final String AGE_SORT = "age";
     private static final Map<String, String> SORTS = Map.ofEntries(
-            Map.entry("overall", "r.overall"),
+            Map.entry("overall", "COALESCE(cpd.overall, r.overall)"),
             Map.entry("name", "b.full_name"),
-            Map.entry("potential", "v.potential"),
+            Map.entry("potential", "COALESCE(cpd.potential, v.potential)"),
             Map.entry("value", "v.value_eur"),
             Map.entry("club", "c.name"),
             Map.entry("league", "l.name"),
@@ -76,6 +78,7 @@ public class PlayerSearchRepository {
         List<String> clauses = new ArrayList<>();
         clauses.add("r.game_version_id = :gv");
         params.addValue("gv", request.getGameVersionId());
+        params.addValue("careerId", request.getCareerId(), java.sql.Types.BIGINT);
         if (Objects.nonNull(request.getQuery()) && !request.getQuery().isBlank()) {
             clauses.add("b.full_name ILIKE :q");
             params.addValue("q", "%" + request.getQuery().trim() + "%");
@@ -91,13 +94,17 @@ public class PlayerSearchRepository {
         addPlaystyles(request, clauses, params);
         addAttrBounds(request.getAttrMin(), ">=", "min", clauses, params);
         addAttrBounds(request.getAttrMax(), "<=", "max", clauses, params);
-        addBound(request.getOverallMin(), "r.overall >= :overallMin", "overallMin", clauses, params);
-        addBound(request.getOverallMax(), "r.overall <= :overallMax", "overallMax", clauses, params);
-        addBound(request.getPotentialMin(), "v.potential >= :potentialMin", "potentialMin", clauses, params);
-        addBound(request.getPotentialMax(), "v.potential <= :potentialMax", "potentialMax", clauses, params);
+        addBound(request.getOverallMin(), "COALESCE(cpd.overall, r.overall) >= :overallMin", "overallMin", clauses, params);
+        addBound(request.getOverallMax(), "COALESCE(cpd.overall, r.overall) <= :overallMax", "overallMax", clauses, params);
+        addBound(request.getPotentialMin(), "COALESCE(cpd.potential, v.potential) >= :potentialMin", "potentialMin", clauses, params);
+        addBound(request.getPotentialMax(), "COALESCE(cpd.potential, v.potential) <= :potentialMax", "potentialMax", clauses, params);
         addBound(request.getValueMax(), request.isIncludeUnvalued()
                 ? "(v.value_eur IS NULL OR v.value_eur <= :valueMax)" : "v.value_eur <= :valueMax", "valueMax", clauses, params);
         addBound(request.getClubId(), "r.club_id = :clubId", "clubId", clauses, params);
+        addBound(request.getTeamId(), "cpd.team_id = :teamId", "teamId", clauses, params);
+        if (request.isFreeAgent()) {
+            clauses.add("cpd.free_agent");
+        }
         addBound(request.getLeagueId(), "c.league_id = :leagueId", "leagueId", clauses, params);
         addBound(request.getNationalityId(), "b.nationality_id = :nationalityId", "nationalityId", clauses, params);
         addBound(request.getGender(), "b.gender = :gender", "gender", clauses, params);

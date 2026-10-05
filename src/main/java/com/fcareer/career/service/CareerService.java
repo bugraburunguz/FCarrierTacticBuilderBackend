@@ -72,6 +72,7 @@ public class CareerService {
     private final CatalogProperties catalogProperties;
     private final CareerMapper careerMapper;
     private final Clock clock;
+    private final org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate jdbc;
 
     public CareerResponse create(Long userId, CreateCareerRequest request) {
         short gameVersion = Objects.isNull(request.getGameVersionId())
@@ -143,10 +144,35 @@ public class CareerService {
         List<UserPlayerStateEntity> states = userPlayerStateRepository.findByCareerIdOrderByIdAsc(careerId);
         Map<Long, PlayerSummaryResponse> summaries = playerService.summaries(
                 states.stream().map(UserPlayerStateEntity::getBasePlayerId).toList(), career.getGameVersionId());
+        Map<Long, int[]> overlay = importedRatings(careerId, states);
         return states.stream()
                 .filter(s -> summaries.containsKey(s.getBasePlayerId()))
-                .map(s -> careerMapper.toPlayer(s, summaries.get(s.getBasePlayerId())))
+                .map(s -> {
+                    PlayerSummaryResponse summary = summaries.get(s.getBasePlayerId());
+                    int[] imported = overlay.get(s.getBasePlayerId());
+                    if (Objects.nonNull(imported)) {
+                        summary.setOverall(imported[0]);
+                        summary.setPotential(imported[1]);
+                        summary.setValuationEstimated(false);
+                    }
+                    return careerMapper.toPlayer(s, summary);
+                })
                 .toList();
+    }
+
+    private Map<Long, int[]> importedRatings(Long careerId, List<UserPlayerStateEntity> states) {
+        Map<Long, int[]> overlay = new java.util.HashMap<>();
+        if (states.isEmpty()) {
+            return overlay;
+        }
+        jdbc.query("SELECT base_player_id, overall, potential FROM career_player_data WHERE career_id = :c AND base_player_id IN (:ids)",
+                new org.springframework.jdbc.core.namedparam.MapSqlParameterSource()
+                        .addValue("c", careerId)
+                        .addValue("ids", states.stream().map(UserPlayerStateEntity::getBasePlayerId).toList()),
+                rs -> {
+                    overlay.put(rs.getLong("base_player_id"), new int[]{rs.getInt("overall"), rs.getInt("potential")});
+                });
+        return overlay;
     }
 
     @Transactional(readOnly = true)
@@ -328,6 +354,10 @@ public class CareerService {
             state.setValueEur(valuation.getValueEur());
         }
         userPlayerStateRepository.save(state);
+    }
+
+    public CareerEntity requireOwned(Long userId, Long careerId) {
+        return owned(userId, careerId);
     }
 
     private CareerEntity owned(Long userId, Long careerId) {
