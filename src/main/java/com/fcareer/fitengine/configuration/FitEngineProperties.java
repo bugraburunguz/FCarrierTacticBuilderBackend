@@ -1,0 +1,129 @@
+package com.fcareer.fitengine.configuration;
+
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Getter
+@Setter
+@ConfigurationProperties(prefix = "fcareer.fit")
+public class FitEngineProperties {
+
+    private Weapon weapon = new Weapon();
+    private Projected projected = new Projected();
+    private Playstyle playstyle = new Playstyle();
+    private Accelerate accelerate = new Accelerate();
+    private double outOfPositionPenalty = 15;
+    private double globalFloorPenaltyPerPoint = 0.8;
+    private double intentWeaponBoost = 0.05;
+    private Intent intent = new Intent();
+    private Squad squad = new Squad();
+    private Map<String, List<String>> positionEquivalents = defaultPositionEquivalents();
+    private Map<String, List<String>> playstyleRelevance = defaultPlaystyleRelevance();
+
+    @Getter
+    @Setter
+    public static class Weapon {
+        private double yellowPenaltyPerPoint = 0.4;
+        private double redPenaltyPerPoint = 1.5;
+        private int playstylePlusCompensation = 4;
+    }
+
+    @Getter
+    @Setter
+    public static class Projected {
+        private int redCap = 74;
+        private int yellowCap = 82;
+        private double playstyleFactor = 0.4;
+        private double accelerateFactor = 0.3;
+    }
+
+    @Getter
+    @Setter
+    public static class Playstyle {
+        private double priority = 3;
+        private double priorityPlus = 6;
+        private double bonus = 1.5;
+        private double bonusPlus = 3;
+    }
+
+    @Getter
+    @Setter
+    public static class Accelerate {
+        private double match = 4;
+        private double mismatch = -6;
+        private int explosiveMaxHeight = 182;
+        private int explosiveMinAgility = 65;
+        private int explosiveMinAgilityMinusStrength = 10;
+        private int lengthyMinHeight = 183;
+        private int lengthyMinStrength = 65;
+        private int lengthyMinStrengthMinusAgility = 4;
+    }
+
+    @Getter
+    @Setter
+    public static class Intent {
+        private double okRatio = 0.85;
+        private double weakRatio = 0.70;
+    }
+
+    @Getter
+    @Setter
+    public static class Squad {
+        private double roleFitWeight = 0.7;
+        private double intentFitWeight = 0.3;
+        private int weakLinkCount = 3;
+        private int depthCount = 2;
+    }
+
+    private static Map<String, List<String>> defaultPositionEquivalents() {
+        Map<String, List<String>> map = new HashMap<>();
+        map.put("LWB", List.of("LB"));
+        map.put("RWB", List.of("RB"));
+        map.put("LB", List.of("LWB"));
+        map.put("RB", List.of("RWB"));
+        map.put("LM", List.of("LW"));
+        map.put("RM", List.of("RW"));
+        map.put("LW", List.of("LM"));
+        map.put("RW", List.of("RM"));
+        map.put("CF", List.of("ST"));
+        map.put("ST", List.of("CF"));
+        return map;
+    }
+
+    private static Map<String, List<String>> defaultPlaystyleRelevance() {
+        Map<String, List<String>> map = new HashMap<>();
+        map.put("Finishing", List.of("FinesseShot", "PowerShot", "ChipShot", "LowDrivenShot", "Acrobatic"));
+        map.put("ShotPower", List.of("PowerShot"));
+        map.put("LongShots", List.of("PowerShot", "FinesseShot", "LowDrivenShot"));
+        map.put("Curve", List.of("FinesseShot", "WhippedPass", "DeadBall"));
+        map.put("Crossing", List.of("WhippedPass"));
+        map.put("ShortPassing", List.of("TikiTaka", "IncisivePass", "PingedPass"));
+        map.put("LongPassing", List.of("LongBallPass", "PingedPass"));
+        map.put("Vision", List.of("IncisivePass", "Inventive"));
+        map.put("Dribbling", List.of("Technical", "Rapid", "PressProven", "Trickster"));
+        map.put("BallControl", List.of("FirstTouch", "Technical", "PressProven"));
+        map.put("Agility", List.of("Technical", "Rapid"));
+        map.put("Acceleration", List.of("QuickStep", "Rapid"));
+        map.put("SprintSpeed", List.of("QuickStep", "Rapid"));
+        map.put("DefAwareness", List.of("Anticipate", "Intercept"));
+        map.put("Interceptions", List.of("Intercept"));
+        map.put("StandingTackle", List.of("Anticipate", "Jockey"));
+        map.put("SlidingTackle", List.of("SlideTackle"));
+        map.put("Strength", List.of("Bruiser"));
+        map.put("Aggression", List.of("Bruiser"));
+        map.put("Heading", List.of("PrecisionHeader", "AerialFortress"));
+        map.put("Jumping", List.of("AerialFortress"));
+        map.put("Stamina", List.of("Relentless"));
+        map.put("Composure", List.of("FinesseShot", "PressProven"));
+        map.put("GKReflexes", List.of("QuickReflexes", "FarReach"));
+        map.put("GKPositioning", List.of("RushOut", "CrossClaimer"));
+        map.put("GKKicking", List.of("Footwork", "FarThrow"));
+        map.put("GKDiving", List.of("FarReach", "Deflector"));
+        return map;
+    }
+}

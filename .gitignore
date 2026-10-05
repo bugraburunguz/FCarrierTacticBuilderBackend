@@ -1,0 +1,12 @@
+target/
+*.iml
+.idea/
+.vscode/
+*.log
+.env
+ml-service/.venv/
+ml-service/__pycache__/
+ml-service/**/__pycache__/
+ml-service/models/*.json
+ml-service/data/*.csv
+!ml-service/data/README.md
