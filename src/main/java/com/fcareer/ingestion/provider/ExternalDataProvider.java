@@ -7,4 +7,8 @@ public interface ExternalDataProvider {
     String name();
 
     ExternalPlayerPage fetch(int offset, int limit);
+
+    default long pageDelayMillis() {
+        return 0;
+    }
 }

@@ -11,23 +11,28 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "fcareer.ingestion")
 public class IngestionProperties {
     private String provider = "mock";
-    private short gameVersionId = 25;
+    private short gameVersionId = 27;
     private int pageSize = 100;
     private int maxPlayers = 0;
     private boolean runOnStartup = false;
     private String adminKey = "";
-    private DropApi dropApi = new DropApi();
+    private EaSite eaSite = new EaSite();
     private Mock mock = new Mock();
     private OpenDataset openDataset = new OpenDataset();
 
     @Getter
     @Setter
-    public static class DropApi {
-        private String baseUrl = "https://drop-api.ea.com/rating/ea-sports-fc";
+    public static class EaSite {
+        private String baseUrl = "https://www.ea.com";
         private String locale = "en";
+        private String ratingsPath = "/games/ea-sports-fc/ratings";
+        private String franchiseSlug = "ea-sports-fc";
+        private int sitePageSize = 100;
         private Duration timeout = Duration.ofSeconds(30);
-        private Duration pageDelay = Duration.ofMillis(250);
-        private String expectedBranding = "FC25";
+        private Duration pageDelay = Duration.ofMillis(1000);
+        private String userAgent = "FCareerIngestion/1.0";
+        // Sayfa başlığı bu desene uymuyorsa (ör. site başka bir FC sürümüne geçtiyse) ingestion durur.
+        private String expectedTitlePattern = "EA SPORTS FC\\S*\\s+27\\b";
     }
 
     @Getter

@@ -5,7 +5,7 @@ import com.fcareer.fitengine.model.Attr;
 import java.util.EnumMap;
 import java.util.Map;
 
-public final class DropApiStatKeys {
+public final class RatingStatKeys {
 
     public static final Map<Attr, String> KEYS = new EnumMap<>(Attr.class);
 
@@ -46,6 +46,6 @@ public final class DropApiStatKeys {
         KEYS.put(Attr.GK_REFLEXES, "gkReflexes");
     }
 
-    private DropApiStatKeys() {
+    private RatingStatKeys() {
     }
 }

@@ -1,24 +1,14 @@
 package com.fcareer.ingestion.provider;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fcareer.common.exception.DownstreamServiceException;
 import com.fcareer.fitengine.model.Attr;
-import com.fcareer.ingestion.configuration.IngestionProperties;
 import com.fcareer.ingestion.model.ExternalPlayer;
-import com.fcareer.ingestion.model.ExternalPlayerPage;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.web.client.ClientHttpRequestFactories;
-import org.springframework.boot.web.client.ClientHttpRequestFactorySettings;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -31,68 +21,22 @@ import java.util.Set;
 
 @Slf4j
 @Component
-@ConditionalOnProperty(prefix = "fcareer.ingestion", name = "provider", havingValue = "drop-api")
-public class DropApiProvider implements ExternalDataProvider {
+public class RatingItemMapper {
 
-    private static final String DROP_API = "drop-api";
-    private static final DateTimeFormatter BIRTHDATE = DateTimeFormatter.ofPattern("M/d/yyyy h:mm:ss a", Locale.US);
+    private static final List<DateTimeFormatter> BIRTHDATE_FORMATS = List.of(
+            DateTimeFormatter.ofPattern("M/d/yyyy h:mm:ss a", Locale.US),
+            DateTimeFormatter.ofPattern("M/d/yyyy H:mm:ss", Locale.US),
+            DateTimeFormatter.ofPattern("M/d/yyyy H:mm", Locale.US));
     private static final String PLAYSTYLE_PLUS = "playStylePlus";
     private static final String LEFT_FOOT = "Left";
     private static final String RIGHT_FOOT = "Right";
     private static final int FOOT_LEFT_CODE = 2;
     private static final int FOOT_RIGHT_CODE = 1;
 
-    private final IngestionProperties.DropApi config;
-    private final RestClient restClient;
-
-    public DropApiProvider(IngestionProperties properties) {
-        this.config = properties.getDropApi();
-        ClientHttpRequestFactorySettings settings = ClientHttpRequestFactorySettings.DEFAULTS
-                .withConnectTimeout(config.getTimeout())
-                .withReadTimeout(config.getTimeout());
-        this.restClient = RestClient.builder()
-                .requestFactory(ClientHttpRequestFactories.get(settings))
-                .baseUrl(config.getBaseUrl())
-                .build();
-    }
-
-    @Override
-    public String name() {
-        return DROP_API;
-    }
-
-    @Override
-    public ExternalPlayerPage fetch(int offset, int limit) {
-        JsonNode root = call(offset, limit);
-        List<ExternalPlayer> players = new ArrayList<>();
-        for (JsonNode item : root.path("items")) {
-            toPlayer(item).ifPresent(players::add);
-        }
-        return new ExternalPlayerPage(players, root.path("totalItems").asInt());
-    }
-
-    private JsonNode call(int offset, int limit) {
-        try {
-            JsonNode body = restClient.get()
-                    .uri(uri -> uri.queryParam("limit", limit).queryParam("offset", offset)
-                            .queryParam("locale", config.getLocale()).build())
-                    .accept(MediaType.APPLICATION_JSON)
-                    .retrieve()
-                    .body(JsonNode.class);
-            if (Objects.isNull(body) || !body.has("items")) {
-                throw new DownstreamServiceException(DROP_API);
-            }
-            return body;
-        } catch (RestClientException e) {
-            log.error("drop-api call failed offset : {} limit : {}", offset, limit, e);
-            throw new DownstreamServiceException(DROP_API);
-        }
-    }
-
-    private Optional<ExternalPlayer> toPlayer(JsonNode item) {
+    public Optional<ExternalPlayer> toPlayer(JsonNode item) {
         Map<Attr, Integer> attrs = attrs(item.path("stats"));
         if (attrs.size() != Attr.values().length || !item.has("id")) {
-            log.warn("drop-api item skipped id : {} attrCount : {}", item.path("id").asText(), attrs.size());
+            log.warn("Rating item skipped id : {} attrCount : {}", item.path("id").asText(), attrs.size());
             return Optional.empty();
         }
         JsonNode team = item.path("team");
@@ -123,16 +67,19 @@ public class DropApiProvider implements ExternalDataProvider {
         return (item.path("firstName").asText("") + " " + item.path("lastName").asText("")).trim();
     }
 
-    private LocalDate birthdate(String raw) {
+    LocalDate birthdate(String raw) {
         if (Objects.isNull(raw) || raw.isBlank()) {
             return null;
         }
-        try {
-            return LocalDate.parse(raw, BIRTHDATE);
-        } catch (DateTimeParseException e) {
-            log.warn("drop-api birthdate unparsable value : {}", raw);
-            return null;
+        for (DateTimeFormatter format : BIRTHDATE_FORMATS) {
+            try {
+                return LocalDate.parse(raw.trim(), format);
+            } catch (DateTimeParseException ignored) {
+                // sıradaki format denenir
+            }
         }
+        log.warn("Birthdate unparsable value : {}", raw);
+        return null;
     }
 
     private String foot(int code) {
@@ -154,7 +101,7 @@ public class DropApiProvider implements ExternalDataProvider {
 
     private Map<Attr, Integer> attrs(JsonNode stats) {
         Map<Attr, Integer> attrs = new EnumMap<>(Attr.class);
-        DropApiStatKeys.KEYS.forEach((attr, key) -> {
+        RatingStatKeys.KEYS.forEach((attr, key) -> {
             JsonNode value = stats.path(key).path("value");
             if (value.isNumber()) {
                 attrs.put(attr, value.asInt());

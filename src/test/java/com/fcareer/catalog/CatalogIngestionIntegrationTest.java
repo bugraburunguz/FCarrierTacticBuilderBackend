@@ -28,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @IntegrationTest
 @TestPropertySource(properties = {
         "fcareer.ingestion.provider=mock",
-        "fcareer.ingestion.game-version-id=25",
+        "fcareer.ingestion.game-version-id=27",
         "fcareer.ingestion.mock.player-count=250"
 })
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)

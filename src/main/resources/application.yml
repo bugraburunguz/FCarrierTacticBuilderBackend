@@ -42,16 +42,16 @@ management:
         include: health,info
 
 # --- Faz 2: ingestion / katalog (CONFIG) ---
-# provider: mock (dev) | drop-api. FC27 çıkışında game-version-id=27 ve drop-api branding yeniden doğrulanmalı (drop_api_fc27_rollover).
+# provider: mock (dev) | ea-site (EA ratings sayfası, FC27). Yalnızca FC27 desteklenir; ea-site başlık denetimi başka sürümde durur.
 fcareer.ingestion:
   provider: ${INGESTION_PROVIDER:mock}
-  game-version-id: ${INGESTION_GAME_VERSION:25}
+  game-version-id: ${INGESTION_GAME_VERSION:27}
   run-on-startup: ${INGESTION_RUN_ON_STARTUP:false}
   admin-key: ${ADMIN_KEY:}
   open-dataset:
     license-confirmed: false
 fcareer.catalog:
-  default-game-version: ${CATALOG_DEFAULT_GAME_VERSION:25}
+  default-game-version: ${CATALOG_DEFAULT_GAME_VERSION:27}
 
 # --- Faz 7: güvenlik / billing (CONFIG) ---
 # JWT_SECRET zorunlu (>= 32 byte); kodda varsayılan secret YOK.

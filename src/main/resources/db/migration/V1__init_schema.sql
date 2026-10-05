@@ -199,6 +199,4 @@ CREATE TABLE roster_event (
 CREATE INDEX ix_roster_event_career ON roster_event(career_id);
 
 INSERT INTO game_version (id, code, released_on) VALUES
-  (25, 'FC25', DATE '2024-09-27'),
-  (26, 'FC26', DATE '2025-09-26'),
   (27, 'FC27', NULL);

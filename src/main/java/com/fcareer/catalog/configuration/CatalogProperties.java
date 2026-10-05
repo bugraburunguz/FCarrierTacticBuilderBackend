@@ -8,5 +8,5 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Setter
 @ConfigurationProperties(prefix = "fcareer.catalog")
 public class CatalogProperties {
-    private short defaultGameVersion = 25;
+    private short defaultGameVersion = 27;
 }

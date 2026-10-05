@@ -32,8 +32,8 @@ class MlLiveContractTest {
     void javaFeaturesAreAcceptedByPythonServiceAndPersistedAsModeled() {
         ingestionService.run();
 
-        int written = mlValuationService.run((short) 25);
-        int rewritten = mlValuationService.run((short) 25);
+        int written = mlValuationService.run((short) 27);
+        int rewritten = mlValuationService.run((short) 27);
 
         assertThat(written).isEqualTo(250);
         assertThat(rewritten).isEqualTo(250);

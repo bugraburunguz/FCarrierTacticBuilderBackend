@@ -183,8 +183,8 @@ public class IngestionService {
     }
 
     private void pause() {
-        long delay = properties.getDropApi().getPageDelay().toMillis();
-        if (delay <= 0 || !"drop-api".equals(provider.name())) {
+        long delay = provider.pageDelayMillis();
+        if (delay <= 0) {
             return;
         }
         try {
