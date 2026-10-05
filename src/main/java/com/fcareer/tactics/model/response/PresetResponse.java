@@ -18,6 +18,9 @@ public class PresetResponse {
     private String id;
     private String kind;
     private String name;
+    private String club;
+    private String coach;
+    private String season;
     private String formation;
     private Map<String, Object> settings;
     private String signature;

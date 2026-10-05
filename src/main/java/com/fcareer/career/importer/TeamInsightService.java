@@ -31,9 +31,9 @@ public class TeamInsightService {
     private static final double HIGH_PERCENTILE = 0.75;
     private static final double LOW_PERCENTILE = 0.25;
     private static final int LINE_GAP = 3;
-    private static final Set<String> FULLBACKS = Set.of("LB", "RB", "LWB", "RWB");
+    private static final Set<String> FULLBACKS = Set.of("LB", "RB");
     private static final Set<String> MIDFIELD = Set.of("CDM", "CM", "CAM", "LM", "RM");
-    private static final Set<String> FORWARDS = Set.of("ST", "CF", "LW", "RW");
+    private static final Set<String> FORWARDS = Set.of("ST", "LW", "RW");
 
     private static final String SUMMARY_SQL = """
             SELECT t.team_id, t.name, t.league_name, t.gender, t.overall, t.attack, t.midfield, t.defence,

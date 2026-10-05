@@ -92,6 +92,9 @@ public class ReferenceDataSeeder implements ApplicationRunner {
         preset.setId(seed.id());
         preset.setKind(seed.kind());
         preset.setName(seed.name());
+        preset.setClub(seed.club());
+        preset.setCoach(seed.coach());
+        preset.setSeason(seed.season());
         preset.setFormation(seed.formation());
         preset.setSettings(seed.settings());
         preset.setSignatureTr(seed.signatureTr());

@@ -26,6 +26,12 @@ public class PresetEntity {
     @Column(nullable = false)
     private String name;
 
+    private String club;
+
+    private String coach;
+
+    private String season;
+
     private String formation;
 
     @JdbcTypeCode(SqlTypes.JSON)

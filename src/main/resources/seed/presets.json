@@ -1,216 +1,1428 @@
 [
-  { "id": "gegenpress", "kind": "STYLE", "name": "Gegenpress (Klopp DNA)", "formation": "4-3-3",
-    "settings": { "buildUp": "Counter / Fast", "defensiveApproach": "High / Aggressive", "notes": "Tetikleyici pres" },
+  {
+    "id": "gegenpress",
+    "kind": "STYLE",
+    "name": "Gegenpress (Klopp DNA)",
+    "formation": "4-3-3",
+    "settings": {
+      "buildUp": "Counter / Fast",
+      "defensiveApproach": "High / Aggressive",
+      "notes": "Tetikleyici pres"
+    },
     "signatureTr": "Topu kaybettiğin yerde 5 saniye içinde geri kazan, dikey patla.",
     "roleHints": {},
-    "slotTags": { "LB": ["fb_overlap"], "RB": ["fb_overlap"], "CDM": ["cdm_destroyer"], "LCM": ["cm_engine"], "RCM": ["cm_engine"],
-                  "LW": ["w_cut_inside", "w_stay_high"], "RW": ["w_cut_inside", "w_stay_high"], "ST": ["st_press", "st_run_behind"] },
-    "sourceNote": "preset_and_replica_library v1 — Part A" },
-  { "id": "tiki_taka", "kind": "STYLE", "name": "Tiki-Taka / Positional (Pep DNA)", "formation": "4-3-3",
-    "settings": { "buildUp": "Short (Close Support)", "defensiveApproach": "High", "notes": "Alternatif şekil: 3-2-4-1 (topluyken)" },
+    "slotTags": {
+      "LB": [
+        "fb_overlap"
+      ],
+      "RB": [
+        "fb_overlap"
+      ],
+      "CDM": [
+        "cdm_destroyer"
+      ],
+      "LCM": [
+        "cm_engine"
+      ],
+      "RCM": [
+        "cm_engine"
+      ],
+      "LW": [
+        "w_cut_inside",
+        "w_stay_high"
+      ],
+      "RW": [
+        "w_cut_inside",
+        "w_stay_high"
+      ],
+      "ST": [
+        "st_press",
+        "st_run_behind"
+      ]
+    },
+    "sourceNote": "preset_and_replica_library v1 — Part A"
+  },
+  {
+    "id": "tiki_taka",
+    "kind": "STYLE",
+    "name": "Tiki-Taka / Positional (Pep DNA)",
+    "formation": "4-3-3",
+    "settings": {
+      "buildUp": "Short (Close Support)",
+      "defensiveApproach": "High",
+      "notes": "Alternatif şekil: 3-2-4-1 (topluyken)"
+    },
     "signatureTr": "Topa sahip ol, pozisyonel üstünlük kur, sabırla savunmayı aç.",
     "roleHints": {},
-    "slotTags": { "GK": ["gk_build_up"], "LB": ["fb_invert"], "RB": ["fb_invert"], "CDM": ["cdm_deep_build"], "LCM": ["cm_deep_build"], "RCM": ["cm_playmake"],
-                  "LW": ["w_create_inside"], "RW": ["w_create_inside"], "ST": ["st_drop_deep"] },
-    "sourceNote": "preset_and_replica_library v1 — Part A" },
-  { "id": "tiki_gegen_hybrid", "kind": "STYLE", "name": "Tiki-Taka + Gegen melezi (modern Pep / Flick)", "formation": "4-2-3-1",
-    "settings": { "buildUp": "Short", "defensiveApproach": "High / Aggressive", "notes": "Yüksek hat + kayıpta anında pres" },
+    "slotTags": {
+      "GK": [
+        "gk_build_up"
+      ],
+      "LB": [
+        "fb_invert"
+      ],
+      "RB": [
+        "fb_invert"
+      ],
+      "CDM": [
+        "cdm_deep_build"
+      ],
+      "LCM": [
+        "cm_deep_build"
+      ],
+      "RCM": [
+        "cm_playmake"
+      ],
+      "LW": [
+        "w_create_inside"
+      ],
+      "RW": [
+        "w_create_inside"
+      ],
+      "ST": [
+        "st_drop_deep"
+      ]
+    },
+    "sourceNote": "preset_and_replica_library v1 — Part A"
+  },
+  {
+    "id": "tiki_gegen_hybrid",
+    "kind": "STYLE",
+    "name": "Tiki-Taka + Gegen melezi (modern Pep / Flick)",
+    "formation": "4-2-3-1 (2)",
+    "settings": {
+      "buildUp": "Short",
+      "defensiveApproach": "High / Aggressive",
+      "notes": "Yüksek hat + kayıpta anında pres"
+    },
     "signatureTr": "Kısa pasla çık, hattı yüksek tut, kayıpta anında agresif pres.",
     "roleHints": {},
-    "slotTags": { "GK": ["gk_build_up"], "LB": ["fb_invert"], "RB": ["fb_invert"], "LCB": ["cb_step_up"], "RCB": ["cb_step_up"],
-                  "LDM": ["cdm_deep_build"], "RDM": ["cdm_destroyer"], "CAM": ["cam_create"], "LW": ["w_create_inside"], "RW": ["w_create_inside"],
-                  "ST": ["st_press", "st_drop_deep"] },
-    "sourceNote": "preset_and_replica_library v1 — Part A" },
-  { "id": "park_the_bus", "kind": "STYLE", "name": "Park the Bus / Kale önü blok (Mourinho defansif)", "formation": "4-2-3-1",
-    "settings": { "buildUp": "Counter", "defensiveApproach": "Deep / Low block, dar", "notes": "Alternatif: 4-4-2" },
+    "slotTags": {
+      "GK": [
+        "gk_build_up"
+      ],
+      "LB": [
+        "fb_invert"
+      ],
+      "RB": [
+        "fb_invert"
+      ],
+      "LCB": [
+        "cb_step_up"
+      ],
+      "RCB": [
+        "cb_step_up"
+      ],
+      "LDM": [
+        "cdm_deep_build"
+      ],
+      "RDM": [
+        "cdm_destroyer"
+      ],
+      "CAM": [
+        "cam_create"
+      ],
+      "LM": [
+        "wm_create_inside"
+      ],
+      "RM": [
+        "wm_create_inside"
+      ],
+      "ST": [
+        "st_press",
+        "st_drop_deep"
+      ]
+    },
+    "sourceNote": "preset_and_replica_library v1 — Part A"
+  },
+  {
+    "id": "park_the_bus",
+    "kind": "STYLE",
+    "name": "Park the Bus / Kale önü blok (Mourinho defansif)",
+    "formation": "4-2-3-1 (2)",
+    "settings": {
+      "buildUp": "Counter",
+      "defensiveApproach": "Deep / Low block, dar",
+      "notes": "Alternatif: 4-4-2"
+    },
     "signatureTr": "Alan verme, rakibi kendine çek, kaptığında hızlı vur.",
     "roleHints": {},
-    "slotTags": { "LB": ["fb_stay_back"], "RB": ["fb_stay_back"], "LCB": ["cb_hold"], "RCB": ["cb_hold"], "LDM": ["cdm_screen"], "RDM": ["cdm_destroyer"],
-                  "LW": ["w_track_back"], "RW": ["w_track_back"], "ST": ["st_run_behind"] },
-    "sourceNote": "preset_and_replica_library v1 — Part A" },
-  { "id": "atletico_block", "kind": "STYLE", "name": "Atlético Blok (Cholismo)", "formation": "4-4-2",
-    "settings": { "buildUp": "Counter", "defensiveApproach": "Orta blok, dar iki bant", "notes": "Duran top vurgusu" },
+    "slotTags": {
+      "LB": [
+        "fb_stay_back"
+      ],
+      "RB": [
+        "fb_stay_back"
+      ],
+      "LCB": [
+        "cb_hold"
+      ],
+      "RCB": [
+        "cb_hold"
+      ],
+      "LDM": [
+        "cdm_screen"
+      ],
+      "RDM": [
+        "cdm_destroyer"
+      ],
+      "LM": [
+        "wm_two_way"
+      ],
+      "RM": [
+        "wm_two_way"
+      ],
+      "ST": [
+        "st_run_behind"
+      ]
+    },
+    "sourceNote": "preset_and_replica_library v1 — Part A"
+  },
+  {
+    "id": "atletico_block",
+    "kind": "STYLE",
+    "name": "Atlético Blok (Cholismo)",
+    "formation": "4-4-2",
+    "settings": {
+      "buildUp": "Counter",
+      "defensiveApproach": "Orta blok, dar iki bant",
+      "notes": "Duran top vurgusu"
+    },
     "signatureTr": "4-4-2 duvar; duran top, kontra ve mücadele.",
     "roleHints": {},
-    "slotTags": { "LM": ["wm_two_way"], "RM": ["wm_two_way"], "LCB": ["cb_step_up"], "RCB": ["cb_step_up"], "LST": ["st_target"], "RST": ["st_run_behind"] },
-    "sourceNote": "preset_and_replica_library v1 — Part A" },
-  { "id": "anatolian_counter", "kind": "STYLE", "name": "Dikey Kontra — Anadolu Kulübü Kontra", "formation": "4-2-3-1",
-    "settings": { "buildUp": "Counter (direkt)", "defensiveApproach": "Balanced / Deep blok", "notes": "Alternatif: 4-4-2" },
+    "slotTags": {
+      "LM": [
+        "wm_two_way"
+      ],
+      "RM": [
+        "wm_two_way"
+      ],
+      "LCB": [
+        "cb_step_up"
+      ],
+      "RCB": [
+        "cb_step_up"
+      ],
+      "LST": [
+        "st_target"
+      ],
+      "RST": [
+        "st_run_behind"
+      ]
+    },
+    "sourceNote": "preset_and_replica_library v1 — Part A"
+  },
+  {
+    "id": "anatolian_counter",
+    "kind": "STYLE",
+    "name": "Dikey Kontra — Anadolu Kulübü Kontra",
+    "formation": "4-2-3-1 (2)",
+    "settings": {
+      "buildUp": "Counter (direkt)",
+      "defensiveApproach": "Balanced / Deep blok",
+      "notes": "Alternatif: 4-4-2"
+    },
     "signatureTr": "Disiplinli blok + kap, 3-4 pasta dikey.",
     "roleHints": {},
-    "slotTags": { "LB": ["fb_balanced"], "RB": ["fb_balanced"], "LDM": ["cdm_screen"], "RDM": ["cdm_deep_build"], "CAM": ["cam_create"],
-                  "LW": ["w_cut_inside"], "RW": ["w_cross"], "ST": ["st_run_behind"] },
-    "sourceNote": "preset_and_replica_library v1 — Part A (ST alternatifi: istasyon)" },
-  { "id": "wing_play", "kind": "STYLE", "name": "Kanat Oyunu / Orta-Kafa", "formation": "4-4-2",
-    "settings": { "buildUp": "Balanced", "defensiveApproach": "Balanced", "notes": "Offensive Width yüksek, bindiren bekler" },
+    "slotTags": {
+      "LB": [
+        "fb_balanced"
+      ],
+      "RB": [
+        "fb_balanced"
+      ],
+      "LDM": [
+        "cdm_screen"
+      ],
+      "RDM": [
+        "cdm_deep_build"
+      ],
+      "CAM": [
+        "cam_create"
+      ],
+      "LM": [
+        "wm_cut_inside"
+      ],
+      "RM": [
+        "wm_stay_wide_cross"
+      ],
+      "ST": [
+        "st_run_behind"
+      ]
+    },
+    "sourceNote": "preset_and_replica_library v1 — Part A (ST alternatifi: istasyon)"
+  },
+  {
+    "id": "wing_play",
+    "kind": "STYLE",
+    "name": "Kanat Oyunu / Orta-Kafa",
+    "formation": "4-4-2",
+    "settings": {
+      "buildUp": "Balanced",
+      "defensiveApproach": "Balanced",
+      "notes": "Offensive Width yüksek, bindiren bekler"
+    },
     "signatureTr": "Genişlikten orta yağdır, kutuda hava gücüyle bitir.",
     "roleHints": {},
-    "slotTags": { "LB": ["fb_overlap", "fb_early_cross"], "RB": ["fb_overlap", "fb_early_cross"], "LM": ["wm_stay_wide_cross"], "RM": ["wm_stay_wide_cross"],
-                  "LCM": ["cm_late_run"], "LST": ["st_target"], "RST": ["st_poacher"] },
-    "sourceNote": "preset_and_replica_library v1 — Part A" },
-  { "id": "possession_control", "kind": "STYLE", "name": "Possession-Control (dengeli hakimiyet)", "formation": "4-2-3-1",
-    "settings": { "buildUp": "Balanced", "defensiveApproach": "Balanced", "notes": "Orta tempo" },
+    "slotTags": {
+      "LB": [
+        "fb_overlap",
+        "fb_early_cross"
+      ],
+      "RB": [
+        "fb_overlap",
+        "fb_early_cross"
+      ],
+      "LM": [
+        "wm_stay_wide_cross"
+      ],
+      "RM": [
+        "wm_stay_wide_cross"
+      ],
+      "LCM": [
+        "cm_late_run"
+      ],
+      "LST": [
+        "st_target"
+      ],
+      "RST": [
+        "st_poacher"
+      ]
+    },
+    "sourceNote": "preset_and_replica_library v1 — Part A"
+  },
+  {
+    "id": "possession_control",
+    "kind": "STYLE",
+    "name": "Possession-Control (dengeli hakimiyet)",
+    "formation": "4-2-3-1 (2)",
+    "settings": {
+      "buildUp": "Balanced",
+      "defensiveApproach": "Balanced",
+      "notes": "Orta tempo"
+    },
     "signatureTr": "Dengeli kuruluş, orta tempo, topla kontrol.",
     "roleHints": {},
-    "slotTags": { "LDM": ["cdm_deep_build"], "RDM": ["cdm_screen"], "CAM": ["cam_create"], "LW": ["w_create_inside"], "RW": ["w_create_inside"] },
-    "sourceNote": "preset_and_replica_library v1 — Part A" },
-  { "id": "far_post", "kind": "STYLE", "name": "Arka Direk (far-post cross)", "formation": "4-3-3",
-    "settings": { "buildUp": "Balanced", "defensiveApproach": "Balanced", "notes": "Offensive Width yüksek · bindiren bek(ler) · Players in Box ≥ 5" },
+    "slotTags": {
+      "LDM": [
+        "cdm_deep_build"
+      ],
+      "RDM": [
+        "cdm_screen"
+      ],
+      "CAM": [
+        "cam_create"
+      ],
+      "LM": [
+        "wm_create_inside"
+      ],
+      "RM": [
+        "wm_create_inside"
+      ]
+    },
+    "sourceNote": "preset_and_replica_library v1 — Part A"
+  },
+  {
+    "id": "far_post",
+    "kind": "STYLE",
+    "name": "Arka Direk (far-post cross)",
+    "formation": "4-3-3",
+    "settings": {
+      "buildUp": "Balanced",
+      "defensiveApproach": "Balanced",
+      "notes": "Offensive Width yüksek · bindiren bek(ler) · Players in Box ≥ 5"
+    },
     "signatureTr": "İki kanattan arka direğe kavisli ortalar, kutuda üçlü hava yükü (ST + arka direk kanat + dalan CM).",
-    "roleHints": { "LB": "Attack bomber: Crossing / Whipped Pass", "RB": "Support bek: dengeli + erken orta", "RW": "Arka direğe inen fizikli kanat" },
-    "slotTags": { "LB": ["fb_overlap", "fb_early_cross"], "RB": ["fb_balanced", "fb_early_cross"], "LW": ["w_cross"], "RW": ["w_cut_inside", "w_aerial"],
-                  "LCM": ["cm_late_run"], "ST": ["st_target"] },
-    "sourceNote": "preset_and_replica_library v1.1 — Beşiktaş bindiren-bek + arka direk kimliği" },
-
-  { "id": "pep_barcelona_2011", "kind": "REPLICA", "name": "Pep Guardiola — Barcelona 2010-11", "formation": "4-3-3",
-    "settings": { "buildUp": "Short", "defensiveApproach": "High press", "notes": "False 9, pozisyonel oyun" },
+    "roleHints": {
+      "LB": "Attack bomber: Crossing / Whipped Pass",
+      "RB": "Support bek: dengeli + erken orta",
+      "RW": "Arka direğe inen fizikli kanat"
+    },
+    "slotTags": {
+      "LB": [
+        "fb_overlap",
+        "fb_early_cross"
+      ],
+      "RB": [
+        "fb_balanced",
+        "fb_early_cross"
+      ],
+      "LW": [
+        "w_cross"
+      ],
+      "RW": [
+        "w_cut_inside",
+        "w_aerial"
+      ],
+      "LCM": [
+        "cm_late_run"
+      ],
+      "ST": [
+        "st_target"
+      ]
+    },
+    "sourceNote": "preset_and_replica_library v1.1 — Beşiktaş bindiren-bek + arka direk kimliği"
+  },
+  {
+    "id": "pep_barcelona_2011",
+    "kind": "REPLICA",
+    "name": "Pep Guardiola — Barcelona 2010-11",
+    "club": "Barcelona",
+    "coach": "Pep Guardiola",
+    "season": "2010-11",
+    "formation": "4-3-3",
+    "settings": {
+      "buildUp": "Short",
+      "defensiveApproach": "High press",
+      "notes": "False 9, pozisyonel oyun"
+    },
     "signatureTr": "Topu asla verme, 3. adam koşuları, kanatları genişte tut, ortadan boğ.",
-    "roleHints": { "CDM": "Pas-dağıtıcı süpürücü pivot (Busquets tipi)", "LCM": "Yüksek vizyonlu teknik 8 (Xavi tipi)", "RCM": "Yüksek vizyonlu teknik 8 (Iniesta tipi)", "ST": "Düşen yaratıcı — false 9 (Messi tipi)" },
-    "slotTags": { "GK": ["gk_build_up"], "LB": ["fb_invert"], "RB": ["fb_invert"], "CDM": ["cdm_screen", "cdm_deep_build"], "LCM": ["cm_playmake"], "RCM": ["cm_playmake"],
-                  "LW": ["w_cross"], "RW": ["w_cross"], "ST": ["st_drop_deep"] },
-    "sourceNote": "UCL + LaLiga. Kanatların 'çizgide dursun (genişlik)' imzası W grubunda 'orta açsın' ile karşılandı." },
-  { "id": "flick_barcelona_2025", "kind": "REPLICA", "name": "Hansi Flick — Barcelona 2024-25", "formation": "4-2-3-1",
-    "settings": { "buildUp": "Short / dikey", "defensiveApproach": "Aşırı yüksek hat + agresif ofsayt tuzağı" },
+    "roleHints": {
+      "CDM": "Pas-dağıtıcı süpürücü pivot (Busquets tipi)",
+      "LCM": "Yüksek vizyonlu teknik 8 (Xavi tipi)",
+      "RCM": "Yüksek vizyonlu teknik 8 (Iniesta tipi)",
+      "ST": "Düşen yaratıcı — false 9 (Messi tipi)"
+    },
+    "slotTags": {
+      "GK": [
+        "gk_build_up"
+      ],
+      "LB": [
+        "fb_invert"
+      ],
+      "RB": [
+        "fb_invert"
+      ],
+      "CDM": [
+        "cdm_screen",
+        "cdm_deep_build"
+      ],
+      "LCM": [
+        "cm_playmake"
+      ],
+      "RCM": [
+        "cm_playmake"
+      ],
+      "LW": [
+        "w_cross"
+      ],
+      "RW": [
+        "w_cross"
+      ],
+      "ST": [
+        "st_drop_deep"
+      ]
+    },
+    "sourceNote": "UCL + LaLiga. Kanatların 'çizgide dursun (genişlik)' imzası W grubunda 'orta açsın' ile karşılandı."
+  },
+  {
+    "id": "flick_barcelona_2025",
+    "kind": "REPLICA",
+    "name": "Hansi Flick — Barcelona 2024-25",
+    "club": "Barcelona",
+    "coach": "Hansi Flick",
+    "season": "2024-25",
+    "formation": "4-2-3-1 (2)",
+    "settings": {
+      "buildUp": "Short / dikey",
+      "defensiveApproach": "Aşırı yüksek hat + agresif ofsayt tuzağı"
+    },
     "signatureTr": "Hattı rakip yarıya it, ofsaytla sıkıştır, hızlı dikey geçişlerle bitir.",
-    "roleHints": { "LCB": "Hızlı stoper şart (yüksek hat)", "RCB": "Hızlı stoper şart (yüksek hat)", "LW": "Çevik içe-kesen kanat (Raphinha tipi)", "RW": "Çevik içe-kesen kanat (Yamal tipi)", "ST": "Bitirici 9 (Lewandowski tipi)" },
-    "slotTags": { "LCB": ["cb_step_up", "cb_recover"], "RCB": ["cb_step_up", "cb_recover"], "LB": ["fb_overlap"], "RB": ["fb_overlap"], "CAM": ["cam_create"],
-                  "LW": ["w_cut_inside"], "RW": ["w_cut_inside"], "ST": ["st_run_behind"] },
-    "sourceNote": "LaLiga + Copa + Supercopa" },
-  { "id": "zidane_real_2017", "kind": "REPLICA", "name": "Zinédine Zidane — Real Madrid 2016-17", "formation": "4-3-3",
-    "settings": { "buildUp": "Balanced", "defensiveApproach": "Balanced", "notes": "Kontrol + kontra + bireysel kalite" },
+    "roleHints": {
+      "LCB": "Hızlı stoper şart (yüksek hat)",
+      "RCB": "Hızlı stoper şart (yüksek hat)",
+      "LM": "Çevik içe-kesen kanat (Raphinha tipi)",
+      "RM": "Çevik içe-kesen kanat (Yamal tipi)",
+      "ST": "Bitirici 9 (Lewandowski tipi)"
+    },
+    "slotTags": {
+      "LCB": [
+        "cb_step_up",
+        "cb_recover"
+      ],
+      "RCB": [
+        "cb_step_up",
+        "cb_recover"
+      ],
+      "LB": [
+        "fb_overlap"
+      ],
+      "RB": [
+        "fb_overlap"
+      ],
+      "CAM": [
+        "cam_create"
+      ],
+      "LM": [
+        "wm_cut_inside"
+      ],
+      "RM": [
+        "wm_cut_inside"
+      ],
+      "ST": [
+        "st_run_behind"
+      ]
+    },
+    "sourceNote": "LaLiga + Copa + Supercopa"
+  },
+  {
+    "id": "zidane_real_2017",
+    "kind": "REPLICA",
+    "name": "Zinédine Zidane — Real Madrid 2016-17",
+    "club": "Real Madrid",
+    "coach": "Zinédine Zidane",
+    "season": "2016-17",
+    "formation": "4-3-3",
+    "settings": {
+      "buildUp": "Balanced",
+      "defensiveApproach": "Balanced",
+      "notes": "Kontrol + kontra + bireysel kalite"
+    },
     "signatureTr": "Dengeli hakimiyet, gerektiğinde kontra, yıldızlara özgürlük.",
-    "roleHints": { "CDM": "Yıkıcı çapa (Casemiro tipi)", "LCM": "Derin kurucu (Kroos tipi)", "RCM": "İleri kurucu (Modrić tipi)" },
-    "slotTags": { "CDM": ["cdm_screen", "cdm_destroyer"], "LCM": ["cm_deep_build"], "RCM": ["cm_playmake"], "LB": ["fb_balanced"], "RB": ["fb_balanced"],
-                  "LW": ["w_cut_inside"], "RW": ["w_cut_inside"], "ST": ["st_run_behind"] },
-    "sourceNote": "UCL + LaLiga" },
-  { "id": "mourinho_inter_2010", "kind": "REPLICA", "name": "José Mourinho — Inter 2009-10 (Treble)", "formation": "4-2-3-1",
-    "settings": { "buildUp": "Counter", "defensiveApproach": "Alçak blok" },
+    "roleHints": {
+      "CDM": "Yıkıcı çapa (Casemiro tipi)",
+      "LCM": "Derin kurucu (Kroos tipi)",
+      "RCM": "İleri kurucu (Modrić tipi)"
+    },
+    "slotTags": {
+      "CDM": [
+        "cdm_screen",
+        "cdm_destroyer"
+      ],
+      "LCM": [
+        "cm_deep_build"
+      ],
+      "RCM": [
+        "cm_playmake"
+      ],
+      "LB": [
+        "fb_balanced"
+      ],
+      "RB": [
+        "fb_balanced"
+      ],
+      "LW": [
+        "w_cut_inside"
+      ],
+      "RW": [
+        "w_cut_inside"
+      ],
+      "ST": [
+        "st_run_behind"
+      ]
+    },
+    "sourceNote": "UCL + LaLiga"
+  },
+  {
+    "id": "mourinho_inter_2010",
+    "kind": "REPLICA",
+    "name": "José Mourinho — Inter 2009-10 (Treble)",
+    "club": "Internazionale",
+    "coach": "José Mourinho",
+    "season": "2009-10",
+    "formation": "4-2-3-1 (2)",
+    "settings": {
+      "buildUp": "Counter",
+      "defensiveApproach": "Alçak blok"
+    },
     "signatureTr": "Alan verme, disiplinli ikili pivot, Sneijder'den dikey + forvet hızı.",
-    "roleHints": { "CAM": "Yaratıcı 10 (Sneijder tipi)", "ST": "Hızlı bitirici (Eto'o / Milito tipi)" },
-    "slotTags": { "LDM": ["cdm_screen"], "RDM": ["cdm_destroyer"], "CAM": ["cam_create"], "LW": ["w_track_back"], "RW": ["w_track_back"], "ST": ["st_run_behind"] },
-    "sourceNote": "UCL + Serie A + Kupa. ST alternatifi: istasyon." },
-  { "id": "ancelotti_milan_2007", "kind": "REPLICA", "name": "Carlo Ancelotti — Milan 2006-07 (Dida / Kaká)", "formation": "4-3-2-1",
-    "settings": { "buildUp": "Balanced", "defensiveApproach": "Sağlam blok + kontra", "notes": "Noel ağacı" },
+    "roleHints": {
+      "CAM": "Yaratıcı 10 (Sneijder tipi)",
+      "ST": "Hızlı bitirici (Eto'o / Milito tipi)"
+    },
+    "slotTags": {
+      "LDM": [
+        "cdm_screen"
+      ],
+      "RDM": [
+        "cdm_destroyer"
+      ],
+      "CAM": [
+        "cam_create"
+      ],
+      "LM": [
+        "wm_two_way"
+      ],
+      "RM": [
+        "wm_two_way"
+      ],
+      "ST": [
+        "st_run_behind"
+      ]
+    },
+    "sourceNote": "UCL + Serie A + Kupa. ST alternatifi: istasyon."
+  },
+  {
+    "id": "ancelotti_milan_2007",
+    "kind": "REPLICA",
+    "name": "Carlo Ancelotti — Milan 2006-07 (Dida / Kaká)",
+    "club": "AC Milan",
+    "coach": "Carlo Ancelotti",
+    "season": "2006-07",
+    "formation": "4-3-2-1",
+    "settings": {
+      "buildUp": "Balanced",
+      "defensiveApproach": "Sağlam blok + kontra",
+      "notes": "Noel ağacı"
+    },
     "signatureTr": "Pirlo'dan tempo, Kaká'nın ceza sahasına dikey koşuları ve uzaktan şutu, Inzaghi'nin pozisyon golleri.",
-    "roleHints": { "GK": "Çizgi kalecisi (Dida tipi)", "CM": "Derin regista (Pirlo tipi)", "RCM": "Yıkıcı (Gattuso tipi)", "LAM": "Ceza sahasına dalan yaratıcı 10 (Kaká tipi)", "RAM": "Kurucu + geç dalış (Seedorf tipi)", "ST": "Pusuda bitirici 9 (Inzaghi tipi)" },
-    "slotTags": { "GK": ["gk_line_keeper"], "CM": ["cm_deep_build"], "RCM": ["cm_ball_winner"], "LCM": ["cm_engine"], "LAM": ["cam_run_beyond", "cam_long_shot"], "RAM": ["cam_create"], "ST": ["st_poacher"] },
-    "sourceNote": "UCL. Kaká'nın 'oyun kursun + ötesine koşsun' hibriti çelişki kilidi nedeniyle 'ötesine koşsun + uzaktan vursun' olarak seçildi." },
-  { "id": "klopp_liverpool_2020", "kind": "REPLICA", "name": "Jürgen Klopp — Liverpool 2019-20", "formation": "4-3-3",
-    "settings": { "buildUp": "Fast / dikey", "defensiveApproach": "Gegenpress" },
+    "roleHints": {
+      "GK": "Çizgi kalecisi (Dida tipi)",
+      "CM": "Derin regista (Pirlo tipi)",
+      "RCM": "Yıkıcı (Gattuso tipi)",
+      "LAM": "Ceza sahasına dalan yaratıcı 10 (Kaká tipi)",
+      "RAM": "Kurucu + geç dalış (Seedorf tipi)",
+      "ST": "Pusuda bitirici 9 (Inzaghi tipi)"
+    },
+    "slotTags": {
+      "GK": [
+        "gk_line_keeper"
+      ],
+      "CM": [
+        "cm_deep_build"
+      ],
+      "RCM": [
+        "cm_ball_winner"
+      ],
+      "LCM": [
+        "cm_engine"
+      ],
+      "LAM": [
+        "cam_run_beyond",
+        "cam_long_shot"
+      ],
+      "RAM": [
+        "cam_create"
+      ],
+      "ST": [
+        "st_poacher"
+      ]
+    },
+    "sourceNote": "UCL. Kaká'nın 'oyun kursun + ötesine koşsun' hibriti çelişki kilidi nedeniyle 'ötesine koşsun + uzaktan vursun' olarak seçildi."
+  },
+  {
+    "id": "klopp_liverpool_2020",
+    "kind": "REPLICA",
+    "name": "Jürgen Klopp — Liverpool 2019-20",
+    "club": "Liverpool",
+    "coach": "Jürgen Klopp",
+    "season": "2019-20",
+    "formation": "4-3-3",
+    "settings": {
+      "buildUp": "Fast / dikey",
+      "defensiveApproach": "Gegenpress"
+    },
     "signatureTr": "Dikey, yoğun pres, bek-kanat üretimi, hızlı forvet üçlüsü.",
-    "roleHints": { "LB": "Bombalayan bek (Robertson tipi)", "RB": "Bombalayan bek (Alexander-Arnold tipi)" },
-    "slotTags": { "LB": ["fb_overlap", "fb_early_cross"], "RB": ["fb_overlap", "fb_early_cross"], "CDM": ["cdm_destroyer"], "LCM": ["cm_engine"], "RCM": ["cm_engine"],
-                  "LW": ["w_cut_inside", "w_stay_high"], "RW": ["w_cut_inside", "w_stay_high"], "ST": ["st_press", "st_run_behind"] },
-    "sourceNote": "UCL / Premier League" },
-  { "id": "simeone_atletico_2014", "kind": "REPLICA", "name": "Diego Simeone — Atlético 2013-14", "formation": "4-4-2",
-    "settings": { "buildUp": "Counter", "defensiveApproach": "Kompakt iki bant", "notes": "Duran top vurgusu" },
+    "roleHints": {
+      "LB": "Bombalayan bek (Robertson tipi)",
+      "RB": "Bombalayan bek (Alexander-Arnold tipi)"
+    },
+    "slotTags": {
+      "LB": [
+        "fb_overlap",
+        "fb_early_cross"
+      ],
+      "RB": [
+        "fb_overlap",
+        "fb_early_cross"
+      ],
+      "CDM": [
+        "cdm_destroyer"
+      ],
+      "LCM": [
+        "cm_engine"
+      ],
+      "RCM": [
+        "cm_engine"
+      ],
+      "LW": [
+        "w_cut_inside",
+        "w_stay_high"
+      ],
+      "RW": [
+        "w_cut_inside",
+        "w_stay_high"
+      ],
+      "ST": [
+        "st_press",
+        "st_run_behind"
+      ]
+    },
+    "sourceNote": "UCL / Premier League"
+  },
+  {
+    "id": "simeone_atletico_2014",
+    "kind": "REPLICA",
+    "name": "Diego Simeone — Atlético 2013-14",
+    "club": "Atlético Madrid",
+    "coach": "Diego Simeone",
+    "season": "2013-14",
+    "formation": "4-4-2",
+    "settings": {
+      "buildUp": "Counter",
+      "defensiveApproach": "Kompakt iki bant",
+      "notes": "Duran top vurgusu"
+    },
     "signatureTr": "İki sıkı bant, alan verme, disiplin ve kontra.",
-    "roleHints": { "LST": "Hava kulesi / mücadeleci (Diego Costa tipi)", "RST": "Arkaya koşan (Villa tipi)" },
-    "slotTags": { "LM": ["wm_two_way"], "RM": ["wm_two_way"], "LCB": ["cb_step_up"], "RCB": ["cb_step_up"], "LST": ["st_target"], "RST": ["st_run_behind"] },
-    "sourceNote": "LaLiga şampiyonu, UCL finali" },
-  { "id": "terim_galatasaray_2000", "kind": "REPLICA", "name": "Galatasaray 1999-2000 — Fatih Terim", "formation": "4-2-3-1",
-    "settings": { "buildUp": "Balanced", "defensiveApproach": "Organize savunma", "notes": "Kaynak şekil: 4-4-2 / Hagi serbest 10" },
+    "roleHints": {
+      "LST": "Hava kulesi / mücadeleci (Diego Costa tipi)",
+      "RST": "Arkaya koşan (Villa tipi)"
+    },
+    "slotTags": {
+      "LM": [
+        "wm_two_way"
+      ],
+      "RM": [
+        "wm_two_way"
+      ],
+      "LCB": [
+        "cb_step_up"
+      ],
+      "RCB": [
+        "cb_step_up"
+      ],
+      "LST": [
+        "st_target"
+      ],
+      "RST": [
+        "st_run_behind"
+      ]
+    },
+    "sourceNote": "LaLiga şampiyonu, UCL finali"
+  },
+  {
+    "id": "terim_galatasaray_2000",
+    "kind": "REPLICA",
+    "name": "Galatasaray 1999-2000 — Fatih Terim",
+    "club": "Galatasaray",
+    "coach": "Fatih Terim",
+    "season": "1999-2000",
+    "formation": "4-2-3-1 (2)",
+    "settings": {
+      "buildUp": "Balanced",
+      "defensiveApproach": "Organize savunma",
+      "notes": "Kaynak şekil: 4-4-2 / Hagi serbest 10"
+    },
     "signatureTr": "Pragmatik, mental sağlamlık; organize savunma + Hagi'den fark + Hakan'dan gol.",
-    "roleHints": { "GK": "Güvenilir kaleci (Taffarel tipi)", "CAM": "Serbest yaratıcı 10 (Hagi tipi)", "ST": "Klinik santrfor (Hakan Şükür tipi)" },
-    "slotTags": { "GK": ["gk_line_keeper"], "LDM": ["cdm_destroyer"], "CAM": ["cam_create", "cam_long_shot"], "LW": ["w_cut_inside"], "RW": ["w_cross"], "ST": ["st_poacher", "st_target"] },
-    "sourceNote": "UEFA Kupası + Süper Kupa" },
-  { "id": "lucescu_besiktas_2003", "kind": "REPLICA", "name": "Beşiktaş 2002-03 — Mircea Lucescu", "formation": "4-2-3-1",
-    "settings": { "buildUp": "Counter", "defensiveApproach": "Disiplinli blok", "notes": "Kaynak şekil: 4-4-2 / esnek" },
+    "roleHints": {
+      "GK": "Güvenilir kaleci (Taffarel tipi)",
+      "CAM": "Serbest yaratıcı 10 (Hagi tipi)",
+      "ST": "Klinik santrfor (Hakan Şükür tipi)"
+    },
+    "slotTags": {
+      "GK": [
+        "gk_line_keeper"
+      ],
+      "LDM": [
+        "cdm_destroyer"
+      ],
+      "CAM": [
+        "cam_create",
+        "cam_long_shot"
+      ],
+      "LM": [
+        "wm_cut_inside"
+      ],
+      "RM": [
+        "wm_stay_wide_cross"
+      ],
+      "ST": [
+        "st_poacher",
+        "st_target"
+      ]
+    },
+    "sourceNote": "UEFA Kupası + Süper Kupa"
+  },
+  {
+    "id": "lucescu_besiktas_2003",
+    "kind": "REPLICA",
+    "name": "Beşiktaş 2002-03 — Mircea Lucescu",
+    "club": "Beşiktaş",
+    "coach": "Mircea Lucescu",
+    "season": "2002-03",
+    "formation": "4-4-2",
+    "settings": {
+      "buildUp": "Counter",
+      "defensiveApproach": "Disiplinli blok",
+      "notes": "Disiplinli 4-4-2; kaptığında hızlı dikey, Sergen forvetin arkasında/yanında serbest"
+    },
     "signatureTr": "Disiplinli savunma, pragmatik, hızlı dikey; güzelden çok etkili futbol.",
-    "roleHints": { "CAM": "Yaratıcı 10 (Sergen Yalçın tipi)" },
-    "slotTags": { "LCB": ["cb_hold"], "RCB": ["cb_hold"], "LB": ["fb_balanced"], "RB": ["fb_balanced"], "CAM": ["cam_create"], "LW": ["w_cut_inside"], "RW": ["w_cut_inside"], "ST": ["st_run_behind"] },
-    "sourceNote": "Süper Lig, UEFA çeyrek. ST alternatifi: istasyon." },
-  { "id": "gunes_besiktas_2017", "kind": "REPLICA", "name": "Beşiktaş 2016-17 — Şenol Güneş", "formation": "4-2-3-1",
-    "settings": { "buildUp": "Short", "defensiveApproach": "Balanced", "notes": "3 pasta ceza sahası" },
+    "roleHints": {
+      "LST": "Yaratıcı ikinci forvet (Sergen Yalçın tipi)",
+      "RST": "Derine koşan hızlı forvet",
+      "LM": "Disiplinli iki yönlü kanat orta saha",
+      "RM": "Disiplinli iki yönlü kanat orta saha"
+    },
+    "slotTags": {
+      "LCB": [
+        "cb_hold"
+      ],
+      "RCB": [
+        "cb_hold"
+      ],
+      "LB": [
+        "fb_balanced"
+      ],
+      "RB": [
+        "fb_balanced"
+      ],
+      "LM": [
+        "wm_two_way"
+      ],
+      "RM": [
+        "wm_two_way"
+      ],
+      "LCM": [
+        "cm_ball_winner"
+      ],
+      "RCM": [
+        "cm_engine"
+      ],
+      "LST": [
+        "st_drop_deep"
+      ],
+      "RST": [
+        "st_run_behind"
+      ]
+    },
+    "sourceNote": "Süper Lig şampiyonu, UEFA Kupası çeyrek final. Lucescu 4-4-2 (esnek) kurardı; 4-2-3-1 değil."
+  },
+  {
+    "id": "gunes_besiktas_2017",
+    "kind": "REPLICA",
+    "name": "Beşiktaş 2016-17 — Şenol Güneş",
+    "club": "Beşiktaş",
+    "coach": "Şenol Güneş",
+    "season": "2016-17",
+    "formation": "4-2-3-1 (2)",
+    "settings": {
+      "buildUp": "Short",
+      "defensiveApproach": "Balanced",
+      "notes": "3 pasta ceza sahası"
+    },
     "signatureTr": "Arkadan kısa pasla çık, kaptığında hızlı dikey, bireysel kalite serbest.",
-    "roleHints": { "LB": "Overlap sol bek (Caner tipi)", "CAM": "Kutuya giren + kenara açılan hücumcu 10 (Talisca tipi)", "RW": "İçe-kesen trickster, geri gelmez (Quaresma tipi)", "LDM": "Dayanıklı pivot (Atiba tipi)" },
-    "slotTags": { "GK": ["gk_build_up"], "LB": ["fb_overlap"], "LDM": ["cdm_screen"], "RDM": ["cdm_screen"], "CAM": ["cam_run_beyond", "cam_drift_wide"],
-                  "RW": ["w_cut_inside", "w_finesse", "w_stay_high"], "ST": ["st_run_behind"] },
-    "sourceNote": "Süper Lig + Avrupa Ligi çeyrek. 10 için 'oyun kursun + geç kutuya dalsın' çelişki kilidine takıldığından profil ipucuna göre seçildi; RW 'orta' ile 'içe kessin' birlikte seçilemez." },
-  { "id": "zico_fenerbahce_2008", "kind": "REPLICA", "name": "Fenerbahçe 2007-08 — Zico", "formation": "4-2-3-1",
-    "settings": { "buildUp": "Balanced", "defensiveApproach": "Balanced", "notes": "Hücumcu; Kadıköy'de Chelsea'yi yenen ŞL çeyrek finalist kadro" },
+    "roleHints": {
+      "LB": "Overlap sol bek (Caner tipi)",
+      "CAM": "Kutuya giren + kenara açılan hücumcu 10 (Talisca tipi)",
+      "RM": "İçe-kesen trickster, geri gelmez (Quaresma tipi)",
+      "LDM": "Dayanıklı pivot (Atiba tipi)"
+    },
+    "slotTags": {
+      "GK": [
+        "gk_build_up"
+      ],
+      "LB": [
+        "fb_overlap"
+      ],
+      "LDM": [
+        "cdm_screen"
+      ],
+      "RDM": [
+        "cdm_screen"
+      ],
+      "CAM": [
+        "cam_run_beyond",
+        "cam_drift_wide"
+      ],
+      "RM": [
+        "wm_cut_inside"
+      ],
+      "ST": [
+        "st_run_behind"
+      ]
+    },
+    "sourceNote": "Süper Lig + Avrupa Ligi çeyrek. 10 için 'oyun kursun + geç kutuya dalsın' çelişki kilidine takıldığından profil ipucuna göre seçildi; RW 'orta' ile 'içe kessin' birlikte seçilemez."
+  },
+  {
+    "id": "zico_fenerbahce_2008",
+    "kind": "REPLICA",
+    "name": "Fenerbahçe 2007-08 — Zico",
+    "club": "Fenerbahçe",
+    "coach": "Zico",
+    "season": "2007-08",
+    "formation": "4-2-3-1 (2)",
+    "settings": {
+      "buildUp": "Balanced",
+      "defensiveApproach": "Balanced",
+      "notes": "Hücumcu; Kadıköy'de Chelsea'yi yenen ŞL çeyrek finalist kadro"
+    },
     "signatureTr": "Yaratıcı-10 ekseni, soldan bombalayan bek üretimi, hücumcu.",
-    "roleHints": { "CAM": "Ritmi kuran klasik 10 (Alex de Souza tipi)", "LB": "Bombalayan + sert şutlu sol bek (Roberto Carlos tipi)" },
-    "slotTags": { "LB": ["fb_overlap", "fb_early_cross"], "CAM": ["cam_create", "cam_long_shot"], "LW": ["w_cut_inside"], "RW": ["w_cut_inside"], "ST": ["st_run_behind", "st_poacher"] },
-    "sourceNote": "Şampiyonlar Ligi çeyrek final (tarihte ilk)" },
-  { "id": "avci_trabzonspor_2022", "kind": "REPLICA", "name": "Trabzonspor 2021-22 — Abdullah Avcı", "formation": "4-2-3-1",
-    "settings": { "buildUp": "Possession", "defensiveApproach": "Elit geçiş savunması", "notes": "Kanat-koridor overload ile 10'a alan açma; duran top" },
+    "roleHints": {
+      "CAM": "Ritmi kuran klasik 10 (Alex de Souza tipi)",
+      "LB": "Bombalayan + sert şutlu sol bek (Roberto Carlos tipi)"
+    },
+    "slotTags": {
+      "LB": [
+        "fb_overlap",
+        "fb_early_cross"
+      ],
+      "CAM": [
+        "cam_create",
+        "cam_long_shot"
+      ],
+      "LM": [
+        "wm_cut_inside"
+      ],
+      "RM": [
+        "wm_cut_inside"
+      ],
+      "ST": [
+        "st_run_behind",
+        "st_poacher"
+      ]
+    },
+    "sourceNote": "Şampiyonlar Ligi çeyrek final (tarihte ilk)"
+  },
+  {
+    "id": "avci_trabzonspor_2022",
+    "kind": "REPLICA",
+    "name": "Trabzonspor 2021-22 — Abdullah Avcı",
+    "club": "Trabzonspor",
+    "coach": "Abdullah Avcı",
+    "season": "2021-22",
+    "formation": "4-2-3-1 (2)",
+    "settings": {
+      "buildUp": "Possession",
+      "defensiveApproach": "Elit geçiş savunması",
+      "notes": "Kanat-koridor overload ile 10'a alan açma; duran top"
+    },
     "signatureTr": "Topa sahip olma + sıkı geçiş savunması; kanat koridorunu yükleyip 10'a boşluk aç.",
-    "roleHints": { "GK": "Ligin en iyisi seviyesinde kaleci", "LDM": "Yıkıcı pivot (Siopis tipi)", "RDM": "Kurucu pivot (Hamšík tipi)", "CAM": "Duran top + ara pas 10 (Bakasetas tipi)", "RW": "Dayanıklı iki-yönlü kanat (Nwakaeme tipi)", "ST": "İstasyon (Cornelius) veya mobil arkaya koşan (Djaniny)" },
-    "slotTags": { "GK": ["gk_line_keeper"], "LDM": ["cdm_screen", "cdm_destroyer"], "RDM": ["cdm_deep_build"], "CAM": ["cam_create"], "RW": ["w_cut_inside", "w_track_back"], "ST": ["st_target"] },
-    "sourceNote": "Süper Lig (38 yıl sonra). Anadolu arketipi: 1975-84 dinastisi." },
-  { "id": "sacchi_milan_1989", "kind": "REPLICA", "name": "AC Milan — Arrigo Sacchi 1988-90", "formation": "4-4-2",
-    "settings": { "buildUp": "Fast / dikey", "defensiveApproach": "Kompakt yüksek blok + ofsayt tuzağı + kolektif pres" },
+    "roleHints": {
+      "GK": "Ligin en iyisi seviyesinde kaleci",
+      "LDM": "Yıkıcı pivot (Siopis tipi)",
+      "RDM": "Kurucu pivot (Hamšík tipi)",
+      "CAM": "Duran top + ara pas 10 (Bakasetas tipi)",
+      "RM": "Dayanıklı iki-yönlü kanat (Nwakaeme tipi)",
+      "ST": "İstasyon (Cornelius) veya mobil arkaya koşan (Djaniny)"
+    },
+    "slotTags": {
+      "GK": [
+        "gk_line_keeper"
+      ],
+      "LDM": [
+        "cdm_screen",
+        "cdm_destroyer"
+      ],
+      "RDM": [
+        "cdm_deep_build"
+      ],
+      "CAM": [
+        "cam_create"
+      ],
+      "RM": [
+        "wm_cut_inside",
+        "wm_two_way"
+      ],
+      "ST": [
+        "st_target"
+      ]
+    },
+    "sourceNote": "Süper Lig (38 yıl sonra). Anadolu arketipi: 1975-84 dinastisi."
+  },
+  {
+    "id": "sacchi_milan_1989",
+    "kind": "REPLICA",
+    "name": "AC Milan — Arrigo Sacchi 1988-90",
+    "club": "AC Milan",
+    "coach": "Arrigo Sacchi",
+    "season": "1988-90",
+    "formation": "4-4-2",
+    "settings": {
+      "buildUp": "Fast / dikey",
+      "defensiveApproach": "Kompakt yüksek blok + ofsayt tuzağı + kolektif pres"
+    },
     "signatureTr": "Kompakt yüksek blok, takım halinde pres, ofsaytla sıkıştır, hızlı dikey.",
-    "roleHints": { "LCB": "Önde basan lider stoper (Baresi tipi)" },
-    "slotTags": { "LCB": ["cb_step_up"], "LB": ["fb_balanced"], "RB": ["fb_balanced"], "LCM": ["cm_engine", "cm_ball_winner"], "RCM": ["cm_engine", "cm_ball_winner"],
-                  "LM": ["wm_cut_inside"], "RM": ["wm_cut_inside"], "LST": ["st_run_behind"], "RST": ["st_run_behind"] },
-    "sourceNote": "Üst üste Avrupa Kupası. WM grubunda 'baskı yapsın' tag'i yok; kanat forvetler 'içe kessin' ile temsil edildi." },
-  { "id": "capello_milan_1994", "kind": "REPLICA", "name": "AC Milan — Capello Invincibili 1991-94", "formation": "4-4-2",
-    "settings": { "buildUp": "Balanced", "defensiveApproach": "Sağlam blok, kontrollü pres" },
+    "roleHints": {
+      "LCB": "Önde basan lider stoper (Baresi tipi)"
+    },
+    "slotTags": {
+      "LCB": [
+        "cb_step_up"
+      ],
+      "LB": [
+        "fb_balanced"
+      ],
+      "RB": [
+        "fb_balanced"
+      ],
+      "LCM": [
+        "cm_engine",
+        "cm_ball_winner"
+      ],
+      "RCM": [
+        "cm_engine",
+        "cm_ball_winner"
+      ],
+      "LM": [
+        "wm_cut_inside"
+      ],
+      "RM": [
+        "wm_cut_inside"
+      ],
+      "LST": [
+        "st_run_behind"
+      ],
+      "RST": [
+        "st_run_behind"
+      ]
+    },
+    "sourceNote": "Üst üste Avrupa Kupası. WM grubunda 'baskı yapsın' tag'i yok; kanat forvetler 'içe kessin' ile temsil edildi."
+  },
+  {
+    "id": "capello_milan_1994",
+    "kind": "REPLICA",
+    "name": "AC Milan — Capello Invincibili 1991-94",
+    "club": "AC Milan",
+    "coach": "Fabio Capello",
+    "season": "1991-94",
+    "formation": "4-4-2",
+    "settings": {
+      "buildUp": "Balanced",
+      "defensiveApproach": "Sağlam blok, kontrollü pres"
+    },
     "signatureTr": "Dünyanın en sağlam savunması + ölçülü hakimiyet + öldürücü verimlilik.",
-    "roleHints": { "LCB": "Libero / önde basan (Baresi tipi)", "RCB": "Pozisyon tutan stoper" },
-    "slotTags": { "LCB": ["cb_step_up"], "RCB": ["cb_hold"], "LB": ["fb_balanced"], "RB": ["fb_balanced"], "LCM": ["cm_deep_build"], "RCM": ["cm_playmake"],
-                  "LM": ["wm_cut_inside"], "RM": ["wm_cut_inside"], "LST": ["st_run_behind"], "RST": ["st_poacher"] },
-    "sourceNote": "58 maç yenilmezlik, 1994 UCL finali 4-0 Barcelona" },
-  { "id": "mourinho_chelsea_2005", "kind": "REPLICA", "name": "Chelsea — José Mourinho 2004-05", "formation": "4-3-3",
-    "settings": { "buildUp": "Balanced / Counter", "defensiveApproach": "Sağlam blok" },
+    "roleHints": {
+      "LCB": "Libero / önde basan (Baresi tipi)",
+      "RCB": "Pozisyon tutan stoper"
+    },
+    "slotTags": {
+      "LCB": [
+        "cb_step_up"
+      ],
+      "RCB": [
+        "cb_hold"
+      ],
+      "LB": [
+        "fb_balanced"
+      ],
+      "RB": [
+        "fb_balanced"
+      ],
+      "LCM": [
+        "cm_deep_build"
+      ],
+      "RCM": [
+        "cm_playmake"
+      ],
+      "LM": [
+        "wm_cut_inside"
+      ],
+      "RM": [
+        "wm_cut_inside"
+      ],
+      "LST": [
+        "st_run_behind"
+      ],
+      "RST": [
+        "st_poacher"
+      ]
+    },
+    "sourceNote": "58 maç yenilmezlik, 1994 UCL finali 4-0 Barcelona"
+  },
+  {
+    "id": "mourinho_chelsea_2005",
+    "kind": "REPLICA",
+    "name": "Chelsea — José Mourinho 2004-05",
+    "club": "Chelsea",
+    "coach": "José Mourinho",
+    "season": "2004-05",
+    "formation": "4-3-3",
+    "settings": {
+      "buildUp": "Balanced / Counter",
+      "defensiveApproach": "Sağlam blok"
+    },
     "signatureTr": "Sağlam blok, az gol ye; Lampard'dan gol, Drogba'dan güç, kanat hızıyla kontra.",
-    "roleHints": { "CDM": "Çapa (Makélélé tipi)", "LCM": "Geç dalış + füze (Lampard tipi)", "ST": "Hedef + bitirici (Drogba tipi)" },
-    "slotTags": { "CDM": ["cdm_screen"], "LCM": ["cm_late_run"], "RCM": ["cm_engine"], "LB": ["fb_balanced"], "RB": ["fb_balanced"],
-                  "LW": ["w_cut_inside"], "RW": ["w_cut_inside"], "ST": ["st_target", "st_poacher"] },
-    "sourceNote": "95 puan, rekor 15 gol yeme" },
-  { "id": "galacticos_real_2003", "kind": "REPLICA", "name": "Real Madrid — Los Galácticos ~2002-03", "formation": "4-2-3-1",
-    "settings": { "buildUp": "Balanced", "defensiveApproach": "Gevşek", "notes": "Kaynak şekil: 4-4-2 / 4-2-3-1" },
+    "roleHints": {
+      "CDM": "Çapa (Makélélé tipi)",
+      "LCM": "Geç dalış + füze (Lampard tipi)",
+      "ST": "Hedef + bitirici (Drogba tipi)"
+    },
+    "slotTags": {
+      "CDM": [
+        "cdm_screen"
+      ],
+      "LCM": [
+        "cm_late_run"
+      ],
+      "RCM": [
+        "cm_engine"
+      ],
+      "LB": [
+        "fb_balanced"
+      ],
+      "RB": [
+        "fb_balanced"
+      ],
+      "LW": [
+        "w_cut_inside"
+      ],
+      "RW": [
+        "w_cut_inside"
+      ],
+      "ST": [
+        "st_target",
+        "st_poacher"
+      ]
+    },
+    "sourceNote": "95 puan, rekor 15 gol yeme"
+  },
+  {
+    "id": "galacticos_real_2003",
+    "kind": "REPLICA",
+    "name": "Real Madrid — Los Galácticos ~2002-03",
+    "club": "Real Madrid",
+    "coach": "Vicente del Bosque",
+    "season": "2002-03",
+    "formation": "4-2-3-1 (2)",
+    "settings": {
+      "buildUp": "Balanced",
+      "defensiveApproach": "Gevşek",
+      "notes": "Kaynak şekil: 4-4-2 / 4-2-3-1"
+    },
     "signatureTr": "Yıldızlara özgürlük, no-look ara paslar, zarafet, bol gol.",
-    "roleHints": { "CAM": "Yaratıcı 10 (Guti / Zidane tipi)", "LB": "Bombalayan bek (Roberto Carlos tipi)", "ST": "Arkaya koşan bitirici (Raúl / Ronaldo tipi)" },
-    "slotTags": { "CAM": ["cam_create", "cam_long_shot"], "LB": ["fb_overlap"], "LW": ["w_cut_inside"], "RW": ["w_cut_inside"], "ST": ["st_run_behind", "st_poacher"] },
-    "sourceNote": "v1.1" },
-  { "id": "cruyff_ajax_1972", "kind": "REPLICA", "name": "Ajax — Cruyff Total Football 1971-73", "formation": "4-3-3",
-    "settings": { "buildUp": "Short", "defensiveApproach": "Yüksek pres + ofsayt", "notes": "Pozisyon değiştirme" },
+    "roleHints": {
+      "CAM": "Yaratıcı 10 (Guti / Zidane tipi)",
+      "LB": "Bombalayan bek (Roberto Carlos tipi)",
+      "ST": "Arkaya koşan bitirici (Raúl / Ronaldo tipi)"
+    },
+    "slotTags": {
+      "CAM": [
+        "cam_create",
+        "cam_long_shot"
+      ],
+      "LB": [
+        "fb_overlap"
+      ],
+      "LM": [
+        "wm_cut_inside"
+      ],
+      "RM": [
+        "wm_cut_inside"
+      ],
+      "ST": [
+        "st_run_behind",
+        "st_poacher"
+      ]
+    },
+    "sourceNote": "v1.1"
+  },
+  {
+    "id": "cruyff_ajax_1972",
+    "kind": "REPLICA",
+    "name": "Ajax 1971-73 — Total Football (Kovács / Cruyff)",
+    "club": "Ajax",
+    "coach": "Ștefan Kovács (kaptan: Johan Cruyff)",
+    "season": "1971-73",
+    "formation": "4-3-3",
+    "settings": {
+      "buildUp": "Short",
+      "defensiveApproach": "Yüksek pres + ofsayt",
+      "notes": "Pozisyon değiştirme"
+    },
     "signatureTr": "Herkes her yeri oynar; alanı daralt, topu önde kazan.",
-    "roleHints": { "ST": "Serbest 9/10 (Cruyff tipi)" },
-    "slotTags": { "GK": ["gk_build_up"], "LB": ["fb_invert"], "RB": ["fb_overlap"], "CDM": ["cdm_deep_build"], "LCM": ["cm_playmake", "cm_engine"], "RCM": ["cm_playmake", "cm_engine"],
-                  "LW": ["w_create_inside"], "RW": ["w_create_inside"], "ST": ["st_drop_deep"] },
-    "sourceNote": "3 Avrupa Kupası. Beklerin 'içeri katsın + bindirsin' imzası çelişki kilidi nedeniyle iki beke bölündü." },
-  { "id": "ferguson_united_2008", "kind": "REPLICA", "name": "Manchester United — Ferguson 2007-08", "formation": "4-3-3",
-    "settings": { "buildUp": "Balanced / Counter", "defensiveApproach": "Sağlam blok", "notes": "Akışkan ön üçlü" },
+    "roleHints": {
+      "ST": "Serbest 9/10 (Cruyff tipi)"
+    },
+    "slotTags": {
+      "GK": [
+        "gk_build_up"
+      ],
+      "LB": [
+        "fb_invert"
+      ],
+      "RB": [
+        "fb_overlap"
+      ],
+      "CDM": [
+        "cdm_deep_build"
+      ],
+      "LCM": [
+        "cm_playmake",
+        "cm_engine"
+      ],
+      "RCM": [
+        "cm_playmake",
+        "cm_engine"
+      ],
+      "LW": [
+        "w_create_inside"
+      ],
+      "RW": [
+        "w_create_inside"
+      ],
+      "ST": [
+        "st_drop_deep"
+      ]
+    },
+    "sourceNote": "3 Avrupa Kupası. Beklerin 'içeri katsın + bindirsin' imzası çelişki kilidi nedeniyle iki beke bölündü."
+  },
+  {
+    "id": "ferguson_united_2008",
+    "kind": "REPLICA",
+    "name": "Manchester United — Ferguson 2007-08",
+    "club": "Manchester United",
+    "coach": "Alex Ferguson",
+    "season": "2007-08",
+    "formation": "4-3-3",
+    "settings": {
+      "buildUp": "Balanced / Counter",
+      "defensiveApproach": "Sağlam blok",
+      "notes": "Akışkan ön üçlü"
+    },
     "signatureTr": "Hız + genişlik + bireysel fark, sağlam savunma, kontra + kanat.",
-    "roleHints": { "CDM": "Derin kurucu (Carrick tipi)", "LCM": "Oyun kurucu (Scholes tipi)", "LW": "Genç Ronaldo tipi kanat golcü" },
-    "slotTags": { "LB": ["fb_overlap"], "RB": ["fb_overlap"], "CDM": ["cdm_deep_build"], "LCM": ["cm_playmake"], "RCM": ["cm_engine"],
-                  "LW": ["w_cut_inside", "w_long_shot"], "RW": ["w_cut_inside", "w_long_shot"], "ST": ["st_run_behind"] },
-    "sourceNote": "UCL + Premier League" },
-  { "id": "pulis_stoke_2011", "kind": "REPLICA", "name": "Stoke City — Tony Pulis 2010-11", "formation": "4-4-2",
-    "settings": { "buildUp": "Direct", "defensiveApproach": "Fiziksel", "notes": "Uzun taç + duran top vurgusu" },
+    "roleHints": {
+      "CDM": "Derin kurucu (Carrick tipi)",
+      "LCM": "Oyun kurucu (Scholes tipi)",
+      "LW": "Genç Ronaldo tipi kanat golcü"
+    },
+    "slotTags": {
+      "LB": [
+        "fb_overlap"
+      ],
+      "RB": [
+        "fb_overlap"
+      ],
+      "CDM": [
+        "cdm_deep_build"
+      ],
+      "LCM": [
+        "cm_playmake"
+      ],
+      "RCM": [
+        "cm_engine"
+      ],
+      "LW": [
+        "w_cut_inside",
+        "w_long_shot"
+      ],
+      "RW": [
+        "w_cut_inside",
+        "w_long_shot"
+      ],
+      "ST": [
+        "st_run_behind"
+      ]
+    },
+    "sourceNote": "UCL + Premier League"
+  },
+  {
+    "id": "pulis_stoke_2011",
+    "kind": "REPLICA",
+    "name": "Stoke City — Tony Pulis 2010-11",
+    "club": "Stoke City",
+    "coach": "Tony Pulis",
+    "season": "2010-11",
+    "formation": "4-4-2",
+    "settings": {
+      "buildUp": "Direct",
+      "defensiveApproach": "Fiziksel",
+      "notes": "Uzun taç + duran top vurgusu"
+    },
     "signatureTr": "Direkt, fiziksel; kenardan, taçtan ve duran toptan arka direğe hava bombardımanı.",
-    "roleHints": { "LST": "Hava kulesi (Crouch tipi)" },
-    "slotTags": { "LB": ["fb_early_cross"], "RB": ["fb_early_cross"], "LM": ["wm_stay_wide_cross"], "RM": ["wm_stay_wide_cross"], "LCM": ["cm_late_run"],
-                  "LST": ["st_target"], "RST": ["st_target"] },
-    "sourceNote": "Gerçek Pulis kimliği (Delap uzun taç / Crouch) üzerine kuruldu." },
-  { "id": "gunes_trabzonspor_2011", "kind": "REPLICA", "name": "Trabzonspor 2010-11 — Şenol Güneş", "formation": "4-4-2",
-    "settings": { "buildUp": "Balanced", "defensiveApproach": "Organize blok" },
+    "roleHints": {
+      "LST": "Hava kulesi (Crouch tipi)"
+    },
+    "slotTags": {
+      "LB": [
+        "fb_early_cross"
+      ],
+      "RB": [
+        "fb_early_cross"
+      ],
+      "LM": [
+        "wm_stay_wide_cross"
+      ],
+      "RM": [
+        "wm_stay_wide_cross"
+      ],
+      "LCM": [
+        "cm_late_run"
+      ],
+      "LST": [
+        "st_target"
+      ],
+      "RST": [
+        "st_target"
+      ]
+    },
+    "sourceNote": "Gerçek Pulis kimliği (Delap uzun taç / Crouch) üzerine kuruldu."
+  },
+  {
+    "id": "gunes_trabzonspor_2011",
+    "kind": "REPLICA",
+    "name": "Trabzonspor 2010-11 — Şenol Güneş",
+    "club": "Trabzonspor",
+    "coach": "Şenol Güneş",
+    "season": "2010-11",
+    "formation": "4-4-2",
+    "settings": {
+      "buildUp": "Balanced",
+      "defensiveApproach": "Organize blok"
+    },
     "signatureTr": "Göze hoş gelen ama sağlam; organize blok + Burak bitiriciliği + Selçuk üretimi.",
-    "roleHints": { "LCM": "Oyun kurucu + uzaktan şut (Selçuk İnan tipi)", "LST": "Çalışkan arkaya koşan (Umut Bulut tipi)", "RST": "Kutuda bitirici (Burak Yılmaz tipi)" },
-    "slotTags": { "LCB": ["cb_hold"], "RCB": ["cb_hold"], "LCM": ["cm_playmake"], "LM": ["wm_cut_inside"], "RM": ["wm_stay_wide_cross"], "LST": ["st_run_behind"], "RST": ["st_poacher"] },
-    "sourceNote": "82 puanla 2. — 'ahlaki şampiyon'" },
-  { "id": "terim_galatasaray_2013", "kind": "REPLICA", "name": "Galatasaray 2012-13 — Fatih Terim", "formation": "4-2-3-1",
-    "settings": { "buildUp": "Balanced", "defensiveApproach": "Organize" },
+    "roleHints": {
+      "LCM": "Oyun kurucu + uzaktan şut (Selçuk İnan tipi)",
+      "LST": "Çalışkan arkaya koşan (Umut Bulut tipi)",
+      "RST": "Kutuda bitirici (Burak Yılmaz tipi)"
+    },
+    "slotTags": {
+      "LCB": [
+        "cb_hold"
+      ],
+      "RCB": [
+        "cb_hold"
+      ],
+      "LCM": [
+        "cm_playmake"
+      ],
+      "LM": [
+        "wm_cut_inside"
+      ],
+      "RM": [
+        "wm_stay_wide_cross"
+      ],
+      "LST": [
+        "st_run_behind"
+      ],
+      "RST": [
+        "st_poacher"
+      ]
+    },
+    "sourceNote": "82 puanla 2. — 'ahlaki şampiyon'"
+  },
+  {
+    "id": "terim_galatasaray_2013",
+    "kind": "REPLICA",
+    "name": "Galatasaray 2012-13 — Fatih Terim",
+    "club": "Galatasaray",
+    "coach": "Fatih Terim",
+    "season": "2012-13",
+    "formation": "4-2-3-1 (2)",
+    "settings": {
+      "buildUp": "Balanced",
+      "defensiveApproach": "Organize"
+    },
     "signatureTr": "Organize blok + Sneijder'den fark + iki güçlü santrfor, Avrupa geceleri.",
-    "roleHints": { "CAM": "Yaratıcı 10 (Sneijder tipi)", "ST": "İstasyon + bitirici (Drogba tipi); alternatif arkaya koşan (Burak Yılmaz tipi)" },
-    "slotTags": { "LDM": ["cdm_screen"], "RDM": ["cdm_destroyer"], "CAM": ["cam_create", "cam_long_shot"], "LW": ["w_cut_inside"], "RW": ["w_cut_inside"], "ST": ["st_target", "st_poacher"] },
-    "sourceNote": "Süper Lig + UCL çeyrek" },
-  { "id": "vangaal_ajax_1995", "kind": "REPLICA", "name": "Ajax — Louis van Gaal 1994-95", "formation": "4-3-3",
-    "settings": { "buildUp": "Short", "defensiveApproach": "Yüksek pres", "notes": "Kaynak şekil: 3-3-1-3 / 4-3-3" },
+    "roleHints": {
+      "CAM": "Yaratıcı 10 (Sneijder tipi)",
+      "ST": "İstasyon + bitirici (Drogba tipi); alternatif arkaya koşan (Burak Yılmaz tipi)"
+    },
+    "slotTags": {
+      "LDM": [
+        "cdm_screen"
+      ],
+      "RDM": [
+        "cdm_destroyer"
+      ],
+      "CAM": [
+        "cam_create",
+        "cam_long_shot"
+      ],
+      "LM": [
+        "wm_cut_inside"
+      ],
+      "RM": [
+        "wm_cut_inside"
+      ],
+      "ST": [
+        "st_target",
+        "st_poacher"
+      ]
+    },
+    "sourceNote": "Süper Lig + UCL çeyrek"
+  },
+  {
+    "id": "vangaal_ajax_1995",
+    "kind": "REPLICA",
+    "name": "Ajax — Louis van Gaal 1994-95",
+    "club": "Ajax",
+    "coach": "Louis van Gaal",
+    "season": "1994-95",
+    "formation": "3-4-3",
+    "settings": {
+      "buildUp": "Short",
+      "defensiveApproach": "Yüksek pres",
+      "notes": "Orijinal şekil 3-3-1-3; oyundaki en yakın karşılığı 3-4-3"
+    },
     "signatureTr": "Akademiden çıkan genç kadro; top hakimiyeti + pres + genişlik.",
-    "roleHints": { "CDM": "Tecrübe çıpası (Rijkaard tipi)", "ST": "Düşen bağlantı forveti (Kluivert tipi)" },
-    "slotTags": { "GK": ["gk_build_up"], "LB": ["fb_invert"], "RB": ["fb_overlap"], "CDM": ["cdm_screen", "cdm_deep_build"], "LCM": ["cm_playmake", "cm_engine"], "RCM": ["cm_playmake", "cm_engine"],
-                  "LW": ["w_cross"], "RW": ["w_cross"], "ST": ["st_drop_deep"] },
-    "sourceNote": "UCL şampiyonu — altyapı-ağırlıklı save'ler için ideal şablon" },
-  { "id": "herrera_inter_1964", "kind": "REPLICA", "name": "Internazionale — Herrera 'Grande Inter' 1963-65", "formation": "5-3-2",
-    "settings": { "buildUp": "Counter", "defensiveApproach": "Catenaccio — libero + sıkı markaj" },
+    "roleHints": {
+      "LCM": "Tecrübe çıpası (Rijkaard tipi)",
+      "ST": "Düşen bağlantı forveti (Kluivert tipi)"
+    },
+    "slotTags": {
+      "GK": [
+        "gk_build_up"
+      ],
+      "LCM": [
+        "cm_playmake",
+        "cm_engine"
+      ],
+      "RCM": [
+        "cm_playmake",
+        "cm_engine"
+      ],
+      "LW": [
+        "w_cross"
+      ],
+      "RW": [
+        "w_cross"
+      ],
+      "ST": [
+        "st_drop_deep"
+      ]
+    },
+    "sourceNote": "UCL şampiyonu — altyapı-ağırlıklı save'ler için ideal şablon"
+  },
+  {
+    "id": "herrera_inter_1964",
+    "kind": "REPLICA",
+    "name": "Internazionale — Herrera 'Grande Inter' 1963-65",
+    "club": "Internazionale",
+    "coach": "Helenio Herrera",
+    "season": "1963-65",
+    "formation": "5-3-2",
+    "settings": {
+      "buildUp": "Counter",
+      "defensiveApproach": "Catenaccio — libero + sıkı markaj"
+    },
     "signatureTr": "Kaleyi kilitle, libero süpürsün, kaptığın an dikey + kanat hızıyla vur.",
-    "roleHints": { "CB": "Libero / süpürücü (Picchi tipi)", "LWB": "Bindiren bek — çağının devrimi (Facchetti tipi)", "CM": "Geriden uzun kuran (Luis Suárez tipi)" },
-    "slotTags": { "LCB": ["cb_hold"], "CB": ["cb_hold"], "RCB": ["cb_hold"], "LWB": ["fb_overlap"], "RWB": ["fb_stay_back"], "CM": ["cm_deep_build"], "LCM": ["cm_ball_winner"],
-                  "RCM": ["cm_engine"], "LST": ["st_run_behind"], "RST": ["st_run_behind"] },
-    "sourceNote": "Üst üste Avrupa Kupası. Formasyon ≈ 5-3-2 / 1-4-3-2." }
+    "roleHints": {
+      "CB": "Libero / süpürücü (Picchi tipi)",
+      "LB": "Bindiren bek — çağının devrimi (Facchetti tipi)",
+      "CM": "Geriden uzun kuran (Luis Suárez tipi)"
+    },
+    "slotTags": {
+      "LCB": [
+        "cb_hold"
+      ],
+      "CB": [
+        "cb_hold"
+      ],
+      "RCB": [
+        "cb_hold"
+      ],
+      "LB": [
+        "fb_overlap"
+      ],
+      "RB": [
+        "fb_stay_back"
+      ],
+      "CM": [
+        "cm_deep_build"
+      ],
+      "LCM": [
+        "cm_ball_winner"
+      ],
+      "RCM": [
+        "cm_engine"
+      ],
+      "LST": [
+        "st_run_behind"
+      ],
+      "RST": [
+        "st_run_behind"
+      ]
+    },
+    "sourceNote": "Üst üste Avrupa Kupası. Formasyon ≈ 5-3-2 / 1-4-3-2."
+  }
 ]

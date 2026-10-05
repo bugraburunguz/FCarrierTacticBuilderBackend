@@ -88,16 +88,6 @@ public class FitEngineProperties {
 
     private static Map<String, List<String>> defaultPositionEquivalents() {
         Map<String, List<String>> map = new HashMap<>();
-        map.put("LWB", List.of("LB"));
-        map.put("RWB", List.of("RB"));
-        map.put("LB", List.of("LWB"));
-        map.put("RB", List.of("RWB"));
-        map.put("LM", List.of("LW"));
-        map.put("RM", List.of("RW"));
-        map.put("LW", List.of("LM"));
-        map.put("RW", List.of("RM"));
-        map.put("CF", List.of("ST"));
-        map.put("ST", List.of("CF"));
         return map;
     }
 
