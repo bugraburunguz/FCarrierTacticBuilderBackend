@@ -34,12 +34,13 @@ public class CareerImportController {
 
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ImportSummaryResponse importData(@AuthenticationPrincipal AuthUser user, @PathVariable Long id,
-                                            @RequestParam("players") MultipartFile players,
-                                            @RequestParam("teams") MultipartFile teams,
-                                            @RequestParam("teamplayerlinks") MultipartFile links,
+                                            @RequestParam(value = "log", required = false) MultipartFile log,
+                                            @RequestParam(value = "players", required = false) MultipartFile players,
+                                            @RequestParam(value = "teams", required = false) MultipartFile teams,
+                                            @RequestParam(value = "teamplayerlinks", required = false) MultipartFile links,
                                             @RequestParam(value = "leagueteamlinks", required = false) MultipartFile leagueLinks,
                                             @RequestParam(value = "leagues", required = false) MultipartFile leagues) {
-        return careerImportService.importData(user.id(), id, players, teams, links, leagueLinks, leagues);
+        return careerImportService.importData(user.id(), id, log, players, teams, links, leagueLinks, leagues);
     }
 
     @PostMapping("/import/squad")

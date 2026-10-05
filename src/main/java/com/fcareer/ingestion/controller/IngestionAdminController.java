@@ -5,6 +5,8 @@ import com.fcareer.ingestion.model.IngestionResult;
 import com.fcareer.ingestion.service.CatalogEnrichmentService;
 import com.fcareer.ingestion.service.IngestionService;
 import com.fcareer.ingestion.service.OpenDatasetImporter;
+import com.fcareer.ingestion.base.BaseCatalogImporter;
+import com.fcareer.ingestion.base.BaseUploads;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,6 +23,7 @@ public class IngestionAdminController {
     private final IngestionService ingestionService;
     private final OpenDatasetImporter openDatasetImporter;
     private final CatalogEnrichmentService catalogEnrichmentService;
+    private final BaseCatalogImporter baseCatalogImporter;
     private final com.fcareer.catalog.configuration.CatalogProperties catalogProperties;
 
     @PostMapping("/run")
@@ -33,6 +36,23 @@ public class IngestionAdminController {
         try (java.io.InputStream in = file.getInputStream()) {
             return catalogEnrichmentService.enrichFromPlayersCsv(in, catalogProperties.getDefaultGameVersion());
         }
+    }
+
+    @PostMapping(value = "/import-base", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public BaseCatalogImporter.BaseImportResult importBase(
+            @RequestParam(value = "log", required = false) org.springframework.web.multipart.MultipartFile log,
+            @RequestParam(value = "players", required = false) org.springframework.web.multipart.MultipartFile players,
+            @RequestParam(value = "teams", required = false) org.springframework.web.multipart.MultipartFile teams,
+            @RequestParam(value = "teamplayerlinks", required = false) org.springframework.web.multipart.MultipartFile links,
+            @RequestParam(value = "leagueteamlinks", required = false) org.springframework.web.multipart.MultipartFile leagueLinks,
+            @RequestParam(value = "leagues", required = false) org.springframework.web.multipart.MultipartFile leagues) {
+        java.util.Map<String, org.springframework.web.multipart.MultipartFile> csvs = new java.util.HashMap<>();
+        csvs.put("players", players);
+        csvs.put("teams", teams);
+        csvs.put("teamplayerlinks", links);
+        csvs.put("leagueteamlinks", leagueLinks);
+        csvs.put("leagues", leagues);
+        return baseCatalogImporter.importMissing(BaseUploads.toTables(log, csvs), catalogProperties.getDefaultGameVersion());
     }
 
     @PostMapping("/open-dataset")

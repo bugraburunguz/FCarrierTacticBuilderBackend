@@ -5,6 +5,7 @@ import com.fcareer.career.entity.CareerEntity;
 import com.fcareer.career.model.response.ImportSummaryResponse;
 import com.fcareer.career.service.CareerService;
 import com.fcareer.common.exception.ImportParseException;
+import com.fcareer.ingestion.base.BaseUploads;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -43,26 +44,33 @@ public class CareerImportService {
     private final EntitlementService entitlementService;
 
     @Transactional
-    public ImportSummaryResponse importData(Long userId, Long careerId, MultipartFile players, MultipartFile teams,
+    public ImportSummaryResponse importData(Long userId, Long careerId, MultipartFile logFile, MultipartFile players, MultipartFile teams,
                                             MultipartFile links, MultipartFile leagueLinks, MultipartFile leagues) {
         entitlementService.requirePremium(userId);
         CareerEntity career = careerService.requireOwned(userId, careerId);
 
+        Map<String, MultipartFile> csvs = new HashMap<>();
+        csvs.put("players", players);
+        csvs.put("teams", teams);
+        csvs.put("teamplayerlinks", links);
+        csvs.put("leagueteamlinks", leagueLinks);
+        csvs.put("leagues", leagues);
+        Map<String, List<Map<String, String>>> tables = BaseUploads.toTables(logFile, csvs);
         Map<Integer, String> leagueNames = new HashMap<>();
         Set<Integer> internationalLeagues = new HashSet<>();
-        readLeagues(leagues, leagueNames, internationalLeagues);
-        Map<Integer, Integer> teamLeague = readLeagueLinks(leagueLinks);
-        Map<Integer, Map<String, String>> teamRows = readTeams(teams);
+        readLeagues(tables.get("leagues"), leagueNames, internationalLeagues);
+        Map<Integer, Integer> teamLeague = readLeagueLinks(tables.get("leagueteamlinks"));
+        Map<Integer, Map<String, String>> teamRows = readTeams(tables.get("teams"));
         Set<Integer> nationalTeams = new HashSet<>();
         teamLeague.forEach((team, league) -> {
             if (internationalLeagues.contains(league)) {
                 nationalTeams.add(team);
             }
         });
-        Map<Long, Integer> playerTeam = readLinks(links, nationalTeams);
+        Map<Long, Integer> playerTeam = readLinks(tables.get("teamplayerlinks"), nationalTeams);
         Map<Long, Long> eaToBase = eaIdMap();
         Map<Long, int[]> ratings = new HashMap<>();
-        readPlayers(players, ratings);
+        readPlayers(tables.get("players"), ratings);
 
         List<SqlParameterSource> playerRows = new ArrayList<>();
         int unmatched = 0;
@@ -178,84 +186,79 @@ public class CareerImportService {
         return map;
     }
 
-    private void readPlayers(MultipartFile file, Map<Long, int[]> ratings) {
-        CsvStream.read(open(file), Set.of("playerid", "overallrating", "potential"), Set.of(), row -> {
+    private void readPlayers(List<Map<String, String>> rows, Map<Long, int[]> ratings) {
+        for (Map<String, String> row : required(rows, "players")) {
             Long id = toLong(row.get("playerid"));
             Integer overall = toInt(row.get("overallrating"));
             Integer potential = toInt(row.get("potential"));
             if (Objects.nonNull(id) && Objects.nonNull(overall) && Objects.nonNull(potential)) {
                 ratings.put(id, new int[]{overall, potential});
             }
-        });
+        }
     }
 
-    private Map<Integer, Map<String, String>> readTeams(MultipartFile file) {
+    private Map<Integer, Map<String, String>> readTeams(List<Map<String, String>> rows) {
         Map<Integer, Map<String, String>> teams = new HashMap<>();
-        CsvStream.read(open(file), Set.of("teamid", "teamname"), TEAM_COLUMNS, row -> {
+        for (Map<String, String> row : required(rows, "teams")) {
             Integer id = toInt(row.get("teamid"));
-            if (Objects.nonNull(id)) {
+            if (Objects.nonNull(id) && Objects.nonNull(row.get("teamname"))) {
                 teams.put(id, row);
             }
-        });
+        }
         return teams;
     }
 
-    private Map<Long, Integer> readLinks(MultipartFile file, Set<Integer> nationalTeams) {
+    private Map<Long, Integer> readLinks(List<Map<String, String>> rows, Set<Integer> nationalTeams) {
         Map<Long, Integer> links = new HashMap<>();
-        CsvStream.read(open(file), Set.of("playerid", "teamid"), Set.of(), row -> {
+        for (Map<String, String> row : required(rows, "teamplayerlinks")) {
             Long player = toLong(row.get("playerid"));
             Integer team = toInt(row.get("teamid"));
             if (Objects.isNull(player) || Objects.isNull(team) || nationalTeams.contains(team)) {
-                return;
+                continue;
             }
             Integer existing = links.get(player);
             if (Objects.isNull(existing) || (FREE_AGENT_TEAM_IDS.contains(existing) && !FREE_AGENT_TEAM_IDS.contains(team))) {
                 links.put(player, team);
             }
-        });
+        }
         return links;
     }
 
-    private Map<Integer, Integer> readLeagueLinks(MultipartFile file) {
+    private Map<Integer, Integer> readLeagueLinks(List<Map<String, String>> rows) {
         Map<Integer, Integer> links = new HashMap<>();
-        if (Objects.isNull(file) || file.isEmpty()) {
+        if (Objects.isNull(rows)) {
             return links;
         }
-        CsvStream.read(open(file), Set.of("teamid", "leagueid"), Set.of(), row -> {
+        for (Map<String, String> row : rows) {
             Integer team = toInt(row.get("teamid"));
             Integer league = toInt(row.get("leagueid"));
             if (Objects.nonNull(team) && Objects.nonNull(league)) {
                 links.put(team, league);
             }
-        });
+        }
         return links;
     }
 
-    private void readLeagues(MultipartFile file, Map<Integer, String> names, Set<Integer> international) {
-        if (Objects.isNull(file) || file.isEmpty()) {
+    private void readLeagues(List<Map<String, String>> rows, Map<Integer, String> names, Set<Integer> international) {
+        if (Objects.isNull(rows)) {
             return;
         }
-        CsvStream.read(open(file), Set.of("leagueid", "leaguename"), Set.of("isinternationalleague"), row -> {
+        for (Map<String, String> row : rows) {
             Integer id = toInt(row.get("leagueid"));
             if (Objects.isNull(id)) {
-                return;
+                continue;
             }
             names.put(id, row.get("leaguename"));
             if (Objects.equals(toInt(row.get("isinternationalleague")), 1)) {
                 international.add(id);
             }
-        });
+        }
     }
 
-    private InputStream open(MultipartFile file) {
-        if (Objects.isNull(file) || file.isEmpty()) {
-            throw new ImportParseException("required file missing");
+    private List<Map<String, String>> required(List<Map<String, String>> rows, String table) {
+        if (Objects.isNull(rows) || rows.isEmpty()) {
+            throw new ImportParseException("table " + table + " missing");
         }
-        try {
-            return file.getInputStream();
-        } catch (IOException e) {
-            log.error("Import upload unreadable", e);
-            throw new ImportParseException("file unreadable");
-        }
+        return rows;
     }
 }

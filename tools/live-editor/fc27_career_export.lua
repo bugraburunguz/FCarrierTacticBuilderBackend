@@ -1,7 +1,7 @@
 --- FC Career Platform - kariyer disa aktarimi (SADECE OKUR, hicbir seyi degistirmez).
 --- Kullanim: oyunu ac -> KARIYERINI YUKLE (ana menude degil, kariyerin icinde ol) -> Live Editor -> Lua Engine -> bu dosyayi calistir.
---- Cikti: Masaustu\careerexport klasoru (yoksa olusturulur, varsa dokunulmaz) icinde 5 kucuk CSV dosyasi
----        (players, teams, teamplayerlinks, leagueteamlinks, leagues). Masaustu bulunamazsa C:\FC 27 Live Editor\export\ kullanilir.
+--- Cikti: Live Editor Lua dosya yazmayi kapali tuttugu icin veri Logsive_editor_<tarih>.log dosyasina "FCDUMP" satirlari olarak yazilir;
+---        bu log dosyasini sitedeki 'Ice aktar' sayfasina yukle. (Dosya yazma aciksa Masaustureerexport klasorune CSV de yazilir.)
 --- Dosya olusmazsa Logs\live_editor_<tarih>.log icinde "FCDUMP" satirlari yazilir.
 
 local FALLBACK_DIR = "C:\\FC 27 Live Editor\\export\\"
@@ -117,5 +117,10 @@ for _, spec in ipairs(TABLES) do
     if not ok then Log(string.format("%s\tERROR\t%s\t%s", MARK, spec.name, tostring(count))) end
 end
 
-MessageBox("Disa aktarim bitti", table.concat(summary, "\n") ..
-    "\n\nDosyalar: " .. OUT_DIR .. "\nBu 5 dosyayi sitedeki 'Kariyeri icerik aktar' sayfasina yukle.")
+MessageBox("Disa aktarim bitti", table.concat(summary, "
+") ..
+    "
+
+Veri su dosyaya yazildi (Live Editor klasoru):
+Logs\live_editor_<tarih>.log
+Bu dosyayi sitedeki 'Ice aktar' sayfasina yukle.")

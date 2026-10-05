@@ -88,6 +88,36 @@ class CareerImportIntegrationTest {
         assertThat(json(get("/api/v1/careers/" + careerId + "/teams?q=Serbest"), token).at("/data")).isEmpty();
     }
 
+    @Test
+    void importAcceptsTheLiveEditorLogFileDirectly() throws Exception {
+        String token = register();
+        var club = clubRepository.findAll().get(0);
+        long careerId = json(post("/api/v1/careers").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("clubId", club.getId(), "budgetEur", 1_000_000))), token)
+                .at("/data/id").asLong();
+        json(post("/api/v1/billing/subscribe"), token);
+
+        String tab = "\t";
+        String prefix = "10:00:00.1" + tab + "INFO" + tab + "[LUA API] FCDUMP" + tab;
+        String log = String.join("\n",
+                prefix + "BEGIN" + tab + "players" + tab + "fields=3",
+                prefix + "HEADER" + tab + "players" + tab + "playerid,overallrating,potential",
+                prefix + "ROW" + tab + "players" + tab + FIRST_MOCK_ID + ",88,92",
+                prefix + "END" + tab + "players" + tab + "1",
+                prefix + "BEGIN" + tab + "teams" + tab + "fields=3",
+                prefix + "HEADER" + tab + "teams" + tab + "teamid,teamname,overallrating",
+                prefix + "ROW" + tab + "teams" + tab + "1,\"" + club.getName() + "\",80",
+                prefix + "BEGIN" + tab + "teamplayerlinks" + tab + "fields=2",
+                prefix + "HEADER" + tab + "teamplayerlinks" + tab + "playerid,teamid",
+                prefix + "ROW" + tab + "teamplayerlinks" + tab + FIRST_MOCK_ID + ",1");
+
+        JsonNode result = json(multipart("/api/v1/careers/" + careerId + "/import").file(file("log", log)), token);
+
+        assertThat(result.at("/success").asBoolean()).as(result.toString()).isTrue();
+        assertThat(result.at("/data/players").asInt()).isEqualTo(1);
+        assertThat(result.at("/data/guessedTeamId").asInt()).isEqualTo(1);
+    }
+
     private JsonNode upload(long careerId, String token, String clubName) throws Exception {
         MockHttpServletRequestBuilder builder = multipart("/api/v1/careers/" + careerId + "/import")
                 .file(file("players", "playerid,overallrating,potential\n" + FIRST_MOCK_ID + ",91,95\n" + (FIRST_MOCK_ID + 1) + ",90,93\n"
