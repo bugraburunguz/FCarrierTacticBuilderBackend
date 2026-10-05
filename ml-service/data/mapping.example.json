@@ -1,0 +1,19 @@
+{
+  "_note": "ÖRNEK — gerçek açık-dataset kolon adları ile doldurulacak (şema doğrulanmadığı için uydurulmadı). columns: feature adı -> CSV kolonu. attr_columns verilirse pace/shooting/... grup ortalamaları ham attribute kolonlarından hesaplanır.",
+  "columns": {
+    "age": "<CSV age column>",
+    "overall": "<CSV overall column>",
+    "position": "<CSV positions column (ilk pozisyon kullanılır)>",
+    "league_tier": "<optional>",
+    "intl_reputation": "<optional>",
+    "weak_foot": "<optional>",
+    "skill_moves": "<optional>",
+    "contract_years": "<optional>",
+    "potential_target": "<CSV potential column>",
+    "value_target": "<CSV value_eur column>"
+  },
+  "attr_columns": {
+    "acceleration": "<optional>",
+    "sprint_speed": "<optional>"
+  }
+}

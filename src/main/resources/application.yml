@@ -69,3 +69,8 @@ fcareer.billing:
   squad-fit-cost: 5
   recommend-cost: 3
   subscription-days: 30
+
+# --- Faz 6: ML servisi ---
+fcareer.ml:
+  base-url: ${ML_BASE_URL:http://localhost:8000}
+  batch-size: 500
