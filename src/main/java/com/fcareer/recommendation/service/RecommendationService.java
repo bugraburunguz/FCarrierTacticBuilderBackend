@@ -48,6 +48,8 @@ public class RecommendationService {
     private static final String SLOT_ID = "SLOT";
     private static final int CANDIDATE_POOL = MAX_PAGE_SIZE;
     private static final int DEFAULT_LIMIT = 10;
+    private static final int PREVIEW_LIMIT = 8;
+    private static final Short DEFAULT_PREVIEW_GENDER = 0;
 
     private final PlayerService playerService;
     private final PlayerSearchRepository playerSearchRepository;
@@ -83,6 +85,18 @@ public class RecommendationService {
         Short finalVersion = gameVersion;
         return creditGuard.runCharged(userId, billingProperties.getRecommendCost(), RECOMMEND,
                 () -> rank(request, role, intent, summaries, finalBudget, finalVersion));
+    }
+
+    public RecommendationResponse preview(RecommendSlotRequest request) {
+        FitRole role = roleService.getFitRole(request.getRoleId());
+        IntentProfile intent = tacticResolver.slotIntent(SLOT_ID, request.getPosition(), null, request.getRoleId(), request.getTags());
+        Short gender = Objects.isNull(request.getGender()) ? DEFAULT_PREVIEW_GENDER : request.getGender();
+        PlayerSearchRequest search = candidateSearch(role, intent, request, List.of(), request.getGameVersionId(), null, gender);
+        Map<Long, PlayerSummaryResponse> summaries = playerService.search(search).getItems().stream()
+                .collect(Collectors.toMap(PlayerSummaryResponse::getId, c -> c));
+        RecommendSlotRequest capped = RecommendSlotRequest.builder().roleId(request.getRoleId()).position(request.getPosition())
+                .limit(Math.min(Objects.isNull(request.getLimit()) ? PREVIEW_LIMIT : request.getLimit(), PREVIEW_LIMIT)).build();
+        return rank(capped, role, intent, summaries, null, request.getGameVersionId());
     }
 
     private PlayerSearchRequest candidateSearch(FitRole role, IntentProfile intent, RecommendSlotRequest request,

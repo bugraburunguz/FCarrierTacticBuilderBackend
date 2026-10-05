@@ -37,6 +37,8 @@ public class RecommendSlotRequest {
 
     private Short gameVersionId;
 
+    private Short gender;
+
     private Long currentPlayerId;
 
     @Max(25)

@@ -22,6 +22,11 @@ public class RecommendationController {
 
     private final RecommendationService recommendationService;
 
+    @PostMapping("/preview")
+    public RecommendationResponse preview(@Valid @RequestBody RecommendSlotRequest request) {
+        return recommendationService.preview(request);
+    }
+
     @PostMapping("/slot")
     public CreditedResponse<RecommendationResponse> slot(@AuthenticationPrincipal AuthUser user,
                                                          @Valid @RequestBody RecommendSlotRequest request) {
