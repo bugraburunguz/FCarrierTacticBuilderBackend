@@ -66,14 +66,16 @@ public class RecommendationService {
         IntentProfile intent = tacticResolver.slotIntent(SLOT_ID, request.getPosition(), null, request.getRoleId(), request.getTags());
         List<Long> squadIds = List.of();
         Short gameVersion = request.getGameVersionId();
+        Short gender = null;
         Long budget = request.getBudgetMax();
         if (Objects.nonNull(request.getCareerId())) {
             CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, request.getCareerId());
             squadIds = squad.playerIds();
             gameVersion = squad.gameVersionId();
+            gender = squad.gender();
             budget = Objects.isNull(budget) ? squad.budgetEur() : budget;
         }
-        PlayerSearchRequest search = candidateSearch(role, intent, request, squadIds, gameVersion, budget);
+        PlayerSearchRequest search = candidateSearch(role, intent, request, squadIds, gameVersion, budget, gender);
         List<PlayerSummaryResponse> candidates = playerService.search(search).getItems();
         Map<Long, PlayerSummaryResponse> summaries = candidates.stream()
                 .collect(Collectors.toMap(PlayerSummaryResponse::getId, c -> c));
@@ -84,7 +86,7 @@ public class RecommendationService {
     }
 
     private PlayerSearchRequest candidateSearch(FitRole role, IntentProfile intent, RecommendSlotRequest request,
-                                                List<Long> squadIds, Short gameVersion, Long budget) {
+                                                List<Long> squadIds, Short gameVersion, Long budget, Short gender) {
         Set<String> positions = new LinkedHashSet<>(List.of(request.getPosition()));
         positions.addAll(fitEngineProperties.getPositionEquivalents().getOrDefault(request.getPosition(), List.of()));
         Map<String, Integer> minAttrs = new HashMap<>();
@@ -94,6 +96,7 @@ public class RecommendationService {
         }
         return PlayerSearchRequest.builder()
                 .gameVersionId(gameVersion)
+                .gender(gender)
                 .positions(new ArrayList<>(positions))
                 .attrMin(minAttrs)
                 .valueMax(budget)
