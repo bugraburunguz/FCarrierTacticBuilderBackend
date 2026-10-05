@@ -1,0 +1,51 @@
+package com.fcareer.roles.service;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fcareer.common.configuration.CacheProperties;
+import com.fcareer.common.exception.NotFoundException;
+import com.fcareer.common.redis.RedisJsonCache;
+import com.fcareer.fitengine.model.FitRole;
+import com.fcareer.roles.mapper.RoleMapper;
+import com.fcareer.roles.model.response.RoleResponse;
+import com.fcareer.roles.repository.RoleRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import static com.fcareer.common.constants.RedisConstants.CACHE_ROLES;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class RoleService {
+
+    private static final String ROLE = "role";
+
+    private final RoleRepository roleRepository;
+    private final RoleMapper roleMapper;
+    private final RedisJsonCache redisJsonCache;
+    private final CacheProperties cacheProperties;
+
+    public List<RoleResponse> findAll() {
+        return redisJsonCache.getOrLoad(CACHE_ROLES, new TypeReference<>() {
+                }, cacheProperties.getReferenceTtl(),
+                () -> roleRepository.findAllByOrderByIdAsc().stream().map(roleMapper::toResponse).toList());
+    }
+
+    public FitRole getFitRole(String roleId) {
+        return roleRepository.findById(roleId)
+                .map(roleMapper::toFitRole)
+                .orElseThrow(() -> new NotFoundException(ROLE, roleId));
+    }
+
+    public Map<String, FitRole> fitRolesById() {
+        return roleRepository.findAll().stream()
+                .map(roleMapper::toFitRole)
+                .collect(Collectors.toMap(FitRole::getId, Function.identity()));
+    }
+}

@@ -1,0 +1,29 @@
+{
+  "_note": "CONFIG/calibrate. positionBase = topluluk tarafından türetilmiş EA OVR ağırlıkları (varsayılan). Açık datasetten regresyonla (playerlab yöntemi) yeniden öğrenilecek. weaponBend spec aralığı 0.05-0.10.",
+  "weaponBend": 0.07,
+  "positionBase": {
+    "GK":  { "GKDiving": 0.21, "GKHandling": 0.21, "GKPositioning": 0.21, "GKReflexes": 0.21, "GKKicking": 0.05, "Reactions": 0.11 },
+    "FB":  { "StandingTackle": 0.11, "SlidingTackle": 0.14, "Interceptions": 0.12, "DefAwareness": 0.08, "Crossing": 0.09, "ShortPassing": 0.07, "BallControl": 0.07, "Reactions": 0.08, "Stamina": 0.08, "SprintSpeed": 0.07, "Acceleration": 0.05, "Heading": 0.04 },
+    "CB":  { "DefAwareness": 0.14, "StandingTackle": 0.17, "SlidingTackle": 0.14, "Interceptions": 0.13, "Heading": 0.10, "Strength": 0.10, "Aggression": 0.07, "Reactions": 0.05, "ShortPassing": 0.05, "BallControl": 0.04 },
+    "CDM": { "ShortPassing": 0.14, "LongPassing": 0.10, "Interceptions": 0.14, "DefAwareness": 0.14, "StandingTackle": 0.12, "SlidingTackle": 0.05, "BallControl": 0.10, "Reactions": 0.07, "Vision": 0.04, "Strength": 0.04, "Aggression": 0.05, "Stamina": 0.06 },
+    "CM":  { "ShortPassing": 0.17, "LongPassing": 0.13, "Vision": 0.13, "BallControl": 0.14, "Dribbling": 0.07, "Reactions": 0.08, "Interceptions": 0.05, "StandingTackle": 0.05, "Positioning": 0.06, "LongShots": 0.04, "Stamina": 0.06 },
+    "CAM": { "Vision": 0.14, "ShortPassing": 0.16, "BallControl": 0.15, "Dribbling": 0.13, "Positioning": 0.09, "Finishing": 0.07, "LongShots": 0.05, "ShotPower": 0.05, "Agility": 0.03, "Acceleration": 0.04, "Reactions": 0.07 },
+    "WM":  { "Crossing": 0.10, "Dribbling": 0.15, "BallControl": 0.13, "ShortPassing": 0.11, "LongPassing": 0.05, "Vision": 0.07, "Positioning": 0.08, "Finishing": 0.06, "Stamina": 0.05, "Acceleration": 0.07, "SprintSpeed": 0.06, "Reactions": 0.07 },
+    "W":   { "Crossing": 0.09, "Dribbling": 0.16, "BallControl": 0.14, "ShortPassing": 0.09, "Finishing": 0.10, "LongShots": 0.04, "Positioning": 0.09, "Vision": 0.06, "Agility": 0.03, "Acceleration": 0.07, "SprintSpeed": 0.06, "Reactions": 0.07 },
+    "ST":  { "Finishing": 0.18, "Positioning": 0.13, "Heading": 0.10, "ShotPower": 0.10, "Reactions": 0.08, "Dribbling": 0.07, "BallControl": 0.10, "Volleys": 0.02, "LongShots": 0.03, "Acceleration": 0.04, "SprintSpeed": 0.05, "Strength": 0.05 }
+  },
+  "focusBend": {
+    "Defend":       { "DefAwareness": 0.04, "StandingTackle": 0.03, "Interceptions": 0.03 },
+    "Balanced":     { "Stamina": 0.02 },
+    "Support":      { "Stamina": 0.03, "Crossing": 0.02, "ShortPassing": 0.02 },
+    "Attack":       { "Positioning": 0.04, "Finishing": 0.03, "Acceleration": 0.02 },
+    "Build-Up":     { "ShortPassing": 0.04, "Vision": 0.03, "Composure": 0.03, "LongPassing": 0.02 },
+    "Roaming":      { "Stamina": 0.03, "Agility": 0.02, "Vision": 0.02, "Dribbling": 0.02 },
+    "Ball-Winning": { "Interceptions": 0.04, "Aggression": 0.03, "StandingTackle": 0.03 },
+    "Aggressive":   { "Aggression": 0.04, "StandingTackle": 0.03, "Acceleration": 0.02 },
+    "Wide":         { "Crossing": 0.03, "Acceleration": 0.02, "SprintSpeed": 0.02 },
+    "Versatile":    { "Reactions": 0.02, "Composure": 0.02, "BallControl": 0.02 }
+  },
+  "defaultGlobalFloor": { "Stamina": 68, "Reactions": 60, "Composure": 60 },
+  "goalkeeperGlobalFloor": { "Reactions": 60 }
+}
