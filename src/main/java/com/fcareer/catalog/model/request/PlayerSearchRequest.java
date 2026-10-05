@@ -38,6 +38,9 @@ public class PlayerSearchRequest {
     private Long valueMax;
     private Integer clubId;
     private Long idFilter;
+    private List<Long> ids;
+    private List<Long> excludeIds;
+    private boolean includeUnvalued;
     private String sort;
     private boolean ascending;
     private int page;

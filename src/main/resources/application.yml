@@ -52,3 +52,20 @@ fcareer.ingestion:
     license-confirmed: false
 fcareer.catalog:
   default-game-version: ${CATALOG_DEFAULT_GAME_VERSION:25}
+
+# --- Faz 7: güvenlik / billing (CONFIG) ---
+# JWT_SECRET zorunlu (>= 32 byte); kodda varsayılan secret YOK.
+fcareer.security:
+  jwt:
+    secret: ${JWT_SECRET:}
+    access-ttl: 15m
+    refresh-ttl: 14d
+  rate-limit:
+    enabled: true
+    auth-per-minute: 10
+    api-per-minute: 120
+fcareer.billing:
+  daily-credits: 20
+  squad-fit-cost: 5
+  recommend-cost: 3
+  subscription-days: 30

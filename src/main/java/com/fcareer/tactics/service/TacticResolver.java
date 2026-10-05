@@ -79,29 +79,41 @@ public class TacticResolver {
 
     private IntentProfile toProfile(FormationSlot slot, SlotSelection selection, Map<String, FitRole> roles,
                                     Map<String, FitTag> tagCatalog) {
-        List<FitTag> tags = Objects.isNull(selection) ? List.of() : selectedTags(slot, selection, tagCatalog);
-        FitRole role = resolveRole(slot, selection, tags, roles);
+        List<String> tagIds = Objects.isNull(selection) ? List.of() : selection.getTags();
+        String roleId = Objects.isNull(selection) ? null : selection.getRoleId();
+        return buildProfile(slot.slotId(), slot.position(), slot.group(), slot.defaultRole(), roleId, tagIds, roles, tagCatalog);
+    }
+
+    public IntentProfile slotIntent(String slotId, String position, String group, String roleId, List<String> tagIds) {
+        return buildProfile(slotId, position, group, null, roleId, Objects.isNull(tagIds) ? List.of() : tagIds,
+                roleService.fitRolesById(), behaviorTagService.fitTagsById());
+    }
+
+    private IntentProfile buildProfile(String slotId, String position, String group, String defaultRole, String roleId,
+                                       List<String> tagIds, Map<String, FitRole> roles, Map<String, FitTag> tagCatalog) {
+        List<FitTag> tags = selectedTags(slotId, group, tagIds, tagCatalog);
+        FitRole role = resolveRole(slotId, roleId, defaultRole, tags, roles);
         return IntentProfile.builder()
-                .slotId(slot.slotId())
-                .slotPosition(slot.position())
-                .slotGroup(slot.group())
+                .slotId(slotId)
+                .slotPosition(position)
+                .slotGroup(group)
                 .tags(tags)
                 .weaponBoost(weaponBoost(tags))
                 .resolvedRole(role)
                 .build();
     }
 
-    private List<FitTag> selectedTags(FormationSlot slot, SlotSelection selection, Map<String, FitTag> tagCatalog) {
+    private List<FitTag> selectedTags(String slotId, String group, List<String> tagIds, Map<String, FitTag> tagCatalog) {
         List<FitTag> tags = new ArrayList<>();
-        for (String tagId : selection.getTags()) {
+        for (String tagId : tagIds) {
             FitTag tag = tagCatalog.get(tagId);
-            if (Objects.isNull(tag) || !tag.getPosition().equals(slot.group())) {
-                log.warn("Tag not allowed tag : {} slot : {}", tagId, slot.slotId());
-                throw new InvalidTacticException("tag " + tagId + " @ " + slot.slotId());
+            if (Objects.isNull(tag) || (Objects.nonNull(group) && !tag.getPosition().equals(group))) {
+                log.warn("Tag not allowed tag : {} slot : {}", tagId, slotId);
+                throw new InvalidTacticException("tag " + tagId + " @ " + slotId);
             }
             for (FitTag chosen : tags) {
                 if (chosen.getConflicts().contains(tagId)) {
-                    log.warn("Conflicting tags slot : {} tags : {} / {}", slot.slotId(), chosen.getId(), tagId);
+                    log.warn("Conflicting tags slot : {} tags : {} / {}", slotId, chosen.getId(), tagId);
                     throw new TagConflictException(chosen.getLabelTr(), tag.getLabelTr());
                 }
             }
@@ -110,14 +122,14 @@ public class TacticResolver {
         return tags;
     }
 
-    private FitRole resolveRole(FormationSlot slot, SlotSelection selection, List<FitTag> tags, Map<String, FitRole> roles) {
-        String roleId = Optional.ofNullable(selection)
-                .map(SlotSelection::getRoleId)
+    private FitRole resolveRole(String slotId, String requestedRoleId, String defaultRole, List<FitTag> tags,
+                                Map<String, FitRole> roles) {
+        String roleId = Optional.ofNullable(requestedRoleId)
                 .or(() -> voteRole(tags))
-                .orElse(slot.defaultRole());
-        FitRole role = roles.get(roleId);
+                .orElse(defaultRole);
+        FitRole role = Objects.isNull(roleId) ? null : roles.get(roleId);
         if (Objects.isNull(role)) {
-            log.warn("Unknown role for slot : {} role : {}", slot.slotId(), roleId);
+            log.warn("Unknown role for slot : {} role : {}", slotId, roleId);
             throw new InvalidTacticException("role " + roleId);
         }
         return role;

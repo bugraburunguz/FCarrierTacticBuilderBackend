@@ -82,6 +82,18 @@ public class PlayerService {
         }).toList();
     }
 
+    public Map<Long, PlayerSummaryResponse> summaries(List<Long> ids, Short gameVersionId) {
+        if (ids.isEmpty()) {
+            return Map.of();
+        }
+        PlayerSearchRequest request = new PlayerSearchRequest();
+        request.setGameVersionId(resolveGameVersion(gameVersionId));
+        request.setIds(ids);
+        request.setSize(ids.size());
+        return playerSearchRepository.search(request).stream()
+                .collect(Collectors.toMap(PlayerSummaryResponse::getId, Function.identity()));
+    }
+
     private PlayerSummaryResponse summaryOf(Long playerId, short gameVersionId) {
         PlayerSearchRequest request = new PlayerSearchRequest();
         request.setGameVersionId(gameVersionId);

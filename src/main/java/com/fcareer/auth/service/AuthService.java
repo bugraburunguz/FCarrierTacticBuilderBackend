@@ -1,0 +1,144 @@
+package com.fcareer.auth.service;
+
+import com.fcareer.auth.configuration.SecurityProperties;
+import com.fcareer.auth.entity.AppUserEntity;
+import com.fcareer.auth.model.SubscriptionType;
+import com.fcareer.auth.model.request.LoginRequest;
+import com.fcareer.auth.model.request.RefreshRequest;
+import com.fcareer.auth.model.request.RegisterRequest;
+import com.fcareer.auth.model.response.MeResponse;
+import com.fcareer.auth.model.response.TokenResponse;
+import com.fcareer.auth.repository.AppUserRepository;
+import com.fcareer.auth.security.JwtService;
+import com.fcareer.auth.security.RefreshTokenStore;
+import com.fcareer.billing.configuration.BillingProperties;
+import com.fcareer.billing.model.response.CreditStatus;
+import com.fcareer.billing.service.CreditService;
+import com.fcareer.common.exception.EmailAlreadyRegisteredException;
+import com.fcareer.common.exception.InvalidCredentialsException;
+import com.fcareer.common.exception.InvalidRefreshTokenException;
+import com.fcareer.common.exception.NotFoundException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.HexFormat;
+import java.util.Locale;
+import java.util.Objects;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class AuthService {
+
+    private static final String BEARER = "Bearer";
+    private static final String USER = "user";
+    private static final int REFRESH_TOKEN_BYTES = 48;
+
+    private final AppUserRepository appUserRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final RefreshTokenStore refreshTokenStore;
+    private final SecurityProperties securityProperties;
+    private final BillingProperties billingProperties;
+    private final CreditService creditService;
+    private final SecureRandom secureRandom = new SecureRandom();
+
+    @Transactional
+    public TokenResponse register(RegisterRequest request) {
+        String email = normalize(request.getEmail());
+        if (appUserRepository.findByEmail(email).isPresent()) {
+            log.warn("Registration rejected, email exists");
+            throw new EmailAlreadyRegisteredException();
+        }
+        AppUserEntity user = new AppUserEntity();
+        user.setEmail(email);
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setSubscriptionType(SubscriptionType.FREE);
+        user.setDailyCreditLimit(billingProperties.getDailyCredits());
+        creditService.initialize(user);
+        try {
+            user = appUserRepository.saveAndFlush(user);
+        } catch (DataIntegrityViolationException e) {
+            log.warn("Registration rejected, concurrent duplicate email");
+            throw new EmailAlreadyRegisteredException();
+        }
+        log.info("User registered userId : {}", user.getId());
+        return issueTokens(user);
+    }
+
+    @Transactional(readOnly = true)
+    public TokenResponse login(LoginRequest request) {
+        AppUserEntity user = appUserRepository.findByEmail(normalize(request.getEmail()))
+                .filter(candidate -> passwordEncoder.matches(request.getPassword(), candidate.getPasswordHash()))
+                .orElseThrow(() -> {
+                    log.warn("Login rejected");
+                    return new InvalidCredentialsException();
+                });
+        log.info("User logged in userId : {}", user.getId());
+        return issueTokens(user);
+    }
+
+    @Transactional(readOnly = true)
+    public TokenResponse refresh(RefreshRequest request) {
+        Long userId = refreshTokenStore.consume(hash(request.getRefreshToken()))
+                .orElseThrow(() -> {
+                    log.warn("Refresh rejected, unknown or expired token");
+                    return new InvalidRefreshTokenException();
+                });
+        AppUserEntity user = appUserRepository.findById(userId).orElseThrow(InvalidRefreshTokenException::new);
+        return issueTokens(user);
+    }
+
+    public void logout(RefreshRequest request) {
+        refreshTokenStore.consume(hash(request.getRefreshToken()));
+    }
+
+    @Transactional
+    public MeResponse me(Long userId) {
+        AppUserEntity user = appUserRepository.findById(userId).orElseThrow(() -> new NotFoundException(USER, userId));
+        CreditStatus status = creditService.status(userId);
+        return MeResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .subscriptionType(status.premium() ? SubscriptionType.PREMIUM : SubscriptionType.FREE)
+                .creditBalance(status.premium() ? null : status.balance())
+                .dailyCreditLimit(status.dailyLimit())
+                .showAds(!status.premium())
+                .createdAt(user.getCreatedAt())
+                .build();
+    }
+
+    private TokenResponse issueTokens(AppUserEntity user) {
+        byte[] bytes = new byte[REFRESH_TOKEN_BYTES];
+        secureRandom.nextBytes(bytes);
+        String refreshToken = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        refreshTokenStore.save(hash(refreshToken), user.getId(), securityProperties.getJwt().getRefreshTtl());
+        return TokenResponse.builder()
+                .accessToken(jwtService.createAccessToken(user.getId(), user.getEmail()))
+                .refreshToken(refreshToken)
+                .tokenType(BEARER)
+                .expiresInSeconds(jwtService.accessTtlSeconds())
+                .build();
+    }
+
+    private static String normalize(String email) {
+        return Objects.requireNonNull(email).trim().toLowerCase(Locale.ROOT);
+    }
+
+    private static String hash(String token) {
+        try {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(token.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+}

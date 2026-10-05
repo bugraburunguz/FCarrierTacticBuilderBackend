@@ -126,7 +126,7 @@ public class SquadFitService {
                 .build();
     }
 
-    private double combine(RoleFitResponse roleFit, IntentFitResponse intentFit, IntentProfile slot) {
+    public double combine(RoleFitResponse roleFit, IntentFitResponse intentFit, IntentProfile slot) {
         if (!slot.hasTags()) {
             return roleFit.getScore();
         }

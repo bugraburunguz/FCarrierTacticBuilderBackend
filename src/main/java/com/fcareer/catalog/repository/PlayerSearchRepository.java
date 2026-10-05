@@ -84,7 +84,10 @@ public class PlayerSearchRepository {
         addBound(request.getOverallMin(), "r.overall >= :overallMin", "overallMin", clauses, params);
         addBound(request.getOverallMax(), "r.overall <= :overallMax", "overallMax", clauses, params);
         addBound(request.getPotentialMin(), "v.potential >= :potentialMin", "potentialMin", clauses, params);
-        addBound(request.getValueMax(), "v.value_eur <= :valueMax", "valueMax", clauses, params);
+        addBound(request.getValueMax(), request.isIncludeUnvalued()
+                ? "(v.value_eur IS NULL OR v.value_eur <= :valueMax)" : "v.value_eur <= :valueMax", "valueMax", clauses, params);
+        addIds(request.getIds(), "b.id IN (:ids)", "ids", clauses, params);
+        addIds(request.getExcludeIds(), "b.id NOT IN (:excludeIds)", "excludeIds", clauses, params);
         addBound(request.getClubId(), "r.club_id = :clubId", "clubId", clauses, params);
         addBound(request.getIdFilter(), "b.id = :playerId", "playerId", clauses, params);
         return " WHERE " + String.join(" AND ", clauses);
@@ -105,6 +108,13 @@ public class PlayerSearchRepository {
             String name = prefix + "Attr" + i++;
             clauses.add("r." + attr.getColumn() + " " + operator + " :" + name);
             params.addValue(name, bound.getValue());
+        }
+    }
+
+    private void addIds(List<Long> ids, String clause, String name, List<String> clauses, MapSqlParameterSource params) {
+        if (Objects.nonNull(ids) && !ids.isEmpty()) {
+            clauses.add(clause);
+            params.addValue(name, ids);
         }
     }
 
