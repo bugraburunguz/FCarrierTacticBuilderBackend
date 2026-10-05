@@ -22,13 +22,13 @@ class ModelStore:
         self.potential_model: Optional[XGBRegressor] = None
         self.value_model: Optional[XGBRegressor] = None
         self.meta: dict = {}
-        self._cache: "OrderedDict[tuple, tuple[int, int]]" = OrderedDict()
+        self._cache: "OrderedDict[tuple, tuple[int, Optional[int]]]" = OrderedDict()
         self._lock = threading.Lock()
         self.load()
 
     @property
     def loaded(self) -> bool:
-        return self.potential_model is not None and self.value_model is not None
+        return self.potential_model is not None
 
     @property
     def version(self) -> Optional[str]:
@@ -38,19 +38,22 @@ class ModelStore:
         meta_path = self.model_dir / MODEL_FILES["meta"]
         pot_path = self.model_dir / MODEL_FILES["potential"]
         val_path = self.model_dir / MODEL_FILES["value"]
-        if not (meta_path.exists() and pot_path.exists() and val_path.exists()):
+        if not (meta_path.exists() and pot_path.exists()):
             return
-        potential, value = XGBRegressor(), XGBRegressor()
+        potential = XGBRegressor()
         potential.load_model(pot_path)
-        value.load_model(val_path)
+        value = None
+        if val_path.exists():
+            value = XGBRegressor()
+            value.load_model(val_path)
         self.potential_model, self.value_model = potential, value
         self.meta = json.loads(meta_path.read_text(encoding="utf-8"))
         with self._lock:
             self._cache.clear()
 
-    def predict(self, players: list[dict]) -> list[tuple[int, int]]:
+    def predict(self, players: list[dict]) -> list[tuple[int, Optional[int]]]:
         keys = [self._key(p) for p in players]
-        results: list[Optional[tuple[int, int]]] = [None] * len(players)
+        results: list[Optional[tuple[int, Optional[int]]]] = [None] * len(players)
         missing: list[int] = []
         with self._lock:
             for index, key in enumerate(keys):
@@ -64,10 +67,13 @@ class ModelStore:
             batch = [players[i] for i in missing]
             potentials = np.clip(self.potential_model.predict(features.potential_matrix(batch)),
                                  [float(p["overall"]) for p in batch], 99)
-            values = np.expm1(self.value_model.predict(features.value_matrix(batch, potentials)))
+            values = None
+            if self.value_model is not None:
+                values = np.expm1(self.value_model.predict(features.value_matrix(batch, potentials)))
             with self._lock:
                 for offset, index in enumerate(missing):
-                    result = (int(round(potentials[offset])), max(int(round(values[offset])), 0))
+                    value = None if values is None else max(int(round(values[offset])), 0)
+                    result = (int(round(potentials[offset])), value)
                     results[index] = result
                     self._cache[keys[index]] = result
                     if len(self._cache) > CACHE_SIZE:

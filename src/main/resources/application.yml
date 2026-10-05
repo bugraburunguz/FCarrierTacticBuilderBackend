@@ -74,3 +74,4 @@ fcareer.billing:
 fcareer.ml:
   base-url: ${ML_BASE_URL:http://localhost:8000}
   batch-size: 500
+  age-reference-date: ${ML_AGE_REFERENCE_DATE:2026-10-05}

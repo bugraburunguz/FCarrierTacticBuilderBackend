@@ -42,7 +42,7 @@ class PredictRequest(BaseModel):
 class Prediction(BaseModel):
     player_id: int
     potential: int
-    value: int
+    value: Optional[int] = None
     model_version: str
 
 
@@ -53,7 +53,8 @@ class PredictResponse(BaseModel):
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "UP", "model_loaded": store.loaded, "model_version": store.version}
+    return {"status": "UP", "model_loaded": store.loaded, "model_version": store.version,
+            "value_model": store.value_model is not None, "snapshot_date": store.meta.get("snapshot_date")}
 
 
 @app.post("/ml/reload")

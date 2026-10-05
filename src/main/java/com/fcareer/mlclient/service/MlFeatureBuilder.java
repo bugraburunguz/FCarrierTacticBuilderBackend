@@ -2,13 +2,15 @@ package com.fcareer.mlclient.service;
 
 import com.fcareer.catalog.entity.BasePlayerEntity;
 import com.fcareer.catalog.entity.PlayerRatingEntity;
-import com.fcareer.catalog.mapper.PlayerMapper;
 import com.fcareer.catalog.mapper.RatingAttrAccessor;
 import com.fcareer.fitengine.model.Attr;
+import com.fcareer.mlclient.configuration.MlProperties;
 import com.fcareer.mlclient.model.MlPlayerFeatures;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -38,13 +40,14 @@ public class MlFeatureBuilder {
             Map.entry("LF", "ATT"), Map.entry("RF", "ATT"));
 
     private final RatingAttrAccessor ratingAttrAccessor;
+    private final MlProperties properties;
 
     public MlPlayerFeatures build(BasePlayerEntity base, PlayerRatingEntity rating, Integer leagueTier) {
         Map<Attr, Integer> attrs = ratingAttrAccessor.read(rating);
         String group = rating.getPositions().isEmpty() ? null : POSITION_GROUPS.get(rating.getPositions().get(0));
         return MlPlayerFeatures.builder()
                 .playerId(base.getId())
-                .age(PlayerMapper.age(base))
+                .age(age(base))
                 .overall(rating.getOverall().intValue())
                 .positionGroup(group)
                 .leagueTier(leagueTier)
@@ -59,6 +62,14 @@ public class MlFeatureBuilder {
                 .skillMoves(Objects.isNull(rating.getSkillMoves()) ? null : rating.getSkillMoves().intValue())
                 .goalkeeper(GK.equals(group))
                 .build();
+    }
+
+    private Integer age(BasePlayerEntity base) {
+        if (Objects.isNull(base.getDob())) {
+            return null;
+        }
+        LocalDate reference = Objects.isNull(properties.getAgeReferenceDate()) ? LocalDate.now() : properties.getAgeReferenceDate();
+        return Period.between(base.getDob(), reference).getYears();
     }
 
     static double mean(Map<Attr, Integer> attrs, List<Attr> members) {

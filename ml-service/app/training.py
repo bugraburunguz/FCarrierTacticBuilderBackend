@@ -5,6 +5,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -60,9 +61,12 @@ def prepare_frame(df: pd.DataFrame, mapping: dict) -> pd.DataFrame:
 
 
 def train_models(frame: pd.DataFrame, output_dir: Path, u21_max_age: int = 21, test_size: float = 0.2,
-                 seed: int = 7) -> TrainingResult:
-    data = frame.dropna(subset=["age", "overall", "potential_target", "value_target"]).copy()
-    data = data[data["value_target"] > 0]
+                 seed: int = 7, snapshot_date: Optional[str] = None) -> TrainingResult:
+    has_value = bool("value_target" in frame and frame["value_target"].notna().any())
+    required = ["age", "overall", "potential_target"] + (["value_target"] if has_value else [])
+    data = frame.dropna(subset=required).copy()
+    if has_value:
+        data = data[data["value_target"] > 0]
     if len(data) < 200:
         raise ValueError(f"Not enough rows to train: {len(data)} (need >= 200)")
 
@@ -82,30 +86,39 @@ def train_models(frame: pd.DataFrame, output_dir: Path, u21_max_age: int = 21, t
     potential_model.fit(x_train, train["potential_target"].to_numpy())
     pred_potential = np.clip(potential_model.predict(x_test), test["overall"].to_numpy(), 99)
 
-    # Value modeli gerçek potential ile eğitilir; çıkarımda tahmin edilen potential kullanılır (dürüst sınır: hata birikir).
-    v_train = features.value_matrix(players_train, train["potential_target"].to_numpy())
-    value_model = XGBRegressor(**VALUE_PARAMS)
-    value_model.fit(v_train, np.log1p(train["value_target"].to_numpy()))
-    v_test = features.value_matrix(players_test, pred_potential)
-    pred_value = np.expm1(value_model.predict(v_test))
-
     y_pot = test["potential_target"].to_numpy()
-    y_val = test["value_target"].to_numpy()
     u21 = (test["age"] <= u21_max_age).to_numpy()
+    baseline = np.clip(test["overall"].to_numpy(), 0, 99)
     metrics = {
         "rows_train": int(len(train)),
         "rows_test": int(len(test)),
         "potential_mae": float(mean_absolute_error(y_pot, pred_potential)),
         "potential_mae_u21": float(mean_absolute_error(y_pot[u21], pred_potential[u21])) if u21.any() else None,
+        "potential_mae_baseline_overall": float(mean_absolute_error(y_pot, baseline)),
+        "potential_within_2": float((np.abs(y_pot - pred_potential) <= 2).mean()),
         "u21_rows_test": int(u21.sum()),
-        "value_mae_eur": float(mean_absolute_error(y_val, pred_value)),
-        "value_median_abs_pct_error": float(np.median(np.abs(pred_value - y_val) / y_val)),
         "u21_max_age": u21_max_age,
+        "value_mae_eur": None,
+        "value_median_abs_pct_error": None,
     }
 
     output_dir.mkdir(parents=True, exist_ok=True)
     potential_model.save_model(output_dir / MODEL_FILES["potential"])
-    value_model.save_model(output_dir / MODEL_FILES["value"])
+    value_path = output_dir / MODEL_FILES["value"]
+    value_path.unlink(missing_ok=True)
+
+    if has_value:
+        # Value modeli gerçek potential ile eğitilir; çıkarımda tahmin edilen potential kullanılır (dürüst sınır: hata birikir).
+        v_train = features.value_matrix(players_train, train["potential_target"].to_numpy())
+        value_model = XGBRegressor(**VALUE_PARAMS)
+        value_model.fit(v_train, np.log1p(train["value_target"].to_numpy()))
+        v_test = features.value_matrix(players_test, pred_potential)
+        pred_value = np.expm1(value_model.predict(v_test))
+        y_val = test["value_target"].to_numpy()
+        metrics["value_mae_eur"] = float(mean_absolute_error(y_val, pred_value))
+        metrics["value_median_abs_pct_error"] = float(np.median(np.abs(pred_value - y_val) / y_val))
+        value_model.save_model(value_path)
+
     digest = hashlib.sha1(json.dumps(metrics, sort_keys=True).encode()).hexdigest()[:8]
     version = f"xgb-{datetime.now(timezone.utc):%Y%m%d}-{digest}"
     meta = {
@@ -114,8 +127,11 @@ def train_models(frame: pd.DataFrame, output_dir: Path, u21_max_age: int = 21, t
         "metrics": metrics,
         "potential_features": features.POTENTIAL_FEATURES,
         "value_features": features.VALUE_FEATURES,
-        # FC27 potential sistemi değişti (UNKNOWN): FC27 verisi gelene dek FC26 modeli + bayrak.
-        "fc27_pot_flag": True,
+        "value_model": has_value,
+        # Yaş bu tarihe göre hesaplanmalı (backend: fcareer.ml.age-reference-date).
+        "snapshot_date": snapshot_date,
+        # FC27 verisiyle eğitildiğinde bayrak kapanır; FC26 vb. veriyle eğitildiyse açık kalır.
+        "fc27_pot_flag": snapshot_date is None,
     }
     (output_dir / MODEL_FILES["meta"]).write_text(json.dumps(meta, indent=2), encoding="utf-8")
     return TrainingResult(model_version=version, metrics=metrics)

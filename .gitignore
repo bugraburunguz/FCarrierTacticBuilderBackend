@@ -10,3 +10,4 @@ ml-service/**/__pycache__/
 ml-service/models/*.json
 ml-service/data/*.csv
 !ml-service/data/README.md
+ml-service/data/fc27-dump/
