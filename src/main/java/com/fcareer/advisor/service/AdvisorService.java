@@ -3,8 +3,6 @@ package com.fcareer.advisor.service;
 import com.fcareer.advisor.model.request.AdvisorRequest;
 import com.fcareer.advisor.model.response.AdvisorResponses.Advice;
 import com.fcareer.advisor.model.response.AdvisorResponses.Candidate;
-import com.fcareer.advisor.model.response.AdvisorResponses.PlayerPositionAdvice;
-import com.fcareer.advisor.model.response.AdvisorResponses.PositionOption;
 import com.fcareer.advisor.model.response.AdvisorResponses.TransferSuggestion;
 import com.fcareer.billing.configuration.BillingProperties;
 import com.fcareer.billing.model.response.CreditedResponse;
@@ -67,14 +65,10 @@ public class AdvisorService {
     private static final int MIN_SQUAD = 11;
     private static final int TOP_FORMATIONS = 8;
     private static final int ALTERNATIVES = 5;
-    private static final int POSITIONS_SHOWN = 3;
     private static final int TRANSFER_SLOTS = 3;
     private static final int TRANSFER_ITEMS = 3;
     private static final double STYLE_TOLERANCE = 3.0;
     private static final double TOLERANCE_PER_WEIGHT = 0.1;
-    private static final double POSITION_GAIN = 3.0;
-    private static final List<String> OUTFIELD_POSITIONS = List.of("LB", "RB", "CB", "CDM", "CM", "CAM", "LM", "RM", "LW", "RW", "ST");
-    private static final String GOALKEEPER = "GK";
 
     private final CareerService careerService;
     private final PlayerService playerService;
@@ -89,6 +83,7 @@ public class AdvisorService {
     private final SquadFitService squadFitService;
     private final HungarianSolver hungarianSolver;
     private final RecommendationService recommendationService;
+    private final PositionAdviceService positionAdviceService;
     private final CreditGuard creditGuard;
     private final BillingProperties billingProperties;
 
@@ -231,7 +226,7 @@ public class AdvisorService {
                 .recommended(recommendedCandidate).verdict(verdict).reasons(reasons)
                 .philosophy(philosophyCandidate).bestCustom(customCandidate)
                 .alternatives(alternatives(all, recommended))
-                .playerPositions(positionAdvice(players))
+                .playerPositions(positionAdviceService.advise(players))
                 .transferSuggestions(request.isAllowTransfers() ? transferSuggestions(recommendedCandidate, squad) : null)
                 .evaluated(all.size()).build();
         return advice;
@@ -252,53 +247,6 @@ public class AdvisorService {
             bestPerKey.putIfAbsent(key, s);
         });
         return bestPerKey.values().stream().filter(s -> s != recommended).limit(ALTERNATIVES).map(Scored::candidate).toList();
-    }
-
-    private List<PlayerPositionAdvice> positionAdvice(List<FitPlayer> players) {
-        Map<String, FitRole> roles = roleService.fitRolesById();
-        List<PlayerPositionAdvice> advice = new ArrayList<>();
-        for (FitPlayer player : players) {
-            boolean keeper = player.getPositions().contains(GOALKEEPER);
-            List<String> candidates = keeper ? List.of(GOALKEEPER) : OUTFIELD_POSITIONS;
-            List<PositionOption> options = new ArrayList<>();
-            for (String position : candidates) {
-                PositionOption best = null;
-                for (FitRole role : roles.values()) {
-                    if (!role.getPositions().contains(position)) {
-                        continue;
-                    }
-                    double score = roleFitService.calculate(player, role, null, position).getScore();
-                    if (Objects.isNull(best) || score > best.getScore()) {
-                        best = PositionOption.builder().position(position).roleName(role.getName()).score(round1(score))
-                                .natural(player.getPositions().contains(position)).build();
-                    }
-                }
-                if (Objects.nonNull(best)) {
-                    options.add(best);
-                }
-            }
-            options.sort(Comparator.comparingDouble(PositionOption::getScore).reversed());
-            List<PositionOption> top = options.stream().limit(POSITIONS_SHOWN).toList();
-            advice.add(PlayerPositionAdvice.builder().playerId(player.getId()).playerName(player.getName())
-                    .listedPositions(player.getPositions()).best(top).note(positionNote(options)).build());
-        }
-        return advice;
-    }
-
-    private String positionNote(List<PositionOption> sorted) {
-        if (sorted.isEmpty()) {
-            return null;
-        }
-        PositionOption first = sorted.get(0);
-        double bestNatural = sorted.stream().filter(PositionOption::isNatural).mapToDouble(PositionOption::getScore).max().orElse(0);
-        if (first.isNatural()) {
-            return "Listelenen mevkilerinde en iyi " + first.getPosition() + " (" + first.getRoleName() + ").";
-        }
-        if (first.getScore() - bestNatural >= POSITION_GAIN) {
-            return String.format(Locale.ROOT, "Mevki listesinde yok ama %s (%s) rolünde %.1f puanla listelenen mevkilerinden daha iyi.",
-                    first.getPosition(), first.getRoleName(), first.getScore());
-        }
-        return "Listelenen mevkilerinde daha güvenli.";
     }
 
     private List<TransferSuggestion> transferSuggestions(Candidate recommended, CareerService.CareerSquad squad) {

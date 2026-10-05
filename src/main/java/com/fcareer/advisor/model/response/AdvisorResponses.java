@@ -44,6 +44,7 @@ public final class AdvisorResponses {
         private String roleName;
         private double score;
         private boolean natural;
+        private List<String> reasons;
     }
 
     @Data
@@ -57,6 +58,7 @@ public final class AdvisorResponses {
         private List<String> listedPositions;
         private List<PositionOption> best;
         private String note;
+        private boolean ownPositionBest;
     }
 
     @Data
