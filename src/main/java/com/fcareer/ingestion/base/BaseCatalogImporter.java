@@ -180,7 +180,7 @@ public class BaseCatalogImporter {
         }
         RATING_SQL = "INSERT INTO player_rating (" + columns + ") VALUES (" + values + ")";
         StringBuilder sets = new StringBuilder("overall = :overall, positions = CAST(string_to_array(:positions, ',') AS text[]), "
-                + "accelerate = :accelerate, weak_foot = :weakFoot, skill_moves = :skillMoves, playstyles = CAST(:playstyles AS jsonb), "
+                + "accelerate = :accelerate, weak_foot = :weakFoot, skill_moves = :skillMoves, "
                 + "run_style1 = :run1, run_style2 = :run2");
         for (Attr attr : DumpMappings.ATTRIBUTE_COLUMNS.values()) {
             sets.append(", ").append(attr.getColumn()).append(" = :").append(attr.getColumn());
