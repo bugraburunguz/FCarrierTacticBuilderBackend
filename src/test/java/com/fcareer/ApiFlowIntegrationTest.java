@@ -201,8 +201,10 @@ class ApiFlowIntegrationTest {
     private long firstPlayerNotInSquad(JsonNode squad) {
         java.util.Set<Long> inSquad = new java.util.HashSet<>();
         squad.at("/data").forEach(p -> inSquad.add(p.at("/player/id").asLong()));
-        return basePlayerRepository.findAll().stream().map(p -> p.getId())
-                .filter(id -> !inSquad.contains(id)).findFirst().orElseThrow();
+        int squadGender = squad.at("/data/0/player/gender").asInt();
+        return basePlayerRepository.findAll().stream()
+                .filter(p -> p.getGender() == squadGender && !inSquad.contains(p.getId()))
+                .map(p -> p.getId()).findFirst().orElseThrow();
     }
 
     private String registerAndGetToken() throws Exception {

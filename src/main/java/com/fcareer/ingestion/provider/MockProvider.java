@@ -22,6 +22,7 @@ public class MockProvider implements ExternalDataProvider {
 
     private static final String MOCK = "mock";
     private static final long BASE_ID = 900_000L;
+    private static final int WOMEN_CLUB_FROM = 16;
     private static final List<String> POSITIONS = List.of("GK", "RB", "CB", "CB", "LB", "CDM", "CM", "CAM", "RW", "LW", "ST");
     private static final List<String> PLAYSTYLES = List.of("FinesseShot", "WhippedPass", "IncisivePass", "Technical",
             "Anticipate", "Intercept", "Relentless", "QuickStep", "Jockey", "PowerShot");
@@ -63,6 +64,7 @@ public class MockProvider implements ExternalDataProvider {
         return new ExternalPlayer(BASE_ID + index, "Mock Player " + index, LocalDate.of(1990 + random.nextInt(14), 1 + random.nextInt(12), 1 + random.nextInt(28)),
                 "Mockland", 165 + random.nextInt(30), 60 + random.nextInt(30), random.nextBoolean() ? "Right" : "Left",
                 LEAGUES.get(clubIndex % LEAGUES.size()), 5_000L + clubIndex, "Mock FC " + clubIndex,
-                overall, List.of(position), 1 + random.nextInt(5), 1 + random.nextInt(5), attrs, playstyles);
+                overall, List.of(position), 1 + random.nextInt(5), 1 + random.nextInt(5), attrs, playstyles,
+                clubIndex >= WOMEN_CLUB_FROM ? 1 : 0);
     }
 }

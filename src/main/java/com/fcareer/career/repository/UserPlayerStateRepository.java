@@ -11,4 +11,6 @@ public interface UserPlayerStateRepository extends JpaRepository<UserPlayerState
     List<UserPlayerStateEntity> findByCareerIdOrderByIdAsc(Long careerId);
 
     Optional<UserPlayerStateEntity> findByCareerIdAndBasePlayerId(Long careerId, Long basePlayerId);
+
+    void deleteByCareerId(Long careerId);
 }

@@ -8,4 +8,6 @@ import java.util.List;
 public interface RosterEventRepository extends JpaRepository<RosterEventEntity, Long> {
 
     List<RosterEventEntity> findByCareerIdOrderByIdDesc(Long careerId);
+
+    void deleteByCareerId(Long careerId);
 }

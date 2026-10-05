@@ -18,9 +18,12 @@ public class RosterEventResponse {
     private Long id;
     private RosterEventType type;
     private Long playerId;
+    private String playerName;
     private Long feeEur;
     private Integer fromClubId;
+    private String fromClubName;
     private Integer toClubId;
+    private String toClubName;
     private Instant createdAt;
     private Long budgetEurAfter;
 }

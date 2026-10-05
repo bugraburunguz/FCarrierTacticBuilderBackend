@@ -23,4 +23,6 @@ public class ClubEntity {
     private String name;
 
     private Integer leagueId;
+
+    private Short gender;
 }

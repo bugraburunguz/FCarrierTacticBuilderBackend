@@ -34,15 +34,25 @@ public class PlayerSearchRepository {
                   AND v.game_version_id = r.game_version_id AND v.source = 'MODELED' AND v.owner_user_id IS NULL
             """;
     private static final String SELECT = """
-            SELECT b.id AS id, b.full_name AS name, b.dob AS dob, r.overall AS overall, r.positions AS positions,
-                   c.name AS club, l.name AS league, n.name AS nationality, r.accelerate AS accelerate,
+            SELECT b.id AS id, b.full_name AS name, b.dob AS dob, b.gender AS gender, b.preferred_foot AS foot,
+                   r.overall AS overall, r.positions AS positions, r.weak_foot AS weak_foot, r.skill_moves AS skill_moves,
+                   c.id AS club_id, c.name AS club, l.name AS league, n.name AS nationality, r.accelerate AS accelerate,
                    v.potential AS potential, v.value_eur AS value_eur, (v.id IS NOT NULL) AS estimated
             """;
-    private static final Map<String, String> SORTS = Map.of(
-            "overall", "r.overall",
-            "name", "b.full_name",
-            "potential", "v.potential",
-            "value", "v.value_eur");
+    private static final String AGE_YEARS = "EXTRACT(YEAR FROM age(b.dob))";
+    private static final String AGE_SORT = "age";
+    private static final Map<String, String> SORTS = Map.ofEntries(
+            Map.entry("overall", "r.overall"),
+            Map.entry("name", "b.full_name"),
+            Map.entry("potential", "v.potential"),
+            Map.entry("value", "v.value_eur"),
+            Map.entry("club", "c.name"),
+            Map.entry("league", "l.name"),
+            Map.entry("nationality", "n.name"),
+            Map.entry("accelerate", "r.accelerate"),
+            Map.entry("position", "r.positions[1]"),
+            Map.entry("weakfoot", "r.weak_foot"),
+            Map.entry("skillmoves", "r.skill_moves"));
 
     private final NamedParameterJdbcTemplate jdbc;
 
@@ -84,12 +94,24 @@ public class PlayerSearchRepository {
         addBound(request.getOverallMin(), "r.overall >= :overallMin", "overallMin", clauses, params);
         addBound(request.getOverallMax(), "r.overall <= :overallMax", "overallMax", clauses, params);
         addBound(request.getPotentialMin(), "v.potential >= :potentialMin", "potentialMin", clauses, params);
+        addBound(request.getPotentialMax(), "v.potential <= :potentialMax", "potentialMax", clauses, params);
         addBound(request.getValueMax(), request.isIncludeUnvalued()
                 ? "(v.value_eur IS NULL OR v.value_eur <= :valueMax)" : "v.value_eur <= :valueMax", "valueMax", clauses, params);
+        addBound(request.getClubId(), "r.club_id = :clubId", "clubId", clauses, params);
+        addBound(request.getLeagueId(), "c.league_id = :leagueId", "leagueId", clauses, params);
+        addBound(request.getNationalityId(), "b.nationality_id = :nationalityId", "nationalityId", clauses, params);
+        addBound(request.getGender(), "b.gender = :gender", "gender", clauses, params);
+        addBound(request.getAgeMin(), AGE_YEARS + " >= :ageMin", "ageMin", clauses, params);
+        addBound(request.getAgeMax(), AGE_YEARS + " <= :ageMax", "ageMax", clauses, params);
+        addBound(request.getWeakFootMin(), "r.weak_foot >= :weakFootMin", "weakFootMin", clauses, params);
+        addBound(request.getSkillMovesMin(), "r.skill_moves >= :skillMovesMin", "skillMovesMin", clauses, params);
+        if (Objects.nonNull(request.getFoot()) && !request.getFoot().isBlank()) {
+            clauses.add("b.preferred_foot = :foot");
+            params.addValue("foot", request.getFoot());
+        }
+        addBound(request.getIdFilter(), "b.id = :playerId", "playerId", clauses, params);
         addIds(request.getIds(), "b.id IN (:ids)", "ids", clauses, params);
         addIds(request.getExcludeIds(), "b.id NOT IN (:excludeIds)", "excludeIds", clauses, params);
-        addBound(request.getClubId(), "r.club_id = :clubId", "clubId", clauses, params);
-        addBound(request.getIdFilter(), "b.id = :playerId", "playerId", clauses, params);
         return " WHERE " + String.join(" AND ", clauses);
     }
 
@@ -126,11 +148,18 @@ public class PlayerSearchRepository {
     }
 
     private String orderBy(PlayerSearchRequest request) {
-        String column = SORTS.get(Objects.isNull(request.getSort()) ? "overall" : request.getSort());
-        if (Objects.isNull(column)) {
-            column = Attr.fromKey(request.getSort().replace("_", "")).map(a -> "r." + a.getColumn()).orElse("r.overall");
+        String key = Objects.isNull(request.getSort()) ? "overall" : request.getSort().replace("_", "").toLowerCase();
+        boolean ascending = request.isAscending();
+        String column = SORTS.get(key);
+        if (AGE_SORT.equals(key)) {
+            // Genç → yaşlı sıralaması doğum tarihinin ters yönüdür.
+            column = "b.dob";
+            ascending = !ascending;
         }
-        return column + (request.isAscending() ? " ASC" : " DESC") + " NULLS LAST, b.id ASC";
+        if (Objects.isNull(column)) {
+            column = Attr.fromKey(key).map(a -> "r." + a.getColumn()).orElse("r.overall");
+        }
+        return column + (ascending ? " ASC" : " DESC") + " NULLS LAST, b.id ASC";
     }
 
     private PlayerSummaryResponse toSummary(ResultSet rs) throws SQLException {
@@ -142,9 +171,14 @@ public class PlayerSearchRepository {
                 .age(Objects.isNull(dob) ? null : Period.between(dob.toLocalDate(), LocalDate.now()).getYears())
                 .overall(rs.getInt("overall"))
                 .positions(Arrays.asList((String[]) positions.getArray()))
+                .clubId(nullableInt(rs, "club_id"))
                 .club(rs.getString("club"))
                 .league(rs.getString("league"))
                 .nationality(rs.getString("nationality"))
+                .gender(nullableInt(rs, "gender"))
+                .preferredFoot(rs.getString("foot"))
+                .weakFoot(nullableInt(rs, "weak_foot"))
+                .skillMoves(nullableInt(rs, "skill_moves"))
                 .accelerate(rs.getString("accelerate"))
                 .potential(nullableInt(rs, "potential"))
                 .valueEur(nullableLong(rs, "value_eur"))

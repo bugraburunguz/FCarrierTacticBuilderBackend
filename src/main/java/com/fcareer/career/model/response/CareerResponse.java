@@ -15,9 +15,11 @@ import java.time.Instant;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CareerResponse {
     private Long id;
+    private String name;
     private Short gameVersionId;
     private Integer clubId;
     private String clubName;
+    private Integer gender;
     private Integer season;
     private Long budgetEur;
     private int squadSize;

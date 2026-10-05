@@ -56,7 +56,8 @@ public class RatingItemMapper {
                 intOrNull(item.path("weakFootAbility")),
                 intOrNull(item.path("skillMoves")),
                 attrs,
-                playstyles(item.path("playerAbilities"))));
+                playstyles(item.path("playerAbilities")),
+                item.path("gender").path("id").asInt(0)));
     }
 
     private String fullName(JsonNode item) {

@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static com.fcareer.common.constants.ApiConstants.API_V1;
 
@@ -29,6 +30,7 @@ public class PlayerController {
     private static final String MIN_SUFFIX = "_min";
     private static final String MAX_SUFFIX = "_max";
     private static final String ORDER_DESC = "desc";
+    private static final Set<String> RESERVED_BOUNDS = Set.of("ovr", "pot", "value", "age", "wf", "sm");
 
     private final PlayerService playerService;
 
@@ -42,8 +44,17 @@ public class PlayerController {
             @RequestParam(name = "ovr_min", required = false) Integer overallMin,
             @RequestParam(name = "ovr_max", required = false) Integer overallMax,
             @RequestParam(name = "pot_min", required = false) Integer potentialMin,
+            @RequestParam(name = "pot_max", required = false) Integer potentialMax,
             @RequestParam(name = "value_max", required = false) Long valueMax,
+            @RequestParam(name = "age_min", required = false) Integer ageMin,
+            @RequestParam(name = "age_max", required = false) Integer ageMax,
+            @RequestParam(name = "wf_min", required = false) Integer weakFootMin,
+            @RequestParam(name = "sm_min", required = false) Integer skillMovesMin,
+            @RequestParam(name = "foot", required = false) String foot,
             @RequestParam(name = "club", required = false) Integer clubId,
+            @RequestParam(name = "league", required = false) Integer leagueId,
+            @RequestParam(name = "nat", required = false) Integer nationalityId,
+            @RequestParam(name = "gender", required = false) Short gender,
             @RequestParam(name = "sort", required = false) String sort,
             @RequestParam(name = "order", required = false, defaultValue = ORDER_DESC) String order,
             @RequestParam(name = "page", required = false, defaultValue = "0") int page,
@@ -63,8 +74,17 @@ public class PlayerController {
                 .overallMin(overallMin)
                 .overallMax(overallMax)
                 .potentialMin(potentialMin)
+                .potentialMax(potentialMax)
                 .valueMax(valueMax)
+                .ageMin(ageMin)
+                .ageMax(ageMax)
+                .weakFootMin(weakFootMin)
+                .skillMovesMin(skillMovesMin)
+                .foot(foot)
                 .clubId(clubId)
+                .leagueId(leagueId)
+                .nationalityId(nationalityId)
+                .gender(gender)
                 .sort(sort)
                 .ascending(!ORDER_DESC.equalsIgnoreCase(order))
                 .page(page)
@@ -85,7 +105,7 @@ public class PlayerController {
             return;
         }
         String attrName = key.substring(0, key.length() - MIN_SUFFIX.length());
-        if (attrName.equals("ovr") || attrName.equals("pot") || attrName.equals("value")) {
+        if (RESERVED_BOUNDS.contains(attrName)) {
             return;
         }
         try {

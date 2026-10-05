@@ -22,5 +22,6 @@ public record ExternalPlayer(
         Integer weakFoot,
         Integer skillMoves,
         Map<Attr, Integer> attrs,
-        Map<String, Integer> playstyles) {
+        Map<String, Integer> playstyles,
+        int gender) {
 }

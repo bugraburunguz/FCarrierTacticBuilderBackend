@@ -14,5 +14,7 @@ import lombok.NoArgsConstructor;
 public class ClubResponse {
     private Integer id;
     private String name;
+    private Integer leagueId;
     private String league;
+    private Integer gender;
 }

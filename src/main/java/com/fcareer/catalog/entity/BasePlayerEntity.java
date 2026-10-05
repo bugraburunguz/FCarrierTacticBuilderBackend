@@ -36,4 +36,7 @@ public class BasePlayerEntity {
     private Short weightKg;
 
     private String preferredFoot;
+
+    @Column(nullable = false)
+    private Short gender = 0;
 }

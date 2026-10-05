@@ -19,9 +19,14 @@ public class PlayerSummaryResponse {
     private Integer age;
     private int overall;
     private List<String> positions;
+    private Integer clubId;
     private String club;
     private String league;
     private String nationality;
+    private Integer gender;
+    private String preferredFoot;
+    private Integer weakFoot;
+    private Integer skillMoves;
     private String accelerate;
     private Integer potential;
     private Long valueEur;

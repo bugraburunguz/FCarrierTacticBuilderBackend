@@ -135,6 +135,7 @@ public class IngestionService {
         base.setHeightCm(toShort(player.heightCm()));
         base.setWeightKg(toShort(player.weightKg()));
         base.setPreferredFoot(player.preferredFoot());
+        base.setGender((short) player.gender());
         base.setNationalityId(Objects.isNull(player.nationality()) ? null : cache
                 .computeIfAbsent(player.nationality(), this::nationality).getId());
     }
@@ -157,13 +158,14 @@ public class IngestionService {
         }
         Integer leagueId = Objects.isNull(player.leagueName()) ? null
                 : leagues.computeIfAbsent(player.leagueName(), this::league).getId();
-        return clubRepository.findByNameAndLeagueId(player.clubName(), leagueId)
-                .orElseGet(() -> {
-                    ClubEntity club = new ClubEntity();
-                    club.setName(player.clubName());
-                    club.setLeagueId(leagueId);
-                    return clubRepository.save(club);
-                }).getId();
+        ClubEntity club = clubRepository.findByNameAndLeagueId(player.clubName(), leagueId).orElseGet(() -> {
+            ClubEntity created = new ClubEntity();
+            created.setName(player.clubName());
+            created.setLeagueId(leagueId);
+            return created;
+        });
+        club.setGender((short) player.gender());
+        return clubRepository.save(club).getId();
     }
 
     private NationalityEntity nationality(String name) {

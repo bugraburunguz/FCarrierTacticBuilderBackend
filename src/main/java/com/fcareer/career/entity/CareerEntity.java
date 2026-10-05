@@ -35,6 +35,8 @@ public class CareerEntity {
 
     private Long budgetEur;
 
+    private String name;
+
     @CreatedDate
     @Column(columnDefinition = "timestamptz", updatable = false)
     private Instant createdAt;

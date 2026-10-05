@@ -37,6 +37,15 @@ public class PlayerSearchRequest {
     private Integer potentialMin;
     private Long valueMax;
     private Integer clubId;
+    private Integer leagueId;
+    private Integer nationalityId;
+    private Short gender;
+    private Integer ageMin;
+    private Integer ageMax;
+    private Integer potentialMax;
+    private String foot;
+    private Integer weakFootMin;
+    private Integer skillMovesMin;
     private Long idFilter;
     private List<Long> ids;
     private List<Long> excludeIds;
