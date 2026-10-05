@@ -1,7 +1,7 @@
 --- FC Career Platform - kariyer disa aktarimi (SADECE OKUR, hicbir seyi degistirmez).
 --- Kullanim: oyunu ac -> KARIYERINI YUKLE (ana menude degil, kariyerin icinde ol) -> Live Editor -> Lua Engine -> bu dosyayi calistir.
---- Cikti: Live Editor Lua dosya yazmayi kapali tuttugu icin veri Logsive_editor_<tarih>.log dosyasina "FCDUMP" satirlari olarak yazilir;
----        bu log dosyasini sitedeki 'Ice aktar' sayfasina yukle. (Dosya yazma aciksa Masaustureerexport klasorune CSV de yazilir.)
+--- Cikti: Live Editor Lua dosya yazmayi kapali tuttugu icin veri Logslive_editor_<tarih>.log dosyasina "FCDUMP" satirlari olarak yazilir;
+---        bu log dosyasini sitedeki 'Ice aktar' sayfasina yukle. (Dosya yazma aciksa Masaustucareerexport klasorune CSV de yazilir.)
 --- Dosya olusmazsa Logs\live_editor_<tarih>.log icinde "FCDUMP" satirlari yazilir.
 
 local FALLBACK_DIR = "C:\\FC 27 Live Editor\\export\\"
