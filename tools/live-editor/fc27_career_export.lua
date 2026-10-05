@@ -1,9 +1,46 @@
 --- FC Career Platform - kariyer disa aktarimi (SADECE OKUR, hicbir seyi degistirmez).
 --- Kullanim: oyunu ac -> KARIYERINI YUKLE (ana menude degil, kariyerin icinde ol) -> Live Editor -> Lua Engine -> bu dosyayi calistir.
---- Cikti: C:\FC 27 Live Editor\export\ klasorunde 5 kucuk CSV dosyasi (players, teams, teamplayerlinks, leagueteamlinks, leagues).
+--- Cikti: Masaustu\careerexport klasoru (yoksa olusturulur, varsa dokunulmaz) icinde 5 kucuk CSV dosyasi
+---        (players, teams, teamplayerlinks, leagueteamlinks, leagues). Masaustu bulunamazsa C:\FC 27 Live Editor\export\ kullanilir.
 --- Dosya olusmazsa Logs\live_editor_<tarih>.log icinde "FCDUMP" satirlari yazilir.
 
-local OUT_DIR = FC_DUMP_OUT_DIR or "C:\\FC 27 Live Editor\\export\\"
+local FALLBACK_DIR = "C:\\FC 27 Live Editor\\export\\"
+local FOLDER = "careerexport"
+
+local function can_write(dir)
+    if type(io) ~= "table" or type(io.open) ~= "function" then return false end
+    local probe = dir .. ".probe"
+    local ok, f = pcall(io.open, probe, "wb")
+    if ok and f then
+        f:close()
+        if type(os) == "table" and type(os.remove) == "function" then pcall(os.remove, probe) end
+        return true
+    end
+    return false
+end
+
+local function ensure_dir(dir)
+    if can_write(dir) then return true end
+    if type(os) == "table" and type(os.execute) == "function" then
+        pcall(os.execute, 'if not exist "' .. dir .. '" mkdir "' .. dir .. '"')
+    end
+    return can_write(dir)
+end
+
+local function pick_out_dir()
+    if FC_DUMP_OUT_DIR then return FC_DUMP_OUT_DIR end
+    local home = type(os) == "table" and type(os.getenv) == "function" and os.getenv("USERPROFILE") or nil
+    if home then
+        local bases = { home .. "\\OneDrive\\Desktop\\", home .. "\\Desktop\\" }
+        for _, base in ipairs(bases) do
+            local dir = base .. FOLDER .. "\\"
+            if ensure_dir(dir) then return dir end
+        end
+    end
+    return FALLBACK_DIR
+end
+
+local OUT_DIR = pick_out_dir()
 local MARK = "FCDUMP"
 local FLUSH_EVERY = 500
 
