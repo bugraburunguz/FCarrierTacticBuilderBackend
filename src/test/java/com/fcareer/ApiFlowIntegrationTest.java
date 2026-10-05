@@ -195,6 +195,24 @@ class ApiFlowIntegrationTest {
         assertThat(recommended.at("/data/result/scoutQuery/minAttrs/Crossing").asInt()).isEqualTo(64);
     }
 
+    @Test
+    void advisorPicksSetupAndExplainsPhilosophyGap() throws Exception {
+        String token = registerAndGetToken();
+        long careerId = createCareer(token, 0).at("/data/id").asLong();
+
+        JsonNode advice = call(post("/api/v1/advisor/squad"), Map.of("careerId", careerId, "philosophyPresetId", "tiki_taka",
+                "philosophyWeight", 0, "allowTransfers", true), token, 200);
+        assertThat(advice.at("/success").asBoolean()).as(advice.toString()).isTrue();
+        assertThat(advice.at("/data/charged").asInt()).isEqualTo(8);
+        JsonNode result = advice.at("/data/result");
+        assertThat(result.at("/recommended/lineup/slots")).hasSize(11);
+        assertThat(result.at("/recommended/tactic/slots")).hasSize(11);
+        assertThat(result.at("/playerPositions").size()).isGreaterThan(10);
+        assertThat(result.at("/evaluated").asInt()).isGreaterThan(30);
+        assertThat(result.at("/verdict").asText()).isIn("BEST_FIT", "PHILOSOPHY_OK", "BETTER_ELSEWHERE");
+        assertThat(result.at("/transferSuggestions").isArray()).isTrue();
+    }
+
     private JsonNode createCareer(String token, long budget) throws Exception {
         long clubId = clubRepository.findAll().get(0).getId();
         JsonNode career = call(post("/api/v1/careers"), Map.of("clubId", clubId, "budgetEur", budget), token, 200);

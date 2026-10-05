@@ -68,6 +68,7 @@ fcareer.billing:
   daily-credits: 20
   squad-fit-cost: 5
   recommend-cost: 3
+  advisor-cost: 8
   subscription-days: 30
 
 # --- Faz 6: ML servisi ---
