@@ -33,7 +33,7 @@ import static com.fcareer.common.constants.ApiConstants.API_V1;
 public class SecurityConfig {
 
     private static final String[] PUBLIC_GET = {
-            API_V1 + "/players/**", API_V1 + "/roles", API_V1 + "/behavior-tags", API_V1 + "/formations",
+            API_V1 + "/players/**", API_V1 + "/clubs", API_V1 + "/roles", API_V1 + "/behavior-tags", API_V1 + "/formations",
             API_V1 + "/presets/**", "/actuator/health", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"};
     private static final String[] PUBLIC_POST = {
             API_V1 + "/auth/**", API_V1 + "/tactics/resolve", API_V1 + "/fit/role", API_V1 + "/players/compare"};

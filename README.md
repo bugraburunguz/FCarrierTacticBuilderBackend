@@ -1,0 +1,45 @@
+# FC Kariyer — Backend
+
+Java 17 / Spring Boot 3 / PostgreSQL / Redis + Python ML servisi (`ml-service/`). Mimari ve kurallar: `docs/backend-standard.md`, spesifikasyon: `docs/spec/`.
+
+## Çalıştırma
+
+```bash
+# Tam yığın (Docker): kök dizindeki docker-compose.yml + .env
+docker compose up --build
+
+# Docker olmadan geliştirme (kalıcı embedded Postgres + mock veri, Redis yerine bellek içi refresh store)
+mvn test-compile dependency:build-classpath -Dmdep.outputFile=target/cp.txt -Dmdep.includeScope=test
+INGESTION_RUN_ON_STARTUP=true java -cp "target/classes;target/test-classes;$(cat target/cp.txt)" com.fcareer.DevApplication
+```
+
+`DevApplication` yalnızca test kaynağındadır; üretimde kullanılmaz.
+
+## Ortam değişkenleri
+
+| Değişken | Açıklama |
+|---|---|
+| `JWT_SECRET` | **Zorunlu**, ≥ 32 byte. Varsayılanı yok. |
+| `ADMIN_KEY` | `/api/v1/admin/**` için `X-Admin-Key`. Boşsa admin uçları kapalı. |
+| `DB_URL` `DB_USERNAME` `DB_PASSWORD` | PostgreSQL |
+| `REDIS_HOST` `REDIS_PORT` | Redis (refresh token, rate limit, referans cache) |
+| `INGESTION_PROVIDER` | `mock` (varsayılan) \| `drop-api` |
+| `INGESTION_GAME_VERSION` | 25/26/27 — FC27'de drop-api branding'i yeniden doğrulanmalı |
+| `ML_BASE_URL` | ML servisi |
+
+## Veri hattı
+
+1. `POST /api/v1/admin/ingestion/run` — drop-api (veya mock) ile katalog.
+2. ML modelini eğit (`ml-service/app/train.py`, kolon eşlemesi gerekir — `ml-service/data/mapping.example.json`).
+3. `POST /api/v1/admin/ml/valuations` — `MODELED` potential/değer üretir.
+
+Public sorgular yalnızca `valuation.source = 'MODELED'` okur; gerçek EA potential'ı yalnızca ileride `IMPORT` + ilgili kullanıcıya özeldir.
+
+## Test
+
+```bash
+mvn test                      # birim + embedded Postgres entegrasyon testleri
+mvn test -Ddrop.live=true     # canlı drop-api sözleşmesi (opt-in)
+mvn test -Dml.live=true       # çalışan ml-service ile sözleşme (opt-in)
+cd ml-service && python -m pytest
+```

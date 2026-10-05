@@ -9,7 +9,10 @@ import com.fcareer.fitengine.model.WeaponState;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -101,9 +104,12 @@ public class NlgService {
     }
 
     public String attackPattern(List<SlotPattern> patterns) {
-        String body = patterns.stream()
+        Map<String, List<String>> bySlot = new LinkedHashMap<>();
+        patterns.stream()
                 .filter(p -> Objects.nonNull(p.sentence()) && !p.sentence().isBlank())
-                .map(p -> messageService.getMessage("nlg.pattern.slot", p.slotId(), lowerFirst(p.sentence())))
+                .forEach(p -> bySlot.computeIfAbsent(p.slotId(), k -> new ArrayList<>()).add(lowerFirst(p.sentence())));
+        String body = bySlot.entrySet().stream()
+                .map(e -> messageService.getMessage("nlg.pattern.slot", e.getKey(), String.join(", ", e.getValue())))
                 .collect(Collectors.joining("; "));
         if (body.isBlank()) {
             return messageService.getMessage("nlg.pattern.none");

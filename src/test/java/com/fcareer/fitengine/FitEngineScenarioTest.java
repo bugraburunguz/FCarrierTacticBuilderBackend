@@ -222,6 +222,18 @@ class FitEngineScenarioTest {
     }
 
     @Test
+    @DisplayName("Atak paterni aynı slotun davranışlarını tek cümlede birleştirir")
+    void attackPatternGroupsSentencesPerSlot() {
+        FitPlayer p = player(80, "Forvet", "ST").all(80).accelerate(AcceleRate.EXPLOSIVE).build();
+        IntentProfile slot = slot("ST", "ST", "ST", striker(), tag("a", "ST", Attr.FINISHING, 60), tag("b", "ST", Attr.POSITIONING, 60));
+
+        SquadFitResponse response = SQUAD_FIT.solve(List.of(p), List.of(slot), List.of());
+
+        assertThat(response.getAttackPattern()).startsWith("Atak paterni: ST test cümlesi a, test cümlesi b");
+        assertThat(response.getAttackPattern().split("ST ", -1)).hasSize(2);
+    }
+
+    @Test
     @DisplayName("Kadro slot sayısından azsa boş slot zayıf halka olarak raporlanır")
     void emptySlotIsReportedAsWeakLink() {
         FitPlayer p = player(70, "Tek", "ST").all(80).accelerate(AcceleRate.EXPLOSIVE).build();
