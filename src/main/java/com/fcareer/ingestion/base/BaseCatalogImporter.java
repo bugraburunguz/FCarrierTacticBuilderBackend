@@ -40,7 +40,7 @@ public class BaseCatalogImporter {
     private static final double NATIONALITY_CONFIDENCE = 0.6;
 
     public record BaseImportResult(int playersInFile, int existing, int created, int skippedNoTeam, int skippedNoPosition,
-                                   int nationalitiesCreated, int clubsCreated, int leaguesCreated) {
+                                   int nationalitiesCreated, int clubsCreated, int leaguesCreated, int updated) {
     }
 
     private final NamedParameterJdbcTemplate jdbc;
@@ -48,7 +48,8 @@ public class BaseCatalogImporter {
     private final ObjectMapper objectMapper;
 
     @Transactional
-    public BaseImportResult importMissing(Map<String, List<Map<String, String>>> tables, short gameVersionId) {
+    public BaseImportResult importMissing(Map<String, List<Map<String, String>>> tables, short gameVersionId, boolean overwriteExisting,
+                                         boolean createMissing) {
         List<Map<String, String>> players = require(tables, "players");
         List<Map<String, String>> teams = require(tables, "teams");
         List<Map<String, String>> links = require(tables, "teamplayerlinks");
@@ -96,6 +97,8 @@ public class BaseCatalogImporter {
         List<SqlParameterSource> basePlayers = new ArrayList<>();
         Map<Long, Map<String, String>> pending = new LinkedHashMap<>();
         int already = 0;
+        List<SqlParameterSource> baseUpdates = new ArrayList<>();
+        List<SqlParameterSource> ratingUpdates = new ArrayList<>();
         int noTeam = 0;
         int noPosition = 0;
         for (Map<String, String> row : players) {
@@ -106,6 +109,14 @@ public class BaseCatalogImporter {
             }
             if (existing.containsKey(eaId)) {
                 already++;
+                if (overwriteExisting && !positions(row).isEmpty()) {
+                    Long baseId = existing.get(eaId);
+                    baseUpdates.add(baseUpdateParams(baseId, row));
+                    ratingUpdates.add(ratingParams(baseId, row, gameVersionId, null));
+                }
+                continue;
+            }
+            if (!createMissing) {
                 continue;
             }
             Integer teamId = playerTeam.get(eaId);
@@ -133,6 +144,9 @@ public class BaseCatalogImporter {
                 INSERT INTO base_player (ea_resource_id, full_name, dob, nationality_id, height_cm, weight_kg, preferred_foot, gender)
                 VALUES (:ea, :name, :dob, :nat, :height, :weight, :foot, :gender)""", basePlayers);
 
+        batch(BASE_UPDATE_SQL, baseUpdates);
+        batch(RATING_UPDATE_SQL, ratingUpdates);
+
         Map<Long, Long> created = idsByEaId(pending.keySet());
         List<SqlParameterSource> ratings = new ArrayList<>();
         for (Map.Entry<Long, Map<String, String>> entry : pending.entrySet()) {
@@ -146,10 +160,14 @@ public class BaseCatalogImporter {
         log.info("Base catalog import players : {} created : {} existing : {} noTeam : {} noPosition : {}",
                 players.size(), ratings.size(), already, noTeam, noPosition);
         return new BaseImportResult(players.size(), already, ratings.size(), noTeam, noPosition,
-                nationalities.created(), clubs.createdClubs(), clubs.createdLeagues());
+                nationalities.created(), clubs.createdClubs(), clubs.createdLeagues(), ratingUpdates.size());
     }
 
     private static final String RATING_SQL;
+    private static final String RATING_UPDATE_SQL;
+    private static final String BASE_UPDATE_SQL = """
+            UPDATE base_player SET dob = :dob, height_cm = :height, weight_kg = :weight, preferred_foot = :foot, gender = :gender
+            WHERE id = :base""";
 
     static {
         StringBuilder columns = new StringBuilder("base_player_id, game_version_id, club_id, overall, positions, accelerate, weak_foot, "
@@ -161,6 +179,23 @@ public class BaseCatalogImporter {
             values.append(", :").append(attr.getColumn());
         }
         RATING_SQL = "INSERT INTO player_rating (" + columns + ") VALUES (" + values + ")";
+        StringBuilder sets = new StringBuilder("overall = :overall, positions = CAST(string_to_array(:positions, ',') AS text[]), "
+                + "accelerate = :accelerate, weak_foot = :weakFoot, skill_moves = :skillMoves, playstyles = CAST(:playstyles AS jsonb), "
+                + "run_style1 = :run1, run_style2 = :run2");
+        for (Attr attr : DumpMappings.ATTRIBUTE_COLUMNS.values()) {
+            sets.append(", ").append(attr.getColumn()).append(" = :").append(attr.getColumn());
+        }
+        RATING_UPDATE_SQL = "UPDATE player_rating SET " + sets + " WHERE base_player_id = :base AND game_version_id = :gv";
+    }
+
+    private SqlParameterSource baseUpdateParams(Long baseId, Map<String, String> row) {
+        Integer birth = toInt(row.get("birthdate"));
+        return new MapSqlParameterSource().addValue("base", baseId)
+                .addValue("dob", Objects.isNull(birth) ? null : java.sql.Date.valueOf(LocalDate.ofEpochDay(birth + DumpMappings.BIRTHDATE_EPOCH_OFFSET)))
+                .addValue("height", positiveOrNull(toInt(row.get("height"))), java.sql.Types.SMALLINT)
+                .addValue("weight", positiveOrNull(toInt(row.get("weight"))), java.sql.Types.SMALLINT)
+                .addValue("foot", foot(toInt(row.get("preferredfoot"))))
+                .addValue("gender", Objects.equals(toInt(row.get("gender")), 1) ? 1 : 0);
     }
 
     private SqlParameterSource ratingParams(Long baseId, Map<String, String> row, short gameVersionId, Integer clubId) {

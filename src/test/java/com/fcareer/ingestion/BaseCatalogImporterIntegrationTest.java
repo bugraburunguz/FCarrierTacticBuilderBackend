@@ -94,7 +94,7 @@ class BaseCatalogImporterIntegrationTest {
 
     @Test
     void createsMissingPlayersWithMappedFieldsAndSkipsExistingAndUnlinked() {
-        BaseImportResult result = importer.importMissing(tables(), (short) 27);
+        BaseImportResult result = importer.importMissing(tables(), (short) 27, false, true);
 
         assertThat(result.created()).isEqualTo(2);
         assertThat(result.existing()).isEqualTo(1);
@@ -124,6 +124,23 @@ class BaseCatalogImporterIntegrationTest {
         assertThat(keeper.get("playstyles").toString()).contains("FarThrow");
         assertThat(keeper.get("club")).isEqualTo("Free Agents");
         assertThat(basePlayerRepository.findByEaResourceId(NO_TEAM)).isEmpty();
+    }
+
+    @Test
+    void overwriteReplacesRatingsOfExistingPlayersButKeepsTheirName() {
+        Map<String, List<Map<String, String>>> tables = tables();
+        tables.get("players").get(3).put("overallrating", "99");
+        tables.get("players").get(3).put("preferredposition1", "14");
+
+        BaseImportResult result = importer.importMissing(tables, (short) 27, true, false);
+
+        assertThat(result.updated()).isGreaterThanOrEqualTo(1);
+        Map<String, Object> row = jdbc.queryForMap("""
+                SELECT b.full_name, r.overall, array_to_string(r.positions, ',') AS positions
+                FROM base_player b JOIN player_rating r ON r.base_player_id = b.id WHERE b.ea_resource_id = ?""", EXISTING_MOCK_ID);
+        assertThat(((Number) row.get("overall")).intValue()).isEqualTo(99);
+        assertThat(row.get("positions")).isEqualTo("CM");
+        assertThat(row.get("full_name")).isNotEqualTo("Already Here");
     }
 
     @Test
