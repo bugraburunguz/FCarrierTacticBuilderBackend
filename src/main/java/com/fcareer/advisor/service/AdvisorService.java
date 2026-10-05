@@ -57,6 +57,7 @@ public class AdvisorService {
     private static final String ADVISOR = "ADVISOR";
     private static final String STYLE = "STYLE";
     private static final String REPLICA = "REPLICA";
+    private static final String PERSONAL = "PERSONAL";
     private static final String ADAPTIVE = "ADAPTIVE";
     private static final String CUSTOM_NAME = "Kadroya özel kurulum";
     private static final String BETTER_ELSEWHERE = "BETTER_ELSEWHERE";
@@ -100,7 +101,7 @@ public class AdvisorService {
     private Advice compute(List<FitPlayer> players, AdvisorRequest request, CareerService.CareerSquad squad) {
         Map<String, FitTag> tagCatalog = behaviorTagService.fitTagsById();
         List<PresetResponse> presets = presetService.findByKind(null);
-        List<PresetResponse> styles = presets.stream().filter(p -> STYLE.equals(p.getKind())).toList();
+        List<PresetResponse> styles = presets.stream().filter(p -> STYLE.equals(p.getKind()) || PERSONAL.equals(p.getKind())).toList();
         List<PresetResponse> replicas = presets.stream().filter(p -> REPLICA.equals(p.getKind())).toList();
         PresetResponse philosophy = presets.stream().filter(p -> p.getId().equals(request.getPhilosophyPresetId())).findFirst().orElse(null);
 
@@ -134,17 +135,20 @@ public class AdvisorService {
         return buildAdvice(players, request, squad, all, philosophy);
     }
 
-    private Scored scoreStyle(List<FitPlayer> players, PresetResponse style, FormationDefinition formation,
-                              Map<String, List<String>> template) {
+    Scored scoreStyle(List<FitPlayer> players, PresetResponse style, FormationDefinition formation, Map<String, List<String>> template) {
         Map<String, List<String>> bySlot = new LinkedHashMap<>();
+        Map<String, String> presetGroups = formationRegistry.get(style.getFormation()).slots().stream()
+                .collect(Collectors.toMap(FormationSlot::slotId, FormationSlot::group));
         for (FormationSlot slot : formation.slots()) {
-            List<String> tags = template.getOrDefault(slot.group(), List.of());
+            List<String> nativeTags = style.getSlotTags().get(slot.slotId());
+            boolean sameGroup = Objects.nonNull(nativeTags) && slot.group().equals(presetGroups.get(slot.slotId()));
+            List<String> tags = sameGroup ? nativeTags : template.getOrDefault(slot.group(), List.of());
             if (!tags.isEmpty()) {
                 bySlot.put(slot.slotId(), tags);
             }
         }
         List<IntentProfile> profiles = resolve(formation.id(), null, bySlot);
-        return scored(STYLE, style, formation.id(), profiles, evaluate(players, profiles));
+        return scored(style.getKind().equals(PERSONAL) ? STYLE : style.getKind(), style, formation.id(), profiles, evaluate(players, profiles));
     }
 
     private Scored adaptive(List<FitPlayer> players, String formationId) {
@@ -262,7 +266,7 @@ public class AdvisorService {
         return suggestions;
     }
 
-    private Scored scored(String kind, PresetResponse preset, String formationId, List<IntentProfile> profiles, Eval eval) {
+    Scored scored(String kind, PresetResponse preset, String formationId, List<IntentProfile> profiles, Eval eval) {
         Candidate candidate = Candidate.builder().kind(kind).presetId(preset.getId()).name(preset.getName()).formation(formationId)
                 .formationLabel(label(formationId)).score(round1(eval.score())).squadFit(round1(eval.squadFit()))
                 .intentFit(Objects.isNull(eval.intentFit()) ? null : round1(eval.intentFit()))
@@ -270,7 +274,7 @@ public class AdvisorService {
         return new Scored(candidate, profiles);
     }
 
-    private Map<String, List<String>> styleTemplate(PresetResponse style, Map<String, FitTag> tagCatalog) {
+    Map<String, List<String>> styleTemplate(PresetResponse style, Map<String, FitTag> tagCatalog) {
         FormationDefinition source = formationRegistry.get(style.getFormation());
         Map<String, String> groupBySlot = source.slots().stream().collect(Collectors.toMap(FormationSlot::slotId, FormationSlot::group));
         Map<String, List<String>> template = new LinkedHashMap<>();
@@ -289,22 +293,37 @@ public class AdvisorService {
                 }
             }
         });
+        mergeGroupTags(style, template, tagCatalog);
         return template;
     }
 
-    private List<IntentProfile> resolve(String formationId, String presetId, Map<String, List<String>> tagsBySlot) {
+    @SuppressWarnings("unchecked")
+    private void mergeGroupTags(PresetResponse style, Map<String, List<String>> template, Map<String, FitTag> tagCatalog) {
+        Object declared = Objects.isNull(style.getSettings()) ? null : style.getSettings().get("groupTags");
+        if (!(declared instanceof Map<?, ?> groups)) {
+            return;
+        }
+        ((Map<String, List<String>>) groups).forEach((group, tagIds) -> {
+            List<String> valid = tagIds.stream().filter(tagCatalog::containsKey).toList();
+            if (!valid.isEmpty()) {
+                template.put(group, new ArrayList<>(valid));
+            }
+        });
+    }
+
+    List<IntentProfile> resolve(String formationId, String presetId, Map<String, List<String>> tagsBySlot) {
         List<SlotSelection> selections = tagsBySlot.entrySet().stream()
                 .map(e -> SlotSelection.builder().slotId(e.getKey()).tags(e.getValue()).build()).toList();
         return tacticResolver.resolve(TacticRequest.builder().formation(formationId).presetId(presetId).slots(new ArrayList<>(selections)).build()).slots();
     }
 
-    private TacticRequest toTactic(String formationId, String presetId, List<IntentProfile> profiles) {
+    TacticRequest toTactic(String formationId, String presetId, List<IntentProfile> profiles) {
         List<SlotSelection> slots = profiles.stream().map(p -> SlotSelection.builder().slotId(p.getSlotId())
                 .tags(p.getTags().stream().map(FitTag::getId).toList()).roleId(p.getResolvedRole().getId()).build()).toList();
         return TacticRequest.builder().formation(formationId).presetId(presetId).slots(new ArrayList<>(slots)).build();
     }
 
-    private String label(String formationId) {
+    String label(String formationId) {
         return Objects.requireNonNullElse(formationRegistry.get(formationId).label(), formationId);
     }
 
@@ -328,7 +347,7 @@ public class AdvisorService {
         return null;
     }
 
-    private Eval evaluate(List<FitPlayer> players, List<IntentProfile> slots) {
+    Eval evaluate(List<FitPlayer> players, List<IntentProfile> slots) {
         int playerCount = players.size();
         int slotCount = slots.size();
         double[][] combined = new double[playerCount][slotCount];
@@ -364,16 +383,31 @@ public class AdvisorService {
             }
         }
         double divisor = Math.max(assigned, 1);
-        return new Eval(combinedSum / divisor, roleSum / divisor, intentCount == 0 ? null : intentSum / intentCount);
+        return new Eval(combinedSum / divisor, roleSum / divisor, intentCount == 0 ? null : intentSum / intentCount,
+                depth(roleScores, assignment, slotCount));
+    }
+
+    private double depth(double[][] roleScores, int[] assignment, int slotCount) {
+        double total = 0;
+        for (int s = 0; s < slotCount; s++) {
+            double bestBackup = 0;
+            for (int p = 0; p < assignment.length; p++) {
+                if (assignment[p] < 0) {
+                    bestBackup = Math.max(bestBackup, roleScores[p][s]);
+                }
+            }
+            total += bestBackup;
+        }
+        return total / Math.max(slotCount, 1) / 100.0;
     }
 
     private static double round1(double value) {
         return Math.round(value * 10) / 10.0;
     }
 
-    private record Eval(double score, double squadFit, Double intentFit) {
+    record Eval(double score, double squadFit, Double intentFit, double depth) {
     }
 
-    private record Scored(Candidate candidate, List<IntentProfile> profiles) {
+    record Scored(Candidate candidate, List<IntentProfile> profiles) {
     }
 }

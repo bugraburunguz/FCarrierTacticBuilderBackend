@@ -75,6 +75,24 @@ public class PositionAdviceService {
         return advice;
     }
 
+    public Map<Long, Map<String, Double>> bestScores(List<FitPlayer> players) {
+        Map<String, FitRole> roles = roleService.fitRolesById();
+        Map<Long, Map<String, Double>> matrix = new java.util.HashMap<>();
+        for (FitPlayer player : players) {
+            Map<String, Double> byPosition = new java.util.HashMap<>();
+            List<String> candidates = player.getPositions().contains(GOALKEEPER) ? List.of(GOALKEEPER) : OUTFIELD_POSITIONS;
+            for (String position : candidates) {
+                for (FitRole role : roles.values()) {
+                    if (role.getPositions().contains(position)) {
+                        byPosition.merge(position, roleFitService.calculate(player, role, null, position).getScore(), Math::max);
+                    }
+                }
+            }
+            matrix.put(player.getId(), byPosition);
+        }
+        return matrix;
+    }
+
     private boolean isOwnBest(List<PositionOption> sorted) {
         if (sorted.isEmpty()) {
             return true;

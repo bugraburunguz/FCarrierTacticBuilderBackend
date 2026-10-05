@@ -213,6 +213,36 @@ class ApiFlowIntegrationTest {
         assertThat(result.at("/transferSuggestions").isArray()).isTrue();
     }
 
+    @Test
+    void autoFitRecommendsFormationsPresetsAndTwoDifferentCombos() throws Exception {
+        String token = registerAndGetToken();
+        long careerId = createCareer(token, 0).at("/data/id").asLong();
+
+        JsonNode presets = call(get("/api/v1/presets?kind=PERSONAL"), null, null, 200);
+        assertThat(presets.at("/data/0/id").asText()).isEqualTo("personal_cakal_doktrini");
+
+        JsonNode response = call(post("/api/v1/advisor/tactic"), Map.of("careerId", careerId), token, 200);
+        assertThat(response.at("/success").asBoolean()).as(response.toString()).isTrue();
+        assertThat(response.at("/data/charged").asInt()).isEqualTo(8);
+        JsonNode result = response.at("/data/result");
+        assertThat(result.at("/formations").size()).isBetween(1, 5);
+        assertThat(result.at("/presets").size()).isBetween(1, 5);
+        assertThat(result.at("/bestCombos")).hasSize(2);
+        JsonNode first = result.at("/bestCombos/0");
+        JsonNode second = result.at("/bestCombos/1");
+        assertThat(first.at("/formation").asText() + first.at("/presetId").asText())
+                .isNotEqualTo(second.at("/formation").asText() + second.at("/presetId").asText());
+        assertThat(first.at("/lineup/slots")).hasSize(11);
+        assertThat(first.at("/pct").asInt()).isGreaterThanOrEqualTo(second.at("/pct").asInt());
+
+        JsonNode locked = call(post("/api/v1/advisor/tactic"), Map.of("careerId", careerId, "lockFormation", "4-4-2",
+                "diversityMode", "differentPreset"), token, 200);
+        JsonNode lockedCombos = locked.at("/data/result/bestCombos");
+        assertThat(lockedCombos.get(0).at("/formation").asText()).isEqualTo("4-4-2");
+        assertThat(lockedCombos.get(1).at("/formation").asText()).isEqualTo("4-4-2");
+        assertThat(lockedCombos.get(0).at("/presetId").asText()).isNotEqualTo(lockedCombos.get(1).at("/presetId").asText());
+    }
+
     private JsonNode createCareer(String token, long budget) throws Exception {
         long clubId = clubRepository.findAll().get(0).getId();
         JsonNode career = call(post("/api/v1/careers"), Map.of("clubId", clubId, "budgetEur", budget), token, 200);
