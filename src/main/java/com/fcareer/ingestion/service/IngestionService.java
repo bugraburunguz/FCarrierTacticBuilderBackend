@@ -118,7 +118,7 @@ public class IngestionService {
             PlayerRatingEntity rating = ratings.getOrDefault(base.getId(), new PlayerRatingEntity());
             rating.setBasePlayerId(base.getId());
             rating.setGameVersionId(gameVersion);
-            applyRating(rating, player, leagues);
+            applyRating(rating, player, base, leagues);
             playerRatingRepository.save(rating);
             if (isNew) {
                 created++;
@@ -132,22 +132,28 @@ public class IngestionService {
     private void applyBase(BasePlayerEntity base, ExternalPlayer player, Map<String, NationalityEntity> cache) {
         base.setFullName(player.fullName());
         base.setDob(player.dob());
-        base.setHeightCm(toShort(player.heightCm()));
-        base.setWeightKg(toShort(player.weightKg()));
+        // FC27 sayfası boy/kiloyu boş döndürüyor; daha önce dökümden doldurulmuş değerler ezilmez.
+        if (Objects.nonNull(player.heightCm())) {
+            base.setHeightCm(toShort(player.heightCm()));
+        }
+        if (Objects.nonNull(player.weightKg())) {
+            base.setWeightKg(toShort(player.weightKg()));
+        }
         base.setPreferredFoot(player.preferredFoot());
         base.setGender((short) player.gender());
         base.setNationalityId(Objects.isNull(player.nationality()) ? null : cache
                 .computeIfAbsent(player.nationality(), this::nationality).getId());
     }
 
-    private void applyRating(PlayerRatingEntity rating, ExternalPlayer player, Map<String, LeagueEntity> leagues) {
+    private void applyRating(PlayerRatingEntity rating, ExternalPlayer player, BasePlayerEntity base,
+                             Map<String, LeagueEntity> leagues) {
         rating.setOverall((short) player.overall());
         rating.setPositions(player.positions());
         rating.setWeakFoot(toShort(player.weakFoot()));
         rating.setSkillMoves(toShort(player.skillMoves()));
         rating.setPlaystyles(player.playstyles());
-        AcceleRate acceleRate = acceleRateDeriver.derive(player.heightCm(), player.attrs());
-        rating.setAccelerate(acceleRate.name());
+        rating.setAccelerate(acceleRateDeriver.derive(Objects.isNull(base.getHeightCm()) ? null : base.getHeightCm().intValue(),
+                player.gender(), player.attrs()).map(AcceleRate::name).orElse(null));
         ratingAttrAccessor.write(rating, player.attrs());
         rating.setClubId(club(player, leagues));
     }

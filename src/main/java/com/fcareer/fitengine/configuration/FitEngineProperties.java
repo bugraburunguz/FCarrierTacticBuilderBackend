@@ -56,12 +56,17 @@ public class FitEngineProperties {
     public static class Accelerate {
         private double match = 4;
         private double mismatch = -6;
+        // FC26 için topluluk kaynaklarında belgelenen eşikler (fut.gg, fifauteam); FC27 için doğrulanmadı — CONFIG.
         private int explosiveMaxHeight = 182;
+        private int explosiveMaxHeightWomen = 162;
         private int explosiveMinAgility = 65;
         private int explosiveMinAgilityMinusStrength = 10;
+        private int explosiveMinAcceleration = 80;
         private int lengthyMinHeight = 183;
+        private int lengthyMinHeightWomen = 164;
         private int lengthyMinStrength = 65;
         private int lengthyMinStrengthMinusAgility = 4;
+        private int lengthyMinAcceleration = 40;
     }
 
     @Getter
