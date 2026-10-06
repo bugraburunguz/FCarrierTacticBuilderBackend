@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ImportSummaryResponse {
     private int players;
+    private int generatedPlayers;
     private int unmatchedPlayers;
     private int teams;
     private int freeAgents;

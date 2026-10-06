@@ -5,6 +5,7 @@ import com.fcareer.career.entity.CareerEntity;
 import com.fcareer.career.model.response.ImportSummaryResponse;
 import com.fcareer.career.service.CareerService;
 import com.fcareer.common.exception.ImportParseException;
+import com.fcareer.ingestion.base.BaseCatalogImporter;
 import com.fcareer.ingestion.base.BaseUploads;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +43,7 @@ public class CareerImportService {
     private final NamedParameterJdbcTemplate jdbc;
     private final CareerService careerService;
     private final EntitlementService entitlementService;
+    private final BaseCatalogImporter baseCatalogImporter;
 
     @Transactional
     public ImportSummaryResponse importData(Long userId, Long careerId, MultipartFile logFile, MultipartFile players, MultipartFile teams,
@@ -69,6 +71,8 @@ public class CareerImportService {
         });
         Map<Long, Integer> playerTeam = readLinks(tables.get("teamplayerlinks"), nationalTeams);
         Map<Long, Long> eaToBase = eaIdMap();
+        Map<Long, Long> generated = baseCatalogImporter.upsertCareerPlayers(careerId, tables, career.getGameVersionId());
+        eaToBase.putAll(generated);
         Map<Long, int[]> ratings = new HashMap<>();
         readPlayers(tables.get("players"), ratings);
 
@@ -145,7 +149,7 @@ public class CareerImportService {
         log.info("Career import done careerId : {} players : {} teams : {} freeAgents : {} unmatched : {}",
                 careerId, playerRows.size(), teamParams.size(), freeAgents, unmatched);
         return ImportSummaryResponse.builder()
-                .players(playerRows.size()).unmatchedPlayers(unmatched).teams(teamParams.size()).freeAgents(freeAgents)
+                .players(playerRows.size()).generatedPlayers(generated.size()).unmatchedPlayers(unmatched).teams(teamParams.size()).freeAgents(freeAgents)
                 .guessedTeamId(guess.isEmpty() ? null : ((Number) guess.get(0).get("team_id")).intValue())
                 .guessedTeamName(guess.isEmpty() ? null : (String) guess.get(0).get("name"))
                 .build();

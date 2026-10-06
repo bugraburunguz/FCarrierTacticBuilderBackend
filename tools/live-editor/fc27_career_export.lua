@@ -1,54 +1,36 @@
---- FC Career Platform - kariyer disa aktarimi (SADECE OKUR, hicbir seyi degistirmez).
---- Kullanim: oyunu ac -> KARIYERINI YUKLE (ana menude degil, kariyerin icinde ol) -> Live Editor -> Lua Engine -> bu dosyayi calistir.
---- Cikti: Live Editor Lua dosya yazmayi kapali tuttugu icin veri Logs/live_editor_<tarih>.log dosyasina "FCDUMP" satirlari olarak yazilir;
----        bu log dosyasini sitedeki 'Ice aktar' sayfasina yukle. (Dosya yazma aciksa Masaustu/careerexport klasorune CSV de yazilir.)
---- Dosya olusmazsa Logs\live_editor_<tarih>.log icinde "FCDUMP" satirlari yazilir.
+--- FC Career Platform - BASE KATALOG disa aktarimi (SADECE OKUR, hicbir seyi degistirmez).
+--- Tum oyuncular (alt lig, genc, regen, serbest dahil) + isimleri + takim/lig verisi.
+--- Kullanim: oyunu ac -> Live Editor -> Lua Engine -> bu dosyayi calistir (ana menude de, kariyerde de calisir).
+--- Cikti: Live Editor'un Logs/live_editor_<tarih>.log dosyasina "FCDUMP" satirlari olarak yazilir
+---        (Lua dosya yazma kapali oldugu icin). Dosyayi sonra projenin icindeki FC 27 LE klasorunden aliriz.
+---
+--- NOT: Live Editor tablo kayit sayisini isaretli 16-bit okuyor; 32767'den buyuk tablolarda (playernames ~43 bin)
+--- sayi eksiye dondugu icin eski donguler 1 kayitta duruyordu. Burada sayi duzeltilip kayitlar tek tek gezilir.
 
-local FALLBACK_DIR = "C:\\FC 27 Live Editor\\export\\"
-local FOLDER = "careerexport"
-
-local function can_write(dir)
-    if type(io) ~= "table" or type(io.open) ~= "function" then return false end
-    local probe = dir .. ".probe"
-    local ok, f = pcall(io.open, probe, "wb")
-    if ok and f then
-        f:close()
-        if type(os) == "table" and type(os.remove) == "function" then pcall(os.remove, probe) end
-        return true
-    end
-    return false
-end
-
-local function ensure_dir(dir)
-    if can_write(dir) then return true end
-    if type(os) == "table" and type(os.execute) == "function" then
-        pcall(os.execute, 'if not exist "' .. dir .. '" mkdir "' .. dir .. '"')
-    end
-    return can_write(dir)
-end
-
-local function pick_out_dir()
-    if FC_DUMP_OUT_DIR then return FC_DUMP_OUT_DIR end
-    local home = type(os) == "table" and type(os.getenv) == "function" and os.getenv("USERPROFILE") or nil
-    if home then
-        local bases = { home .. "\\OneDrive\\Desktop\\", home .. "\\Desktop\\" }
-        for _, base in ipairs(bases) do
-            local dir = base .. FOLDER .. "\\"
-            if ensure_dir(dir) then return dir end
-        end
-    end
-    return FALLBACK_DIR
-end
-
-local OUT_DIR = pick_out_dir()
 local MARK = "FCDUMP"
-local FLUSH_EVERY = 500
+local PROGRESS_EVERY = 5000
+
+local PLAYER_COLUMNS = {
+    "playerid", "birthdate", "height", "weight", "preferredfoot", "nationality", "gender",
+    "firstnameid", "lastnameid", "commonnameid", "playerjerseynameid",
+    "overallrating", "potential",
+    "preferredposition1", "preferredposition2", "preferredposition3", "preferredposition4",
+    "preferredposition5", "preferredposition6", "preferredposition7",
+    "weakfootabilitytypecode", "skillmoves", "internationalrep",
+    "trait1", "trait2", "icontrait1", "icontrait2", "runningcode1", "runningcode2", "bodytypecode",
+    "acceleration", "sprintspeed", "agility", "balance", "reactions", "ballcontrol", "dribbling", "composure",
+    "vision", "shortpassing", "longpassing", "crossing", "curve", "freekickaccuracy", "finishing", "shotpower",
+    "longshots", "volleys", "penalties", "positioning", "headingaccuracy", "defensiveawareness",
+    "standingtackle", "slidingtackle", "interceptions", "jumping", "stamina", "strength", "aggression",
+    "gkdiving", "gkhandling", "gkkicking", "gkpositioning", "gkreflexes",
+}
 
 local TABLES = {
-    { name = "players", columns = { "playerid", "overallrating", "potential" } },
-    { name = "teams", columns = { "teamid", "teamname", "overallrating", "attackrating", "midfieldrating", "defenserating",
-        "buildupplay", "defensivedepth", "youthdevelopment", "domesticprestige", "internationalprestige", "popularity",
-        "clubworth", "profitability", "rivalteam", "gender" } },
+    { name = "playernames", columns = { "nameid", "name" } },
+    { name = "players", columns = PLAYER_COLUMNS },
+    { name = "teams", columns = { "teamid", "teamname", "overallrating", "attackrating", "midfieldrating",
+        "defenserating", "buildupplay", "defensivedepth", "youthdevelopment", "domesticprestige",
+        "internationalprestige", "popularity", "clubworth", "profitability", "rivalteam", "gender" } },
     { name = "teamplayerlinks", columns = { "playerid", "teamid" } },
     { name = "leagueteamlinks", columns = { "teamid", "leagueid" } },
     { name = "leagues", columns = { "leagueid", "leaguename", "isinternationalleague" } },
@@ -57,17 +39,16 @@ local TABLES = {
 local function csv(v)
     if v == nil then return "" end
     local s = tostring(v)
-    if s:find('[",\r\n]') then
-        s = '"' .. (s:gsub('"', '""')) .. '"'
+    if s:find('[",\r\n\t]') then
+        s = '"' .. (s:gsub('"', '""'):gsub("[\r\n\t]", " ")) .. '"'
     end
     return s
 end
 
-local function open_file(name)
-    if type(io) ~= "table" or type(io.open) ~= "function" then return nil end
-    local ok, f = pcall(io.open, OUT_DIR .. name .. ".csv", "wb")
-    if ok and f then return f end
-    return nil
+local function record_count(tbl)
+    local count = tbl.written_records
+    if count < 0 then count = count + 65536 end
+    return count
 end
 
 local function dump_table(spec)
@@ -76,35 +57,34 @@ local function dump_table(spec)
         Log(string.format("%s\tSKIP\t%s", MARK, spec.name))
         return 0
     end
-    local file = open_file(spec.name)
-    local header = {}
-    for i, name in ipairs(spec.columns) do header[i] = csv(name) end
-    local header_line = table.concat(header, ",")
-    if file then file:write(header_line, "\n") else Log(string.format("%s\tHEADER\t%s\t%s", MARK, spec.name, header_line)) end
-
-    local buffer, count = {}, 0
-    local record = tbl:GetFirstRecord()
-    while record > 0 do
-        local row = {}
-        for i, name in ipairs(spec.columns) do
-            row[i] = csv(tbl:GetRecordFieldValue(record, name))
-        end
-        local line = table.concat(row, ",")
-        count = count + 1
-        if file then
-            buffer[#buffer + 1] = line
-            if #buffer >= FLUSH_EVERY then
-                file:write(table.concat(buffer, "\n"), "\n")
-                buffer = {}
-            end
+    local columns = {}
+    for _, name in ipairs(spec.columns) do
+        if tbl.fields[name] ~= nil then
+            columns[#columns + 1] = name
         else
-            Log(string.format("%s\tROW\t%s\t%s", MARK, spec.name, line))
+            Log(string.format("%s\tMISSINGFIELD\t%s\t%s", MARK, spec.name, name))
         end
-        record = tbl:GetNextValidRecord()
     end
-    if file then
-        if #buffer > 0 then file:write(table.concat(buffer, "\n"), "\n") end
-        file:close()
+    local header = {}
+    for i, name in ipairs(columns) do header[i] = csv(name) end
+    local total = record_count(tbl)
+    Log(string.format("%s\tBEGIN\t%s\tfields=%d\trecords=%d\tvia=log", MARK, spec.name, #header, total))
+    Log(string.format("%s\tHEADER\t%s\t%s", MARK, spec.name, table.concat(header, ",")))
+
+    local count = 0
+    for index = 0, total - 1 do
+        local record = tbl.first_record + (tbl.record_size * index)
+        if tbl:IsRecordValid(record) then
+            local row = {}
+            for i, name in ipairs(columns) do
+                row[i] = csv(tbl:GetRecordFieldValue(record, name))
+            end
+            count = count + 1
+            Log(string.format("%s\tROW\t%s\t%s", MARK, spec.name, table.concat(row, ",")))
+            if count % PROGRESS_EVERY == 0 then
+                Log(string.format("%s\tPROGRESS\t%s\t%d", MARK, spec.name, count))
+            end
+        end
     end
     Log(string.format("%s\tEND\t%s\t%d", MARK, spec.name, count))
     return count
@@ -117,10 +97,5 @@ for _, spec in ipairs(TABLES) do
     if not ok then Log(string.format("%s\tERROR\t%s\t%s", MARK, spec.name, tostring(count))) end
 end
 
-MessageBox("Disa aktarim bitti", table.concat(summary, "
-") ..
-    "
-
-Veri su dosyaya yazildi (Live Editor klasoru):
-Logs\live_editor_<tarih>.log
-Bu dosyayi sitedeki 'Ice aktar' sayfasina yukle.")
+MessageBox("Base disa aktarim bitti", table.concat(summary, "\n") ..
+    "\n\nVeri Live Editor log dosyasina yazildi:\nFC 27 LE v27.1.0/Logs/live_editor_<tarih>.log\nBana 'bitti' yaz, gerisini ben alirim.")

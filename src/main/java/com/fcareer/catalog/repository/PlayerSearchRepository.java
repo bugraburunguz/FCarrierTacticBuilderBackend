@@ -79,6 +79,9 @@ public class PlayerSearchRepository {
         clauses.add("r.game_version_id = :gv");
         params.addValue("gv", request.getGameVersionId());
         params.addValue("careerId", request.getCareerId(), java.sql.Types.BIGINT);
+        if (Objects.isNull(request.getIdFilter()) && (Objects.isNull(request.getIds()) || request.getIds().isEmpty())) {
+            clauses.add("(b.owner_career_id IS NULL OR b.owner_career_id = CAST(:careerId AS BIGINT))");
+        }
         if (Objects.nonNull(request.getQuery()) && !request.getQuery().isBlank()) {
             clauses.add("b.full_name ILIKE :q");
             params.addValue("q", "%" + request.getQuery().trim() + "%");

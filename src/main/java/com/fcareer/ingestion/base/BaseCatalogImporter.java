@@ -50,50 +50,13 @@ public class BaseCatalogImporter {
     @Transactional
     public BaseImportResult importMissing(Map<String, List<Map<String, String>>> tables, short gameVersionId, boolean overwriteExisting,
                                          boolean createMissing) {
-        List<Map<String, String>> players = require(tables, "players");
-        List<Map<String, String>> teams = require(tables, "teams");
-        List<Map<String, String>> links = require(tables, "teamplayerlinks");
-        List<Map<String, String>> leagueLinks = tables.getOrDefault("leagueteamlinks", List.of());
-        List<Map<String, String>> leagues = tables.getOrDefault("leagues", List.of());
-
-        Map<Integer, String> leagueNames = new HashMap<>();
-        Set<Integer> international = new HashSet<>();
-        for (Map<String, String> row : leagues) {
-            Integer id = toInt(row.get("leagueid"));
-            if (Objects.nonNull(id)) {
-                leagueNames.put(id, row.get("leaguename"));
-                if (Objects.equals(toInt(row.get("isinternationalleague")), 1)) {
-                    international.add(id);
-                }
-            }
-        }
-        Map<Integer, Integer> teamLeague = new HashMap<>();
-        for (Map<String, String> row : leagueLinks) {
-            Integer team = toInt(row.get("teamid"));
-            Integer league = toInt(row.get("leagueid"));
-            if (Objects.nonNull(team) && Objects.nonNull(league)) {
-                teamLeague.put(team, league);
-            }
-        }
-        Set<Integer> nationalTeams = new HashSet<>();
-        teamLeague.forEach((team, league) -> {
-            if (international.contains(league)) {
-                nationalTeams.add(team);
-            }
-        });
-        Map<Integer, Map<String, String>> teamRows = new HashMap<>();
-        for (Map<String, String> row : teams) {
-            Integer id = toInt(row.get("teamid"));
-            if (Objects.nonNull(id)) {
-                teamRows.put(id, row);
-            }
-        }
-        Map<Long, Integer> playerTeam = playerTeams(links, nationalTeams);
-
-        Map<Integer, String> names = playerNames(tables.getOrDefault("playernames", List.of()));
-        Map<Long, Long> existing = existingPlayers();
-        NationalityResolver nationalities = new NationalityResolver(players, existing);
-        ClubResolver clubs = new ClubResolver(teamRows, teamLeague, leagueNames);
+        Context ctx = buildContext(tables);
+        List<Map<String, String>> players = ctx.players();
+        Map<Long, Integer> playerTeam = ctx.playerTeam();
+        Map<Integer, String> names = ctx.names();
+        Map<Long, Long> existing = ctx.existing();
+        NationalityResolver nationalities = ctx.nationalities();
+        ClubResolver clubs = ctx.clubs();
 
         List<SqlParameterSource> basePlayers = new ArrayList<>();
         Map<Long, Map<String, String>> pending = new LinkedHashMap<>();
@@ -164,7 +127,119 @@ public class BaseCatalogImporter {
                 nationalities.created(), clubs.createdClubs(), clubs.createdLeagues(), ratingUpdates.size());
     }
 
+
+    private record Context(List<Map<String, String>> players, Map<Long, Integer> playerTeam, Map<Integer, String> names,
+                           Map<Long, Long> existing, NationalityResolver nationalities, ClubResolver clubs) {
+    }
+
+    private Context buildContext(Map<String, List<Map<String, String>>> tables) {
+        List<Map<String, String>> players = require(tables, "players");
+        List<Map<String, String>> teams = require(tables, "teams");
+        List<Map<String, String>> links = require(tables, "teamplayerlinks");
+        List<Map<String, String>> leagueLinks = tables.getOrDefault("leagueteamlinks", List.of());
+        List<Map<String, String>> leagues = tables.getOrDefault("leagues", List.of());
+
+        Map<Integer, String> leagueNames = new HashMap<>();
+        Set<Integer> international = new HashSet<>();
+        for (Map<String, String> row : leagues) {
+            Integer id = toInt(row.get("leagueid"));
+            if (Objects.nonNull(id)) {
+                leagueNames.put(id, row.get("leaguename"));
+                if (Objects.equals(toInt(row.get("isinternationalleague")), 1)) {
+                    international.add(id);
+                }
+            }
+        }
+        Map<Integer, Integer> teamLeague = new HashMap<>();
+        for (Map<String, String> row : leagueLinks) {
+            Integer team = toInt(row.get("teamid"));
+            Integer league = toInt(row.get("leagueid"));
+            if (Objects.nonNull(team) && Objects.nonNull(league)) {
+                teamLeague.put(team, league);
+            }
+        }
+        Set<Integer> nationalTeams = new HashSet<>();
+        teamLeague.forEach((team, league) -> {
+            if (international.contains(league)) {
+                nationalTeams.add(team);
+            }
+        });
+        Map<Integer, Map<String, String>> teamRows = new HashMap<>();
+        for (Map<String, String> row : teams) {
+            Integer id = toInt(row.get("teamid"));
+            if (Objects.nonNull(id)) {
+                teamRows.put(id, row);
+            }
+        }
+        Map<Long, Integer> playerTeam = playerTeams(links, nationalTeams);
+
+        Map<Integer, String> names = playerNames(tables.getOrDefault("playernames", List.of()));
+        Map<Long, Long> existing = existingPlayers();
+        NationalityResolver nationalities = new NationalityResolver(players, existing);
+        ClubResolver clubs = new ClubResolver(teamRows, teamLeague, leagueNames);
+        return new Context(players, playerTeam, names, existing, nationalities, clubs);
+    }
+
+    /**
+     * Kariyerde üretilmiş (katalogda karşılığı olmayan) oyuncuları o kariyere ait oyuncu olarak oluşturur/günceller.
+     * Dönen harita: dump playerid → base_player.id.
+     */
+    @Transactional
+    public Map<Long, Long> upsertCareerPlayers(Long careerId, Map<String, List<Map<String, String>>> tables, short gameVersionId) {
+        Context ctx = buildContext(tables);
+        Map<Long, Long> known = careerPlayers(careerId);
+        List<SqlParameterSource> inserts = new ArrayList<>();
+        List<SqlParameterSource> baseUpdates = new ArrayList<>();
+        List<SqlParameterSource> ratingUpdates = new ArrayList<>();
+        Map<Long, Map<String, String>> fresh = new LinkedHashMap<>();
+        for (Map<String, String> row : ctx.players()) {
+            Long sourceId = toLong(row.get("playerid"));
+            Integer overall = toInt(row.get("overallrating"));
+            if (Objects.isNull(sourceId) || Objects.isNull(overall) || overall < MIN_OVERALL || ctx.existing().containsKey(sourceId)
+                    || Objects.isNull(ctx.playerTeam().get(sourceId)) || positions(row).isEmpty()) {
+                continue;
+            }
+            if (known.containsKey(sourceId)) {
+                baseUpdates.add(baseUpdateParams(known.get(sourceId), row));
+                ratingUpdates.add(ratingParams(known.get(sourceId), row, gameVersionId, ctx.clubs().idFor(ctx.playerTeam().get(sourceId))));
+                continue;
+            }
+            Integer birth = toInt(row.get("birthdate"));
+            inserts.add(new MapSqlParameterSource().addValue("career", careerId).addValue("source", sourceId)
+                    .addValue("name", nameOf(row, sourceId, ctx.names()))
+                    .addValue("dob", Objects.isNull(birth) ? null : java.sql.Date.valueOf(LocalDate.ofEpochDay(birth + DumpMappings.BIRTHDATE_EPOCH_OFFSET)))
+                    .addValue("nat", ctx.nationalities().idFor(toInt(row.get("nationality"))), java.sql.Types.INTEGER)
+                    .addValue("height", positiveOrNull(toInt(row.get("height"))), java.sql.Types.SMALLINT)
+                    .addValue("weight", positiveOrNull(toInt(row.get("weight"))), java.sql.Types.SMALLINT)
+                    .addValue("foot", foot(toInt(row.get("preferredfoot"))))
+                    .addValue("gender", Objects.equals(toInt(row.get("gender")), 1) ? 1 : 0));
+            fresh.put(sourceId, row);
+        }
+        batch("""
+                INSERT INTO base_player (owner_career_id, career_source_id, full_name, dob, nationality_id, height_cm, weight_kg, preferred_foot, gender)
+                VALUES (:career, :source, :name, :dob, :nat, :height, :weight, :foot, :gender)""", inserts);
+        batch(BASE_UPDATE_SQL, baseUpdates);
+        batch(RATING_UPDATE_SQL_WITH_CLUB, ratingUpdates);
+        Map<Long, Long> all = careerPlayers(careerId);
+        List<SqlParameterSource> ratings = new ArrayList<>();
+        fresh.forEach((sourceId, row) -> ratings.add(ratingParams(all.get(sourceId), row, gameVersionId,
+                ctx.clubs().idFor(ctx.playerTeam().get(sourceId)))));
+        batch(RATING_SQL, ratings);
+        log.info("Career generated players careerId : {} created : {} updated : {}", careerId, ratings.size(), ratingUpdates.size());
+        return all;
+    }
+
+    private Map<Long, Long> careerPlayers(Long careerId) {
+        Map<Long, Long> map = new HashMap<>();
+        jdbc.query("SELECT id, career_source_id FROM base_player WHERE owner_career_id = :c",
+                new MapSqlParameterSource("c", careerId), rs -> {
+                    map.put(rs.getLong("career_source_id"), rs.getLong("id"));
+                });
+        return map;
+    }
+
     private static final String RATING_SQL;
+    private static final String RATING_UPDATE_SQL_WITH_CLUB;
     private static final String RATING_UPDATE_SQL;
     private static final String BASE_UPDATE_SQL = """
             UPDATE base_player SET dob = :dob, height_cm = :height, weight_kg = :weight, preferred_foot = :foot, gender = :gender
@@ -187,6 +262,7 @@ public class BaseCatalogImporter {
             sets.append(", ").append(attr.getColumn()).append(" = :").append(attr.getColumn());
         }
         RATING_UPDATE_SQL = "UPDATE player_rating SET " + sets + " WHERE base_player_id = :base AND game_version_id = :gv";
+        RATING_UPDATE_SQL_WITH_CLUB = "UPDATE player_rating SET club_id = :club, " + sets + " WHERE base_player_id = :base AND game_version_id = :gv";
     }
 
     private SqlParameterSource baseUpdateParams(Long baseId, Map<String, String> row) {
@@ -334,7 +410,7 @@ public class BaseCatalogImporter {
             return full;
         }
         String inline = row.get("name");
-        return Objects.isNull(inline) || inline.isBlank() ? "Player " + eaId : inline.trim();
+        return Objects.isNull(inline) || inline.isBlank() ? "Oyuncu #" + eaId : inline.trim();
     }
 
     private static Integer positiveOrNull(Integer value) {

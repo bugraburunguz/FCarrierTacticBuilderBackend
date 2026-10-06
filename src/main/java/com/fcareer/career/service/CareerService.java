@@ -123,6 +123,9 @@ public class CareerService {
         assertOwner(career, userId);
         rosterEventRepository.deleteByCareerId(careerId);
         userPlayerStateRepository.deleteByCareerId(careerId);
+        rosterEventRepository.flush();
+        userPlayerStateRepository.flush();
+        deleteGeneratedPlayers(careerId);
         careerRepository.deleteSnapshots(careerId);
         careerRepository.delete(career);
         log.info("Career deleted careerId : {} userId : {}", careerId, userId);
@@ -354,6 +357,14 @@ public class CareerService {
             state.setValueEur(valuation.getValueEur());
         }
         userPlayerStateRepository.save(state);
+    }
+
+    private void deleteGeneratedPlayers(Long careerId) {
+        java.util.Map<String, Object> params = java.util.Map.of("c", careerId);
+        jdbc.update("DELETE FROM career_player_data WHERE career_id = :c", params);
+        jdbc.update("DELETE FROM player_valuation WHERE base_player_id IN (SELECT id FROM base_player WHERE owner_career_id = :c)", params);
+        jdbc.update("DELETE FROM player_rating WHERE base_player_id IN (SELECT id FROM base_player WHERE owner_career_id = :c)", params);
+        jdbc.update("DELETE FROM base_player WHERE owner_career_id = :c", params);
     }
 
     public CareerEntity requireOwned(Long userId, Long careerId) {

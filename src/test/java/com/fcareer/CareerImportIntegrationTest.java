@@ -29,6 +29,7 @@ class CareerImportIntegrationTest {
 
     private static final String PASSWORD = "S3cure-pass!";
     private static final long FIRST_MOCK_ID = 900_000L;
+    private static final long GENERATED_ID = 999_500L;
 
     @Autowired
     private MockMvc mockMvc;
@@ -40,6 +41,8 @@ class CareerImportIntegrationTest {
     private BasePlayerRepository basePlayerRepository;
     @Autowired
     private ClubRepository clubRepository;
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     @BeforeEach
     void seed() {
@@ -101,21 +104,39 @@ class CareerImportIntegrationTest {
         String prefix = "10:00:00.1" + tab + "INFO" + tab + "[LUA API] FCDUMP" + tab;
         String log = String.join("\n",
                 prefix + "BEGIN" + tab + "players" + tab + "fields=3",
-                prefix + "HEADER" + tab + "players" + tab + "playerid,overallrating,potential",
-                prefix + "ROW" + tab + "players" + tab + FIRST_MOCK_ID + ",88,92",
-                prefix + "END" + tab + "players" + tab + "1",
+                prefix + "HEADER" + tab + "players" + tab + "playerid,overallrating,potential,preferredposition1,gender,agility",
+                prefix + "ROW" + tab + "players" + tab + FIRST_MOCK_ID + ",88,92,-1,0,70",
+                prefix + "ROW" + tab + "players" + tab + GENERATED_ID + ",66,84,25,0,70",
+                prefix + "END" + tab + "players" + tab + "2",
                 prefix + "BEGIN" + tab + "teams" + tab + "fields=3",
                 prefix + "HEADER" + tab + "teams" + tab + "teamid,teamname,overallrating",
                 prefix + "ROW" + tab + "teams" + tab + "1,\"" + club.getName() + "\",80",
                 prefix + "BEGIN" + tab + "teamplayerlinks" + tab + "fields=2",
                 prefix + "HEADER" + tab + "teamplayerlinks" + tab + "playerid,teamid",
-                prefix + "ROW" + tab + "teamplayerlinks" + tab + FIRST_MOCK_ID + ",1");
+                prefix + "ROW" + tab + "teamplayerlinks" + tab + FIRST_MOCK_ID + ",1",
+                prefix + "ROW" + tab + "teamplayerlinks" + tab + GENERATED_ID + ",1");
 
         JsonNode result = json(multipart("/api/v1/careers/" + careerId + "/import").file(file("log", log)), token);
 
         assertThat(result.at("/success").asBoolean()).as(result.toString()).isTrue();
-        assertThat(result.at("/data/players").asInt()).isEqualTo(1);
+        assertThat(result.at("/data/players").asInt()).isEqualTo(2);
+        assertThat(result.at("/data/generatedPlayers").asInt()).isEqualTo(1);
         assertThat(result.at("/data/guessedTeamId").asInt()).isEqualTo(1);
+
+        String name = String.valueOf(GENERATED_ID);
+        assertThat(json(get("/api/v1/players?q=" + name), null).at("/data/items")).isEmpty();
+        JsonNode own = json(get("/api/v1/players?career=" + careerId + "&q=" + name), token);
+        assertThat(own.at("/data/items")).hasSize(1);
+        assertThat(own.at("/data/items/0/overall").asInt()).isEqualTo(66);
+        assertThat(own.at("/data/items/0/potential").asInt()).isEqualTo(84);
+
+        json(post("/api/v1/careers/" + careerId + "/import/squad?teamId=1"), token);
+        JsonNode squad = json(get("/api/v1/careers/" + careerId + "/squad"), token);
+        assertThat(squad.at("/data")).hasSize(2);
+
+        JsonNode deleted = json(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/v1/careers/" + careerId), token);
+        assertThat(deleted.at("/success").asBoolean()).as(deleted.toString()).isTrue();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM base_player WHERE career_source_id = ?", Integer.class, GENERATED_ID)).isZero();
     }
 
     private JsonNode upload(long careerId, String token, String clubName) throws Exception {
