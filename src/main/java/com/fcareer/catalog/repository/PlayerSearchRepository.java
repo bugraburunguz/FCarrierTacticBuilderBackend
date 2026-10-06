@@ -67,6 +67,30 @@ public class PlayerSearchRepository {
         return jdbc.query(sql, params, (rs, i) -> toSummary(rs));
     }
 
+    public record LeagueQuality(int id, String name, double averageOverall) {
+    }
+
+    public List<LeagueQuality> leagueQuality(Short gameVersionId, Short gender, int minOverall, int minPlayers) {
+        String sql = """
+                SELECT l.id AS id, l.name AS name, AVG(r.overall) AS average
+                  FROM player_rating r
+                  JOIN base_player b ON b.id = r.base_player_id
+                  JOIN club c ON c.id = r.club_id
+                  JOIN league l ON l.id = c.league_id
+                 WHERE b.owner_career_id IS NULL AND r.overall >= :minOverall
+                   AND (CAST(:gameVersionId AS SMALLINT) IS NULL OR r.game_version_id = :gameVersionId)
+                   AND (CAST(:gender AS SMALLINT) IS NULL OR b.gender = :gender)
+                 GROUP BY l.id, l.name
+                HAVING COUNT(*) >= :minPlayers
+                """;
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("gameVersionId", gameVersionId)
+                .addValue("gender", gender)
+                .addValue("minOverall", minOverall)
+                .addValue("minPlayers", minPlayers);
+        return jdbc.query(sql, params, (rs, i) -> new LeagueQuality(rs.getInt("id"), rs.getString("name"), rs.getDouble("average")));
+    }
+
     public long count(PlayerSearchRequest request) {
         MapSqlParameterSource params = new MapSqlParameterSource();
         String where = where(request, params);
@@ -109,6 +133,10 @@ public class PlayerSearchRepository {
             clauses.add("cpd.free_agent");
         }
         addBound(request.getLeagueId(), "c.league_id = :leagueId", "leagueId", clauses, params);
+        if (Objects.nonNull(request.getLeagueIds()) && !request.getLeagueIds().isEmpty()) {
+            clauses.add("c.league_id IN (:leagueIds)");
+            params.addValue("leagueIds", request.getLeagueIds());
+        }
         addBound(request.getNationalityId(), "b.nationality_id = :nationalityId", "nationalityId", clauses, params);
         addBound(request.getGender(), "b.gender = :gender", "gender", clauses, params);
         addBound(request.getAgeMin(), AGE_YEARS + " >= :ageMin", "ageMin", clauses, params);

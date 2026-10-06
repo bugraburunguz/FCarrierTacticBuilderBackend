@@ -184,7 +184,7 @@ public class CareerService {
         List<Long> ids = userPlayerStateRepository.findByCareerIdOrderByIdAsc(careerId).stream()
                 .map(UserPlayerStateEntity::getBasePlayerId)
                 .toList();
-        return new CareerSquad(ids, career.getGameVersionId(), career.getBudgetEur(), clubGender(career.getClubId()));
+        return new CareerSquad(ids, career.getGameVersionId(), career.getBudgetEur(), clubGender(career.getClubId()), career.getClubId());
     }
 
     public RosterEventResponse applyEvent(Long userId, Long careerId, RosterEventRequest request) {
@@ -399,6 +399,6 @@ public class CareerService {
         return Objects.isNull(name) || name.isBlank() ? null : name.trim();
     }
 
-    public record CareerSquad(List<Long> playerIds, Short gameVersionId, Long budgetEur, Short gender) {
+    public record CareerSquad(List<Long> playerIds, Short gameVersionId, Long budgetEur, Short gender, Integer clubId) {
     }
 }

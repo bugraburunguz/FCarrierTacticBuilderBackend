@@ -6,6 +6,7 @@ import com.fcareer.billing.service.CreditGuard;
 import com.fcareer.career.service.CareerService;
 import com.fcareer.catalog.model.request.PlayerSearchRequest;
 import com.fcareer.catalog.model.response.PlayerSummaryResponse;
+import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.catalog.repository.PlayerSearchRepository;
 import com.fcareer.catalog.service.PlayerService;
 import com.fcareer.fitengine.configuration.FitEngineProperties;
@@ -36,6 +37,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -52,9 +54,18 @@ public class RecommendationService {
     private static final int DEFAULT_LIMIT = 10;
     private static final int PREVIEW_LIMIT = 8;
     private static final Short DEFAULT_PREVIEW_GENDER = 0;
+    private static final String FREE_AGENTS = "Free Agents";
+    private static final int SQUAD_CORE = 18;
+    private static final int LEAGUE_QUALITY_MIN_OVERALL = 60;
+    private static final int LEAGUE_QUALITY_MIN_PLAYERS = 100;
+    private static final double LEAGUE_QUALITY_ABOVE = 1.5;
+    private static final double LEAGUE_QUALITY_BELOW = 6.0;
+    private static final int MARKET_OVERALL_BELOW = 2;
+    private static final int MARKET_OVERALL_ABOVE = 6;
 
     private final PlayerService playerService;
     private final PlayerSearchRepository playerSearchRepository;
+    private final ClubRepository clubRepository;
     private final RoleService roleService;
     private final TacticResolver tacticResolver;
     private final CareerService careerService;
@@ -117,16 +128,56 @@ public class RecommendationService {
                 league.setLeagueId(request.getLeagueId());
                 yield league;
             }
-            case MARKET -> {
-                Long budget = Objects.isNull(request.getBudgetMax()) ? squad.budgetEur() : request.getBudgetMax();
-                yield candidateSearch(role, intent, request, squad.playerIds(), squad.gameVersionId(), budget, squad.gender());
-            }
+            case MARKET -> marketSearch(role, intent, request, squad);
         };
         Map<Long, PlayerSummaryResponse> summaries = playerService.search(search).getItems().stream()
                 .collect(Collectors.toMap(PlayerSummaryResponse::getId, c -> c));
         RecommendSlotRequest capped = RecommendSlotRequest.builder().roleId(request.getRoleId()).position(request.getPosition())
                 .limit(Math.min(Objects.isNull(request.getLimit()) ? PREVIEW_LIMIT : request.getLimit(), PREVIEW_LIMIT)).build();
         return rank(capped, role, intent, summaries, search.getValueMax(), squad.gameVersionId());
+    }
+
+    private PlayerSearchRequest marketSearch(FitRole role, IntentProfile intent, RecommendSlotRequest request,
+                                             CareerService.CareerSquad squad) {
+        Long budget = Objects.isNull(request.getBudgetMax()) ? squad.budgetEur() : request.getBudgetMax();
+        PlayerSearchRequest search = candidateSearch(role, intent, request, squad.playerIds(), squad.gameVersionId(), budget, squad.gender());
+        OptionalDouble squadAverage = squadCoreAverage(squad);
+        if (squadAverage.isPresent()) {
+            long average = Math.round(squadAverage.getAsDouble());
+            search.setOverallMin((int) average - MARKET_OVERALL_BELOW);
+            search.setOverallMax((int) average + MARKET_OVERALL_ABOVE);
+        }
+        search.setLeagueIds(reachableLeagues(squad));
+        return search;
+    }
+
+    private OptionalDouble squadCoreAverage(CareerService.CareerSquad squad) {
+        if (squad.playerIds().isEmpty()) {
+            return OptionalDouble.empty();
+        }
+        PlayerSearchRequest own = PlayerSearchRequest.builder().gameVersionId(squad.gameVersionId()).gender(squad.gender())
+                .ids(squad.playerIds()).sort("overall").size(CANDIDATE_POOL).build();
+        return playerService.search(own).getItems().stream()
+                .mapToInt(PlayerSummaryResponse::getOverall)
+                .sorted().skip(Math.max(0, squad.playerIds().size() - SQUAD_CORE))
+                .average();
+    }
+
+    private List<Integer> reachableLeagues(CareerService.CareerSquad squad) {
+        Integer ownLeague = Objects.isNull(squad.clubId()) ? null
+                : clubRepository.findById(squad.clubId()).map(club -> club.getLeagueId()).orElse(null);
+        List<PlayerSearchRepository.LeagueQuality> leagues = playerSearchRepository.leagueQuality(
+                squad.gameVersionId(), squad.gender(), LEAGUE_QUALITY_MIN_OVERALL, LEAGUE_QUALITY_MIN_PLAYERS);
+        double ownQuality = leagues.stream().filter(l -> Objects.equals(l.id(), ownLeague))
+                .mapToDouble(PlayerSearchRepository.LeagueQuality::averageOverall).findFirst().orElse(Double.NaN);
+        if (Double.isNaN(ownQuality)) {
+            return List.of();
+        }
+        return leagues.stream()
+                .filter(l -> Objects.equals(l.id(), ownLeague) || FREE_AGENTS.equals(l.name())
+                        || (l.averageOverall() <= ownQuality + LEAGUE_QUALITY_ABOVE && l.averageOverall() >= ownQuality - LEAGUE_QUALITY_BELOW))
+                .map(PlayerSearchRepository.LeagueQuality::id)
+                .toList();
     }
 
     private PlayerSearchRequest candidateSearch(FitRole role, IntentProfile intent, RecommendSlotRequest request,

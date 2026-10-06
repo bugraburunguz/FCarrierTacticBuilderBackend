@@ -41,6 +41,7 @@ public class PlayerSearchRequest {
     private Integer teamId;
     private boolean freeAgent;
     private Integer leagueId;
+    private List<Integer> leagueIds;
     private Integer nationalityId;
     private Short gender;
     private Integer ageMin;
