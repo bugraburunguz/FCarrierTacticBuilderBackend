@@ -1,0 +1,94 @@
+{
+  "_note": "EA taktik kodu ↔ ayar çiftleri (tersine mühendislik için). Slot sırası oyundaki liste sırasıdır (soldan sağa, önden arkaya). Yeni örnek eklerken aynı biçimi kullan; en değerli örnekler TEK ayarı değişen çiftlerdir.",
+  "samples": [
+    {
+      "id": "user-1",
+      "code": "AJawHEA#K?tB",
+      "source": "kullanıcı (oyun)",
+      "formation": "4-4-1-1 (2)",
+      "buildUp": "Balanced",
+      "defensiveApproach": "Balanced",
+      "lineHeight": 60,
+      "slots": [
+        { "slot": "ST", "role": "False 9", "focus": "Attack" },
+        { "slot": "LM", "role": "Inside Fwd.", "focus": "Balanced" },
+        { "slot": "CM", "role": "B2B", "focus": "Balanced" },
+        { "slot": "CAM", "role": "Shadow ST", "focus": "Attack" },
+        { "slot": "CM", "role": "B2B", "focus": "Balanced" },
+        { "slot": "RM", "role": "Inside Fwd.", "focus": "Balanced" },
+        { "slot": "LB", "role": "Fullback", "focus": "Balanced" },
+        { "slot": "CB", "role": "Defender", "focus": "Defend" },
+        { "slot": "CB", "role": "Defender", "focus": "Defend" },
+        { "slot": "RB", "role": "Fullback", "focus": "Balanced" },
+        { "slot": "GK", "role": "Sweeper Keeper", "focus": "Balanced" }
+      ]
+    },
+    {
+      "id": "user-2",
+      "code": "vYHZ2fH45tMv",
+      "source": "kullanıcı (oyun)",
+      "formation": "4-2-3-1 (2)",
+      "buildUp": "Balanced",
+      "defensiveApproach": "Balanced",
+      "lineHeight": 50,
+      "slots": [
+        { "slot": "ST", "role": "Adv. Fwd.", "focus": "Attack" },
+        { "slot": "LM", "role": "Inside Fwd.", "focus": "Balanced" },
+        { "slot": "CDM", "role": "Holding", "focus": "Defend" },
+        { "slot": "CAM", "role": "Shadow ST", "focus": "Attack" },
+        { "slot": "CDM", "role": "Box Crasher", "focus": "Balanced" },
+        { "slot": "RM", "role": "Inside Fwd.", "focus": "Balanced" },
+        { "slot": "LB", "role": "Fullback", "focus": "Balanced" },
+        { "slot": "CB", "role": "Defender", "focus": "Defend" },
+        { "slot": "CB", "role": "Defender", "focus": "Defend" },
+        { "slot": "RB", "role": "Fullback", "focus": "Balanced" },
+        { "slot": "GK", "role": "Sweeper Keeper", "focus": "Balanced" }
+      ]
+    },
+    {
+      "id": "user-3",
+      "code": "RZtRy3rYbN?y",
+      "source": "kullanıcı (oyun)",
+      "formation": "4-2-1-3",
+      "buildUp": "Short Passing",
+      "defensiveApproach": "Balanced",
+      "lineHeight": 60,
+      "slots": [
+        { "slot": "LW", "role": "Inside Fwd.", "focus": "Balanced" },
+        { "slot": "ST", "role": "Adv. Fwd.", "focus": "Attack" },
+        { "slot": "RW", "role": "Inside Fwd.", "focus": "Balanced" },
+        { "slot": "CDM", "role": "Deep-Lying", "focus": "Defend" },
+        { "slot": "CAM", "role": "Playmaker", "focus": "Balanced" },
+        { "slot": "CDM", "role": "Box Crasher", "focus": "Balanced" },
+        { "slot": "LB", "role": "Fullback", "focus": "Defend" },
+        { "slot": "CB", "role": "Defender", "focus": "Defend" },
+        { "slot": "CB", "role": "Defender", "focus": "Defend" },
+        { "slot": "RB", "role": "Fullback", "focus": "Defend" },
+        { "slot": "GK", "role": "Sweeper Keeper", "focus": "Balanced" }
+      ]
+    },
+    {
+      "id": "futgg-4213",
+      "code": "RZtRyXrXbt%T",
+      "source": "fut.gg makalesi (ayarlar özetten; belirsiz alanlar işaretli)",
+      "uncertain": ["lineHeight", "defensiveApproach", "slots.focus"],
+      "formation": "4-2-1-3",
+      "buildUp": "Balanced",
+      "defensiveApproach": "High (belirsiz)",
+      "lineHeight": null,
+      "slots": [
+        { "slot": "LW", "role": "Inside Fwd.", "focus": "Roaming? (belirsiz)" },
+        { "slot": "ST", "role": "Adv. Fwd.", "focus": "Attack" },
+        { "slot": "RW", "role": "Inside Fwd.", "focus": "Roaming? (belirsiz)" },
+        { "slot": "CDM", "role": "Deep-Lying", "focus": "Build-Up (belirsiz)" },
+        { "slot": "CAM", "role": "Playmaker", "focus": "Balanced" },
+        { "slot": "CDM", "role": "Holding", "focus": "Defend" },
+        { "slot": "LB", "role": "Fullback", "focus": "Defend" },
+        { "slot": "CB", "role": "Defender", "focus": "Defend" },
+        { "slot": "CB", "role": "Defender", "focus": "Defend" },
+        { "slot": "RB", "role": "Fullback", "focus": "Defend" },
+        { "slot": "GK", "role": "Sweeper Keeper", "focus": "Build-Up (belirsiz)" }
+      ]
+    }
+  ]
+}
