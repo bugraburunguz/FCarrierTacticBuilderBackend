@@ -14,6 +14,8 @@ import com.fcareer.fitengine.model.request.CompareRequest;
 import com.fcareer.fitengine.model.request.FitRoleRequest;
 import com.fcareer.fitengine.model.request.SquadFitRequest;
 import com.fcareer.fitengine.model.response.FitRoleResult;
+import com.fcareer.fitengine.model.response.PlayerRoleFit;
+import com.fcareer.fitengine.model.response.RoleFitResponse;
 import com.fcareer.fitengine.model.response.SquadFitResponse;
 import com.fcareer.roles.service.RoleService;
 import com.fcareer.tactics.service.TacticResolver;
@@ -22,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -33,6 +36,7 @@ public class FitService {
 
     private static final String SQUAD_FIT = "SQUAD_FIT";
     private static final String SLOT_ID = "SLOT";
+    private static final int ROLE_REASONS = 3;
 
     private final PlayerService playerService;
     private final RoleService roleService;
@@ -48,6 +52,25 @@ public class FitService {
     public FitRoleResult roleFit(FitRoleRequest request) {
         FitPlayer player = playerService.fitPlayers(List.of(request.getPlayerId()), request.getGameVersionId()).get(0);
         return evaluate(player, request.getRoleId(), request.getPosition(), request.getTags());
+    }
+
+    public List<PlayerRoleFit> rolesFor(Long playerId, Short gameVersionId, Long careerId) {
+        FitPlayer player = playerService.fitPlayers(List.of(playerId), gameVersionId, careerId).get(0);
+        List<FitRole> roles = roleService.fitRolesById().values().stream().sorted(Comparator.comparing(FitRole::getName)).toList();
+        List<PlayerRoleFit> fits = new ArrayList<>();
+        for (String position : player.getPositions()) {
+            for (FitRole role : roles) {
+                if (!role.getPositions().contains(position)) {
+                    continue;
+                }
+                RoleFitResponse fit = roleFitService.calculate(player, role, null, position);
+                fits.add(PlayerRoleFit.builder().position(position).roleId(role.getId()).roleName(role.getName()).focus(role.getFocus())
+                        .score(Math.round(fit.getScore() * 10.0) / 10.0).projectedRating(fit.getProjectedRating())
+                        .badge(fit.getBadge()).badgeText(fit.getBadgeText())
+                        .reasons(Objects.isNull(fit.getReasons()) ? List.of() : fit.getReasons().stream().limit(ROLE_REASONS).toList()).build());
+            }
+        }
+        return fits;
     }
 
     public List<FitRoleResult> compare(CompareRequest request) {

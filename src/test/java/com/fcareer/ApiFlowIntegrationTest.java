@@ -192,6 +192,11 @@ class ApiFlowIntegrationTest {
         assertThat(similar.at("/data").isArray()).isTrue();
         similar.at("/data").forEach(s -> assertThat(s.at("/player/id").asLong()).isNotEqualTo(playerId));
 
+        JsonNode roles = call(get("/api/v1/players/" + playerId + "/roles"), null, null, 200);
+        assertThat(roles.at("/success").asBoolean()).as(roles.toString()).isTrue();
+        assertThat(roles.at("/data")).isNotEmpty();
+        roles.at("/data").forEach(r -> assertThat(r.at("/score").asDouble()).isBetween(0.0, 100.0));
+
         JsonNode preview = call(post("/api/v1/recommend/preview"), Map.of("roleId", "winger_attack", "position", "RW"), null, 200);
         assertThat(preview.at("/success").asBoolean()).isTrue();
         assertThat(preview.at("/data/items").isArray()).isTrue();

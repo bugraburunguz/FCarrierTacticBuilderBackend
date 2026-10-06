@@ -8,6 +8,8 @@ import com.fcareer.catalog.model.response.PlayerDetailResponse;
 import com.fcareer.catalog.model.response.PlayerSummaryResponse;
 import com.fcareer.catalog.model.response.SimilarPlayerResponse;
 import com.fcareer.catalog.service.PlayerService;
+import com.fcareer.fitengine.model.response.PlayerRoleFit;
+import com.fcareer.fitengine.service.FitService;
 import com.fcareer.common.exception.InvalidTacticException;
 import com.fcareer.common.model.PageResponse;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,7 @@ public class PlayerController {
 
     private final PlayerService playerService;
     private final CareerService careerService;
+    private final FitService fitService;
 
     @GetMapping
     public PageResponse<PlayerSummaryResponse> search(
@@ -106,6 +109,17 @@ public class PlayerController {
                 .page(page)
                 .size(size)
                 .build());
+    }
+
+    @GetMapping("/{id}/roles")
+    public List<PlayerRoleFit> roles(@AuthenticationPrincipal AuthUser user,
+                                     @PathVariable Long id,
+                                     @RequestParam(name = "gv", required = false) Short gameVersionId,
+                                     @RequestParam(name = "career", required = false) Long careerId) {
+        if (careerId != null) {
+            careerService.requireOwned(user == null ? null : user.id(), careerId);
+        }
+        return fitService.rolesFor(id, gameVersionId, careerId);
     }
 
     @GetMapping("/{id}/similar")
