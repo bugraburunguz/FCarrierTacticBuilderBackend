@@ -32,7 +32,7 @@ final class FitFixtures {
     static final IntentFitService INTENT_FIT = new IntentFitService(PROPERTIES, NLG);
     static final HungarianSolver HUNGARIAN = new HungarianSolver();
     static final RulesEngine RULES = new RulesEngine();
-    static final SquadFitService SQUAD_FIT = new SquadFitService(ROLE_FIT, INTENT_FIT, HUNGARIAN, RULES, NLG, PROPERTIES);
+    static final SquadFitService SQUAD_FIT = new SquadFitService(ROLE_FIT, INTENT_FIT, HUNGARIAN, RULES, NLG, PROPERTIES, new com.fcareer.fitengine.service.SetupModifier());
 
     private FitFixtures() {
     }

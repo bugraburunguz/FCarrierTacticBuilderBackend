@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SquadFitResponse {
     private double squadFit;
+    private Double setupDelta;
     private Double intentFit;
     private String summary;
     private List<SlotAssignment> slots;

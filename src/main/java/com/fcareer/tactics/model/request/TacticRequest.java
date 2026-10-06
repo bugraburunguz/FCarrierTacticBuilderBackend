@@ -1,5 +1,6 @@
 package com.fcareer.tactics.model.request;
 
+import com.fcareer.fitengine.model.TeamSetup;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -23,6 +24,9 @@ public class TacticRequest {
     private String formation;
 
     private String presetId;
+
+    @Valid
+    private TeamSetup setup;
 
     @Valid
     @Size(max = 11)

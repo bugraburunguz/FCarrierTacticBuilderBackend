@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 @Getter
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 public class IntentProfile {
     private final String slotId;
@@ -17,6 +17,7 @@ public class IntentProfile {
     private final List<FitTag> tags;
     private final Map<Attr, Double> weaponBoost;
     private final FitRole resolvedRole;
+    private final TeamSetup setup;
 
     public boolean hasTags() {
         return tags != null && !tags.isEmpty();

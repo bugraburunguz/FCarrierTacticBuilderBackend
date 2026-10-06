@@ -45,6 +45,7 @@ public final class TacticMirror {
                     .tags(source.getTags())
                     .weaponBoost(source.getWeaponBoost())
                     .resolvedRole(source.getResolvedRole())
+                    .setup(slot.getSetup())
                     .build());
         }
         return mirrored;

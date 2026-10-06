@@ -54,6 +54,9 @@ public class TacticResolver {
             profiles.add(toProfile(slot, selection, roles, tags));
         }
         log.info("Tactic resolved formation : {} preset : {}", formationId, request.getPresetId());
+        if (Objects.nonNull(request.getSetup())) {
+            profiles = profiles.stream().map(p -> p.toBuilder().setup(request.getSetup()).build()).toList();
+        }
         return new ResolvedTactic(formationId, request.getPresetId(), profiles);
     }
 

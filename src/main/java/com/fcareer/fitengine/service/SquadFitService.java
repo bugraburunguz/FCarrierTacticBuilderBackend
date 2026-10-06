@@ -45,6 +45,7 @@ public class SquadFitService {
     private final RulesEngine rulesEngine;
     private final NlgService nlgService;
     private final FitEngineProperties properties;
+    private final SetupModifier setupModifier;
 
     public SquadFitResponse solve(List<FitPlayer> squad, List<IntentProfile> slots, List<TacticRuleDefinition> rules) {
         int playerCount = squad.size();
@@ -52,13 +53,15 @@ public class SquadFitService {
         RoleFitResponse[][] roleFits = new RoleFitResponse[playerCount][slotCount];
         IntentFitResponse[][] intentFits = new IntentFitResponse[playerCount][slotCount];
         double[][] combined = new double[playerCount][slotCount];
+        double[][] setupDeltas = new double[playerCount][slotCount];
 
         for (int p = 0; p < playerCount; p++) {
             for (int s = 0; s < slotCount; s++) {
                 IntentProfile slot = slots.get(s);
                 roleFits[p][s] = roleFitService.calculate(squad.get(p), slot.getResolvedRole(), slot, slot.getSlotPosition());
                 intentFits[p][s] = intentFitService.calculate(squad.get(p), slot);
-                combined[p][s] = combine(roleFits[p][s], intentFits[p][s], slot);
+                setupDeltas[p][s] = setupModifier.delta(squad.get(p), slot);
+                combined[p][s] = combine(roleFits[p][s], intentFits[p][s], slot) + setupDeltas[p][s];
             }
         }
 
@@ -93,16 +96,22 @@ public class SquadFitService {
                     .playerName(player.getName())
                     .overall(player.getOverall())
                     .combined(round1(combined[p][s]))
+                    .setupDelta(Objects.isNull(slot.getSetup()) ? null : round1(setupDeltas[p][s]))
                     .roleFit(roleFits[p][s])
                     .intentFit(slot.hasTags() ? intentFits[p][s] : null)
                     .depth(depth(squad, starters, combined, roleFits, s))
                     .build());
         }
 
-        double squadFit = averageOf(assignments.stream()
+        double roleAverage = averageOf(assignments.stream()
                 .filter(a -> Objects.nonNull(a.getRoleFit()))
                 .mapToDouble(a -> a.getRoleFit().getScore())
                 .average());
+        Double setupDelta = slots.stream().anyMatch(s -> Objects.nonNull(s.getSetup()))
+                ? round1(IntStream.range(0, slotCount).filter(s -> slotToPlayer[s] != NOT_ASSIGNED)
+                        .mapToDouble(s -> setupDeltas[slotToPlayer[s]][s]).average().orElse(0))
+                : null;
+        double squadFit = Objects.isNull(setupDelta) ? roleAverage : round1(Math.max(0, Math.min(100, roleAverage + setupDelta)));
         OptionalDouble intentAverage = assignments.stream()
                 .filter(a -> Objects.nonNull(a.getIntentFit()))
                 .mapToDouble(a -> a.getIntentFit().getScore())
@@ -117,6 +126,7 @@ public class SquadFitService {
         log.info("SquadFit solved slots : {} players : {} squadFit : {}", slotCount, playerCount, squadFit);
         return SquadFitResponse.builder()
                 .squadFit(squadFit)
+                .setupDelta(setupDelta)
                 .intentFit(intentFit)
                 .summary(nlgService.squadSummary(squadFit, intentFit))
                 .slots(assignments)

@@ -22,6 +22,7 @@ public class SlotAssignment {
     private String playerName;
     private Integer overall;
     private Double combined;
+    private Double setupDelta;
     private RoleFitResponse roleFit;
     private IntentFitResponse intentFit;
     private List<DepthEntry> depth;
