@@ -439,6 +439,10 @@ public class BaseCatalogImporter {
         return names;
     }
 
+    public static String displayTeamName(String name, Integer teamId) {
+        return isPlaceholderTeam(name) ? "Takım #" + teamId : name;
+    }
+
     private static boolean isPlaceholderTeam(String name) {
         return Objects.nonNull(name) && name.startsWith(PLACEHOLDER_TEAM_PREFIX);
     }
@@ -580,7 +584,7 @@ public class BaseCatalogImporter {
         private Integer resolve(Integer teamId) {
             boolean freeAgent = FREE_AGENT_TEAM_IDS.contains(teamId);
             Map<String, String> team = teams.get(teamId);
-            String name = freeAgent ? FREE_AGENTS : Objects.isNull(team) ? "Team " + teamId : team.get("teamname");
+            String name = freeAgent ? FREE_AGENTS : Objects.isNull(team) ? "Team " + teamId : displayTeamName(team.get("teamname"), teamId);
             Integer gender = Objects.isNull(team) ? null : toInt(team.get("gender"));
             List<Map<String, Object>> found = jdbc.queryForList(
                     "SELECT id FROM club WHERE lower(name) = lower(:n) AND (gender IS NULL OR :g IS NULL OR gender = :g) ORDER BY id LIMIT 1",

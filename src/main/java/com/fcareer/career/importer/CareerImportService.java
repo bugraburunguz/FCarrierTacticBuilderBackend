@@ -113,7 +113,7 @@ public class CareerImportService {
             }
             Map<String, String> row = entry.getValue();
             teamParams.add(new MapSqlParameterSource()
-                    .addValue("career", careerId).addValue("team", teamId).addValue("name", row.get("teamname"))
+                    .addValue("career", careerId).addValue("team", teamId).addValue("name", BaseCatalogImporter.displayTeamName(row.get("teamname"), teamId))
                     .addValue("league", leagueNames.get(teamLeague.get(teamId)))
                     .addValue("gender", toInt(row.get("gender")))
                     .addValue("pool", FREE_AGENT_TEAM_IDS.contains(teamId))
