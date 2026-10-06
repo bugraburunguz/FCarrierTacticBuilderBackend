@@ -17,6 +17,7 @@ import java.time.Instant;
 public class CareerPlayerResponse {
     private PlayerSummaryResponse player;
     private boolean onLoan;
+    private boolean loanedOut;
     private Integer dynamicPotential;
     private Long valueEur;
     private Integer form;

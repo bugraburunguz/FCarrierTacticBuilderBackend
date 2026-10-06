@@ -36,6 +36,9 @@ public class UserPlayerStateEntity {
     @Column(nullable = false)
     private boolean onLoan;
 
+    @Column(nullable = false)
+    private boolean loanedOut;
+
     @Column(columnDefinition = "timestamptz")
     private Instant acquiredAt;
 

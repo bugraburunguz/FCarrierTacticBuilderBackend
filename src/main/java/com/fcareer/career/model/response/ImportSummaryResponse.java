@@ -18,5 +18,6 @@ public class ImportSummaryResponse {
     private int teams;
     private int freeAgents;
     private Integer guessedTeamId;
+    private Integer squadSynced;
     private String guessedTeamName;
 }

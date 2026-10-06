@@ -36,6 +36,7 @@ local TABLES = {
         "internationalprestige", "popularity", "clubworth", "profitability", "rivalteam", "gender" } },
     { name = "teamplayerlinks", columns = { "playerid", "teamid" } },
     { name = "leagueteamlinks", columns = { "teamid", "leagueid" } },
+    { name = "playerloans", columns = "*" },
     { name = "leagues", columns = { "leagueid", "leaguename", "isinternationalleague" } },
 }
 

@@ -34,6 +34,7 @@ public class CareerMapper {
         return CareerPlayerResponse.builder()
                 .player(summary)
                 .onLoan(state.isOnLoan())
+                .loanedOut(state.isLoanedOut())
                 .dynamicPotential(Objects.isNull(state.getDynamicPotential()) ? null : state.getDynamicPotential().intValue())
                 .valueEur(state.getValueEur())
                 .form(Objects.isNull(state.getForm()) ? null : state.getForm().intValue())

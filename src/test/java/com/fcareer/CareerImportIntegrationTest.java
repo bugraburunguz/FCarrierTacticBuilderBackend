@@ -108,6 +108,10 @@ class CareerImportIntegrationTest {
                 prefix + "ROW" + tab + "players" + tab + FIRST_MOCK_ID + ",88,92,14,0,70",
                 prefix + "ROW" + tab + "players" + tab + GENERATED_ID + ",66,84,25,0,70",
                 prefix + "END" + tab + "players" + tab + "2",
+                prefix + "BEGIN" + tab + "playerloans" + tab + "fields=2",
+                prefix + "HEADER" + tab + "playerloans" + tab + "playerid,teamidloanedfrom",
+                prefix + "ROW" + tab + "playerloans" + tab + FIRST_MOCK_ID + ",99",
+                prefix + "END" + tab + "playerloans" + tab + "1",
                 prefix + "BEGIN" + tab + "teams" + tab + "fields=3",
                 prefix + "HEADER" + tab + "teams" + tab + "teamid,teamname,overallrating",
                 prefix + "ROW" + tab + "teams" + tab + "1,\"" + club.getName() + "\",80",
@@ -121,6 +125,8 @@ class CareerImportIntegrationTest {
         assertThat(result.at("/success").asBoolean()).as(result.toString()).isTrue();
         assertThat(result.at("/data/players").asInt()).isEqualTo(2);
         assertThat(result.at("/data/generatedPlayers").asInt()).isEqualTo(1);
+        assertThat(result.at("/data/squadSynced").asInt()).isEqualTo(2);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM user_player_state WHERE career_id = ? AND on_loan", Integer.class, careerId)).isEqualTo(1);
         assertThat(jdbc.queryForList("SELECT array_to_string(positions, ',') FROM career_player_rating WHERE career_id = ? AND overall = 88", String.class, careerId))
                 .containsExactly("CM");
         assertThat(result.at("/data/guessedTeamId").asInt()).isEqualTo(1);

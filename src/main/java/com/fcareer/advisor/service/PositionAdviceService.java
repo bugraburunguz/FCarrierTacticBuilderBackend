@@ -7,6 +7,7 @@ import com.fcareer.catalog.service.PlayerService;
 import com.fcareer.catalog.service.PositionOverallService;
 import com.fcareer.fitengine.model.FitPlayer;
 import com.fcareer.fitengine.model.FitRole;
+import com.fcareer.fitengine.model.WeaponState;
 import com.fcareer.fitengine.model.response.RoleFitResponse;
 import com.fcareer.fitengine.service.RoleFitService;
 import com.fcareer.roles.service.RoleService;
@@ -27,6 +28,7 @@ public class PositionAdviceService {
     private static final int POSITIONS_SHOWN = 3;
     private static final int REASONS_SHOWN = 2;
     private static final double POSITION_GAIN = 3.0;
+    private static final int MAX_POSITION_DROP = 6;
     private static final List<String> OUTFIELD_POSITIONS = List.of("LB", "RB", "CB", "CDM", "CM", "CAM", "LM", "RM", "LW", "RW", "ST");
     private static final String GOALKEEPER = "GK";
 
@@ -51,6 +53,7 @@ public class PositionAdviceService {
             boolean keeper = player.getPositions().contains(GOALKEEPER);
             List<String> candidates = keeper ? List.of(GOALKEEPER) : OUTFIELD_POSITIONS;
             List<PositionOption> options = new ArrayList<>();
+            Map<String, Integer> positionOveralls = positionOveralls(player);
             for (String position : candidates) {
                 PositionOption best = null;
                 for (FitRole role : roles.values()) {
@@ -58,6 +61,9 @@ public class PositionAdviceService {
                         continue;
                     }
                     RoleFitResponse fit = roleFitService.calculate(player, role, null, position);
+                    if (!plausible(player, position, fit, positionOveralls)) {
+                        continue;
+                    }
                     if (Objects.isNull(best) || fit.getScore() > best.getScore()) {
                         best = PositionOption.builder().position(position).roleName(role.getName()).score(round1(fit.getScore()))
                                 .natural(player.getPositions().contains(position))
@@ -84,16 +90,33 @@ public class PositionAdviceService {
         for (FitPlayer player : players) {
             Map<String, Double> byPosition = new java.util.HashMap<>();
             List<String> candidates = player.getPositions().contains(GOALKEEPER) ? List.of(GOALKEEPER) : OUTFIELD_POSITIONS;
+            Map<String, Integer> positionOveralls = positionOveralls(player);
             for (String position : candidates) {
                 for (FitRole role : roles.values()) {
                     if (role.getPositions().contains(position)) {
-                        byPosition.merge(position, roleFitService.calculate(player, role, null, position).getScore(), Math::max);
+                        RoleFitResponse fit = roleFitService.calculate(player, role, null, position);
+                        if (plausible(player, position, fit, positionOveralls)) {
+                            byPosition.merge(position, fit.getScore(), Math::max);
+                        }
                     }
                 }
             }
             matrix.put(player.getId(), byPosition);
         }
         return matrix;
+    }
+
+    private Map<String, Integer> positionOveralls(FitPlayer player) {
+        return positionOverallService.byPosition(player.getAttrs(), player.getPositions().contains(GOALKEEPER),
+                player.getPositions().get(0), player.getOverall());
+    }
+
+    private boolean plausible(FitPlayer player, String position, RoleFitResponse fit, Map<String, Integer> positionOveralls) {
+        if (player.getPositions().contains(position)) {
+            return true;
+        }
+        Integer atPosition = positionOveralls.get(position);
+        return fit.getBadge() != WeaponState.RED && Objects.nonNull(atPosition) && atPosition >= player.getOverall() - MAX_POSITION_DROP;
     }
 
     private Map.Entry<String, Integer> bestOverall(FitPlayer player) {

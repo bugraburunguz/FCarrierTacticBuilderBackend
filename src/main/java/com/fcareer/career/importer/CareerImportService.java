@@ -70,6 +70,7 @@ public class CareerImportService {
             }
         });
         Map<Long, Integer> playerTeam = readLinks(tables.get("teamplayerlinks"), nationalTeams);
+        Map<Long, Integer> loanedFrom = readLoans(tables.get("playerloans"));
         Map<Long, Long> eaToBase = eaIdMap();
         Map<Long, Long> generated = baseCatalogImporter.upsertCareerPlayers(careerId, tables, career.getGameVersionId());
         eaToBase.putAll(generated);
@@ -93,7 +94,8 @@ public class CareerImportService {
             playerRows.add(new MapSqlParameterSource()
                     .addValue("career", careerId).addValue("base", baseId)
                     .addValue("overall", entry.getValue()[0]).addValue("potential", entry.getValue()[1])
-                    .addValue("team", teamId).addValue("free", freeAgent));
+                    .addValue("team", teamId).addValue("free", freeAgent)
+                    .addValue("loanFrom", loanedFrom.get(entry.getKey()), java.sql.Types.INTEGER));
         }
         if (playerRows.isEmpty()) {
             throw new ImportParseException("no player matched the catalog");
@@ -102,8 +104,8 @@ public class CareerImportService {
         jdbc.update("DELETE FROM career_player_data WHERE career_id = :c", Map.of("c", careerId));
         jdbc.update("DELETE FROM career_team WHERE career_id = :c", Map.of("c", careerId));
         batch("""
-                INSERT INTO career_player_data (career_id, base_player_id, overall, potential, team_id, free_agent)
-                VALUES (:career, :base, :overall, :potential, :team, :free)""", playerRows);
+                INSERT INTO career_player_data (career_id, base_player_id, overall, potential, team_id, free_agent, loan_from_team_id)
+                VALUES (:career, :base, :overall, :potential, :team, :free, :loanFrom)""", playerRows);
 
         Set<Long> matchedBaseIds = new HashSet<>();
         playerRows.forEach((row) -> matchedBaseIds.add((Long) row.getValue("base")));
@@ -152,7 +154,10 @@ public class CareerImportService {
                 new MapSqlParameterSource().addValue("c", careerId).addValue("club", career.getClubId()));
         log.info("Career import done careerId : {} players : {} teams : {} freeAgents : {} unmatched : {}",
                 careerId, playerRows.size(), teamParams.size(), freeAgents, unmatched);
+        Integer guessedTeam = guess.isEmpty() ? null : ((Number) guess.get(0).get("team_id")).intValue();
+        Integer synced = Objects.isNull(guessedTeam) ? null : rebuildSquad(career, careerId, guessedTeam);
         return ImportSummaryResponse.builder()
+                .squadSynced(synced)
                 .players(playerRows.size()).generatedPlayers(generated.size()).unmatchedPlayers(unmatched).teams(teamParams.size()).freeAgents(freeAgents)
                 .guessedTeamId(guess.isEmpty() ? null : ((Number) guess.get(0).get("team_id")).intValue())
                 .guessedTeamName(guess.isEmpty() ? null : (String) guess.get(0).get("name"))
@@ -168,14 +173,37 @@ public class CareerImportService {
         if (Objects.isNull(count) || count == 0) {
             throw new ImportParseException("team has no imported players");
         }
+        int built = rebuildSquad(career, careerId, teamId);
+        log.info("Squad synced from import careerId : {} teamId : {} players : {}", careerId, teamId, built);
+        return built;
+    }
+
+    private int rebuildSquad(CareerEntity career, Long careerId, Integer teamId) {
         jdbc.update("DELETE FROM user_player_state WHERE career_id = :c", Map.of("c", careerId));
         jdbc.update("""
-                INSERT INTO user_player_state (career_id, base_player_id, club_id, dynamic_potential, on_loan, acquired_at, updated_at)
-                SELECT :c, d.base_player_id, :club, d.potential, false, now(), now()
-                FROM career_player_data d WHERE d.career_id = :c AND d.team_id = :t""",
+                INSERT INTO user_player_state (career_id, base_player_id, club_id, dynamic_potential, on_loan, loaned_out, acquired_at, updated_at)
+                SELECT :c, d.base_player_id, :club, d.potential,
+                       (d.loan_from_team_id IS NOT NULL AND d.team_id = :t AND d.loan_from_team_id <> :t),
+                       (d.loan_from_team_id = :t AND d.team_id <> :t), now(), now()
+                FROM career_player_data d WHERE d.career_id = :c AND (d.team_id = :t OR d.loan_from_team_id = :t)""",
                 new MapSqlParameterSource().addValue("c", careerId).addValue("t", teamId).addValue("club", career.getClubId()));
-        log.info("Squad synced from import careerId : {} teamId : {} players : {}", careerId, teamId, count);
-        return count;
+        Integer count = jdbc.queryForObject("SELECT count(*) FROM user_player_state WHERE career_id = :c", Map.of("c", careerId), Integer.class);
+        return Objects.isNull(count) ? 0 : count;
+    }
+
+    private Map<Long, Integer> readLoans(List<Map<String, String>> rows) {
+        Map<Long, Integer> loans = new HashMap<>();
+        if (Objects.isNull(rows)) {
+            return loans;
+        }
+        for (Map<String, String> row : rows) {
+            Long playerId = toLong(row.get("playerid"));
+            Integer from = toInt(row.get("teamidloanedfrom"));
+            if (Objects.nonNull(playerId) && Objects.nonNull(from)) {
+                loans.put(playerId, from);
+            }
+        }
+        return loans;
     }
 
     private void batch(String sql, List<SqlParameterSource> rows) {
