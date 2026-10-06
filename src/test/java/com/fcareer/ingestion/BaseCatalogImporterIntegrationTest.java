@@ -76,12 +76,17 @@ class BaseCatalogImporterIntegrationTest {
     }
 
     private Map<String, List<Map<String, String>>> tables() {
-        Map<String, String> striker = player(NEW_STRIKER, 25, "Test, Striker \"Jr\"", "trait1=3");
+        Map<String, String> striker = player(NEW_STRIKER, 25, "", "trait1=3");
+        striker.put("firstnameid", "11");
+        striker.put("lastnameid", "12");
         striker.put("icontrait1", "5");
-        Map<String, String> keeper = player(NEW_KEEPER, 0, "Test Keeper", "trait2=1");
+        Map<String, String> keeper = player(NEW_KEEPER, 0, "", "trait2=1");
+        keeper.put("commonnameid", "13");
         Map<String, String> homeless = player(NO_TEAM, 14, "Nobody", null);
         Map<String, String> existing = player(EXISTING_MOCK_ID, 25, "Already Here", null);
         return Map.of(
+                "playernames", List.of(Map.of("nameid", "11", "name", "Test, Striker"), Map.of("nameid", "12", "name", "Jr"),
+                        Map.of("nameid", "13", "name", "Keeper Common")),
                 "players", List.of(striker, keeper, homeless, existing),
                 "teams", List.of(Map.of("teamid", "5000", "teamname", "Test United", "gender", "0"),
                         Map.of("teamid", "111592", "teamname", "Serbest", "gender", "0")),
@@ -106,7 +111,7 @@ class BaseCatalogImporterIntegrationTest {
                 FROM base_player b JOIN player_rating r ON r.base_player_id = b.id
                 JOIN club c ON c.id = r.club_id LEFT JOIN league l ON l.id = c.league_id
                 WHERE b.ea_resource_id = ?""", NEW_STRIKER);
-        assertThat(striker.get("full_name")).isEqualTo("Test, Striker \"Jr\"");
+        assertThat(striker.get("full_name")).isEqualTo("Test, Striker Jr");
         assertThat(striker.get("dob").toString()).isEqualTo("1985-02-05");
         assertThat(((Number) striker.get("height_cm")).intValue()).isEqualTo(187);
         assertThat(striker.get("preferred_foot")).isEqualTo("Left");
@@ -122,6 +127,7 @@ class BaseCatalogImporterIntegrationTest {
                 FROM base_player b JOIN player_rating r ON r.base_player_id = b.id JOIN club c ON c.id = r.club_id
                 WHERE b.ea_resource_id = ?""", NEW_KEEPER);
         assertThat(keeper.get("playstyles").toString()).contains("FarThrow");
+        assertThat(jdbc.queryForObject("SELECT full_name FROM base_player WHERE ea_resource_id = ?", String.class, NEW_KEEPER)).isEqualTo("Keeper Common");
         assertThat(keeper.get("club")).isEqualTo("Free Agents");
         assertThat(basePlayerRepository.findByEaResourceId(NO_TEAM)).isEmpty();
     }

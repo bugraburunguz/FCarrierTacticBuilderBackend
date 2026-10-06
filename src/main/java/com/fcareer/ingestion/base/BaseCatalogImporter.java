@@ -90,6 +90,7 @@ public class BaseCatalogImporter {
         }
         Map<Long, Integer> playerTeam = playerTeams(links, nationalTeams);
 
+        Map<Integer, String> names = playerNames(tables.getOrDefault("playernames", List.of()));
         Map<Long, Long> existing = existingPlayers();
         NationalityResolver nationalities = new NationalityResolver(players, existing);
         ClubResolver clubs = new ClubResolver(teamRows, teamLeague, leagueNames);
@@ -131,7 +132,7 @@ public class BaseCatalogImporter {
             Integer birth = toInt(row.get("birthdate"));
             basePlayers.add(new MapSqlParameterSource()
                     .addValue("ea", eaId)
-                    .addValue("name", nameOf(row, eaId))
+                    .addValue("name", nameOf(row, eaId, names))
                     .addValue("dob", Objects.isNull(birth) ? null : java.sql.Date.valueOf(LocalDate.ofEpochDay(birth + DumpMappings.BIRTHDATE_EPOCH_OFFSET)))
                     .addValue("nat", nationalities.idFor(toInt(row.get("nationality"))), java.sql.Types.INTEGER)
                     .addValue("height", positiveOrNull(toInt(row.get("height"))), java.sql.Types.SMALLINT)
@@ -309,9 +310,31 @@ public class BaseCatalogImporter {
         return rows;
     }
 
-    private static String nameOf(Map<String, String> row, Long eaId) {
-        String name = row.get("name");
-        return Objects.isNull(name) || name.isBlank() ? "Player " + eaId : name.trim();
+    private static Map<Integer, String> playerNames(List<Map<String, String>> rows) {
+        Map<Integer, String> names = new HashMap<>();
+        for (Map<String, String> row : rows) {
+            Integer id = toInt(row.get("nameid"));
+            String name = row.get("name");
+            if (Objects.nonNull(id) && Objects.nonNull(name) && !name.isBlank()) {
+                names.put(id, name.trim());
+            }
+        }
+        return names;
+    }
+
+    private static String nameOf(Map<String, String> row, Long eaId, Map<Integer, String> names) {
+        String common = names.get(toInt(row.get("commonnameid")));
+        if (Objects.nonNull(common)) {
+            return common;
+        }
+        String first = names.getOrDefault(toInt(row.get("firstnameid")), "");
+        String last = names.getOrDefault(toInt(row.get("lastnameid")), "");
+        String full = (first + " " + last).trim();
+        if (!full.isEmpty()) {
+            return full;
+        }
+        String inline = row.get("name");
+        return Objects.isNull(inline) || inline.isBlank() ? "Player " + eaId : inline.trim();
     }
 
     private static Integer positiveOrNull(Integer value) {
