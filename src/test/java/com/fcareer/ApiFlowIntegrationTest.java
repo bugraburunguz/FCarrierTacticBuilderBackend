@@ -171,6 +171,10 @@ class ApiFlowIntegrationTest {
         long careerId = createCareer(token, 0).at("/data/id").asLong();
         long playerId = call(get("/api/v1/players?size=1"), null, null, 200).at("/data/items/0/id").asLong();
 
+        JsonNode detail = call(get("/api/v1/players/" + playerId), null, null, 200);
+        assertThat(detail.at("/data/positionOveralls").size()).isIn(1, 11);
+        detail.at("/data/positionOveralls").forEach(v -> assertThat(v.asInt()).isBetween(1, 99));
+
         JsonNode fit = call(post("/api/v1/fit/role"), Map.of("playerId", playerId, "roleId", "winger_attack",
                 "position", "RW", "tags", new String[]{"w_cross"}), null, 200);
         assertThat(fit.at("/data/roleFit/score").asDouble()).isBetween(0.0, 100.0);

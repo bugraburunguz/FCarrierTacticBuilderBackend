@@ -133,6 +133,19 @@ class BaseCatalogImporterIntegrationTest {
     }
 
     @Test
+    void usesEditedPlayerNamesForGeneratedPlayers() {
+        long edited = 999_003L;
+        Map<String, List<Map<String, String>>> tables = new HashMap<>(tables());
+        tables.put("players", List.of(player(edited, 25, "", null)));
+        tables.put("teamplayerlinks", List.of(Map.of("playerid", String.valueOf(edited), "teamid", "5000")));
+        tables.put("editedplayernames", List.of(Map.of("playerid", String.valueOf(edited), "firstname", "Edward", "surname", "Beckett", "commonname", "")));
+
+        importer.importMissing(tables, (short) 27, false, true);
+
+        assertThat(jdbc.queryForObject("SELECT full_name FROM base_player WHERE ea_resource_id = ?", String.class, edited)).isEqualTo("Edward Beckett");
+    }
+
+    @Test
     void overwriteReplacesRatingsOfExistingPlayersButKeepsTheirName() {
         Map<String, List<Map<String, String>>> tables = tables();
         tables.get("players").get(3).put("overallrating", "99");

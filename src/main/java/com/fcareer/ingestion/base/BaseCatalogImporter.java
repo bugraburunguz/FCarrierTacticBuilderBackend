@@ -59,6 +59,7 @@ public class BaseCatalogImporter {
         NationalityResolver nationalities = ctx.nationalities();
         ClubResolver clubs = ctx.clubs();
         Set<Integer> excludedTeams = ctx.excludedTeams();
+        Map<Long, String> edited = ctx.edited();
 
         List<SqlParameterSource> basePlayers = new ArrayList<>();
         Map<Long, Map<String, String>> pending = new LinkedHashMap<>();
@@ -100,7 +101,7 @@ public class BaseCatalogImporter {
             Integer birth = toInt(row.get("birthdate"));
             basePlayers.add(new MapSqlParameterSource()
                     .addValue("ea", eaId)
-                    .addValue("name", nameOf(row, eaId, names))
+                    .addValue("name", nameOf(row, eaId, names, edited))
                     .addValue("dob", Objects.isNull(birth) ? null : java.sql.Date.valueOf(LocalDate.ofEpochDay(birth + DumpMappings.BIRTHDATE_EPOCH_OFFSET)))
                     .addValue("nat", nationalities.idFor(toInt(row.get("nationality"))), java.sql.Types.INTEGER)
                     .addValue("height", positiveOrNull(toInt(row.get("height"))), java.sql.Types.SMALLINT)
@@ -134,7 +135,8 @@ public class BaseCatalogImporter {
 
 
     private record Context(List<Map<String, String>> players, Map<Long, Integer> playerTeam, Map<Integer, String> names,
-                           Map<Long, Long> existing, NationalityResolver nationalities, ClubResolver clubs, Set<Integer> excludedTeams) {
+                           Map<Long, Long> existing, NationalityResolver nationalities, ClubResolver clubs, Set<Integer> excludedTeams,
+                           Map<Long, String> edited) {
     }
 
     private Context buildContext(Map<String, List<Map<String, String>>> tables) {
@@ -189,7 +191,8 @@ public class BaseCatalogImporter {
                 excludedTeams.add(team);
             }
         });
-        return new Context(players, playerTeam, names, existing, nationalities, clubs, excludedTeams);
+        return new Context(players, playerTeam, names, existing, nationalities, clubs, excludedTeams,
+                editedNames(tables.getOrDefault("editedplayernames", List.of())));
     }
 
     /**
@@ -218,7 +221,7 @@ public class BaseCatalogImporter {
             }
             Integer birth = toInt(row.get("birthdate"));
             inserts.add(new MapSqlParameterSource().addValue("career", careerId).addValue("source", sourceId)
-                    .addValue("name", nameOf(row, sourceId, ctx.names()))
+                    .addValue("name", nameOf(row, sourceId, ctx.names(), ctx.edited()))
                     .addValue("dob", Objects.isNull(birth) ? null : java.sql.Date.valueOf(LocalDate.ofEpochDay(birth + DumpMappings.BIRTHDATE_EPOCH_OFFSET)))
                     .addValue("nat", ctx.nationalities().idFor(toInt(row.get("nationality"))), java.sql.Types.INTEGER)
                     .addValue("height", positiveOrNull(toInt(row.get("height"))), java.sql.Types.SMALLINT)
@@ -410,7 +413,24 @@ public class BaseCatalogImporter {
         return names;
     }
 
-    private static String nameOf(Map<String, String> row, Long eaId, Map<Integer, String> names) {
+    private static Map<Long, String> editedNames(List<Map<String, String>> rows) {
+        Map<Long, String> names = new HashMap<>();
+        for (Map<String, String> row : rows) {
+            Long id = toLong(row.get("playerid"));
+            String common = Objects.requireNonNullElse(row.get("commonname"), "").trim();
+            String full = (Objects.requireNonNullElse(row.get("firstname"), "").trim() + " " + Objects.requireNonNullElse(row.get("surname"), "").trim()).trim();
+            String name = common.isEmpty() ? full : common;
+            if (Objects.nonNull(id) && !name.isEmpty()) {
+                names.put(id, name);
+            }
+        }
+        return names;
+    }
+
+    private static String nameOf(Map<String, String> row, Long eaId, Map<Integer, String> names, Map<Long, String> edited) {
+        if (edited.containsKey(eaId)) {
+            return edited.get(eaId);
+        }
         String common = names.get(toInt(row.get("commonnameid")));
         if (Objects.nonNull(common)) {
             return common;

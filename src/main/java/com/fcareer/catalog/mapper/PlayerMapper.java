@@ -5,6 +5,7 @@ import com.fcareer.catalog.entity.PlayerRatingEntity;
 import com.fcareer.catalog.entity.PlayerValuationEntity;
 import com.fcareer.catalog.model.response.PlayerDetailResponse;
 import com.fcareer.catalog.model.response.PlayerSummaryResponse;
+import com.fcareer.catalog.service.PositionOverallService;
 import com.fcareer.fitengine.model.AcceleRate;
 import com.fcareer.fitengine.model.Attr;
 import com.fcareer.fitengine.model.FitPlayer;
@@ -22,6 +23,7 @@ import java.util.Objects;
 public class PlayerMapper {
 
     private final RatingAttrAccessor ratingAttrAccessor;
+    private final PositionOverallService positionOverallService;
 
     public FitPlayer toFitPlayer(BasePlayerEntity base, PlayerRatingEntity rating, PlayerValuationEntity valuation) {
         return FitPlayer.builder()
@@ -52,6 +54,7 @@ public class PlayerMapper {
                 .skillMoves(Objects.isNull(rating.getSkillMoves()) ? null : rating.getSkillMoves().intValue())
                 .attrs(attrs)
                 .playstyles(rating.getPlaystyles())
+                .positionOveralls(positionOverallService.byPosition(ratingAttrAccessor.read(rating), rating.getPositions().contains("GK")))
                 .build();
     }
 

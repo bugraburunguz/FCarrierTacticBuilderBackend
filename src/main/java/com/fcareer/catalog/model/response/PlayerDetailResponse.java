@@ -22,4 +22,5 @@ public class PlayerDetailResponse {
     private Integer skillMoves;
     private Map<String, Integer> attrs;
     private Map<String, Integer> playstyles;
+    private Map<String, Integer> positionOveralls;
 }

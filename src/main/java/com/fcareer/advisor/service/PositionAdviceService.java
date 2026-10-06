@@ -4,6 +4,7 @@ import com.fcareer.advisor.model.response.AdvisorResponses.PlayerPositionAdvice;
 import com.fcareer.advisor.model.response.AdvisorResponses.PositionOption;
 import com.fcareer.career.service.CareerService;
 import com.fcareer.catalog.service.PlayerService;
+import com.fcareer.catalog.service.PositionOverallService;
 import com.fcareer.fitengine.model.FitPlayer;
 import com.fcareer.fitengine.model.FitRole;
 import com.fcareer.fitengine.model.response.RoleFitResponse;
@@ -33,6 +34,7 @@ public class PositionAdviceService {
     private final RoleFitService roleFitService;
     private final CareerService careerService;
     private final PlayerService playerService;
+    private final PositionOverallService positionOverallService;
 
     public List<PlayerPositionAdvice> forCareer(Long userId, Long careerId) {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
@@ -70,7 +72,8 @@ public class PositionAdviceService {
             options.sort(Comparator.comparingDouble(PositionOption::getScore).reversed());
             advice.add(PlayerPositionAdvice.builder().playerId(player.getId()).playerName(player.getName())
                     .listedPositions(player.getPositions()).best(options.stream().limit(POSITIONS_SHOWN).toList())
-                    .note(note(options)).ownPositionBest(isOwnBest(options)).build());
+                    .note(note(options)).ownPositionBest(isOwnBest(options))
+                    .bestOverallPosition(bestOverall(player).getKey()).bestOverall(bestOverall(player).getValue()).build());
         }
         return advice;
     }
@@ -91,6 +94,11 @@ public class PositionAdviceService {
             matrix.put(player.getId(), byPosition);
         }
         return matrix;
+    }
+
+    private Map.Entry<String, Integer> bestOverall(FitPlayer player) {
+        return positionOverallService.byPosition(player.getAttrs(), player.getPositions().contains(GOALKEEPER)).entrySet().stream()
+                .max(Map.Entry.comparingByValue()).orElse(Map.entry(player.getPositions().get(0), player.getOverall()));
     }
 
     private boolean isOwnBest(List<PositionOption> sorted) {

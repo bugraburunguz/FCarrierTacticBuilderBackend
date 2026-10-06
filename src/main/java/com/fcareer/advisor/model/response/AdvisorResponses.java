@@ -59,6 +59,8 @@ public final class AdvisorResponses {
         private List<PositionOption> best;
         private String note;
         private boolean ownPositionBest;
+        private String bestOverallPosition;
+        private Integer bestOverall;
     }
 
     @Data

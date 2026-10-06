@@ -26,6 +26,9 @@ local PLAYER_COLUMNS = {
 }
 
 local TABLES = {
+    { name = "editedplayernames", columns = { "playerid", "firstname", "surname", "commonname", "playerjerseyname" } },
+    { name = "dcplayernames", columns = "*" },
+    { name = "career_youthplayers", columns = "*" },
     { name = "playernames", columns = { "nameid", "name" } },
     { name = "players", columns = PLAYER_COLUMNS },
     { name = "teams", columns = { "teamid", "teamname", "overallrating", "attackrating", "midfieldrating",
@@ -58,11 +61,16 @@ local function dump_table(spec)
         return 0
     end
     local columns = {}
-    for _, name in ipairs(spec.columns) do
-        if tbl.fields[name] ~= nil then
-            columns[#columns + 1] = name
-        else
-            Log(string.format("%s\tMISSINGFIELD\t%s\t%s", MARK, spec.name, name))
+    if spec.columns == "*" then
+        for name, _ in pairs(tbl.fields) do columns[#columns + 1] = name end
+        table.sort(columns)
+    else
+        for _, name in ipairs(spec.columns) do
+            if tbl.fields[name] ~= nil then
+                columns[#columns + 1] = name
+            else
+                Log(string.format("%s\tMISSINGFIELD\t%s\t%s", MARK, spec.name, name))
+            end
         end
     end
     local header = {}
