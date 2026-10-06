@@ -22,4 +22,5 @@ public class PlayerRoleFit {
     private WeaponState badge;
     private String badgeText;
     private List<String> reasons;
+    private List<AttributeGap> gaps;
 }

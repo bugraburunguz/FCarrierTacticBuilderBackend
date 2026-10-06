@@ -13,6 +13,7 @@ import com.fcareer.fitengine.model.TacticRuleDefinition;
 import com.fcareer.fitengine.model.request.CompareRequest;
 import com.fcareer.fitengine.model.request.FitRoleRequest;
 import com.fcareer.fitengine.model.request.SquadFitRequest;
+import com.fcareer.fitengine.model.response.AttributeGap;
 import com.fcareer.fitengine.model.response.FitRoleResult;
 import com.fcareer.fitengine.model.response.PlayerRoleFit;
 import com.fcareer.fitengine.model.response.RoleFitResponse;
@@ -67,10 +68,21 @@ public class FitService {
                 fits.add(PlayerRoleFit.builder().position(position).roleId(role.getId()).roleName(role.getName()).focus(role.getFocus())
                         .score(Math.round(fit.getScore() * 10.0) / 10.0).projectedRating(fit.getProjectedRating())
                         .badge(fit.getBadge()).badgeText(fit.getBadgeText())
-                        .reasons(Objects.isNull(fit.getReasons()) ? List.of() : fit.getReasons().stream().limit(ROLE_REASONS).toList()).build());
+                        .reasons(Objects.isNull(fit.getReasons()) ? List.of() : fit.getReasons().stream().limit(ROLE_REASONS).toList())
+                        .gaps(gaps(fit)).build());
             }
         }
         return fits;
+    }
+
+    private static List<AttributeGap> gaps(RoleFitResponse fit) {
+        if (Objects.isNull(fit.getWeaponChecks())) {
+            return List.of();
+        }
+        return fit.getWeaponChecks().stream()
+                .filter(w -> w.getValue() < w.getEffectiveMin())
+                .map(w -> AttributeGap.builder().attr(w.getAttr()).value(w.getValue()).needed(w.getEffectiveMin()).build())
+                .toList();
     }
 
     public List<FitRoleResult> compare(CompareRequest request) {
