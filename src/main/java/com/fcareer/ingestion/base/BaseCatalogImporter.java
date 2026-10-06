@@ -249,6 +249,25 @@ public class BaseCatalogImporter {
         return all;
     }
 
+    public int saveCareerRatings(Long careerId, List<Map<String, String>> players, Map<Long, Long> eaToBase, Set<Long> includeBaseIds,
+                                 Set<Long> skipEaIds, short gameVersionId) {
+        jdbc.update("DELETE FROM career_player_rating WHERE career_id = :c", Map.of("c", careerId));
+        List<SqlParameterSource> rows = new ArrayList<>();
+        for (Map<String, String> row : players) {
+            Long eaId = toLong(row.get("playerid"));
+            Long baseId = Objects.isNull(eaId) ? null : eaToBase.get(eaId);
+            if (Objects.isNull(baseId) || skipEaIds.contains(eaId) || !includeBaseIds.contains(baseId)
+                    || Objects.isNull(toInt(row.get("overallrating"))) || positions(row).isEmpty()) {
+                continue;
+            }
+            MapSqlParameterSource params = (MapSqlParameterSource) ratingParams(baseId, row, gameVersionId, null);
+            rows.add(params.addValue("career", careerId));
+        }
+        batch(CAREER_RATING_SQL, rows);
+        log.info("Career rating overlay careerId : {} rows : {}", careerId, rows.size());
+        return rows.size();
+    }
+
     private void renameNameless(List<Map<String, String>> players, Map<Integer, String> names, Map<Long, String> edited) {
         Map<Long, Long> nameless = new HashMap<>();
         jdbc.query("SELECT id, ea_resource_id FROM base_player WHERE owner_career_id IS NULL AND full_name LIKE 'Oyuncu #%'", rs -> {
@@ -280,6 +299,7 @@ public class BaseCatalogImporter {
     }
 
     private static final String RATING_SQL;
+    private static final String CAREER_RATING_SQL;
     private static final String RATING_UPDATE_SQL_WITH_CLUB;
     private static final String RATING_UPDATE_SQL;
     private static final String BASE_UPDATE_SQL = """
@@ -296,6 +316,7 @@ public class BaseCatalogImporter {
             values.append(", :").append(attr.getColumn());
         }
         RATING_SQL = "INSERT INTO player_rating (" + columns + ") VALUES (" + values + ")";
+        CAREER_RATING_SQL = "INSERT INTO career_player_rating (career_id, " + columns + ") VALUES (:career, " + values + ")";
         StringBuilder sets = new StringBuilder("overall = :overall, positions = CAST(string_to_array(:positions, ',') AS text[]), "
                 + "accelerate = :accelerate, weak_foot = :weakFoot, skill_moves = :skillMoves, playstyles = CAST(:playstyles AS jsonb), "
                 + "run_style1 = :run1, run_style2 = :run2");

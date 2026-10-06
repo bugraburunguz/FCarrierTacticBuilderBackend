@@ -41,7 +41,7 @@ public class PositionAdviceService {
         if (squad.playerIds().isEmpty()) {
             return List.of();
         }
-        return advise(playerService.fitPlayers(squad.playerIds(), squad.gameVersionId()));
+        return advise(playerService.fitPlayers(squad.playerIds(), squad.gameVersionId(), careerId));
     }
 
     public List<PlayerPositionAdvice> advise(List<FitPlayer> players) {

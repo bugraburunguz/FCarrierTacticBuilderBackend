@@ -132,7 +132,7 @@ public class RecommendationService {
         };
         Map<Long, PlayerSummaryResponse> summaries = playerService.search(search).getItems().stream()
                 .collect(Collectors.toMap(PlayerSummaryResponse::getId, c -> c));
-        RecommendSlotRequest capped = RecommendSlotRequest.builder().roleId(request.getRoleId()).position(request.getPosition())
+        RecommendSlotRequest capped = RecommendSlotRequest.builder().careerId(view.getCareerId()).roleId(request.getRoleId()).position(request.getPosition())
                 .limit(Math.min(Objects.isNull(request.getLimit()) ? PREVIEW_LIMIT : request.getLimit(), PREVIEW_LIMIT)).build();
         return rank(capped, role, intent, summaries, search.getValueMax(), squad.gameVersionId());
     }
@@ -209,7 +209,7 @@ public class RecommendationService {
         if (Objects.nonNull(request.getCurrentPlayerId())) {
             ids.add(request.getCurrentPlayerId());
         }
-        Map<Long, FitPlayer> players = playerService.fitPlayers(ids, gameVersion).stream()
+        Map<Long, FitPlayer> players = playerService.fitPlayers(ids, gameVersion, request.getCareerId()).stream()
                 .collect(Collectors.toMap(FitPlayer::getId, p -> p, (a, b) -> a));
 
         RecommendationItem current = Objects.isNull(request.getCurrentPlayerId()) ? null

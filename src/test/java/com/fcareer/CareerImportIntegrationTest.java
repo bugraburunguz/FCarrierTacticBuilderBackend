@@ -105,7 +105,7 @@ class CareerImportIntegrationTest {
         String log = String.join("\n",
                 prefix + "BEGIN" + tab + "players" + tab + "fields=3",
                 prefix + "HEADER" + tab + "players" + tab + "playerid,overallrating,potential,preferredposition1,gender,agility",
-                prefix + "ROW" + tab + "players" + tab + FIRST_MOCK_ID + ",88,92,-1,0,70",
+                prefix + "ROW" + tab + "players" + tab + FIRST_MOCK_ID + ",88,92,14,0,70",
                 prefix + "ROW" + tab + "players" + tab + GENERATED_ID + ",66,84,25,0,70",
                 prefix + "END" + tab + "players" + tab + "2",
                 prefix + "BEGIN" + tab + "teams" + tab + "fields=3",
@@ -121,6 +121,8 @@ class CareerImportIntegrationTest {
         assertThat(result.at("/success").asBoolean()).as(result.toString()).isTrue();
         assertThat(result.at("/data/players").asInt()).isEqualTo(2);
         assertThat(result.at("/data/generatedPlayers").asInt()).isEqualTo(1);
+        assertThat(jdbc.queryForList("SELECT array_to_string(positions, ',') FROM career_player_rating WHERE career_id = ? AND overall = 88", String.class, careerId))
+                .containsExactly("CM");
         assertThat(result.at("/data/guessedTeamId").asInt()).isEqualTo(1);
 
         String name = String.valueOf(GENERATED_ID);

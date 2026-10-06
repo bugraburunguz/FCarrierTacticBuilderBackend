@@ -3,6 +3,8 @@ package com.fcareer.catalog.service;
 import com.fcareer.catalog.configuration.CatalogProperties;
 import com.fcareer.catalog.entity.BasePlayerEntity;
 import com.fcareer.catalog.entity.PlayerRatingEntity;
+import com.fcareer.catalog.entity.RatingColumns;
+import com.fcareer.catalog.repository.CareerPlayerRatingRepository;
 import com.fcareer.catalog.entity.PlayerValuationEntity;
 import com.fcareer.catalog.mapper.PlayerMapper;
 import com.fcareer.catalog.model.enums.ValuationSource;
@@ -20,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -40,6 +43,7 @@ public class PlayerService {
     private final PlayerSearchRepository playerSearchRepository;
     private final BasePlayerRepository basePlayerRepository;
     private final PlayerRatingRepository playerRatingRepository;
+    private final CareerPlayerRatingRepository careerPlayerRatingRepository;
     private final PlayerValuationRepository playerValuationRepository;
     private final PlayerMapper playerMapper;
 
@@ -66,11 +70,19 @@ public class PlayerService {
     }
 
     public List<FitPlayer> fitPlayers(List<Long> playerIds, Short gameVersionId) {
+        return fitPlayers(playerIds, gameVersionId, null);
+    }
+
+    public List<FitPlayer> fitPlayers(List<Long> playerIds, Short gameVersionId, Long careerId) {
         short gv = resolveGameVersion(gameVersionId);
         Map<Long, BasePlayerEntity> bases = basePlayerRepository.findAllById(playerIds).stream()
                 .collect(Collectors.toMap(BasePlayerEntity::getId, Function.identity()));
-        Map<Long, PlayerRatingEntity> ratings = playerRatingRepository.findByBasePlayerIdInAndGameVersionId(playerIds, gv)
-                .stream().collect(Collectors.toMap(PlayerRatingEntity::getBasePlayerId, Function.identity()));
+        Map<Long, RatingColumns> ratings = new HashMap<>();
+        playerRatingRepository.findByBasePlayerIdInAndGameVersionId(playerIds, gv).forEach(r -> ratings.put(r.getBasePlayerId(), r));
+        if (Objects.nonNull(careerId)) {
+            careerPlayerRatingRepository.findByCareerIdAndBasePlayerIdInAndGameVersionId(careerId, playerIds, gv)
+                    .forEach(r -> ratings.put(r.getBasePlayerId(), r));
+        }
         Map<Long, PlayerValuationEntity> valuations = playerValuationRepository
                 .findByBasePlayerIdInAndGameVersionIdAndSourceAndOwnerUserIdIsNull(playerIds, gv, ValuationSource.MODELED)
                 .stream().collect(Collectors.toMap(PlayerValuationEntity::getBasePlayerId, Function.identity()));
@@ -83,10 +95,15 @@ public class PlayerService {
     }
 
     public Map<Long, PlayerSummaryResponse> summaries(List<Long> ids, Short gameVersionId) {
+        return summaries(ids, gameVersionId, null);
+    }
+
+    public Map<Long, PlayerSummaryResponse> summaries(List<Long> ids, Short gameVersionId, Long careerId) {
         if (ids.isEmpty()) {
             return Map.of();
         }
         PlayerSearchRequest request = new PlayerSearchRequest();
+        request.setCareerId(careerId);
         request.setGameVersionId(resolveGameVersion(gameVersionId));
         request.setIds(ids);
         request.setSize(ids.size());

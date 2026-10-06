@@ -1,6 +1,6 @@
 package com.fcareer.catalog.mapper;
 
-import com.fcareer.catalog.entity.PlayerRatingEntity;
+import com.fcareer.catalog.entity.RatingColumns;
 import com.fcareer.fitengine.model.Attr;
 import org.springframework.stereotype.Component;
 
@@ -11,7 +11,7 @@ import java.util.Objects;
 @Component
 public class RatingAttrAccessor {
 
-    public Map<Attr, Integer> read(PlayerRatingEntity r) {
+    public Map<Attr, Integer> read(RatingColumns r) {
         Map<Attr, Integer> attrs = new EnumMap<>(Attr.class);
         for (Attr attr : Attr.values()) {
             Short value = get(r, attr);
@@ -20,11 +20,11 @@ public class RatingAttrAccessor {
         return attrs;
     }
 
-    public void write(PlayerRatingEntity r, Map<Attr, Integer> attrs) {
+    public void write(RatingColumns r, Map<Attr, Integer> attrs) {
         attrs.forEach((attr, value) -> set(r, attr, value.shortValue()));
     }
 
-    private Short get(PlayerRatingEntity r, Attr attr) {
+    private Short get(RatingColumns r, Attr attr) {
         return switch (attr) {
             case ACCELERATION -> r.getAcceleration();
             case SPRINT_SPEED -> r.getSprintSpeed();
@@ -63,7 +63,7 @@ public class RatingAttrAccessor {
         };
     }
 
-    private void set(PlayerRatingEntity r, Attr attr, Short v) {
+    private void set(RatingColumns r, Attr attr, Short v) {
         switch (attr) {
             case ACCELERATION -> r.setAcceleration(v);
             case SPRINT_SPEED -> r.setSprintSpeed(v);

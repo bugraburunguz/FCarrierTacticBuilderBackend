@@ -1,7 +1,7 @@
 package com.fcareer.catalog.mapper;
 
 import com.fcareer.catalog.entity.BasePlayerEntity;
-import com.fcareer.catalog.entity.PlayerRatingEntity;
+import com.fcareer.catalog.entity.RatingColumns;
 import com.fcareer.catalog.entity.PlayerValuationEntity;
 import com.fcareer.catalog.model.response.PlayerDetailResponse;
 import com.fcareer.catalog.model.response.PlayerSummaryResponse;
@@ -25,7 +25,7 @@ public class PlayerMapper {
     private final RatingAttrAccessor ratingAttrAccessor;
     private final PositionOverallService positionOverallService;
 
-    public FitPlayer toFitPlayer(BasePlayerEntity base, PlayerRatingEntity rating, PlayerValuationEntity valuation) {
+    public FitPlayer toFitPlayer(BasePlayerEntity base, RatingColumns rating, PlayerValuationEntity valuation) {
         return FitPlayer.builder()
                 .id(base.getId())
                 .name(base.getFullName())
@@ -42,7 +42,7 @@ public class PlayerMapper {
                 .build();
     }
 
-    public PlayerDetailResponse toDetail(PlayerSummaryResponse summary, BasePlayerEntity base, PlayerRatingEntity rating) {
+    public PlayerDetailResponse toDetail(PlayerSummaryResponse summary, BasePlayerEntity base, RatingColumns rating) {
         Map<String, Integer> attrs = new LinkedHashMap<>();
         ratingAttrAccessor.read(rating).forEach((attr, value) -> attrs.put(attr.getKey(), value));
         return PlayerDetailResponse.builder()

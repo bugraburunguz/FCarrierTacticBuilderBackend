@@ -28,6 +28,8 @@ public class PlayerSearchRepository {
              FROM player_rating r
              JOIN base_player b ON b.id = r.base_player_id
              LEFT JOIN career_player_data cpd ON cpd.base_player_id = r.base_player_id AND cpd.career_id = CAST(:careerId AS BIGINT)
+             LEFT JOIN career_player_rating cpr ON cpr.base_player_id = r.base_player_id AND cpr.career_id = cpd.career_id
+                  AND cpr.game_version_id = r.game_version_id
              LEFT JOIN career_team ct ON ct.career_id = cpd.career_id AND ct.team_id = cpd.team_id
              LEFT JOIN club c ON c.id = r.club_id
              LEFT JOIN league l ON l.id = c.league_id
@@ -37,8 +39,9 @@ public class PlayerSearchRepository {
             """;
     private static final String SELECT = """
             SELECT b.id AS id, b.full_name AS name, b.dob AS dob, b.gender AS gender, b.preferred_foot AS foot,
-                   COALESCE(cpd.overall, r.overall) AS overall, r.positions AS positions, r.weak_foot AS weak_foot, r.skill_moves AS skill_moves,
-                   c.id AS club_id, COALESCE(ct.name, c.name) AS club, COALESCE(ct.league_name, l.name) AS league, n.name AS nationality, r.accelerate AS accelerate, r.run_style1 AS run_style,
+                   COALESCE(cpd.overall, r.overall) AS overall, COALESCE(cpr.positions, r.positions) AS positions, COALESCE(cpr.weak_foot, r.weak_foot) AS weak_foot,
+                   COALESCE(cpr.skill_moves, r.skill_moves) AS skill_moves,
+                   c.id AS club_id, COALESCE(ct.name, c.name) AS club, COALESCE(ct.league_name, l.name) AS league, n.name AS nationality, COALESCE(cpr.accelerate, r.accelerate) AS accelerate, COALESCE(cpr.run_style1, r.run_style1) AS run_style,
                    COALESCE(cpd.potential, v.potential) AS potential, v.value_eur AS value_eur, (cpd.base_player_id IS NULL AND v.id IS NOT NULL) AS estimated
             """;
     private static final String AGE_YEARS = "EXTRACT(YEAR FROM age(b.dob))";
@@ -111,7 +114,7 @@ public class PlayerSearchRepository {
             params.addValue("q", "%" + request.getQuery().trim() + "%");
         }
         if (!request.getPositions().isEmpty()) {
-            clauses.add("r.positions && string_to_array(:positions, ',')");
+            clauses.add("COALESCE(cpr.positions, r.positions) && string_to_array(:positions, ',')");
             params.addValue("positions", String.join(",", request.getPositions()));
         }
         if (!request.getAccelerate().isEmpty()) {

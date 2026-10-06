@@ -146,7 +146,7 @@ public class CareerService {
         CareerEntity career = owned(userId, careerId);
         List<UserPlayerStateEntity> states = userPlayerStateRepository.findByCareerIdOrderByIdAsc(careerId);
         Map<Long, PlayerSummaryResponse> summaries = playerService.summaries(
-                states.stream().map(UserPlayerStateEntity::getBasePlayerId).toList(), career.getGameVersionId());
+                states.stream().map(UserPlayerStateEntity::getBasePlayerId).toList(), career.getGameVersionId(), careerId);
         Map<Long, int[]> overlay = importedRatings(careerId, states);
         return states.stream()
                 .filter(s -> summaries.containsKey(s.getBasePlayerId()))

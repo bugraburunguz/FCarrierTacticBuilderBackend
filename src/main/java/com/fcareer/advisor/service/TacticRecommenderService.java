@@ -76,7 +76,7 @@ public class TacticRecommenderService {
             log.warn("Squad too small for tactic recommender careerId : {} size : {}", request.getCareerId(), squad.playerIds().size());
             throw new InvalidTacticException("squad size");
         }
-        List<FitPlayer> players = playerService.fitPlayers(squad.playerIds(), squad.gameVersionId());
+        List<FitPlayer> players = playerService.fitPlayers(squad.playerIds(), squad.gameVersionId(), request.getCareerId());
         return creditGuard.runCharged(userId, billingProperties.getAdvisorCost(), RECOMMEND_TACTIC, () -> compute(players, request));
     }
 

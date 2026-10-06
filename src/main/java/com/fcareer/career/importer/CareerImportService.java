@@ -105,6 +105,10 @@ public class CareerImportService {
                 INSERT INTO career_player_data (career_id, base_player_id, overall, potential, team_id, free_agent)
                 VALUES (:career, :base, :overall, :potential, :team, :free)""", playerRows);
 
+        Set<Long> matchedBaseIds = new HashSet<>();
+        playerRows.forEach((row) -> matchedBaseIds.add((Long) row.getValue("base")));
+        baseCatalogImporter.saveCareerRatings(careerId, tables.get("players"), eaToBase, matchedBaseIds, generated.keySet(), career.getGameVersionId());
+
         List<SqlParameterSource> teamParams = new ArrayList<>();
         for (Map.Entry<Integer, Map<String, String>> entry : teamRows.entrySet()) {
             Integer teamId = entry.getKey();
