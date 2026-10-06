@@ -11,6 +11,8 @@ import com.fcareer.catalog.model.enums.ValuationSource;
 import com.fcareer.catalog.model.request.PlayerSearchRequest;
 import com.fcareer.catalog.model.response.PlayerDetailResponse;
 import com.fcareer.catalog.model.response.PlayerSummaryResponse;
+import com.fcareer.catalog.model.response.SimilarPlayerResponse;
+import com.fcareer.fitengine.model.Attr;
 import com.fcareer.catalog.repository.BasePlayerRepository;
 import com.fcareer.catalog.repository.PlayerRatingRepository;
 import com.fcareer.catalog.repository.PlayerSearchRepository;
@@ -38,6 +40,9 @@ import static com.fcareer.common.constants.ApiConstants.MAX_PAGE_SIZE;
 public class PlayerService {
 
     private static final String PLAYER = "player";
+    private static final String GOALKEEPER = "GK";
+    private static final int SIMILAR_OVERALL_RANGE = 10;
+    private static final double SIMILARITY_PENALTY = 2.2;
 
     private final CatalogProperties catalogProperties;
     private final PlayerSearchRepository playerSearchRepository;
@@ -92,6 +97,38 @@ public class PlayerService {
             }
             return playerMapper.toFitPlayer(bases.get(id), ratings.get(id), valuations.get(id));
         }).toList();
+    }
+
+    public List<SimilarPlayerResponse> similar(Long playerId, Short gameVersionId, Integer ageMax, Integer potentialMin, int limit) {
+        short gv = resolveGameVersion(gameVersionId);
+        FitPlayer target = fitPlayers(List.of(playerId), gv).get(0);
+        PlayerSummaryResponse summary = summaryOf(playerId, gv);
+        boolean keeper = target.getPositions().contains(GOALKEEPER);
+        PlayerSearchRequest request = PlayerSearchRequest.builder()
+                .gameVersionId(gv).gender(Objects.isNull(summary.getGender()) ? null : summary.getGender().shortValue())
+                .positions(List.of(target.getPositions().get(0)))
+                .overallMin(target.getOverall() - SIMILAR_OVERALL_RANGE).overallMax(target.getOverall() + SIMILAR_OVERALL_RANGE)
+                .ageMax(ageMax).potentialMin(potentialMin).excludeIds(List.of(playerId))
+                .sort("overall").size(MAX_PAGE_SIZE).build();
+        Map<Long, PlayerSummaryResponse> pool = playerSearchRepository.search(request).stream()
+                .collect(Collectors.toMap(PlayerSummaryResponse::getId, Function.identity(), (a, b) -> a, java.util.LinkedHashMap::new));
+        List<Attr> axes = java.util.Arrays.stream(Attr.values()).filter(a -> a.getKey().startsWith("GK") == keeper).toList();
+        return fitPlayers(new java.util.ArrayList<>(pool.keySet()), gv).stream()
+                .map(candidate -> SimilarPlayerResponse.builder().player(pool.get(candidate.getId()))
+                        .similarity(similarity(target, candidate, axes)).build())
+                .sorted(java.util.Comparator.comparingDouble(SimilarPlayerResponse::getSimilarity).reversed())
+                .limit(limit)
+                .toList();
+    }
+
+    private static double similarity(FitPlayer a, FitPlayer b, List<Attr> axes) {
+        double sum = 0;
+        for (Attr attr : axes) {
+            double diff = a.attr(attr) - b.attr(attr);
+            sum += diff * diff;
+        }
+        double distance = Math.sqrt(sum / axes.size());
+        return Math.round(Math.max(0, 100 - distance * SIMILARITY_PENALTY) * 10.0) / 10.0;
     }
 
     public Map<Long, PlayerSummaryResponse> summaries(List<Long> ids, Short gameVersionId) {

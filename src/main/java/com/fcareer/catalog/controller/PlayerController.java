@@ -6,6 +6,7 @@ import com.fcareer.catalog.mapper.PlayerMapper;
 import com.fcareer.catalog.model.request.PlayerSearchRequest;
 import com.fcareer.catalog.model.response.PlayerDetailResponse;
 import com.fcareer.catalog.model.response.PlayerSummaryResponse;
+import com.fcareer.catalog.model.response.SimilarPlayerResponse;
 import com.fcareer.catalog.service.PlayerService;
 import com.fcareer.common.exception.InvalidTacticException;
 import com.fcareer.common.model.PageResponse;
@@ -30,6 +31,7 @@ import static com.fcareer.common.constants.ApiConstants.API_V1;
 @RequiredArgsConstructor
 public class PlayerController {
 
+    private static final int MAX_SIMILAR = 20;
     private static final String MIN_SUFFIX = "_min";
     private static final String MAX_SUFFIX = "_max";
     private static final String ORDER_DESC = "desc";
@@ -104,6 +106,15 @@ public class PlayerController {
                 .page(page)
                 .size(size)
                 .build());
+    }
+
+    @GetMapping("/{id}/similar")
+    public List<SimilarPlayerResponse> similar(@PathVariable Long id,
+                                               @RequestParam(name = "gv", required = false) Short gameVersionId,
+                                               @RequestParam(name = "age_max", required = false) Integer ageMax,
+                                               @RequestParam(name = "pot_min", required = false) Integer potentialMin,
+                                               @RequestParam(name = "limit", required = false, defaultValue = "8") int limit) {
+        return playerService.similar(id, gameVersionId, ageMax, potentialMin, Math.max(1, Math.min(limit, MAX_SIMILAR)));
     }
 
     @GetMapping("/{id}")

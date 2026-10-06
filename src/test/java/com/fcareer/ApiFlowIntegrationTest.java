@@ -187,6 +187,11 @@ class ApiFlowIntegrationTest {
         JsonNode compare = call(post("/api/v1/players/compare"), Map.of("ids", new long[]{playerId}, "roleId", "poacher_attack"), null, 200);
         assertThat(compare.at("/data")).hasSize(1);
 
+        JsonNode similar = call(get("/api/v1/players/" + playerId + "/similar?limit=5"), null, null, 200);
+        assertThat(similar.at("/success").asBoolean()).as(similar.toString()).isTrue();
+        assertThat(similar.at("/data").isArray()).isTrue();
+        similar.at("/data").forEach(s -> assertThat(s.at("/player/id").asLong()).isNotEqualTo(playerId));
+
         JsonNode preview = call(post("/api/v1/recommend/preview"), Map.of("roleId", "winger_attack", "position", "RW"), null, 200);
         assertThat(preview.at("/success").asBoolean()).isTrue();
         assertThat(preview.at("/data/items").isArray()).isTrue();
