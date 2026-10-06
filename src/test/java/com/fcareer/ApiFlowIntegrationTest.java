@@ -247,6 +247,21 @@ class ApiFlowIntegrationTest {
         assertThat(lockedCombos.get(0).at("/presetId").asText()).isNotEqualTo(lockedCombos.get(1).at("/presetId").asText());
     }
 
+    @Test
+    void lineupIsFreeAndReturnsStartersWithBackups() throws Exception {
+        String token = registerAndGetToken();
+        long careerId = createCareer(token, 0).at("/data/id").asLong();
+        int before = call(get("/api/v1/me"), null, token, 200).at("/data/creditBalance").asInt();
+
+        JsonNode lineup = call(post("/api/v1/fit/lineup"), Map.of("careerId", careerId, "tactic", Map.of("formation", "4-3-3")), token, 200);
+
+        assertThat(lineup.at("/success").asBoolean()).as(lineup.toString()).isTrue();
+        assertThat(lineup.at("/data/slots")).hasSize(11);
+        assertThat(lineup.at("/data/bench").isArray()).isTrue();
+        assertThat(lineup.at("/data/slots/0/depth").isArray()).isTrue();
+        assertThat(call(get("/api/v1/me"), null, token, 200).at("/data/creditBalance").asInt()).isEqualTo(before);
+    }
+
     private JsonNode createCareer(String token, long budget) throws Exception {
         long clubId = clubRepository.findAll().get(0).getId();
         JsonNode career = call(post("/api/v1/careers"), Map.of("clubId", clubId, "budgetEur", budget), token, 200);

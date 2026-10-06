@@ -37,6 +37,11 @@ public class FitController {
         return fitService.compare(request);
     }
 
+    @PostMapping("/fit/lineup")
+    public SquadFitResponse lineup(@AuthenticationPrincipal AuthUser user, @Valid @RequestBody SquadFitRequest request) {
+        return fitService.lineup(user.id(), request);
+    }
+
     @PostMapping("/fit/squad")
     public CreditedResponse<SquadFitResponse> squadFit(@AuthenticationPrincipal AuthUser user,
                                                        @Valid @RequestBody SquadFitRequest request) {

@@ -22,6 +22,7 @@ import com.fcareer.fitengine.service.HungarianSolver;
 import com.fcareer.fitengine.service.IntentFitService;
 import com.fcareer.fitengine.service.RoleFitService;
 import com.fcareer.fitengine.service.SquadFitService;
+import com.fcareer.fitengine.service.TacticMirror;
 import com.fcareer.recommendation.model.request.RecommendSlotRequest;
 import com.fcareer.recommendation.service.RecommendationService;
 import com.fcareer.roles.service.BehaviorTagService;
@@ -55,6 +56,7 @@ import java.util.stream.Collectors;
 public class AdvisorService {
 
     private static final String ADVISOR = "ADVISOR";
+    private static final double MIRROR_MARGIN = 0.5;
     private static final String STYLE = "STYLE";
     private static final String REPLICA = "REPLICA";
     private static final String PERSONAL = "PERSONAL";
@@ -406,6 +408,29 @@ public class AdvisorService {
     }
 
     record Eval(double score, double squadFit, Double intentFit, double depth) {
+    }
+
+    record Oriented(Scored scored, Eval eval, boolean mirrored) {
+    }
+
+    /** Taktiği olduğu gibi ve sağ-sol aynalanmış haliyle değerlendirir, kadroya uygun olanı seçer. */
+    Oriented orient(List<FitPlayer> players, Scored scored) {
+        Eval original = evaluate(players, scored.profiles());
+        if (!TacticMirror.isMirrorable(scored.profiles())) {
+            return new Oriented(scored, original, false);
+        }
+        List<IntentProfile> flipped = TacticMirror.mirror(scored.profiles());
+        Eval mirroredEval = evaluate(players, flipped);
+        if (mirroredEval.score() <= original.score() + MIRROR_MARGIN) {
+            return new Oriented(scored, original, false);
+        }
+        Candidate source = scored.candidate();
+        Candidate candidate = Candidate.builder().kind(source.getKind()).presetId(source.getPresetId()).name(source.getName())
+                .formation(source.getFormation()).formationLabel(source.getFormationLabel()).score(round1(mirroredEval.score()))
+                .squadFit(round1(mirroredEval.squadFit()))
+                .intentFit(Objects.isNull(mirroredEval.intentFit()) ? null : round1(mirroredEval.intentFit()))
+                .tactic(toTactic(source.getFormation(), source.getTactic().getPresetId(), flipped)).build();
+        return new Oriented(new Scored(candidate, flipped), mirroredEval, true);
     }
 
     record Scored(Candidate candidate, List<IntentProfile> profiles) {

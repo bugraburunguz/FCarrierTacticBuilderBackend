@@ -42,6 +42,7 @@ public final class TacticRecommendation {
         private double squadFit;
         private Double intentFit;
         private int feasibility;
+        private boolean mirrored;
         private List<String> reasons;
         private List<WeakLink> weakLinks;
         private TacticRequest tactic;

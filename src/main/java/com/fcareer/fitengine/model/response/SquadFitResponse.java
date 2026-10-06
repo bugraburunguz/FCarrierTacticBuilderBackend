@@ -21,4 +21,5 @@ public class SquadFitResponse {
     private List<RuleFinding> rules;
     private String attackPattern;
     private List<Long> bench;
+    private boolean mirrored;
 }

@@ -97,8 +97,9 @@ public class TacticRecommenderService {
             for (FormationDefinition formation : searchFormations) {
                 Feasibility feasibility = feasibilityService.evaluate(players, profile, formation, preset.getId());
                 Scored scored = advisorService.scoreStyle(players, preset, formation, template);
-                Eval eval = advisorService.evaluate(players, scored.profiles());
-                ranked.add(new Ranked(preset, formation, scored, eval, feasibility, combine(eval, feasibility)));
+                AdvisorService.Oriented oriented = advisorService.orient(players, scored);
+                ranked.add(new Ranked(preset, formation, oriented.scored(), oriented.eval(), feasibility,
+                        combine(oriented.eval(), feasibility), oriented.mirrored()));
             }
         }
         ranked.sort(Comparator.comparingDouble(Ranked::score).reversed());
@@ -187,13 +188,16 @@ public class TacticRecommenderService {
         reasons.add(String.format(Locale.ROOT, "Kadro uyumu %%%.0f%s, yedek derinliği %%%.0f.", item.eval().squadFit(),
                 Objects.isNull(item.eval().intentFit()) ? "" : String.format(Locale.ROOT, ", niyet uyumu %%%.0f", item.eval().intentFit()),
                 item.eval().depth() * PERCENT));
+        if (item.mirrored()) {
+            reasons.add("Taktik kadronuza göre sağ-sol aynalandı: görevler, bu kanatta daha uygun oyuncularınıza kaydırıldı.");
+        }
         reasons.addAll(item.feasibility().notes());
         lowerFormationNote(all, item).ifPresent(reasons::add);
         lineup.getWeakLinks().stream().limit(WEAK_LINKS_SHOWN).forEach(w -> reasons.add("Zayıf halka: " + w.getSentence()));
         return Combo.builder().formation(item.formation().id()).formationLabel(advisorService.label(item.formation().id()))
                 .presetId(item.preset().getId()).presetName(item.preset().getName()).pct(pct(item.score()))
                 .squadFit(round1(item.eval().squadFit())).intentFit(Objects.isNull(item.eval().intentFit()) ? null : round1(item.eval().intentFit()))
-                .feasibility((int) Math.round(item.feasibility().multiplier() * PERCENT)).reasons(reasons)
+                .feasibility((int) Math.round(item.feasibility().multiplier() * PERCENT)).mirrored(item.mirrored()).reasons(reasons)
                 .weakLinks(lineup.getWeakLinks()).tactic(item.scored().candidate().getTactic()).lineup(lineup).build();
     }
 
@@ -220,6 +224,7 @@ public class TacticRecommenderService {
         return Math.round(value * 10) / 10.0;
     }
 
-    private record Ranked(PresetResponse preset, FormationDefinition formation, Scored scored, Eval eval, Feasibility feasibility, double score) {
+    private record Ranked(PresetResponse preset, FormationDefinition formation, Scored scored, Eval eval, Feasibility feasibility, double score,
+                          boolean mirrored) {
     }
 }

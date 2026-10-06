@@ -37,6 +37,7 @@ import java.util.stream.IntStream;
 public class SquadFitService {
 
     private static final int NOT_ASSIGNED = -1;
+    private static final double MIRROR_MARGIN = 0.5;
 
     private final RoleFitService roleFitService;
     private final IntentFitService intentFitService;
@@ -124,6 +125,27 @@ public class SquadFitService {
                 .attackPattern(nlgService.attackPattern(attackPatterns(slots)))
                 .bench(bench)
                 .build();
+    }
+
+    /** Taktiği olduğu gibi ve sağ-sol aynalanmış haliyle çözer; kadroya daha uygun olanı döner. */
+    public SquadFitResponse solveBest(List<FitPlayer> squad, List<IntentProfile> slots, List<TacticRuleDefinition> rules) {
+        SquadFitResponse original = solve(squad, slots, rules);
+        if (!TacticMirror.isMirrorable(slots)) {
+            return original;
+        }
+        SquadFitResponse flipped = solve(squad, TacticMirror.mirror(slots), rules);
+        if (overall(flipped) > overall(original) + MIRROR_MARGIN) {
+            flipped.setMirrored(true);
+            log.info("Tactic mirrored original : {} mirrored : {}", overall(original), overall(flipped));
+            return flipped;
+        }
+        return original;
+    }
+
+    private double overall(SquadFitResponse response) {
+        FitEngineProperties.Squad config = properties.getSquad();
+        return Objects.isNull(response.getIntentFit()) ? response.getSquadFit()
+                : config.getRoleFitWeight() * response.getSquadFit() + config.getIntentFitWeight() * response.getIntentFit();
     }
 
     public double combine(RoleFitResponse roleFit, IntentFitResponse intentFit, IntentProfile slot) {

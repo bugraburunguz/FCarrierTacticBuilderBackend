@@ -78,7 +78,15 @@ public class FitService {
         List<IntentProfile> slots = tacticResolver.resolve(request.getTactic()).slots();
         List<TacticRuleDefinition> rules = tacticRuleService.enabledRules();
         return creditGuard.runCharged(userId, billingProperties.getSquadFitCost(), SQUAD_FIT,
-                () -> squadFitService.solve(players, slots, rules));
+                () -> squadFitService.solveBest(players, slots, rules));
+    }
+
+    /** Kredi harcamayan kadro dizilişi: seçili taktikte ilk 11 ve yedekler (gerekirse aynalanmış). */
+    public SquadFitResponse lineup(Long userId, SquadFitRequest request) {
+        CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, request.getCareerId());
+        List<FitPlayer> players = playerService.fitPlayers(squad.playerIds(), squad.gameVersionId());
+        List<IntentProfile> slots = tacticResolver.resolve(request.getTactic()).slots();
+        return squadFitService.solveBest(players, slots, tacticRuleService.enabledRules());
     }
 
     private FitRoleResult evaluate(FitPlayer player, String roleId, String position, List<String> tags) {
