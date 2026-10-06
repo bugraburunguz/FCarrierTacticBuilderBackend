@@ -180,7 +180,7 @@ public class BaseCatalogImporter {
         }
         RATING_SQL = "INSERT INTO player_rating (" + columns + ") VALUES (" + values + ")";
         StringBuilder sets = new StringBuilder("overall = :overall, positions = CAST(string_to_array(:positions, ',') AS text[]), "
-                + "accelerate = :accelerate, weak_foot = :weakFoot, skill_moves = :skillMoves, "
+                + "accelerate = :accelerate, weak_foot = :weakFoot, skill_moves = :skillMoves, playstyles = CAST(:playstyles AS jsonb), "
                 + "run_style1 = :run1, run_style2 = :run2");
         for (Attr attr : DumpMappings.ATTRIBUTE_COLUMNS.values()) {
             sets.append(", ").append(attr.getColumn()).append(" = :").append(attr.getColumn());
@@ -247,13 +247,11 @@ public class BaseCatalogImporter {
     }
 
     private void collectStyles(Map<String, Integer> styles, String[] names, Long traits, Long plus) {
-        if (Objects.isNull(traits)) {
-            return;
-        }
         for (int bit = 0; bit < names.length; bit++) {
-            if (((traits >> bit) & 1L) == 1L) {
-                boolean upgraded = Objects.nonNull(plus) && ((plus >> bit) & 1L) == 1L;
-                styles.put(names[bit], upgraded ? 2 : 1);
+            if (Objects.nonNull(plus) && ((plus >> bit) & 1L) == 1L) {
+                styles.put(names[bit], 2);
+            } else if (Objects.nonNull(traits) && ((traits >> bit) & 1L) == 1L) {
+                styles.put(names[bit], 1);
             }
         }
     }

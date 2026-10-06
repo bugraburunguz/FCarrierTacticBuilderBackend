@@ -77,7 +77,7 @@ class BaseCatalogImporterIntegrationTest {
 
     private Map<String, List<Map<String, String>>> tables() {
         Map<String, String> striker = player(NEW_STRIKER, 25, "Test, Striker \"Jr\"", "trait1=3");
-        striker.put("icontrait1", "1");
+        striker.put("icontrait1", "5");
         Map<String, String> keeper = player(NEW_KEEPER, 0, "Test Keeper", "trait2=1");
         Map<String, String> homeless = player(NO_TEAM, 14, "Nobody", null);
         Map<String, String> existing = player(EXISTING_MOCK_ID, 25, "Already Here", null);
@@ -112,7 +112,7 @@ class BaseCatalogImporterIntegrationTest {
         assertThat(striker.get("preferred_foot")).isEqualTo("Left");
         assertThat(((Number) striker.get("skill_moves")).intValue()).isEqualTo(4);
         assertThat(((Number) striker.get("weak_foot")).intValue()).isEqualTo(4);
-        assertThat(striker.get("playstyles").toString()).contains("\"FinesseShot\": 2").contains("\"ChipShot\": 1");
+        assertThat(striker.get("playstyles").toString()).contains("\"FinesseShot\": 2").contains("\"ChipShot\": 1").contains("\"PowerShot\": 2");
         assertThat(((Number) striker.get("run_style1")).intValue()).isEqualTo(2);
         assertThat(striker.get("club")).isEqualTo("Test United");
         assertThat(striker.get("league")).isEqualTo("Test League");
