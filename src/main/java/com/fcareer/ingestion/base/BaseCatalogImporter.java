@@ -35,6 +35,7 @@ public class BaseCatalogImporter {
 
     public static final Set<Integer> FREE_AGENT_TEAM_IDS = Set.of(111592, 131368);
     private static final String FREE_AGENTS = "Free Agents";
+    private static final List<String> NON_CATALOG_LEAGUES = List.of("Custom", "FIFA Twist", "5v5", "Rest of World Men");
     private static final int BATCH = 1000;
     private static final int MIN_OVERALL = 1;
     private static final double NATIONALITY_CONFIDENCE = 0.6;
@@ -57,6 +58,7 @@ public class BaseCatalogImporter {
         Map<Long, Long> existing = ctx.existing();
         NationalityResolver nationalities = ctx.nationalities();
         ClubResolver clubs = ctx.clubs();
+        Set<Integer> excludedTeams = ctx.excludedTeams();
 
         List<SqlParameterSource> basePlayers = new ArrayList<>();
         Map<Long, Map<String, String>> pending = new LinkedHashMap<>();
@@ -84,6 +86,9 @@ public class BaseCatalogImporter {
                 continue;
             }
             Integer teamId = playerTeam.get(eaId);
+            if (Objects.nonNull(teamId) && excludedTeams.contains(teamId)) {
+                continue;
+            }
             if (Objects.isNull(teamId)) {
                 noTeam++;
                 continue;
@@ -129,7 +134,7 @@ public class BaseCatalogImporter {
 
 
     private record Context(List<Map<String, String>> players, Map<Long, Integer> playerTeam, Map<Integer, String> names,
-                           Map<Long, Long> existing, NationalityResolver nationalities, ClubResolver clubs) {
+                           Map<Long, Long> existing, NationalityResolver nationalities, ClubResolver clubs, Set<Integer> excludedTeams) {
     }
 
     private Context buildContext(Map<String, List<Map<String, String>>> tables) {
@@ -177,7 +182,14 @@ public class BaseCatalogImporter {
         Map<Long, Long> existing = existingPlayers();
         NationalityResolver nationalities = new NationalityResolver(players, existing);
         ClubResolver clubs = new ClubResolver(teamRows, teamLeague, leagueNames);
-        return new Context(players, playerTeam, names, existing, nationalities, clubs);
+        Set<Integer> excludedTeams = new HashSet<>();
+        teamLeague.forEach((team, league) -> {
+            String leagueName = Objects.requireNonNullElse(leagueNames.get(league), "");
+            if (NON_CATALOG_LEAGUES.stream().anyMatch(marker -> leagueName.contains(marker))) {
+                excludedTeams.add(team);
+            }
+        });
+        return new Context(players, playerTeam, names, existing, nationalities, clubs, excludedTeams);
     }
 
     /**
