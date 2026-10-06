@@ -197,6 +197,16 @@ class ApiFlowIntegrationTest {
         assertThat(recommended.at("/data/charged").asInt()).isEqualTo(3);
         assertThat(recommended.at("/data/result/items").isArray()).isTrue();
         assertThat(recommended.at("/data/result/scoutQuery/minAttrs/Crossing").asInt()).isEqualTo(64);
+
+        for (String scope : new String[]{"SQUAD", "LEAGUE", "MARKET"}) {
+            JsonNode view = call(post("/api/v1/recommend/slot-view"), Map.of("careerId", careerId, "scope", scope,
+                    "slot", Map.of("roleId", "winger_attack", "position", "RW", "leagueId", 1)), token, 200);
+            assertThat(view.at("/success").asBoolean()).as(scope).isTrue();
+            assertThat(view.at("/data/items").isArray()).as(scope).isTrue();
+        }
+        JsonNode unauthenticated = call(post("/api/v1/recommend/slot-view"), Map.of("careerId", careerId, "scope", "SQUAD",
+                "slot", Map.of("roleId", "winger_attack", "position", "RW")), null, 401);
+        assertThat(unauthenticated.at("/success").asBoolean()).isFalse();
     }
 
     @Test

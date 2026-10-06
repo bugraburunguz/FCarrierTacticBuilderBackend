@@ -3,6 +3,7 @@ package com.fcareer.recommendation.controller;
 import com.fcareer.auth.security.AuthUser;
 import com.fcareer.billing.model.response.CreditedResponse;
 import com.fcareer.recommendation.model.request.RecommendSlotRequest;
+import com.fcareer.recommendation.model.request.SlotViewRequest;
 import com.fcareer.recommendation.model.response.RecommendationResponse;
 import com.fcareer.recommendation.service.RecommendationService;
 import jakarta.validation.Valid;
@@ -25,6 +26,12 @@ public class RecommendationController {
     @PostMapping("/preview")
     public RecommendationResponse preview(@Valid @RequestBody RecommendSlotRequest request) {
         return recommendationService.preview(request);
+    }
+
+    @PostMapping("/slot-view")
+    public RecommendationResponse slotView(@AuthenticationPrincipal AuthUser user,
+                                           @Valid @RequestBody SlotViewRequest request) {
+        return recommendationService.slotView(user.id(), request);
     }
 
     @PostMapping("/slot")

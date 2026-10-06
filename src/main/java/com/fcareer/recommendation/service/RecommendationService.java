@@ -19,6 +19,8 @@ import com.fcareer.fitengine.service.IntentFitService;
 import com.fcareer.fitengine.service.RoleFitService;
 import com.fcareer.fitengine.service.SquadFitService;
 import com.fcareer.recommendation.model.request.RecommendSlotRequest;
+import com.fcareer.recommendation.model.request.SlotScope;
+import com.fcareer.recommendation.model.request.SlotViewRequest;
 import com.fcareer.recommendation.model.response.RecommendationItem;
 import com.fcareer.recommendation.model.response.RecommendationResponse;
 import com.fcareer.roles.service.RoleService;
@@ -97,6 +99,34 @@ public class RecommendationService {
         RecommendSlotRequest capped = RecommendSlotRequest.builder().roleId(request.getRoleId()).position(request.getPosition())
                 .limit(Math.min(Objects.isNull(request.getLimit()) ? PREVIEW_LIMIT : request.getLimit(), PREVIEW_LIMIT)).build();
         return rank(capped, role, intent, summaries, null, request.getGameVersionId());
+    }
+
+    public RecommendationResponse slotView(Long userId, SlotViewRequest view) {
+        RecommendSlotRequest request = view.getSlot();
+        FitRole role = roleService.getFitRole(request.getRoleId());
+        IntentProfile intent = tacticResolver.slotIntent(SLOT_ID, request.getPosition(), null, request.getRoleId(), request.getTags());
+        CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, view.getCareerId());
+        if (view.getScope() == SlotScope.SQUAD && squad.playerIds().isEmpty()) {
+            return RecommendationResponse.builder().roleId(role.getId()).position(request.getPosition()).items(List.of()).build();
+        }
+        PlayerSearchRequest search = switch (view.getScope()) {
+            case SQUAD -> PlayerSearchRequest.builder().gameVersionId(squad.gameVersionId()).gender(squad.gender())
+                    .ids(squad.playerIds()).sort("overall").size(CANDIDATE_POOL).build();
+            case LEAGUE -> {
+                PlayerSearchRequest league = candidateSearch(role, intent, request, squad.playerIds(), squad.gameVersionId(), null, squad.gender());
+                league.setLeagueId(request.getLeagueId());
+                yield league;
+            }
+            case MARKET -> {
+                Long budget = Objects.isNull(request.getBudgetMax()) ? squad.budgetEur() : request.getBudgetMax();
+                yield candidateSearch(role, intent, request, squad.playerIds(), squad.gameVersionId(), budget, squad.gender());
+            }
+        };
+        Map<Long, PlayerSummaryResponse> summaries = playerService.search(search).getItems().stream()
+                .collect(Collectors.toMap(PlayerSummaryResponse::getId, c -> c));
+        RecommendSlotRequest capped = RecommendSlotRequest.builder().roleId(request.getRoleId()).position(request.getPosition())
+                .limit(Math.min(Objects.isNull(request.getLimit()) ? PREVIEW_LIMIT : request.getLimit(), PREVIEW_LIMIT)).build();
+        return rank(capped, role, intent, summaries, search.getValueMax(), squad.gameVersionId());
     }
 
     private PlayerSearchRequest candidateSearch(FitRole role, IntentProfile intent, RecommendSlotRequest request,

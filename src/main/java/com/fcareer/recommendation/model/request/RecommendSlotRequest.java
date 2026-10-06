@@ -41,6 +41,8 @@ public class RecommendSlotRequest {
 
     private Long currentPlayerId;
 
+    private Integer leagueId;
+
     @Max(25)
     private Integer limit;
 
