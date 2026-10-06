@@ -54,18 +54,25 @@ public class PositionOverallService {
         }
     }
 
-    public Map<String, Integer> byPosition(Map<Attr, Integer> attrs, boolean goalkeeper) {
-        Map<String, Integer> result = new LinkedHashMap<>();
+    /**
+     * Formül tüm mevkilerde aynı kalibrasyon hatasını taşır; oyuncunun gerçek overall'ı ile ana mevkisindeki formül
+     * sonucu arasındaki fark (PlayStyle/yuvarlama kaynaklı) tüm mevkilere eklenir. Böylece ana mevki gerçek overall'a eşitlenir.
+     */
+    public Map<String, Integer> byPosition(Map<Attr, Integer> attrs, boolean goalkeeper, String mainPosition, int actualOverall) {
+        Map<String, Double> raw = new LinkedHashMap<>();
         for (String position : goalkeeper ? List.of(GOALKEEPER) : OUTFIELD) {
             Formula formula = formulas.get(position);
             if (Objects.nonNull(formula)) {
-                result.put(position, evaluate(formula, attrs));
+                raw.put(position, evaluate(formula, attrs));
             }
         }
+        double residual = raw.containsKey(mainPosition) ? actualOverall - raw.get(mainPosition) : 0;
+        Map<String, Integer> result = new LinkedHashMap<>();
+        raw.forEach((position, value) -> result.put(position, clamp(value + residual)));
         return result;
     }
 
-    private int evaluate(Formula formula, Map<Attr, Integer> attrs) {
+    private double evaluate(Formula formula, Map<Attr, Integer> attrs) {
         double total = formula.intercept();
         for (Attr attr : attrs.keySet()) {
             Double weight = formula.weights().get(attr.getColumn());
@@ -73,6 +80,10 @@ public class PositionOverallService {
                 total += weight * attrs.get(attr);
             }
         }
-        return (int) Math.max(MIN_OVERALL, Math.min(MAX_OVERALL, Math.round(total)));
+        return total;
+    }
+
+    private static int clamp(double value) {
+        return (int) Math.max(MIN_OVERALL, Math.min(MAX_OVERALL, Math.round(value)));
     }
 }

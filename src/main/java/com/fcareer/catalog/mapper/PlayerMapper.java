@@ -54,7 +54,8 @@ public class PlayerMapper {
                 .skillMoves(Objects.isNull(rating.getSkillMoves()) ? null : rating.getSkillMoves().intValue())
                 .attrs(attrs)
                 .playstyles(rating.getPlaystyles())
-                .positionOveralls(positionOverallService.byPosition(ratingAttrAccessor.read(rating), rating.getPositions().contains("GK")))
+                .positionOveralls(positionOverallService.byPosition(ratingAttrAccessor.read(rating), rating.getPositions().contains("GK"),
+                        rating.getPositions().get(0), rating.getOverall()))
                 .build();
     }
 

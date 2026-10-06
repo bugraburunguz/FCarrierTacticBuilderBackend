@@ -116,6 +116,7 @@ public class BaseCatalogImporter {
 
         batch(BASE_UPDATE_SQL, baseUpdates);
         batch(RATING_UPDATE_SQL, ratingUpdates);
+        renameNameless(players, names, edited);
 
         Map<Long, Long> created = idsByEaId(pending.keySet());
         List<SqlParameterSource> ratings = new ArrayList<>();
@@ -180,7 +181,9 @@ public class BaseCatalogImporter {
         }
         Map<Long, Integer> playerTeam = playerTeams(links, nationalTeams);
 
-        Map<Integer, String> names = playerNames(tables.getOrDefault("playernames", List.of()));
+        List<Map<String, String>> nameRows = new ArrayList<>(tables.getOrDefault("playernames", List.of()));
+        nameRows.addAll(tables.getOrDefault("dcplayernames", List.of()));
+        Map<Integer, String> names = playerNames(nameRows);
         Map<Long, Long> existing = existingPlayers();
         NationalityResolver nationalities = new NationalityResolver(players, existing);
         ClubResolver clubs = new ClubResolver(teamRows, teamLeague, leagueNames);
@@ -242,6 +245,27 @@ public class BaseCatalogImporter {
         batch(RATING_SQL, ratings);
         log.info("Career generated players careerId : {} created : {} updated : {}", careerId, ratings.size(), ratingUpdates.size());
         return all;
+    }
+
+    private void renameNameless(List<Map<String, String>> players, Map<Integer, String> names, Map<Long, String> edited) {
+        Map<Long, Long> nameless = new HashMap<>();
+        jdbc.query("SELECT id, ea_resource_id FROM base_player WHERE owner_career_id IS NULL AND full_name LIKE 'Oyuncu #%'", rs -> {
+            nameless.put(rs.getLong("ea_resource_id"), rs.getLong("id"));
+        });
+        List<SqlParameterSource> renames = new ArrayList<>();
+        for (Map<String, String> row : players) {
+            Long eaId = toLong(row.get("playerid"));
+            Long baseId = nameless.get(eaId);
+            if (Objects.isNull(baseId)) {
+                continue;
+            }
+            String name = nameOf(row, eaId, names, edited);
+            if (!name.startsWith("Oyuncu #")) {
+                renames.add(new MapSqlParameterSource().addValue("id", baseId).addValue("name", name));
+            }
+        }
+        batch("UPDATE base_player SET full_name = :name WHERE id = :id", renames);
+        log.info("Renamed nameless players : {}", renames.size());
     }
 
     private Map<Long, Long> careerPlayers(Long careerId) {

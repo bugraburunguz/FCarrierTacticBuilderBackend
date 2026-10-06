@@ -97,7 +97,8 @@ public class PositionAdviceService {
     }
 
     private Map.Entry<String, Integer> bestOverall(FitPlayer player) {
-        return positionOverallService.byPosition(player.getAttrs(), player.getPositions().contains(GOALKEEPER)).entrySet().stream()
+        return positionOverallService.byPosition(player.getAttrs(), player.getPositions().contains(GOALKEEPER),
+                player.getPositions().get(0), player.getOverall()).entrySet().stream()
                 .max(Map.Entry.comparingByValue()).orElse(Map.entry(player.getPositions().get(0), player.getOverall()));
     }
 
