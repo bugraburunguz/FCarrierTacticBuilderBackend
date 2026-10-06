@@ -23,9 +23,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 class BaseCatalogImporterIntegrationTest {
 
     private static final long EXISTING_MOCK_ID = 900_000L;
-    private static final long NEW_STRIKER = 999_000L;
-    private static final long NEW_KEEPER = 999_001L;
-    private static final long NO_TEAM = 999_002L;
+    private static final long NEW_STRIKER = 199_000L;
+    private static final long NEW_KEEPER = 199_001L;
+    private static final long NO_TEAM = 199_002L;
 
     @Autowired
     private BaseCatalogImporter importer;
@@ -134,7 +134,7 @@ class BaseCatalogImporterIntegrationTest {
 
     @Test
     void usesEditedPlayerNamesForGeneratedPlayers() {
-        long edited = 999_003L;
+        long edited = 199_003L;
         Map<String, List<Map<String, String>>> tables = new HashMap<>(tables());
         tables.put("players", List.of(player(edited, 25, "", null)));
         tables.put("teamplayerlinks", List.of(Map.of("playerid", String.valueOf(edited), "teamid", "5000")));
@@ -143,6 +143,18 @@ class BaseCatalogImporterIntegrationTest {
         importer.importMissing(tables, (short) 27, false, true);
 
         assertThat(jdbc.queryForObject("SELECT full_name FROM base_player WHERE ea_resource_id = ?", String.class, edited)).isEqualTo("Edward Beckett");
+    }
+
+    @Test
+    void careerCreatedPlayersNeverEnterTheBaseCatalog() {
+        long created = 460_500L;
+        Map<String, List<Map<String, String>>> tables = new HashMap<>(tables());
+        tables.put("players", List.of(player(created, 25, "", null)));
+        tables.put("teamplayerlinks", List.of(Map.of("playerid", String.valueOf(created), "teamid", "5000")));
+
+        importer.importMissing(tables, (short) 27, false, true);
+
+        assertThat(basePlayerRepository.findByEaResourceId(created)).isEmpty();
     }
 
     @Test

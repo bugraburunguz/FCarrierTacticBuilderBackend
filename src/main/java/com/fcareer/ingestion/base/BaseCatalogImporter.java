@@ -35,6 +35,8 @@ public class BaseCatalogImporter {
 
     public static final Set<Integer> FREE_AGENT_TEAM_IDS = Set.of(111592, 131368);
     private static final String FREE_AGENTS = "Free Agents";
+    private static final long CAREER_CREATED_MIN_ID = 400_000L;
+    private static final String PLACEHOLDER_TEAM_PREFIX = "*TeamName";
     private static final List<String> NON_CATALOG_LEAGUES = List.of("Custom", "FIFA Twist", "5v5", "Rest of World Men");
     private static final int BATCH = 1000;
     private static final int MIN_OVERALL = 1;
@@ -83,11 +85,11 @@ public class BaseCatalogImporter {
                 }
                 continue;
             }
-            if (!createMissing) {
+            if (!createMissing || eaId >= CAREER_CREATED_MIN_ID) {
                 continue;
             }
             Integer teamId = playerTeam.get(eaId);
-            if (Objects.nonNull(teamId) && excludedTeams.contains(teamId)) {
+            if (Objects.nonNull(teamId) && (excludedTeams.contains(teamId) || isPlaceholderTeam(clubs.teamName(teamId)))) {
                 continue;
             }
             if (Objects.isNull(teamId)) {
@@ -437,6 +439,10 @@ public class BaseCatalogImporter {
         return names;
     }
 
+    private static boolean isPlaceholderTeam(String name) {
+        return Objects.nonNull(name) && name.startsWith(PLACEHOLDER_TEAM_PREFIX);
+    }
+
     private static Map<Long, String> editedNames(List<Map<String, String>> rows) {
         Map<Long, String> names = new HashMap<>();
         for (Map<String, String> row : rows) {
@@ -557,6 +563,11 @@ public class BaseCatalogImporter {
             jdbc.query("SELECT id, name FROM league", rs -> {
                 leagueByName.put(rs.getString("name").toLowerCase(), rs.getInt("id"));
             });
+        }
+
+        String teamName(Integer teamId) {
+            Map<String, String> team = teams.get(teamId);
+            return Objects.isNull(team) ? null : team.get("teamname");
         }
 
         Integer idFor(Integer teamId) {
