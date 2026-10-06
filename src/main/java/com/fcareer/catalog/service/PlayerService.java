@@ -65,12 +65,20 @@ public class PlayerService {
     }
 
     public PlayerDetailResponse detail(Long playerId, Short gameVersionId) {
+        return detail(playerId, gameVersionId, null);
+    }
+
+    public PlayerDetailResponse detail(Long playerId, Short gameVersionId, Long careerId) {
         short gv = resolveGameVersion(gameVersionId);
         BasePlayerEntity base = basePlayerRepository.findById(playerId)
                 .orElseThrow(() -> new NotFoundException(PLAYER, playerId));
-        PlayerRatingEntity rating = playerRatingRepository.findByBasePlayerIdAndGameVersionId(playerId, gv)
+        RatingColumns rating = playerRatingRepository.findByBasePlayerIdAndGameVersionId(playerId, gv)
                 .orElseThrow(() -> new NotFoundException(PLAYER, playerId));
-        PlayerSummaryResponse summary = summaryOf(playerId, gv);
+        if (Objects.nonNull(careerId)) {
+            rating = careerPlayerRatingRepository.findByCareerIdAndBasePlayerIdInAndGameVersionId(careerId, List.of(playerId), gv)
+                    .stream().findFirst().map(RatingColumns.class::cast).orElse(rating);
+        }
+        PlayerSummaryResponse summary = summaryOf(playerId, gv, careerId);
         return playerMapper.toDetail(summary, base, rating);
     }
 
@@ -149,7 +157,12 @@ public class PlayerService {
     }
 
     private PlayerSummaryResponse summaryOf(Long playerId, short gameVersionId) {
+        return summaryOf(playerId, gameVersionId, null);
+    }
+
+    private PlayerSummaryResponse summaryOf(Long playerId, short gameVersionId, Long careerId) {
         PlayerSearchRequest request = new PlayerSearchRequest();
+        request.setCareerId(careerId);
         request.setGameVersionId(gameVersionId);
         request.setSize(1);
         request.setIdFilter(playerId);

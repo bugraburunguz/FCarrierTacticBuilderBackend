@@ -4,7 +4,10 @@ import com.fcareer.auth.security.AuthUser;
 import com.fcareer.billing.model.response.CreditedResponse;
 import com.fcareer.fitengine.model.request.CompareRequest;
 import com.fcareer.fitengine.model.request.FitRoleRequest;
+import com.fcareer.fitengine.model.request.SetupCheckRequest;
 import com.fcareer.fitengine.model.request.SquadFitRequest;
+import com.fcareer.fitengine.model.response.SetupCheck;
+import com.fcareer.fitengine.service.SetupCheckService;
 import com.fcareer.fitengine.model.response.FitRoleResult;
 import com.fcareer.fitengine.model.response.SquadFitResponse;
 import com.fcareer.fitengine.service.FitService;
@@ -26,6 +29,7 @@ import static com.fcareer.common.constants.ApiConstants.API_V1;
 public class FitController {
 
     private final FitService fitService;
+    private final SetupCheckService setupCheckService;
 
     @PostMapping("/fit/role")
     public FitRoleResult roleFit(@Valid @RequestBody FitRoleRequest request) {
@@ -40,6 +44,11 @@ public class FitController {
     @PostMapping("/fit/lineup")
     public SquadFitResponse lineup(@AuthenticationPrincipal AuthUser user, @Valid @RequestBody SquadFitRequest request) {
         return fitService.lineup(user.id(), request);
+    }
+
+    @PostMapping("/fit/setup-check")
+    public List<SetupCheck> setupCheck(@AuthenticationPrincipal AuthUser user, @Valid @RequestBody SetupCheckRequest request) {
+        return setupCheckService.check(user.id(), request);
     }
 
     @PostMapping("/fit/squad")

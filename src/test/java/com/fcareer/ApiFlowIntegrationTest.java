@@ -200,6 +200,15 @@ class ApiFlowIntegrationTest {
             assertThat(r.at("/gaps").isArray()).isTrue();
         });
 
+        JsonNode setupCheck = call(post("/api/v1/fit/setup-check"), Map.of("careerId", careerId, "buildUp", "Short", "depth", 80), token, 200);
+        assertThat(setupCheck.at("/success").asBoolean()).as(setupCheck.toString()).isTrue();
+        assertThat(setupCheck.at("/data")).hasSize(3);
+        setupCheck.at("/data").forEach(c -> assertThat(c.at("/status").asText()).isIn("GREEN", "YELLOW", "RED"));
+
+        JsonNode careerDetail = call(get("/api/v1/players/" + playerId + "?career=" + careerId), null, token, 200);
+        assertThat(careerDetail.at("/success").asBoolean()).as(careerDetail.toString()).isTrue();
+        assertThat(careerDetail.at("/data/summary/id").asLong()).isEqualTo(playerId);
+
         JsonNode preview = call(post("/api/v1/recommend/preview"), Map.of("roleId", "winger_attack", "position", "RW"), null, 200);
         assertThat(preview.at("/success").asBoolean()).isTrue();
         assertThat(preview.at("/data/items").isArray()).isTrue();

@@ -132,9 +132,14 @@ public class PlayerController {
     }
 
     @GetMapping("/{id}")
-    public PlayerDetailResponse detail(@PathVariable Long id,
-                                       @RequestParam(name = "gv", required = false) Short gameVersionId) {
-        return playerService.detail(id, gameVersionId);
+    public PlayerDetailResponse detail(@AuthenticationPrincipal AuthUser user,
+                                       @PathVariable Long id,
+                                       @RequestParam(name = "gv", required = false) Short gameVersionId,
+                                       @RequestParam(name = "career", required = false) Long careerId) {
+        if (careerId != null) {
+            careerService.requireOwned(user == null ? null : user.id(), careerId);
+        }
+        return playerService.detail(id, gameVersionId, careerId);
     }
 
     private void collectAttrBound(String key, String value, Map<String, Integer> attrMin, Map<String, Integer> attrMax) {
