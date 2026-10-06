@@ -151,7 +151,7 @@ public class RecommendationService {
         return search;
     }
 
-    private OptionalDouble squadCoreAverage(CareerService.CareerSquad squad) {
+    OptionalDouble squadCoreAverage(CareerService.CareerSquad squad) {
         if (squad.playerIds().isEmpty()) {
             return OptionalDouble.empty();
         }
@@ -163,7 +163,7 @@ public class RecommendationService {
                 .average();
     }
 
-    private List<Integer> reachableLeagues(CareerService.CareerSquad squad) {
+    List<Integer> reachableLeagues(CareerService.CareerSquad squad) {
         Integer ownLeague = Objects.isNull(squad.clubId()) ? null
                 : clubRepository.findById(squad.clubId()).map(club -> club.getLeagueId()).orElse(null);
         List<PlayerSearchRepository.LeagueQuality> leagues = playerSearchRepository.leagueQuality(
@@ -180,7 +180,7 @@ public class RecommendationService {
                 .toList();
     }
 
-    private PlayerSearchRequest candidateSearch(FitRole role, IntentProfile intent, RecommendSlotRequest request,
+    PlayerSearchRequest candidateSearch(FitRole role, IntentProfile intent, RecommendSlotRequest request,
                                                 List<Long> squadIds, Short gameVersion, Long budget, Short gender) {
         Set<String> positions = new LinkedHashSet<>(List.of(request.getPosition()));
         positions.addAll(fitEngineProperties.getPositionEquivalents().getOrDefault(request.getPosition(), List.of()));
@@ -232,7 +232,7 @@ public class RecommendationService {
                 .build();
     }
 
-    private RecommendationItem evaluate(FitPlayer player, PlayerSummaryResponse summary, FitRole role,
+    RecommendationItem evaluate(FitPlayer player, PlayerSummaryResponse summary, FitRole role,
                                         IntentProfile intent, String position, Double currentScore) {
         RoleFitResponse roleFit = roleFitService.calculate(player, role, intent, position);
         IntentFitResponse intentFit = intent.hasTags() ? intentFitService.calculate(player, intent) : null;

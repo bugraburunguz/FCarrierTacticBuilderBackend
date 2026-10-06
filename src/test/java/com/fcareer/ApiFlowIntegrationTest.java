@@ -207,6 +207,12 @@ class ApiFlowIntegrationTest {
         JsonNode unauthenticated = call(post("/api/v1/recommend/slot-view"), Map.of("careerId", careerId, "scope", "SQUAD",
                 "slot", Map.of("roleId", "winger_attack", "position", "RW")), null, 401);
         assertThat(unauthenticated.at("/success").asBoolean()).isFalse();
+        JsonNode targets = call(post("/api/v1/recommend/transfer-targets"), Map.of("careerId", careerId, "perPosition", 3,
+                "slots", java.util.List.of(Map.of("position", "RW", "roleId", "winger_attack"), Map.of("position", "RW", "roleId", "winger_attack"),
+                        Map.of("position", "ST", "roleId", "poacher_attack"))), token, 200);
+        assertThat(targets.at("/success").asBoolean()).as(targets.toString()).isTrue();
+        assertThat(targets.at("/data/positions")).hasSize(2);
+        targets.at("/data/positions/0/targets").forEach(t -> assertThat(t.at("/acquisition").asText()).isIn("FREE", "LOAN", "BUY"));
     }
 
     @Test

@@ -42,7 +42,8 @@ public class PlayerSearchRepository {
                    COALESCE(cpd.overall, r.overall) AS overall, COALESCE(cpr.positions, r.positions) AS positions, COALESCE(cpr.weak_foot, r.weak_foot) AS weak_foot,
                    COALESCE(cpr.skill_moves, r.skill_moves) AS skill_moves,
                    c.id AS club_id, COALESCE(ct.name, c.name) AS club, COALESCE(ct.league_name, l.name) AS league, n.name AS nationality, COALESCE(cpr.accelerate, r.accelerate) AS accelerate, COALESCE(cpr.run_style1, r.run_style1) AS run_style,
-                   COALESCE(cpd.potential, v.potential) AS potential, v.value_eur AS value_eur, (cpd.base_player_id IS NULL AND v.id IS NOT NULL) AS estimated
+                   COALESCE(cpd.potential, v.potential) AS potential, v.value_eur AS value_eur, (cpd.base_player_id IS NULL AND v.id IS NOT NULL) AS estimated,
+                   (COALESCE(cpd.free_agent, false) OR l.name = 'Free Agents') AS free_agent
             """;
     private static final String AGE_YEARS = "EXTRACT(YEAR FROM age(b.dob))";
     private static final String AGE_SORT = "age";
@@ -225,6 +226,7 @@ public class PlayerSearchRepository {
                 .potential(nullableInt(rs, "potential"))
                 .valueEur(nullableLong(rs, "value_eur"))
                 .valuationEstimated(rs.getBoolean("estimated"))
+                .freeAgent(rs.getBoolean("free_agent"))
                 .build();
     }
 

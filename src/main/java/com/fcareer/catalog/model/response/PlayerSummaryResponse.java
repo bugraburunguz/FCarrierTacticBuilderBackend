@@ -32,4 +32,5 @@ public class PlayerSummaryResponse {
     private Integer potential;
     private Long valueEur;
     private boolean valuationEstimated;
+    private boolean freeAgent;
 }
