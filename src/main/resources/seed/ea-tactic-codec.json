@@ -1,0 +1,1759 @@
+{
+ "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789?@",
+ "substitutions": {
+  "0": "&",
+  "I": "#",
+  "O": "%",
+  "l": "$"
+ },
+ "positionTables": {
+  "GK": "45.0:3,2.0:1,2.1:2,1.0:0,1.1:63",
+  "CB": "48.0:7,48.1:8,48.2:9,12.0:2,12.1:3,11.0:0,11.1:1,13.0:4,13.1:5,13.2:6",
+  "CDM": "17.0:6,17.1:7,49.0:8,16.0:4,16.1:5,16.2:3,15.0:63,14.0:0,14.1:1,14.2:2",
+  "RM": "26.0:6,26.1:7,23.0:0,23.1:1,25.0:3,25.1:2,24.0:4,24.1:5,24.2:8",
+  "CM": "20.0:4,20.1:3,18.0:0,18.1:9,19.0:1,19.1:2,21.0:6,21.1:5,22.0:8,22.1:7,22.2:10",
+  "LM": "27.0:0,27.1:1,30.0:6,30.1:7,28.0:4,28.1:5,28.2:8,29.0:3,29.1:2",
+  "ST": "41.0:0,41.1:1,41.2:2,42.0:62,42.1:63,42.2:4,44.0:58,44.1:59,44.2:60,43.0:61,43.1:3",
+  "CAM": "32.0:1,34.0:4,34.1:5,34.2:7,33.0:3,33.1:2,33.2:6,31.0:0,31.1:63,31.2:62",
+  "RW": "35.0:0,35.1:1,35.2:4,37.0:3,37.1:2,36.0:62,36.1:61,36.2:63",
+  "LW": "40.0:3,40.1:2,39.0:62,39.1:61,39.2:63,38.0:0,38.1:1,38.2:4",
+  "RB": "46.0:8,46.1:9,4.0:4,4.1:3,6.0:5,6.1:6,5.0:1,5.1:2,3.0:0,3.1:63,3.2:7",
+  "LB": "9.0:1,9.1:2,7.0:0,7.1:63,7.2:7,8.0:4,8.1:3,47.0:8,47.1:9,10.0:5,10.1:6"
+ },
+ "roles": [
+  {
+   "id": 1,
+   "name": "Goalkeeper",
+   "position": "GK",
+   "focuses": [
+    "Balanced",
+    "Defend"
+   ]
+  },
+  {
+   "id": 2,
+   "name": "Sweeper Keeper",
+   "position": "GK",
+   "focuses": [
+    "Balanced",
+    "Build-Up"
+   ]
+  },
+  {
+   "id": 3,
+   "name": "Fullback",
+   "position": "RB",
+   "focuses": [
+    "Balanced",
+    "Defend",
+    "Versatile"
+   ]
+  },
+  {
+   "id": 4,
+   "name": "Falseback",
+   "position": "RB",
+   "focuses": [
+    "Balanced",
+    "Defend"
+   ]
+  },
+  {
+   "id": 5,
+   "name": "Wingback",
+   "position": "RB",
+   "focuses": [
+    "Balanced",
+    "Support"
+   ]
+  },
+  {
+   "id": 6,
+   "name": "Attacking Wingback",
+   "position": "RB",
+   "focuses": [
+    "Support",
+    "Attack"
+   ]
+  },
+  {
+   "id": 7,
+   "name": "Fullback",
+   "position": "LB",
+   "focuses": [
+    "Balanced",
+    "Defend",
+    "Versatile"
+   ]
+  },
+  {
+   "id": 8,
+   "name": "Falseback",
+   "position": "LB",
+   "focuses": [
+    "Balanced",
+    "Defend"
+   ]
+  },
+  {
+   "id": 9,
+   "name": "Wingback",
+   "position": "LB",
+   "focuses": [
+    "Balanced",
+    "Support"
+   ]
+  },
+  {
+   "id": 10,
+   "name": "Attacking Wingback",
+   "position": "LB",
+   "focuses": [
+    "Support",
+    "Attack"
+   ]
+  },
+  {
+   "id": 11,
+   "name": "Defender",
+   "position": "CB",
+   "focuses": [
+    "Defend",
+    "Balanced"
+   ]
+  },
+  {
+   "id": 12,
+   "name": "Stopper",
+   "position": "CB",
+   "focuses": [
+    "Balanced",
+    "Aggressive"
+   ]
+  },
+  {
+   "id": 13,
+   "name": "Ball-Playing Defender",
+   "position": "CB",
+   "focuses": [
+    "Defend",
+    "Build-Up",
+    "Aggressive"
+   ]
+  },
+  {
+   "id": 14,
+   "name": "Holding",
+   "position": "CDM",
+   "focuses": [
+    "Defend",
+    "Ball-Winning",
+    "Roaming"
+   ]
+  },
+  {
+   "id": 15,
+   "name": "Centre-Half",
+   "position": "CDM",
+   "focuses": [
+    "Defend"
+   ]
+  },
+  {
+   "id": 16,
+   "name": "Deep-Lying Playmaker",
+   "position": "CDM",
+   "focuses": [
+    "Defend",
+    "Roaming",
+    "Build-Up"
+   ]
+  },
+  {
+   "id": 17,
+   "name": "Wide Half",
+   "position": "CDM",
+   "focuses": [
+    "Defend",
+    "Build-Up"
+   ]
+  },
+  {
+   "id": 18,
+   "name": "Box-to-Box",
+   "position": "CM",
+   "focuses": [
+    "Balanced",
+    "Ball-Winning"
+   ]
+  },
+  {
+   "id": 19,
+   "name": "Holding",
+   "position": "CM",
+   "focuses": [
+    "Defend",
+    "Ball-Winning"
+   ]
+  },
+  {
+   "id": 20,
+   "name": "Deep-Lying Playmaker",
+   "position": "CM",
+   "focuses": [
+    "Defend",
+    "Build-Up"
+   ]
+  },
+  {
+   "id": 21,
+   "name": "Playmaker",
+   "position": "CM",
+   "focuses": [
+    "Roaming",
+    "Attack"
+   ]
+  },
+  {
+   "id": 22,
+   "name": "Half-Winger",
+   "position": "CM",
+   "focuses": [
+    "Balanced",
+    "Attack",
+    "Support"
+   ]
+  },
+  {
+   "id": 23,
+   "name": "Winger",
+   "position": "RM",
+   "focuses": [
+    "Balanced",
+    "Attack"
+   ]
+  },
+  {
+   "id": 24,
+   "name": "Wide Midfielder",
+   "position": "RM",
+   "focuses": [
+    "Support",
+    "Defend",
+    "Build-Up"
+   ]
+  },
+  {
+   "id": 25,
+   "name": "Wide Playmaker",
+   "position": "RM",
+   "focuses": [
+    "Attack",
+    "Build-Up"
+   ]
+  },
+  {
+   "id": 26,
+   "name": "Inside Forward",
+   "position": "RM",
+   "focuses": [
+    "Balanced",
+    "Attack"
+   ]
+  },
+  {
+   "id": 27,
+   "name": "Winger",
+   "position": "LM",
+   "focuses": [
+    "Balanced",
+    "Attack"
+   ]
+  },
+  {
+   "id": 28,
+   "name": "Wide Midfielder",
+   "position": "LM",
+   "focuses": [
+    "Support",
+    "Defend",
+    "Build-Up"
+   ]
+  },
+  {
+   "id": 29,
+   "name": "Wide Playmaker",
+   "position": "LM",
+   "focuses": [
+    "Attack",
+    "Build-Up"
+   ]
+  },
+  {
+   "id": 30,
+   "name": "Inside Forward",
+   "position": "LM",
+   "focuses": [
+    "Balanced",
+    "Attack"
+   ]
+  },
+  {
+   "id": 31,
+   "name": "Playmaker",
+   "position": "CAM",
+   "focuses": [
+    "Roaming",
+    "Balanced",
+    "Build-Up"
+   ]
+  },
+  {
+   "id": 32,
+   "name": "Shadow Striker",
+   "position": "CAM",
+   "focuses": [
+    "Attack"
+   ]
+  },
+  {
+   "id": 33,
+   "name": "Half-Winger",
+   "position": "CAM",
+   "focuses": [
+    "Balanced",
+    "Attack",
+    "Roaming"
+   ]
+  },
+  {
+   "id": 34,
+   "name": "Classic 10",
+   "position": "CAM",
+   "focuses": [
+    "Attack",
+    "Wide",
+    "Versatile"
+   ]
+  },
+  {
+   "id": 35,
+   "name": "Winger",
+   "position": "RW",
+   "focuses": [
+    "Balanced",
+    "Attack",
+    "Versatile"
+   ]
+  },
+  {
+   "id": 36,
+   "name": "Inside Forward",
+   "position": "RW",
+   "focuses": [
+    "Balanced",
+    "Attack",
+    "Roaming"
+   ]
+  },
+  {
+   "id": 37,
+   "name": "Wide Playmaker",
+   "position": "RW",
+   "focuses": [
+    "Attack",
+    "Build-Up"
+   ]
+  },
+  {
+   "id": 38,
+   "name": "Winger",
+   "position": "LW",
+   "focuses": [
+    "Balanced",
+    "Attack",
+    "Versatile"
+   ]
+  },
+  {
+   "id": 39,
+   "name": "Inside Forward",
+   "position": "LW",
+   "focuses": [
+    "Balanced",
+    "Attack",
+    "Roaming"
+   ]
+  },
+  {
+   "id": 40,
+   "name": "Wide Playmaker",
+   "position": "LW",
+   "focuses": [
+    "Attack",
+    "Build-Up"
+   ]
+  },
+  {
+   "id": 41,
+   "name": "Advanced Forward",
+   "position": "ST",
+   "focuses": [
+    "Attack",
+    "Support",
+    "Versatile"
+   ]
+  },
+  {
+   "id": 42,
+   "name": "Poacher",
+   "position": "ST",
+   "focuses": [
+    "Attack",
+    "Support",
+    "Versatile"
+   ]
+  },
+  {
+   "id": 43,
+   "name": "False 9",
+   "position": "ST",
+   "focuses": [
+    "Build-Up",
+    "Attack"
+   ]
+  },
+  {
+   "id": 44,
+   "name": "Target Forward",
+   "position": "ST",
+   "focuses": [
+    "Attack",
+    "Balanced",
+    "Wide"
+   ]
+  },
+  {
+   "id": 45,
+   "name": "Ball-Playing Keeper",
+   "position": "GK",
+   "focuses": [
+    "Build-Up"
+   ]
+  },
+  {
+   "id": 46,
+   "name": "Inverted Wingback",
+   "position": "RB",
+   "focuses": [
+    "Build-Up",
+    "Attack"
+   ]
+  },
+  {
+   "id": 47,
+   "name": "Inverted Wingback",
+   "position": "LB",
+   "focuses": [
+    "Build-Up",
+    "Attack"
+   ]
+  },
+  {
+   "id": 48,
+   "name": "Wide Back",
+   "position": "CB",
+   "focuses": [
+    "Defend",
+    "Aggressive",
+    "Support"
+   ]
+  },
+  {
+   "id": 49,
+   "name": "Box Crasher",
+   "position": "CDM",
+   "focuses": [
+    "Balanced"
+   ]
+  }
+ ],
+ "formations": [
+  {
+   "id": "f3142",
+   "label": "3-1-4-2",
+   "positions": [
+    "GK",
+    "CB",
+    "CB",
+    "CB",
+    "CDM",
+    "RM",
+    "CM",
+    "CM",
+    "LM",
+    "ST",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    11,
+    11,
+    11,
+    14,
+    23,
+    18,
+    18,
+    27,
+    41,
+    41
+   ],
+   "base": [
+    44,
+    40,
+    6,
+    54,
+    5,
+    48,
+    60,
+    52,
+    54,
+    8,
+    8,
+    44
+   ]
+  },
+  {
+   "id": "f3412",
+   "label": "3-4-1-2",
+   "positions": [
+    "GK",
+    "CB",
+    "CB",
+    "CB",
+    "RM",
+    "CM",
+    "CM",
+    "LM",
+    "CAM",
+    "ST",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    11,
+    11,
+    11,
+    23,
+    18,
+    18,
+    27,
+    31,
+    41,
+    41
+   ],
+   "base": [
+    46,
+    48,
+    8,
+    56,
+    23,
+    50,
+    62,
+    52,
+    56,
+    10,
+    10,
+    46
+   ]
+  },
+  {
+   "id": "f3421",
+   "label": "3-4-2-1",
+   "positions": [
+    "GK",
+    "CB",
+    "CB",
+    "CB",
+    "RM",
+    "CM",
+    "CM",
+    "LM",
+    "CAM",
+    "CAM",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    11,
+    11,
+    11,
+    23,
+    18,
+    18,
+    27,
+    31,
+    31,
+    41
+   ],
+   "base": [
+    43,
+    56,
+    6,
+    53,
+    18,
+    47,
+    59,
+    49,
+    53,
+    7,
+    7,
+    43
+   ]
+  },
+  {
+   "id": "f343",
+   "label": "3-4-3",
+   "positions": [
+    "GK",
+    "CB",
+    "CB",
+    "CB",
+    "RM",
+    "CM",
+    "CM",
+    "LM",
+    "RW",
+    "ST",
+    "LW"
+   ],
+   "roleIds": [
+    1,
+    11,
+    11,
+    11,
+    23,
+    18,
+    18,
+    27,
+    35,
+    41,
+    38
+   ],
+   "base": [
+    46,
+    0,
+    9,
+    50,
+    31,
+    50,
+    62,
+    52,
+    56,
+    10,
+    10,
+    46
+   ]
+  },
+  {
+   "id": "f352",
+   "label": "3-5-2",
+   "positions": [
+    "GK",
+    "CB",
+    "CB",
+    "CB",
+    "CDM",
+    "CDM",
+    "RM",
+    "LM",
+    "CAM",
+    "ST",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    11,
+    11,
+    11,
+    14,
+    14,
+    23,
+    27,
+    31,
+    41,
+    41
+   ],
+   "base": [
+    52,
+    16,
+    15,
+    62,
+    29,
+    56,
+    12,
+    60,
+    62,
+    16,
+    16,
+    52
+   ]
+  },
+  {
+   "id": "f41212",
+   "label": "4-1-2-1-2",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "CDM",
+    "RM",
+    "LM",
+    "CAM",
+    "ST",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    14,
+    23,
+    27,
+    31,
+    41,
+    41
+   ],
+   "base": [
+    40,
+    40,
+    1,
+    50,
+    17,
+    44,
+    0,
+    48,
+    50,
+    6,
+    4,
+    40
+   ]
+  },
+  {
+   "id": "f41212a",
+   "label": "4-1-2-1-2 (2)",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "CDM",
+    "CM",
+    "CM",
+    "CAM",
+    "ST",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    14,
+    18,
+    18,
+    31,
+    41,
+    41
+   ],
+   "base": [
+    41,
+    48,
+    2,
+    51,
+    18,
+    45,
+    1,
+    49,
+    51,
+    7,
+    5,
+    41
+   ]
+  },
+  {
+   "id": "f4132",
+   "label": "4-1-3-2",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "CDM",
+    "RM",
+    "CM",
+    "LM",
+    "ST",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    14,
+    23,
+    18,
+    27,
+    41,
+    41
+   ],
+   "base": [
+    25,
+    0,
+    49,
+    35,
+    50,
+    29,
+    49,
+    33,
+    35,
+    55,
+    53,
+    25
+   ]
+  },
+  {
+   "id": "f4141",
+   "label": "4-1-4-1",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "CDM",
+    "RM",
+    "CM",
+    "CM",
+    "LM",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    14,
+    23,
+    18,
+    18,
+    27,
+    41
+   ],
+   "base": [
+    20,
+    8,
+    44,
+    30,
+    42,
+    24,
+    44,
+    28,
+    30,
+    50,
+    48,
+    20
+   ]
+  },
+  {
+   "id": "f4213",
+   "label": "4-2-1-3",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "CDM",
+    "CDM",
+    "CAM",
+    "RW",
+    "ST",
+    "LW"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    14,
+    14,
+    31,
+    35,
+    41,
+    38
+   ],
+   "base": [
+    63,
+    25,
+    27,
+    3,
+    48,
+    39,
+    23,
+    7,
+    9,
+    29,
+    27,
+    63
+   ]
+  },
+  {
+   "id": "f4222",
+   "label": "4-2-2-2",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "CDM",
+    "CDM",
+    "CAM",
+    "CAM",
+    "ST",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    14,
+    14,
+    31,
+    31,
+    41,
+    41
+   ],
+   "base": [
+    42,
+    32,
+    3,
+    52,
+    19,
+    18,
+    2,
+    50,
+    52,
+    8,
+    6,
+    42
+   ]
+  },
+  {
+   "id": "f4231",
+   "label": "4-2-3-1",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "CDM",
+    "CDM",
+    "CAM",
+    "CAM",
+    "CAM",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    14,
+    14,
+    31,
+    31,
+    31,
+    41
+   ],
+   "base": [
+    28,
+    16,
+    52,
+    38,
+    3,
+    4,
+    52,
+    36,
+    38,
+    58,
+    56,
+    28
+   ]
+  },
+  {
+   "id": "f4231a",
+   "label": "4-2-3-1 (2)",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "CDM",
+    "CDM",
+    "RM",
+    "LM",
+    "CAM",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    14,
+    14,
+    23,
+    27,
+    31,
+    41
+   ],
+   "base": [
+    25,
+    24,
+    49,
+    35,
+    48,
+    61,
+    49,
+    33,
+    35,
+    55,
+    53,
+    25
+   ]
+  },
+  {
+   "id": "f424",
+   "label": "4-2-4",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "CM",
+    "CM",
+    "RW",
+    "ST",
+    "ST",
+    "LW"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    18,
+    18,
+    35,
+    41,
+    41,
+    38
+   ],
+   "base": [
+    34,
+    32,
+    58,
+    38,
+    43,
+    44,
+    50,
+    42,
+    44,
+    0,
+    62,
+    34
+   ]
+  },
+  {
+   "id": "f4312",
+   "label": "4-3-1-2",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "CM",
+    "CM",
+    "CM",
+    "CAM",
+    "ST",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    18,
+    18,
+    18,
+    31,
+    41,
+    41
+   ],
+   "base": [
+    31,
+    40,
+    55,
+    41,
+    8,
+    35,
+    47,
+    39,
+    41,
+    61,
+    59,
+    31
+   ]
+  },
+  {
+   "id": "f4321",
+   "label": "4-3-2-1",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "CM",
+    "CM",
+    "CM",
+    "CAM",
+    "CAM",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    18,
+    18,
+    18,
+    31,
+    31,
+    41
+   ],
+   "base": [
+    28,
+    48,
+    52,
+    38,
+    3,
+    32,
+    44,
+    36,
+    38,
+    58,
+    56,
+    28
+   ]
+  },
+  {
+   "id": "f433",
+   "label": "4-3-3",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "CM",
+    "CM",
+    "CM",
+    "RW",
+    "ST",
+    "LW"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    18,
+    18,
+    18,
+    35,
+    41,
+    38
+   ],
+   "base": [
+    31,
+    56,
+    56,
+    35,
+    16,
+    35,
+    47,
+    39,
+    41,
+    61,
+    59,
+    31
+   ]
+  },
+  {
+   "id": "f433a",
+   "label": "4-3-3 (2)",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "CDM",
+    "CM",
+    "CM",
+    "RW",
+    "ST",
+    "LW"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    14,
+    18,
+    18,
+    35,
+    41,
+    38
+   ],
+   "base": [
+    33,
+    0,
+    58,
+    37,
+    18,
+    37,
+    57,
+    41,
+    43,
+    63,
+    61,
+    33
+   ]
+  },
+  {
+   "id": "f433b",
+   "label": "4-3-3 (3)",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "CDM",
+    "CDM",
+    "CM",
+    "RW",
+    "ST",
+    "LW"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    14,
+    14,
+    18,
+    35,
+    41,
+    38
+   ],
+   "base": [
+    35,
+    8,
+    60,
+    39,
+    20,
+    7,
+    59,
+    43,
+    45,
+    1,
+    63,
+    35
+   ]
+  },
+  {
+   "id": "f433c",
+   "label": "4-3-3 (4)",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "CM",
+    "CM",
+    "CAM",
+    "RW",
+    "ST",
+    "LW"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    18,
+    18,
+    31,
+    35,
+    41,
+    38
+   ],
+   "base": [
+    36,
+    16,
+    61,
+    40,
+    21,
+    44,
+    52,
+    44,
+    46,
+    2,
+    0,
+    36
+   ]
+  },
+  {
+   "id": "f4411a",
+   "label": "4-4-1-1 (2)",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "RM",
+    "CM",
+    "CM",
+    "LM",
+    "CAM",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    23,
+    18,
+    18,
+    27,
+    31,
+    41
+   ],
+   "base": [
+    37,
+    8,
+    63,
+    47,
+    60,
+    41,
+    53,
+    45,
+    47,
+    3,
+    1,
+    37
+   ]
+  },
+  {
+   "id": "f442",
+   "label": "4-4-2",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "RM",
+    "CM",
+    "CM",
+    "LM",
+    "ST",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    23,
+    18,
+    18,
+    27,
+    41,
+    41
+   ],
+   "base": [
+    39,
+    56,
+    1,
+    49,
+    0,
+    43,
+    55,
+    47,
+    49,
+    5,
+    3,
+    39
+   ]
+  },
+  {
+   "id": "f442a",
+   "label": "4-4-2 (2)",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "CDM",
+    "CDM",
+    "RM",
+    "LM",
+    "ST",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    14,
+    14,
+    23,
+    27,
+    41,
+    41
+   ],
+   "base": [
+    42,
+    0,
+    4,
+    52,
+    3,
+    14,
+    2,
+    50,
+    52,
+    8,
+    6,
+    42
+   ]
+  },
+  {
+   "id": "f451",
+   "label": "4-5-1",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "RM",
+    "CM",
+    "LM",
+    "CAM",
+    "CAM",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    23,
+    18,
+    27,
+    31,
+    31,
+    41
+   ],
+   "base": [
+    42,
+    32,
+    4,
+    52,
+    17,
+    46,
+    58,
+    50,
+    52,
+    8,
+    6,
+    42
+   ]
+  },
+  {
+   "id": "f451a",
+   "label": "4-5-1 (2)",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "LB",
+    "RM",
+    "CM",
+    "CM",
+    "CM",
+    "LM",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    7,
+    23,
+    18,
+    18,
+    18,
+    27,
+    41
+   ],
+   "base": [
+    37,
+    24,
+    63,
+    47,
+    59,
+    41,
+    53,
+    45,
+    47,
+    3,
+    1,
+    37
+   ]
+  },
+  {
+   "id": "f5212",
+   "label": "5-2-1-2",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "CB",
+    "LB",
+    "CM",
+    "CM",
+    "CAM",
+    "ST",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    11,
+    7,
+    18,
+    18,
+    31,
+    41,
+    41
+   ],
+   "base": [
+    54,
+    32,
+    17,
+    0,
+    31,
+    58,
+    14,
+    60,
+    0,
+    20,
+    18,
+    54
+   ]
+  },
+  {
+   "id": "f523",
+   "label": "5-2-3",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "CB",
+    "LB",
+    "CM",
+    "CM",
+    "RW",
+    "ST",
+    "LW"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    11,
+    7,
+    18,
+    18,
+    35,
+    41,
+    38
+   ],
+   "base": [
+    53,
+    40,
+    16,
+    57,
+    38,
+    57,
+    13,
+    59,
+    63,
+    19,
+    17,
+    53
+   ]
+  },
+  {
+   "id": "f532",
+   "label": "5-3-2",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "CB",
+    "LB",
+    "CDM",
+    "CM",
+    "CM",
+    "ST",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    11,
+    7,
+    14,
+    18,
+    18,
+    41,
+    41
+   ],
+   "base": [
+    55,
+    48,
+    18,
+    1,
+    16,
+    27,
+    15,
+    61,
+    1,
+    21,
+    19,
+    55
+   ]
+  },
+  {
+   "id": "f541a",
+   "label": "5-4-1",
+   "positions": [
+    "GK",
+    "RB",
+    "CB",
+    "CB",
+    "CB",
+    "LB",
+    "RM",
+    "CM",
+    "CM",
+    "LM",
+    "ST"
+   ],
+   "roleIds": [
+    1,
+    3,
+    11,
+    11,
+    11,
+    7,
+    23,
+    18,
+    18,
+    27,
+    41
+   ],
+   "base": [
+    50,
+    0,
+    14,
+    60,
+    8,
+    54,
+    10,
+    56,
+    60,
+    16,
+    14,
+    50
+   ]
+  }
+ ]
+}

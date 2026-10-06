@@ -214,6 +214,20 @@ class ApiFlowIntegrationTest {
         assertThat(withSetup.at("/success").asBoolean()).as(withSetup.toString()).isTrue();
         assertThat(withSetup.at("/data/setupDelta").isNumber()).isTrue();
 
+        JsonNode exported = call(post("/api/v1/tactics/export-code"), Map.of("formation", "4-4-2",
+                "setup", Map.of("buildUp", "Counter", "depth", 60)), null, 200);
+        assertThat(exported.at("/success").asBoolean()).as(exported.toString()).isTrue();
+        String exportedCode = exported.at("/data/code").asText();
+        assertThat(exportedCode).hasSize(12);
+        JsonNode imported = call(post("/api/v1/tactics/import-code"), Map.of("code", exportedCode), null, 200);
+        assertThat(imported.at("/success").asBoolean()).as(imported.toString()).isTrue();
+        assertThat(imported.at("/data/formation").asText()).isEqualTo("4-4-2");
+        assertThat(imported.at("/data/buildUp").asText()).isEqualTo("Counter");
+        assertThat(imported.at("/data/depth").asInt()).isEqualTo(60);
+        assertThat(imported.at("/data/slots")).hasSize(11);
+        JsonNode badCode = call(post("/api/v1/tactics/import-code"), Map.of("code", "AAAAAAAAAAAA"), null, 200);
+        assertThat(badCode.at("/success").asBoolean()).isFalse();
+
         JsonNode preview = call(post("/api/v1/recommend/preview"), Map.of("roleId", "winger_attack", "position", "RW"), null, 200);
         assertThat(preview.at("/success").asBoolean()).isTrue();
         assertThat(preview.at("/data/items").isArray()).isTrue();

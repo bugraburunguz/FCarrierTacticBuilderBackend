@@ -37,7 +37,7 @@ public class SecurityConfig {
             API_V1 + "/presets/**", "/actuator/health", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"};
     private static final String[] PUBLIC_POST = {
             API_V1 + "/auth/**", API_V1 + "/tactics/resolve", API_V1 + "/fit/role", API_V1 + "/players/compare",
-            API_V1 + "/recommend/preview"};
+            API_V1 + "/recommend/preview", API_V1 + "/tactics/export-code", API_V1 + "/tactics/import-code"};
 
     private final SecurityErrorHandler securityErrorHandler;
     private final JwtService jwtService;

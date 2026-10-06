@@ -10,17 +10,61 @@
       "defensiveApproach": "Balanced",
       "lineHeight": 60,
       "slots": [
-        { "slot": "ST", "role": "False 9", "focus": "Attack" },
-        { "slot": "LM", "role": "Inside Fwd.", "focus": "Balanced" },
-        { "slot": "CM", "role": "B2B", "focus": "Balanced" },
-        { "slot": "CAM", "role": "Shadow ST", "focus": "Attack" },
-        { "slot": "CM", "role": "B2B", "focus": "Balanced" },
-        { "slot": "RM", "role": "Inside Fwd.", "focus": "Balanced" },
-        { "slot": "LB", "role": "Fullback", "focus": "Balanced" },
-        { "slot": "CB", "role": "Defender", "focus": "Defend" },
-        { "slot": "CB", "role": "Defender", "focus": "Defend" },
-        { "slot": "RB", "role": "Fullback", "focus": "Balanced" },
-        { "slot": "GK", "role": "Sweeper Keeper", "focus": "Balanced" }
+        {
+          "slot": "ST",
+          "role": "False 9",
+          "focus": "Attack"
+        },
+        {
+          "slot": "LM",
+          "role": "Inside Fwd.",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CAM",
+          "role": "Shadow ST",
+          "focus": "Attack"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "RM",
+          "role": "Inside Fwd.",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "LB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "RB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "GK",
+          "role": "Sweeper Keeper",
+          "focus": "Balanced"
+        }
       ]
     },
     {
@@ -32,17 +76,61 @@
       "defensiveApproach": "Balanced",
       "lineHeight": 50,
       "slots": [
-        { "slot": "ST", "role": "Adv. Fwd.", "focus": "Attack" },
-        { "slot": "LM", "role": "Inside Fwd.", "focus": "Balanced" },
-        { "slot": "CDM", "role": "Holding", "focus": "Defend" },
-        { "slot": "CAM", "role": "Shadow ST", "focus": "Attack" },
-        { "slot": "CDM", "role": "Box Crasher", "focus": "Balanced" },
-        { "slot": "RM", "role": "Inside Fwd.", "focus": "Balanced" },
-        { "slot": "LB", "role": "Fullback", "focus": "Balanced" },
-        { "slot": "CB", "role": "Defender", "focus": "Defend" },
-        { "slot": "CB", "role": "Defender", "focus": "Defend" },
-        { "slot": "RB", "role": "Fullback", "focus": "Balanced" },
-        { "slot": "GK", "role": "Sweeper Keeper", "focus": "Balanced" }
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "LM",
+          "role": "Inside Fwd.",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CDM",
+          "role": "Holding",
+          "focus": "Defend"
+        },
+        {
+          "slot": "CAM",
+          "role": "Shadow ST",
+          "focus": "Attack"
+        },
+        {
+          "slot": "CDM",
+          "role": "Box Crasher",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "RM",
+          "role": "Inside Fwd.",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "LB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "RB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "GK",
+          "role": "Sweeper Keeper",
+          "focus": "Balanced"
+        }
       ]
     },
     {
@@ -54,40 +142,858 @@
       "defensiveApproach": "Balanced",
       "lineHeight": 60,
       "slots": [
-        { "slot": "LW", "role": "Inside Fwd.", "focus": "Balanced" },
-        { "slot": "ST", "role": "Adv. Fwd.", "focus": "Attack" },
-        { "slot": "RW", "role": "Inside Fwd.", "focus": "Balanced" },
-        { "slot": "CDM", "role": "Deep-Lying", "focus": "Defend" },
-        { "slot": "CAM", "role": "Playmaker", "focus": "Balanced" },
-        { "slot": "CDM", "role": "Box Crasher", "focus": "Balanced" },
-        { "slot": "LB", "role": "Fullback", "focus": "Defend" },
-        { "slot": "CB", "role": "Defender", "focus": "Defend" },
-        { "slot": "CB", "role": "Defender", "focus": "Defend" },
-        { "slot": "RB", "role": "Fullback", "focus": "Defend" },
-        { "slot": "GK", "role": "Sweeper Keeper", "focus": "Balanced" }
+        {
+          "slot": "LW",
+          "role": "Inside Fwd.",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "RW",
+          "role": "Inside Fwd.",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CDM",
+          "role": "Deep-Lying",
+          "focus": "Defend"
+        },
+        {
+          "slot": "CAM",
+          "role": "Playmaker",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CDM",
+          "role": "Box Crasher",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "LB",
+          "role": "Fullback",
+          "focus": "Defend"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "RB",
+          "role": "Fullback",
+          "focus": "Defend"
+        },
+        {
+          "slot": "GK",
+          "role": "Sweeper Keeper",
+          "focus": "Balanced"
+        }
       ]
     },
     {
       "id": "futgg-4213",
       "code": "RZtRyXrXbt%T",
       "source": "fut.gg makalesi (ayarlar özetten; belirsiz alanlar işaretli)",
-      "uncertain": ["lineHeight", "defensiveApproach", "slots.focus"],
+      "uncertain": [
+        "lineHeight",
+        "defensiveApproach",
+        "slots.focus"
+      ],
       "formation": "4-2-1-3",
       "buildUp": "Balanced",
       "defensiveApproach": "High (belirsiz)",
       "lineHeight": null,
       "slots": [
-        { "slot": "LW", "role": "Inside Fwd.", "focus": "Roaming? (belirsiz)" },
-        { "slot": "ST", "role": "Adv. Fwd.", "focus": "Attack" },
-        { "slot": "RW", "role": "Inside Fwd.", "focus": "Roaming? (belirsiz)" },
-        { "slot": "CDM", "role": "Deep-Lying", "focus": "Build-Up (belirsiz)" },
-        { "slot": "CAM", "role": "Playmaker", "focus": "Balanced" },
-        { "slot": "CDM", "role": "Holding", "focus": "Defend" },
-        { "slot": "LB", "role": "Fullback", "focus": "Defend" },
-        { "slot": "CB", "role": "Defender", "focus": "Defend" },
-        { "slot": "CB", "role": "Defender", "focus": "Defend" },
-        { "slot": "RB", "role": "Fullback", "focus": "Defend" },
-        { "slot": "GK", "role": "Sweeper Keeper", "focus": "Build-Up (belirsiz)" }
+        {
+          "slot": "LW",
+          "role": "Inside Fwd.",
+          "focus": "Roaming? (belirsiz)"
+        },
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "RW",
+          "role": "Inside Fwd.",
+          "focus": "Roaming? (belirsiz)"
+        },
+        {
+          "slot": "CDM",
+          "role": "Deep-Lying",
+          "focus": "Build-Up (belirsiz)"
+        },
+        {
+          "slot": "CAM",
+          "role": "Playmaker",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CDM",
+          "role": "Holding",
+          "focus": "Defend"
+        },
+        {
+          "slot": "LB",
+          "role": "Fullback",
+          "focus": "Defend"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "RB",
+          "role": "Fullback",
+          "focus": "Defend"
+        },
+        {
+          "slot": "GK",
+          "role": "Sweeper Keeper",
+          "focus": "Build-Up (belirsiz)"
+        }
+      ]
+    },
+    {
+      "id": "442-balanced-balanced-50",
+      "code": "n4BxAr3vxFDn",
+      "source": "kullanıcı (oyun)",
+      "formation": "4-4-2",
+      "buildUp": "Balanced",
+      "defensiveApproach": "Balanced",
+      "lineHeight": 50,
+      "slots": [
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "LM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "RM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "LB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "RB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "GK",
+          "role": "Goalkeeper",
+          "focus": "Balanced"
+        }
+      ]
+    },
+    {
+      "id": "442-balanced-balanced-60",
+      "code": "x4L7K1B57Pdy",
+      "source": "kullanıcı (oyun)",
+      "formation": "4-4-2",
+      "buildUp": "Balanced",
+      "defensiveApproach": "Balanced",
+      "lineHeight": 60,
+      "slots": [
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "LM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "RM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "LB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "RB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "GK",
+          "role": "Goalkeeper",
+          "focus": "Balanced"
+        }
+      ]
+    },
+    {
+      "id": "442-balanced-deep-30",
+      "code": "T4tdsXjbdxPQ",
+      "source": "kullanıcı (oyun)",
+      "formation": "4-4-2",
+      "buildUp": "Balanced",
+      "defensiveApproach": "Deep",
+      "lineHeight": 30,
+      "slots": [
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "LM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "RM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "LB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "RB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "GK",
+          "role": "Goalkeeper",
+          "focus": "Balanced"
+        }
+      ]
+    },
+    {
+      "id": "442-balanced-deep-10",
+      "code": "@4ZJYDPHJdb6",
+      "source": "kullanıcı (oyun)",
+      "formation": "4-4-2",
+      "buildUp": "Balanced",
+      "defensiveApproach": "Deep",
+      "lineHeight": 10,
+      "slots": [
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "LM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "RM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "LB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "RB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "GK",
+          "role": "Goalkeeper",
+          "focus": "Balanced"
+        }
+      ]
+    },
+    {
+      "id": "442-balanced-high-70",
+      "code": "75VFU@LDFZ39",
+      "source": "kullanıcı (oyun)",
+      "formation": "4-4-2",
+      "buildUp": "Balanced",
+      "defensiveApproach": "High",
+      "lineHeight": 70,
+      "slots": [
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "LM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "RM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "LB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "RB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "GK",
+          "role": "Goalkeeper",
+          "focus": "Balanced"
+        }
+      ]
+    },
+    {
+      "id": "442-balanced-high-87",
+      "code": "M5mW$QcUWqQQ",
+      "source": "kullanıcı (oyun)",
+      "formation": "4-4-2",
+      "buildUp": "Balanced",
+      "defensiveApproach": "High",
+      "lineHeight": 87,
+      "slots": [
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "LM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "RM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "LB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "RB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "GK",
+          "role": "Goalkeeper",
+          "focus": "Balanced"
+        }
+      ]
+    },
+    {
+      "id": "442-balanced-aggressive-95",
+      "code": "U5uetYkceyYZ",
+      "source": "kullanıcı (oyun)",
+      "formation": "4-4-2",
+      "buildUp": "Balanced",
+      "defensiveApproach": "Aggressive",
+      "lineHeight": 95,
+      "slots": [
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "LM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "RM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "LB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "RB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "GK",
+          "role": "Goalkeeper",
+          "focus": "Balanced"
+        }
+      ]
+    },
+    {
+      "id": "442-balanced-aggressive-99",
+      "code": "Y5yixcogi28e",
+      "source": "kullanıcı (oyun)",
+      "formation": "4-4-2",
+      "buildUp": "Balanced",
+      "defensiveApproach": "Aggressive",
+      "lineHeight": 99,
+      "slots": [
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "LM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "RM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "LB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "RB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "GK",
+          "role": "Goalkeeper",
+          "focus": "Balanced"
+        }
+      ]
+    },
+    {
+      "id": "442-counter-balanced-50",
+      "code": "o4CyBs4wyGE4",
+      "source": "kullanıcı (oyun)",
+      "formation": "4-4-2",
+      "buildUp": "Counter",
+      "defensiveApproach": "Balanced",
+      "lineHeight": 50,
+      "slots": [
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "LM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "RM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "LB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "RB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "GK",
+          "role": "Goalkeeper",
+          "focus": "Balanced"
+        }
+      ]
+    },
+    {
+      "id": "442-counter-balanced-60",
+      "code": "y4M8L2C68QeD",
+      "source": "kullanıcı (oyun)",
+      "formation": "4-4-2",
+      "buildUp": "Counter",
+      "defensiveApproach": "Balanced",
+      "lineHeight": 60,
+      "slots": [
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "LM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "RM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "LB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "RB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "GK",
+          "role": "Goalkeeper",
+          "focus": "Balanced"
+        }
+      ]
+    },
+    {
+      "id": "442-counter-deep-30",
+      "code": "U4uetYkceyQh",
+      "source": "kullanıcı (oyun)",
+      "formation": "4-4-2",
+      "buildUp": "Counter",
+      "defensiveApproach": "Deep",
+      "lineHeight": 30,
+      "slots": [
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "ST",
+          "role": "Adv. Fwd.",
+          "focus": "Attack"
+        },
+        {
+          "slot": "LM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CM",
+          "role": "B2B",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "RM",
+          "role": "Winger",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "LB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "CB",
+          "role": "Defender",
+          "focus": "Defend"
+        },
+        {
+          "slot": "RB",
+          "role": "Fullback",
+          "focus": "Balanced"
+        },
+        {
+          "slot": "GK",
+          "role": "Goalkeeper",
+          "focus": "Balanced"
+        }
       ]
     }
   ]
