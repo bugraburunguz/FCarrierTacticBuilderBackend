@@ -1,0 +1,44 @@
+package com.fcareer.ut.controller;
+
+import com.fcareer.ut.model.UtMetaModels.MetaCard;
+import com.fcareer.ut.model.UtMetaModels.MetaFormations;
+import com.fcareer.ut.service.UtMetaService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+import static com.fcareer.common.constants.ApiConstants.API_V1;
+
+@RestController
+@RequestMapping(API_V1 + "/ut")
+@RequiredArgsConstructor
+public class UtMetaController {
+
+    private final UtMetaService utMetaService;
+
+    @GetMapping("/meta/formations")
+    public MetaFormations formations() {
+        return utMetaService.formations();
+    }
+
+    @GetMapping("/meta/tier")
+    public List<MetaCard> tier(@RequestParam("pos") String position,
+                               @RequestParam(name = "gender", required = false, defaultValue = "0") Short gender,
+                               @RequestParam(name = "gv", required = false) Short gameVersionId,
+                               @RequestParam(name = "limit", required = false, defaultValue = "20") int limit) {
+        return utMetaService.tier(position, gender, gameVersionId, limit);
+    }
+
+    @PostMapping("/card/{id}/chemstyle")
+    public MetaCard chemStyle(@PathVariable Long id,
+                              @RequestParam(name = "pos", required = false) String position,
+                              @RequestParam(name = "gv", required = false) Short gameVersionId) {
+        return utMetaService.chemStyles(id, gameVersionId, position);
+    }
+}

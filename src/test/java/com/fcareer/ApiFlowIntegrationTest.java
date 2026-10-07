@@ -211,6 +211,16 @@ class ApiFlowIntegrationTest {
         assertThat(wonderkids.at("/data").isArray()).isTrue();
         wonderkids.at("/data").forEach(k -> assertThat(k.at("/gap").asInt()).isEqualTo(k.at("/potential").asInt() - k.at("/overall").asInt()));
 
+        JsonNode metaFormations = call(get("/api/v1/ut/meta/formations"), null, null, 200);
+        assertThat(metaFormations.at("/data/formations")).isNotEmpty();
+        JsonNode chemStyle = call(post("/api/v1/ut/card/" + playerId + "/chemstyle"), null, null, 200);
+        assertThat(chemStyle.at("/success").asBoolean()).as(chemStyle.toString()).isTrue();
+        assertThat(chemStyle.at("/data/chemStyles")).hasSize(3);
+        assertThat(chemStyle.at("/data/assumption").asBoolean()).isTrue();
+        JsonNode tier = call(get("/api/v1/ut/meta/tier?pos=ST&limit=5"), null, null, 200);
+        assertThat(tier.at("/success").asBoolean()).as(tier.toString()).isTrue();
+        assertThat(tier.at("/data").isArray()).isTrue();
+
         JsonNode setupCheck = call(post("/api/v1/fit/setup-check"), Map.of("careerId", careerId, "buildUp", "Short", "depth", 80), token, 200);
         assertThat(setupCheck.at("/success").asBoolean()).as(setupCheck.toString()).isTrue();
         assertThat(setupCheck.at("/data")).hasSize(3);
