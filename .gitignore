@@ -11,3 +11,6 @@ ml-service/models/*.json
 ml-service/data/*.csv
 !ml-service/data/README.md
 ml-service/data/fc27-dump/
+
+# Extension yakalama dosyaları oturum/hesap verisi içerebilir
+fcareer-captures*.json
