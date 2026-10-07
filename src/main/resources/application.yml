@@ -56,6 +56,7 @@ fcareer.catalog:
 # --- Faz 7: güvenlik / billing (CONFIG) ---
 # JWT_SECRET zorunlu (>= 32 byte); kodda varsayılan secret YOK.
 fcareer.security:
+  cors-allowed-origins: ${CORS_ALLOWED_ORIGINS:}
   jwt:
     secret: ${JWT_SECRET:}
     access-ttl: 15m

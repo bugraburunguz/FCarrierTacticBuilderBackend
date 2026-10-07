@@ -5,6 +5,8 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -14,6 +16,7 @@ public class SecurityProperties {
     private Jwt jwt = new Jwt();
     private RateLimit rateLimit = new RateLimit();
     private int minPasswordLength = 8;
+    private List<String> corsAllowedOrigins = new ArrayList<>();
 
     @Getter
     @Setter
