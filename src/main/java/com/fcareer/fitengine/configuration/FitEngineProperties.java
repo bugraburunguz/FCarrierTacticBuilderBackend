@@ -17,6 +17,8 @@ public class FitEngineProperties {
     private Projected projected = new Projected();
     private Playstyle playstyle = new Playstyle();
     private Accelerate accelerate = new Accelerate();
+    private String roleWeightsVersion = "v1";
+    private DefensiveGate defensiveGate = new DefensiveGate();
     private double outOfPositionPenalty = 15;
     private double globalFloorPenaltyPerPoint = 0.8;
     private double intentWeaponBoost = 0.05;
@@ -31,6 +33,16 @@ public class FitEngineProperties {
         private double yellowPenaltyPerPoint = 0.4;
         private double redPenaltyPerPoint = 1.5;
         private int playstylePlusCompensation = 4;
+    }
+
+    @Getter
+    @Setter
+    public static class DefensiveGate {
+        private boolean enabled = true;
+        private double heavyPenalty = 30;
+        private int projectedCap = 60;
+        private Map<String, Integer> defFloor = Map.of("CB", 62, "FB", 55, "CDM", 60);
+        private Map<String, Integer> tackleFloor = Map.of("CB", 60, "FB", 55, "CDM", 60);
     }
 
     @Getter

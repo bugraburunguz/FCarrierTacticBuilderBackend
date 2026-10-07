@@ -18,6 +18,7 @@ import java.util.List;
 public class SeedReader {
 
     public static final String ROLE_WEIGHTING = "seed/role-weighting.json";
+    public static final String ROLE_CALIBRATION = "seed/role-calibration-v2.json";
     public static final String ROLES = "seed/roles.json";
     public static final String BEHAVIOR_TAGS = "seed/behavior-tags.json";
     public static final String FORMATIONS = "seed/formations.json";
@@ -39,6 +40,11 @@ public class SeedReader {
                 }),
                 read(TACTIC_RULES, new TypeReference<List<TacticRuleDefinition>>() {
                 }));
+    }
+
+    public RoleCalibration readCalibration() {
+        return read(ROLE_CALIBRATION, new TypeReference<RoleCalibration>() {
+        });
     }
 
     public List<FormationDefinition> readFormations() {

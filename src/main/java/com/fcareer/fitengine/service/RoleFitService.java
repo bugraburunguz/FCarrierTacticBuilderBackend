@@ -69,11 +69,20 @@ public class RoleFitService {
         }
 
         double floorPenalty = floorPenalty(player, role, reasons);
+        boolean gateTripped = defensiveGateTripped(player, role, position, reasons);
+        double gatePenalty = gateTripped ? properties.getDefensiveGate().getHeavyPenalty() : 0;
+        if (gateTripped) {
+            worst = WeaponState.RED;
+            weakWeapons.add(nlgService.attrLabel(Attr.DEF_AWARENESS));
+        }
 
-        double raw = base * MAX_SCORE + playstyleBonus + accelerate - weaponPenalty - outOfPositionPenalty - floorPenalty;
+        double raw = base * MAX_SCORE + playstyleBonus + accelerate - weaponPenalty - outOfPositionPenalty - floorPenalty - gatePenalty;
         double score = round1(clamp(raw, 0, MAX_SCORE));
 
         int projected = projectedRating(base, playstyleBonus, accelerate, worst);
+        if (gateTripped) {
+            projected = Math.min(projected, properties.getDefensiveGate().getProjectedCap());
+        }
 
         return RoleFitResponse.builder()
                 .playerId(player.getId())
@@ -211,6 +220,38 @@ public class RoleFitService {
         }
         List<String> equivalents = properties.getPositionEquivalents().getOrDefault(position, List.of());
         return equivalents.stream().anyMatch(player.getPositions()::contains);
+    }
+
+    private boolean defensiveGateTripped(FitPlayer player, FitRole role, String position, List<String> reasons) {
+        FitEngineProperties.DefensiveGate gate = properties.getDefensiveGate();
+        String group = defensiveGroup(Objects.nonNull(position) ? position : singlePosition(role));
+        if (!gate.isEnabled() || Objects.isNull(group)) {
+            return false;
+        }
+        int defAwareness = player.attr(Attr.DEF_AWARENESS);
+        int tackling = (player.attr(Attr.STANDING_TACKLE) + player.attr(Attr.INTERCEPTIONS)) / 2;
+        boolean tripped = defAwareness < gate.getDefFloor().get(group) || tackling < gate.getTackleFloor().get(group);
+        if (tripped) {
+            reasons.add(nlgService.defensiveGate(group, defAwareness, tackling));
+        }
+        return tripped;
+    }
+
+    private static String singlePosition(FitRole role) {
+        return role.getPositions().stream().map(RoleFitService::defensiveGroup).distinct().count() == 1
+                && Objects.nonNull(defensiveGroup(role.getPositions().get(0))) ? role.getPositions().get(0) : null;
+    }
+
+    private static String defensiveGroup(String position) {
+        if (Objects.isNull(position)) {
+            return null;
+        }
+        return switch (position) {
+            case "CB" -> "CB";
+            case "LB", "RB", "LWB", "RWB" -> "FB";
+            case "CDM" -> "CDM";
+            default -> null;
+        };
     }
 
     private double floorPenalty(FitPlayer player, FitRole role, List<String> reasons) {

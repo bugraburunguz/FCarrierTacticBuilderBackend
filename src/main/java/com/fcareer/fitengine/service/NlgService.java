@@ -54,6 +54,10 @@ public class NlgService {
         return messageService.getMessage("nlg.outOfPosition", position);
     }
 
+    public String defensiveGate(String position, int defAwareness, int tackling) {
+        return messageService.getMessage("nlg.defensiveGate", position, defAwareness, tackling);
+    }
+
     public String floorReason(Attr attr, int value, int floor) {
         return messageService.getMessage("nlg.floor", attrLabel(attr), value, floor);
     }

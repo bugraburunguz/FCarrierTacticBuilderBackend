@@ -1,0 +1,43 @@
+{
+  "version": "v2",
+  "_note": "role_calibration_v2.md: attrWeights = normalize(positionBaseline[weightGroup] + roleEmphasis[baseRole] + roleEmphasis[baseRole:focus] + focusBend). Pace (ACC/SPD) ve SPA/CRO eşit bölünmüştür. Başlangıç sayıları, tune edilecek. Weapon kontrolleri değişmez; weaponBend yalnızca emphasis'i olmayan rollere uygulanır.",
+  "weaponBendWithoutEmphasis": 0.07,
+  "focusBendScale": 1.0,
+  "positionBaseline": {
+    "GK":  { "GKReflexes": 0.24, "GKDiving": 0.20, "GKPositioning": 0.20, "GKHandling": 0.16, "Acceleration": 0.05, "SprintSpeed": 0.05, "GKKicking": 0.10 },
+    "CB":  { "DefAwareness": 0.24, "StandingTackle": 0.18, "Strength": 0.16, "Acceleration": 0.07, "SprintSpeed": 0.07, "Reactions": 0.10, "Heading": 0.10, "SlidingTackle": 0.08 },
+    "FB":  { "Acceleration": 0.10, "SprintSpeed": 0.10, "DefAwareness": 0.18, "Stamina": 0.16, "StandingTackle": 0.16, "ShortPassing": 0.10, "Crossing": 0.08, "Interceptions": 0.06, "Reactions": 0.06 },
+    "CDM": { "DefAwareness": 0.22, "Interceptions": 0.20, "Strength": 0.14, "StandingTackle": 0.12, "ShortPassing": 0.12, "Reactions": 0.10, "Stamina": 0.10 },
+    "CM":  { "ShortPassing": 0.18, "BallControl": 0.16, "Stamina": 0.14, "Vision": 0.14, "Dribbling": 0.12, "Reactions": 0.12, "LongPassing": 0.14 },
+    "CAM": { "Vision": 0.20, "ShortPassing": 0.18, "BallControl": 0.16, "Dribbling": 0.16, "Finishing": 0.12, "Composure": 0.10, "Agility": 0.08 },
+    "W":   { "Acceleration": 0.10, "SprintSpeed": 0.10, "Dribbling": 0.18, "BallControl": 0.16, "Finishing": 0.14, "ShortPassing": 0.07, "Crossing": 0.07, "Agility": 0.10, "Composure": 0.08 },
+    "WM":  { "Acceleration": 0.10, "SprintSpeed": 0.10, "Dribbling": 0.18, "BallControl": 0.16, "Finishing": 0.14, "ShortPassing": 0.07, "Crossing": 0.07, "Agility": 0.10, "Composure": 0.08 },
+    "ST":  { "Finishing": 0.22, "Positioning": 0.20, "Acceleration": 0.07, "SprintSpeed": 0.07, "Reactions": 0.12, "BallControl": 0.12, "Composure": 0.12, "ShotPower": 0.08 }
+  },
+  "roleEmphasis": {
+    "sweeper_keeper":        { "Acceleration": 0.03, "SprintSpeed": 0.03, "GKPositioning": 0.04, "GKKicking": 0.05 },
+    "fullback":              { "DefAwareness": 0.05, "StandingTackle": 0.05 },
+    "wingback":              { "Stamina": 0.05, "Crossing": 0.05, "Acceleration": 0.04 },
+    "attacking_wingback":    { "Crossing": 0.10, "Stamina": 0.06, "Acceleration": 0.05 },
+    "defender":              { "DefAwareness": 0.04, "Heading": 0.03 },
+    "stopper":               { "Aggression": 0.06, "StandingTackle": 0.04, "Acceleration": 0.04 },
+    "ball_playing_defender": { "ShortPassing": 0.06, "LongPassing": 0.05, "Vision": 0.04, "Composure": 0.03 },
+    "holding":               { "Interceptions": 0.05, "DefAwareness": 0.04 },
+    "centre_half":           { "DefAwareness": 0.05, "Interceptions": 0.03 },
+    "box_crasher":           { "LongShots": 0.10, "ShotPower": 0.08, "Positioning": 0.08, "Finishing": 0.05 },
+    "deep_lying_playmaker":  { "Vision": 0.08, "LongPassing": 0.08, "Composure": 0.05 },
+    "box_to_box":            { "Stamina": 0.05 },
+    "box_to_box:Ball-Winning": { "Interceptions": 0.06, "StandingTackle": 0.04 },
+    "box_to_box:Attack":     { "LongShots": 0.06, "Positioning": 0.05 },
+    "playmaker":             { "Vision": 0.08, "ShortPassing": 0.06, "Dribbling": 0.04 },
+    "classic_10":            { "Vision": 0.08, "BallControl": 0.06, "Composure": 0.05 },
+    "shadow_striker":        { "Finishing": 0.08, "Positioning": 0.08, "Acceleration": 0.06 },
+    "winger":                { "Crossing": 0.10, "Curve": 0.05, "Stamina": 0.04 },
+    "inside_forward":        { "Finishing": 0.08, "Dribbling": 0.06, "Agility": 0.05, "Curve": 0.04 },
+    "wide_playmaker":        { "Vision": 0.08, "ShortPassing": 0.06, "Dribbling": 0.05 },
+    "advanced_forward":      { "Finishing": 0.05, "Positioning": 0.05, "Acceleration": 0.05 },
+    "poacher":               { "Finishing": 0.08, "Positioning": 0.08, "Composure": 0.05 },
+    "target_forward":        { "Heading": 0.12, "Strength": 0.10, "Jumping": 0.08 },
+    "false_9":               { "Vision": 0.08, "ShortPassing": 0.06, "BallControl": 0.06, "Dribbling": 0.05 }
+  }
+}

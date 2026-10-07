@@ -19,10 +19,14 @@ public class RoleLibraryGenerator {
     private static final double WEIGHT_PRECISION = 10000.0;
 
     public List<RoleEntity> generate(List<RoleSeed> seeds, RoleWeighting weighting) {
+        return generate(seeds, weighting, null);
+    }
+
+    public List<RoleEntity> generate(List<RoleSeed> seeds, RoleWeighting weighting, RoleCalibration calibration) {
         List<RoleEntity> roles = new ArrayList<>();
         for (RoleSeed seed : seeds) {
             for (String focus : seed.focuses()) {
-                roles.add(toRole(seed, focus, weighting));
+                roles.add(toRole(seed, focus, weighting, calibration));
             }
         }
         return roles;
@@ -32,7 +36,7 @@ public class RoleLibraryGenerator {
         return baseRole + "_" + focus.toLowerCase(Locale.ROOT).replace('-', '_');
     }
 
-    private RoleEntity toRole(RoleSeed seed, String focus, RoleWeighting weighting) {
+    private RoleEntity toRole(RoleSeed seed, String focus, RoleWeighting weighting, RoleCalibration calibration) {
         List<WeaponSeed> weapons = weaponsFor(seed, focus);
         RoleEntity role = new RoleEntity();
         role.setId(roleId(seed.id(), focus));
@@ -40,7 +44,7 @@ public class RoleLibraryGenerator {
         role.setName(seed.name() + " (" + focus + ")");
         role.setPositions(seed.positions());
         role.setFocus(focus);
-        role.setAttrWeights(weights(seed, focus, weapons, weighting));
+        role.setAttrWeights(Objects.isNull(calibration) ? weights(seed, focus, weapons, weighting) : calibratedWeights(seed, focus, weapons, weighting, calibration));
         role.setWeapons(weapons.stream()
                 .map(w -> RoleWeapon.builder().attr(w.attr()).hardMin(w.hardMin()).target(w.target()).build())
                 .toList());
@@ -72,6 +76,31 @@ public class RoleLibraryGenerator {
         }
         Map<String, Double> focusBend = weighting.focusBend().getOrDefault(focus, Map.of());
         focusBend.forEach((attr, delta) -> weights.merge(attr, delta, Double::sum));
+        double total = weights.values().stream().mapToDouble(Double::doubleValue).sum();
+        weights.replaceAll((attr, weight) -> Math.round(weight / total * WEIGHT_PRECISION) / WEIGHT_PRECISION);
+        return weights;
+    }
+
+    private Map<String, Double> calibratedWeights(RoleSeed seed, String focus, List<WeaponSeed> weapons, RoleWeighting weighting,
+                                                  RoleCalibration calibration) {
+        Map<String, Double> baseline = calibration.positionBaseline().get(seed.weightGroup());
+        if (Objects.isNull(baseline)) {
+            throw new IllegalStateException("Unknown calibration group: " + seed.weightGroup() + " role: " + seed.id());
+        }
+        Map<String, Double> weights = new LinkedHashMap<>(baseline);
+        Map<String, Double> emphasis = calibration.roleEmphasis().get(seed.id());
+        Map<String, Double> focusEmphasis = calibration.roleEmphasis().get(seed.id() + ":" + focus);
+        if (Objects.nonNull(emphasis)) {
+            emphasis.forEach((attr, delta) -> weights.merge(attr, delta, Double::sum));
+        }
+        if (Objects.nonNull(focusEmphasis)) {
+            focusEmphasis.forEach((attr, delta) -> weights.merge(attr, delta, Double::sum));
+        }
+        if (Objects.isNull(emphasis) && Objects.isNull(focusEmphasis)) {
+            weapons.forEach(w -> weights.merge(w.attr(), calibration.weaponBendWithoutEmphasis(), Double::sum));
+        }
+        weighting.focusBend().getOrDefault(focus, Map.of())
+                .forEach((attr, delta) -> weights.merge(attr, delta * calibration.focusBendScale(), Double::sum));
         double total = weights.values().stream().mapToDouble(Double::doubleValue).sum();
         weights.replaceAll((attr, weight) -> Math.round(weight / total * WEIGHT_PRECISION) / WEIGHT_PRECISION);
         return weights;

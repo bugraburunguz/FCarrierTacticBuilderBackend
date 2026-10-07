@@ -1,5 +1,6 @@
 package com.fcareer.roles.seed;
 
+import com.fcareer.fitengine.configuration.FitEngineProperties;
 import com.fcareer.common.redis.RedisJsonCache;
 import com.fcareer.fitengine.model.TacticRuleDefinition;
 import com.fcareer.roles.entity.BehaviorTagEntity;
@@ -43,12 +44,15 @@ public class ReferenceDataSeeder implements ApplicationRunner {
     private final PresetRepository presetRepository;
     private final TacticRuleRepository tacticRuleRepository;
     private final RedisJsonCache redisJsonCache;
+    private final FitEngineProperties fitEngineProperties;
 
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
         ReferenceSeedBundle bundle = seedReader.read();
-        List<RoleEntity> roles = roleLibraryGenerator.generate(bundle.roles(), bundle.weighting());
+        RoleCalibration calibration = "v2".equalsIgnoreCase(fitEngineProperties.getRoleWeightsVersion()) ? seedReader.readCalibration() : null;
+        log.info("Role weights version : {}", Objects.isNull(calibration) ? "v1" : calibration.version());
+        List<RoleEntity> roles = roleLibraryGenerator.generate(bundle.roles(), bundle.weighting(), calibration);
         Map<String, List<String>> conflicts = seedValidator.symmetricConflicts(bundle.tags());
         List<String> errors = seedValidator.validate(bundle, roles, conflicts);
         if (!errors.isEmpty()) {
