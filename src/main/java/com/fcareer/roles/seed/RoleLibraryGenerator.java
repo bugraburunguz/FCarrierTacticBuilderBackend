@@ -42,7 +42,7 @@ public class RoleLibraryGenerator {
         role.setId(roleId(seed.id(), focus));
         role.setBaseRole(seed.id());
         role.setName(seed.name() + " (" + focus + ")");
-        role.setPositions(seed.positions());
+        role.setPositions(positionsFor(seed, focus));
         role.setFocus(focus);
         role.setAttrWeights(Objects.isNull(calibration) ? weights(seed, focus, weapons, weighting) : calibratedWeights(seed, focus, weapons, weighting, calibration));
         role.setWeapons(weapons.stream()
@@ -56,6 +56,11 @@ public class RoleLibraryGenerator {
         role.setGlobalFloor(globalFloor(seed, weighting));
         role.setMovementTags(orEmpty(seed.movementTags()));
         return role;
+    }
+
+    private List<String> positionsFor(RoleSeed seed, String focus) {
+        List<String> excluded = Objects.isNull(seed.focusExcludePositions()) ? List.of() : seed.focusExcludePositions().getOrDefault(focus, List.of());
+        return seed.positions().stream().filter(p -> !excluded.contains(p)).toList();
     }
 
     private List<WeaponSeed> weaponsFor(RoleSeed seed, String focus) {

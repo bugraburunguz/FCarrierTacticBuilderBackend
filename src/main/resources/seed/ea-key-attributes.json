@@ -1,0 +1,124 @@
+{
+  "source": "EA FC27 Web App content: items/keyAttributes.json (extension capture); indeksler seed/ut-attr-index.json sırasıyla adlandırıldı. Sezon içeriği GUID ile sürümlenir, yeni yakalamada yenilenmeli.",
+  "positions": {
+    "GK": [
+      "GKReflexes",
+      "GKHandling",
+      "GKDiving",
+      "GKPositioning",
+      "GKKicking"
+    ],
+    "RWB": [
+      "StandingTackle",
+      "DefAwareness",
+      "Aggression",
+      "Crossing",
+      "SprintSpeed"
+    ],
+    "RB": [
+      "StandingTackle",
+      "DefAwareness",
+      "SlidingTackle",
+      "Acceleration",
+      "LongPassing"
+    ],
+    "CB": [
+      "DefAwareness",
+      "StandingTackle",
+      "Strength",
+      "SlidingTackle",
+      "Aggression"
+    ],
+    "LB": [
+      "StandingTackle",
+      "DefAwareness",
+      "SlidingTackle",
+      "Acceleration",
+      "LongPassing"
+    ],
+    "LWB": [
+      "StandingTackle",
+      "DefAwareness",
+      "Aggression",
+      "Crossing",
+      "SprintSpeed"
+    ],
+    "CDM": [
+      "DefAwareness",
+      "StandingTackle",
+      "Interceptions",
+      "BallControl",
+      "ShortPassing"
+    ],
+    "RM": [
+      "SprintSpeed",
+      "Dribbling",
+      "Agility",
+      "ShortPassing",
+      "Reactions"
+    ],
+    "CM": [
+      "BallControl",
+      "Reactions",
+      "Vision",
+      "ShortPassing",
+      "Interceptions"
+    ],
+    "LM": [
+      "SprintSpeed",
+      "Dribbling",
+      "Agility",
+      "ShortPassing",
+      "Reactions"
+    ],
+    "CAM": [
+      "Dribbling",
+      "Agility",
+      "Vision",
+      "BallControl",
+      "SprintSpeed"
+    ],
+    "CF": [
+      "Positioning",
+      "Finishing",
+      "Dribbling",
+      "Agility",
+      "LongShots"
+    ],
+    "RW": [
+      "Dribbling",
+      "Agility",
+      "SprintSpeed",
+      "Reactions",
+      "Positioning"
+    ],
+    "RF": [
+      "Dribbling",
+      "Agility",
+      "SprintSpeed",
+      "Reactions",
+      "Positioning"
+    ],
+    "ST": [
+      "Positioning",
+      "Finishing",
+      "Reactions",
+      "Strength",
+      "Acceleration"
+    ],
+    "LW": [
+      "Dribbling",
+      "Agility",
+      "SprintSpeed",
+      "Reactions",
+      "Positioning"
+    ],
+    "LF": [
+      "Dribbling",
+      "Agility",
+      "SprintSpeed",
+      "Reactions",
+      "Positioning"
+    ]
+  }
+}

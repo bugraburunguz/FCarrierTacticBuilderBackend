@@ -11,6 +11,7 @@ public record RoleSeed(
         List<String> focuses,
         List<WeaponSeed> weapons,
         Map<String, List<WeaponSeed>> focusWeapons,
+        Map<String, List<String>> focusExcludePositions,
         List<String> priorityPlaystyles,
         List<String> bonusPlaystyles,
         List<String> accelerate,

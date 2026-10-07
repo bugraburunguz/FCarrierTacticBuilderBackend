@@ -114,7 +114,7 @@ public class TacticResolver {
     private IntentProfile buildProfile(String slotId, String position, String group, String defaultRole, String roleId,
                                        List<String> tagIds, Map<String, FitRole> roles, Map<String, FitTag> tagCatalog) {
         List<FitTag> tags = selectedTags(slotId, group, tagIds, tagCatalog);
-        FitRole role = resolveRole(slotId, roleId, defaultRole, tags, roles);
+        FitRole role = resolveRole(slotId, position, roleId, defaultRole, tags, roles);
         return IntentProfile.builder()
                 .slotId(slotId)
                 .slotPosition(position)
@@ -144,17 +144,27 @@ public class TacticResolver {
         return tags;
     }
 
-    private FitRole resolveRole(String slotId, String requestedRoleId, String defaultRole, List<FitTag> tags,
+    private FitRole resolveRole(String slotId, String position, String requestedRoleId, String defaultRole, List<FitTag> tags,
                                 Map<String, FitRole> roles) {
-        String roleId = Optional.ofNullable(requestedRoleId)
-                .or(() -> voteRole(tags))
-                .orElse(defaultRole);
+        String roleId = Optional.ofNullable(requestedRoleId).filter(id -> validAt(roles, id, position, slotId))
+                .or(() -> voteRole(tags).filter(id -> validAt(roles, id, position, slotId)))
+                .orElse(Objects.nonNull(defaultRole) ? defaultRole : requestedRoleId);
         FitRole role = Objects.isNull(roleId) ? null : roles.get(roleId);
         if (Objects.isNull(role)) {
             log.warn("Unknown role for slot : {} role : {}", slotId, roleId);
             throw new InvalidTacticException("role " + roleId);
         }
         return role;
+    }
+
+    /** Rol o mevkide yoksa (ör. CAM'de Playmaker Attack) yok sayılır; bilinmeyen kimlik ya da mevkisiz çağrı olduğu gibi geçer. */
+    private boolean validAt(Map<String, FitRole> roles, String roleId, String position, String slotId) {
+        FitRole role = roles.get(roleId);
+        if (Objects.isNull(role) || Objects.isNull(position) || role.getPositions().contains(position)) {
+            return true;
+        }
+        log.warn("Role not available at position slot : {} role : {} position : {}", slotId, roleId, position);
+        return false;
     }
 
     private Optional<String> voteRole(List<FitTag> tags) {

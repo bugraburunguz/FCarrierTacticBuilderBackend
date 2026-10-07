@@ -34,7 +34,7 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_GET = {
             API_V1 + "/players/**", API_V1 + "/clubs", API_V1 + "/leagues", API_V1 + "/nationalities", API_V1 + "/roles", API_V1 + "/behavior-tags", API_V1 + "/formations",
-            API_V1 + "/presets/**", API_V1 + "/wonderkids", API_V1 + "/ut/meta/**", API_V1 + "/ut/sbc/score-table", API_V1 + "/ut/card/*/upgrades", "/actuator/health", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"};
+            API_V1 + "/presets/**", API_V1 + "/config/**", API_V1 + "/wonderkids", API_V1 + "/ut/meta/**", API_V1 + "/ut/sbc/score-table", API_V1 + "/ut/card/*/upgrades", "/actuator/health", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"};
     private static final String[] PUBLIC_POST = {
             API_V1 + "/auth/**", API_V1 + "/tactics/resolve", API_V1 + "/fit/role", API_V1 + "/players/compare",
             API_V1 + "/recommend/preview", API_V1 + "/tactics/export-code", API_V1 + "/tactics/import-code", API_V1 + "/players/*/development", API_V1 + "/ut/card/*/chemstyle", API_V1 + "/ut/sbc/streamlined", API_V1 + "/ut/squad/evaluate"};
