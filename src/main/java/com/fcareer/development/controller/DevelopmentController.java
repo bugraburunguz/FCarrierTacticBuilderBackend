@@ -1,0 +1,50 @@
+package com.fcareer.development.controller;
+
+import com.fcareer.development.model.DevelopmentModels.DevelopmentRequest;
+import com.fcareer.development.model.DevelopmentModels.DevelopmentResponse;
+import com.fcareer.development.model.DevelopmentModels.WonderkidQuery;
+import com.fcareer.development.model.DevelopmentModels.WonderkidResponse;
+import com.fcareer.development.service.DevelopmentService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+import static com.fcareer.common.constants.ApiConstants.API_V1;
+
+@RestController
+@RequestMapping(API_V1)
+@RequiredArgsConstructor
+public class DevelopmentController {
+
+    private final DevelopmentService developmentService;
+
+    @PostMapping("/players/{id}/development")
+    public DevelopmentResponse development(@PathVariable Long id, @RequestBody(required = false) DevelopmentRequest request) {
+        return developmentService.plan(id, request == null ? new DevelopmentRequest() : request);
+    }
+
+    @GetMapping("/wonderkids")
+    public List<WonderkidResponse> wonderkids(
+            @RequestParam(name = "gv", required = false) Short gameVersionId,
+            @RequestParam(name = "gender", required = false) Short gender,
+            @RequestParam(name = "pos", required = false) String position,
+            @RequestParam(name = "maxAge", required = false) Integer maxAge,
+            @RequestParam(name = "minPot", required = false) Integer minPotential,
+            @RequestParam(name = "league", required = false) Integer leagueId,
+            @RequestParam(name = "budgetMax", required = false) Long budgetMax,
+            @RequestParam(name = "role", required = false) String roleId,
+            @RequestParam(name = "sort", required = false) String sort,
+            @RequestParam(name = "limit", required = false, defaultValue = "0") int limit) {
+        return developmentService.wonderkids(WonderkidQuery.builder()
+                .gameVersionId(gameVersionId).gender(gender).position(position).maxAge(maxAge)
+                .minPotential(minPotential).leagueId(leagueId).budgetMax(budgetMax).roleId(roleId)
+                .sort(sort).limit(limit).build());
+    }
+}

@@ -200,6 +200,17 @@ class ApiFlowIntegrationTest {
             assertThat(r.at("/gaps").isArray()).isTrue();
         });
 
+        JsonNode development = call(post("/api/v1/players/" + playerId + "/development"), Map.of(), null, 200);
+        assertThat(development.at("/success").asBoolean()).as(development.toString()).isTrue();
+        assertThat(development.at("/data/estimated").asBoolean()).isTrue();
+        assertThat(development.at("/data/perRole").isArray()).isTrue();
+        development.at("/data/perRole").forEach(r -> assertThat(r.at("/projectedScore").asDouble()).isGreaterThanOrEqualTo(r.at("/currentScore").asDouble() - 0.5));
+
+        JsonNode wonderkids = call(get("/api/v1/wonderkids?maxAge=40&minPot=1&limit=5&sort=gap"), null, null, 200);
+        assertThat(wonderkids.at("/success").asBoolean()).as(wonderkids.toString()).isTrue();
+        assertThat(wonderkids.at("/data").isArray()).isTrue();
+        wonderkids.at("/data").forEach(k -> assertThat(k.at("/gap").asInt()).isEqualTo(k.at("/potential").asInt() - k.at("/overall").asInt()));
+
         JsonNode setupCheck = call(post("/api/v1/fit/setup-check"), Map.of("careerId", careerId, "buildUp", "Short", "depth", 80), token, 200);
         assertThat(setupCheck.at("/success").asBoolean()).as(setupCheck.toString()).isTrue();
         assertThat(setupCheck.at("/data")).hasSize(3);
