@@ -10,8 +10,8 @@
       "defensiveStyle": "Balanced (öndeyken Deep/Low)",
       "depth": 42,
       "offensiveWidth": 59,
-      "playersInBox": 5,
-      "notes": "Ana şekil 4-2-3-1; 4-3-3, 4-2-2-2 ve elmas (4-1-2-1-2) varyantları. Ruh sabit: blok + kontra + dahi 10 + bek ortası; pres dogması yok.",
+      "playersInBox": 6,
+      "notes": "Ana şekil 4-2-3-1; 4-3-3, 4-2-2-2 ve elmas (4-1-2-1-2) varyantları. Ruh sabit: blok + kontra + dahi 10 + bek ortası; pres dogması yok. v2: kaleci gerektiğinde süpürür; ön hat kalabalık (ST + iki içe kesen kanat + dalan Box Crasher + bindiren bek). Öndeyken 'lead koruma' ikinci slotu: çift pivot + düşük hat + Players in Box 4.",
       "groupTags": {
         "CM": [
           "cm_ball_winner",
@@ -28,13 +28,13 @@
     },
     "signatureTr": "Disiplinli blok + dikey kontra + dahi 10 + arka-direk ortaları + estetik bitiş; pres yok.",
     "roleHints": {
-      "GK": "Komutan refleks kaleci (Buffon / Cech / Dida tipi); sweeper değil",
+      "GK": "Gerektiğinde çıkıp arkayı süpüren, birebirde açı kapatan Sweeper Keeper (Balanced); sürekli çizgi komutanı değil",
       "RB": "Crossing / Whipped Pass'li bindiren bek (Carlos / Alves / Zanetti tipi); arka direğe kavisli orta",
       "LB": "Dengeli bek; kontra kalkanı, bindirme dengede",
       "LCB": "Top oynatan stoper (Nesta / Ferdinand tipi); kontrayı uzun topla başlatır",
       "RCB": "Savaşçı lider stoper (Pepe / Ramos / Vidić tipi); hava hakimiyeti",
       "LDM": "Pozisyonel süpürücü 6 (Makélélé / Busquets / Vieira tipi)",
-      "RDM": "Yıkıcı 8 (Gattuso / Keane tipi); merkezi korur, mekik dokur",
+      "RDM": "Kutuya dalan ileri 8 / Box Crasher (ikinci dalga füze); ön hattı kalabalıklaştırır, LDM süpürücü 6 dengeyi tutar",
       "CAM": "Dahi 10 (Guti / Özil / Alex / Kaká tipi); koşan değil yaratan, yüksek Vision/Composure + uzaktan şut",
       "RM": "İçe kıvrılan kurucu sağ kanat (Quaresma tipi); sağ bekle kombinasyon",
       "LM": "Bitirici sol kanat (Ronaldo modeli içe kesen); 1'e 1 + plase/falso",
@@ -42,7 +42,7 @@
     },
     "slotTags": {
       "GK": [
-        "gk_line_keeper"
+        "gk_sweep"
       ],
       "RB": [
         "fb_overlap",
@@ -61,7 +61,7 @@
         "cdm_screen"
       ],
       "RDM": [
-        "cdm_destroyer"
+        "cdm_box_crash"
       ],
       "CAM": [
         "cam_create",
