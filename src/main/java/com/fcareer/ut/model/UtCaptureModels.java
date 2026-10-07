@@ -27,7 +27,8 @@ public final class UtCaptureModels {
                               Integer rarityId, String cardType, int teamId, int leagueId, int nation, Integer gender, boolean untradeable,
                               List<String> faceLabels, List<Integer> faceStats, Integer skillMoves, Integer weakFoot, Integer preferredFoot,
                               Integer playStyle, List<Integer> baseTraits, List<Integer> iconTraits, List<Integer> plusRoles,
-                              Long lastSalePrice, Long marketMin, Long marketMax, Long marketAverage, boolean duplicate, String pile) {
+                              Long lastSalePrice, Long marketMin, Long marketMax, Long marketAverage, boolean duplicate, String pile,
+                              Long playerId, String club, String league, String nationality, Map<String, Integer> attrs) {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -43,7 +44,7 @@ public final class UtCaptureModels {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record MarketPrice(String source, long assetId, String name, int rating, Long buyNow, Long currentBid, Long startingBid, Long lastSale,
-                              Long expiresIn) {
+                              Long expiresIn, CaptureCard card) {
     }
 
     public record Reward(String type, Long value, int count) {

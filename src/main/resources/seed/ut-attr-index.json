@@ -1,0 +1,7 @@
+{
+  "_note": "players_meta.json 'a' dizisinin sırası. Katalogla (19.790 ortak oyuncu) birebir eşitlik oranıyla doğrulandı: her indeks tek bir attribute'a %86-99 uyuyor.",
+  "order": ["Acceleration", "SprintSpeed", "Agility", "Balance", "Jumping", "Stamina", "Strength", "Reactions", "Aggression", "Composure",
+    "Interceptions", "Positioning", "Vision", "BallControl", "Crossing", "Dribbling", "Finishing", "FKAccuracy", "Heading", "LongPassing",
+    "ShortPassing", "DefAwareness", "ShotPower", "LongShots", "StandingTackle", "SlidingTackle", "Volleys", "Curve", "Penalties",
+    "GKDiving", "GKHandling", "GKKicking", "GKReflexes", "GKPositioning"]
+}

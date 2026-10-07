@@ -21,11 +21,15 @@ import com.fcareer.ut.model.UtCaptureModels.SbcSetView;
 import com.fcareer.ut.model.UtCaptureModels.SquadSlot;
 import com.fcareer.ut.model.UtCaptureModels.SquadSummary;
 import com.fcareer.ut.model.UtCaptureModels.StyleMod;
+import com.fcareer.ut.repository.UtCatalogJoinRepository;
+import com.fcareer.ut.repository.UtCatalogJoinRepository.CatalogInfo;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -39,6 +43,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.springframework.core.io.ClassPathResource;
 
 /**
  * Extension yakalamalarını (ut_capture_mapping.md) işler: whitelist dışını ve oturum/hesap uçlarını atar, tanım JOIN'i yapar.
@@ -51,6 +56,10 @@ public class UtCaptureService {
 
     private static final List<String> DENY = List.of("/auth", "accountinfo", "connect", "nucleus", "phishing", "/fc/user/season", "sid=");
     private static final String USER_ENDPOINT = "/fc/user";
+    private static final String LEGENDS_KEY = "\"LegendsPlayers\"";
+    private static final String PLAYERS_KEY = "\"Players\"";
+    private static final Pattern LEGEND_ID = Pattern.compile("\"id\"\\s*:\\s*(\\d+)");
+    private static final Pattern READABLE_NAME = Pattern.compile("[A-Za-z0-9 .'&+-]{3,40}");
     private static final Pattern OBJECT_WITH_ID = Pattern.compile("\\{[^{}]*\"id\"\\s*:\\s*\\d+[^{}]*}");
     private static final List<String> OUTFIELD_FACE = List.of("PAC", "SHO", "PAS", "DRI", "DEF", "PHY");
     private static final List<String> GOALKEEPER_FACE = List.of("DIV", "HAN", "KIC", "REF", "SPD", "POS");
@@ -58,10 +67,25 @@ public class UtCaptureService {
     private static final int STARTERS = 11;
     private static final int MAX_SBC_DETAILS = 50;
 
+    private static final String ATTR_INDEX_RESOURCE = "seed/ut-attr-index.json";
+
     private final ObjectMapper objectMapper;
+    private final UtCatalogJoinRepository catalogJoinRepository;
+
+    private List<String> attrOrder;
+
+    @PostConstruct
+    void loadAttrOrder() {
+        try (InputStream in = new ClassPathResource(ATTR_INDEX_RESOURCE).getInputStream()) {
+            attrOrder = new ArrayList<>();
+            objectMapper.readTree(in).path("order").forEach(n -> attrOrder.add(n.asText()));
+        } catch (IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+    }
 
     enum Kind {
-        RARITY, DEFINITIONS, SQUAD_DATA, KEY_ATTRIBUTES, CLUB, STORAGE, PURCHASED, SQUAD_ACTIVE, SQUAD_LIST, TRANSFER_MARKET, TRADE_PILE,
+        RARITY, DEFINITIONS, META, SQUAD_DATA, KEY_ATTRIBUTES, CLUB, STORAGE, PURCHASED, SQUAD_ACTIVE, SQUAD_LIST, TRANSFER_MARKET, TRADE_PILE,
         WATCH_LIST, TRADE_STATUS, SBC_HUB, SBC_DETAIL, OBJECTIVES, ACADEMY, CREDITS
     }
 
@@ -89,7 +113,7 @@ public class UtCaptureService {
                 continue;
             }
             raw.computeIfAbsent(kind, k -> new ArrayList<>()).add(capture);
-            if (kind == Kind.DEFINITIONS) {
+            if (kind == Kind.DEFINITIONS || kind == Kind.META) {
                 continue;
             }
             try {
@@ -106,17 +130,18 @@ public class UtCaptureService {
         Map<Integer, String> positionNames = config.positions().stream().collect(HashMap::new, (m, p) -> m.put(p.uniqueId(), p.uniqueName()), HashMap::putAll);
         Map<String, FormationConfig> formationsByName = config.formations().stream().collect(HashMap::new, (m, f) -> m.put(f.name(), f), HashMap::putAll);
         Set<Long> duplicates = duplicateIds(bodies.getOrDefault(Kind.STORAGE, List.of()));
+        Ctx ctx = context(definitions, rarities, bodies, raw.get(Kind.META), duplicates);
 
         Map<Long, CaptureCard> cards = new LinkedHashMap<>();
-        addCards(cards, bodies.get(Kind.CLUB), "club", definitions, rarities, duplicates);
-        addCards(cards, bodies.get(Kind.STORAGE), "storage", definitions, rarities, duplicates);
-        addCards(cards, bodies.get(Kind.PURCHASED), "purchased", definitions, rarities, duplicates);
+        addCards(cards, bodies.get(Kind.CLUB), "club", ctx);
+        addCards(cards, bodies.get(Kind.STORAGE), "storage", ctx);
+        addCards(cards, bodies.get(Kind.PURCHASED), "purchased", ctx);
 
         List<MarketPrice> prices = new ArrayList<>();
-        addPrices(prices, bodies.get(Kind.TRANSFER_MARKET), "transfermarket", definitions);
-        addPrices(prices, bodies.get(Kind.TRADE_PILE), "tradepile", definitions);
-        addPrices(prices, bodies.get(Kind.WATCH_LIST), "watchlist", definitions);
-        addPrices(prices, bodies.get(Kind.TRADE_STATUS), "tradestatus", definitions);
+        addPrices(prices, bodies.get(Kind.TRANSFER_MARKET), "transfermarket", ctx);
+        addPrices(prices, bodies.get(Kind.TRADE_PILE), "tradepile", ctx);
+        addPrices(prices, bodies.get(Kind.WATCH_LIST), "watchlist", ctx);
+        addPrices(prices, bodies.get(Kind.TRADE_STATUS), "tradestatus", ctx);
 
         Map<String, Integer> byKind = new LinkedHashMap<>();
         raw.forEach((k, v) -> byKind.put(k.name(), v.size()));
@@ -124,7 +149,7 @@ public class UtCaptureService {
         CaptureStats stats = new CaptureStats(captures.size(), processed, stripped, ignored, invalid, byKind, definitions.names().size(),
                 definitions.truncated(), warnings);
         log.info("Capture processed received : {} processed : {} stripped : {} ignored : {} invalid : {}", captures.size(), processed, stripped, ignored, invalid);
-        return new CaptureResult(stats, new ArrayList<>(cards.values()), activeSquad(last(bodies, Kind.SQUAD_ACTIVE), definitions, rarities, formationsByName, positionNames),
+        return new CaptureResult(stats, new ArrayList<>(cards.values()), activeSquad(last(bodies, Kind.SQUAD_ACTIVE), ctx, formationsByName, positionNames),
                 squads(last(bodies, Kind.SQUAD_LIST)), prices, objectives(last(bodies, Kind.OBJECTIVES)), sbcSets(bodies.get(Kind.SBC_HUB)),
                 sbcDetails(raw.get(Kind.SBC_DETAIL), bodies.get(Kind.SBC_DETAIL)), evolutions(bodies.get(Kind.ACADEMY)),
                 credits(last(bodies, Kind.CREDITS)), currencies(last(bodies, Kind.CREDITS)), config);
@@ -146,6 +171,9 @@ public class UtCaptureService {
         }
         if (path.endsWith("/items/web/players.json")) {
             return Kind.DEFINITIONS;
+        }
+        if (path.endsWith("/items/web/players_meta.json")) {
+            return Kind.META;
         }
         if (path.endsWith("squaddata.json")) {
             return Kind.SQUAD_DATA;
@@ -205,6 +233,7 @@ public class UtCaptureService {
 
     private Definitions definitions(List<Capture> captures) {
         Map<Long, String> names = new HashMap<>();
+        Set<Long> legends = new HashSet<>();
         boolean truncated = false;
         for (Capture capture : captures) {
             try {
@@ -212,6 +241,7 @@ public class UtCaptureService {
             } catch (IOException e) {
                 truncated = true;
             }
+            collectLegends(capture.body(), legends);
             Matcher matcher = OBJECT_WITH_ID.matcher(capture.body());
             while (matcher.find()) {
                 try {
@@ -225,7 +255,19 @@ public class UtCaptureService {
                 }
             }
         }
-        return new Definitions(names, truncated);
+        return new Definitions(names, truncated, legends);
+    }
+
+    private static void collectLegends(String body, Set<Long> legends) {
+        int start = body.indexOf(LEGENDS_KEY);
+        if (start < 0) {
+            return;
+        }
+        int end = body.indexOf(PLAYERS_KEY, start);
+        Matcher matcher = LEGEND_ID.matcher(body.substring(start, end < 0 ? body.length() : end));
+        while (matcher.find()) {
+            legends.add(Long.parseLong(matcher.group(1)));
+        }
     }
 
     private Map<Integer, String> rarities(List<JsonNode> bodies) {
@@ -280,14 +322,13 @@ public class UtCaptureService {
         return ids;
     }
 
-    private void addCards(Map<Long, CaptureCard> cards, List<JsonNode> bodies, String pile, Definitions definitions, Map<Integer, String> rarities,
-                          Set<Long> duplicates) {
+    private void addCards(Map<Long, CaptureCard> cards, List<JsonNode> bodies, String pile, Ctx ctx) {
         if (Objects.isNull(bodies)) {
             return;
         }
         for (JsonNode body : bodies) {
             body.path("itemData").forEach(item -> {
-                CaptureCard card = card(item, pile, definitions, rarities, duplicates);
+                CaptureCard card = card(item, pile, ctx);
                 if (Objects.nonNull(card)) {
                     cards.put(card.instanceId(), card);
                 }
@@ -295,7 +336,7 @@ public class UtCaptureService {
         }
     }
 
-    private CaptureCard card(JsonNode item, String pile, Definitions definitions, Map<Integer, String> rarities, Set<Long> duplicates) {
+    private CaptureCard card(JsonNode item, String pile, Ctx ctx) {
         if (Objects.isNull(item) || item.isNull() || !item.hasNonNull("assetId") || (item.hasNonNull("itemType") && !"player".equals(item.get("itemType").asText()))) {
             return null;
         }
@@ -307,18 +348,31 @@ public class UtCaptureService {
             positions.add(position);
         }
         int rarityId = item.path("rareflag").asInt(-1);
-        String rarity = rarities.get(rarityId);
+        String rarityName = ctx.rarities().get(rarityId);
+        String rarity = Objects.nonNull(rarityName) && READABLE_NAME.matcher(rarityName).matches() ? rarityName : null;
+        CatalogInfo info = ctx.catalog().get(assetId);
+        int teamId = item.path("teamid").asInt(item.path("teamId").asInt());
+        int leagueId = item.path("leagueId").asInt();
+        int nationId = item.path("nation").asInt();
         List<String> face = GOALKEEPER.equals(position) ? GOALKEEPER_FACE : OUTFIELD_FACE;
-        return new CaptureCard(item.path("id").asLong(), assetId, definitions.names().get(assetId), item.path("rating").asInt(), position, positions, rarity,
-                rarityId < 0 ? null : rarityId, cardType(rarity), item.path("teamid").asInt(item.path("teamId").asInt()), item.path("leagueId").asInt(),
-                item.path("nation").asInt(), item.hasNonNull("gender") ? item.get("gender").asInt() : null, item.path("untradeable").asBoolean(), face,
+        Integer gender = item.hasNonNull("gender") ? Integer.valueOf(item.get("gender").asInt()) : (Objects.nonNull(info) ? info.gender() : null);
+        return new CaptureCard(item.path("id").asLong(), assetId, ctx.definitions().names().get(assetId), item.path("rating").asInt(), position, positions, rarity,
+                rarityId < 0 ? null : rarityId, cardType(rarity, ctx.definitions().legends().contains(assetId)), teamId, leagueId,
+                nationId, gender, item.path("untradeable").asBoolean(), face,
                 ints(item.path("attributeArray")), intOrNull(item, "skillmoves"), intOrNull(item, "weakfootabilitytypecode"), intOrNull(item, "preferredfoot"),
                 intOrNull(item, "playStyle"), ints(item.path("baseTraits")), ints(item.path("iconTraits")), ints(item.path("plusRoles")),
                 longOrNull(item, "lastSalePrice"), longOrNull(item, "marketDataMinPrice"), longOrNull(item, "marketDataMaxPrice"),
-                longOrNull(item, "marketAverage"), duplicates.contains(item.path("id").asLong()), pile);
+                longOrNull(item, "marketAverage"), ctx.duplicates().contains(item.path("id").asLong()), pile,
+                Objects.nonNull(info) ? info.playerId() : null,
+                firstNonNull(ctx.clubs().get(teamId), Objects.nonNull(info) ? info.club() : null),
+                firstNonNull(ctx.leagues().get(leagueId), Objects.nonNull(info) ? info.league() : null),
+                firstNonNull(ctx.nations().get(nationId), Objects.nonNull(info) ? info.nation() : null), ctx.attrs().get(assetId));
     }
 
-    private static String cardType(String rarity) {
+    private static String cardType(String rarity, boolean legend) {
+        if (legend) {
+            return "ICON";
+        }
         if (Objects.isNull(rarity)) {
             return null;
         }
@@ -332,7 +386,7 @@ public class UtCaptureService {
         return lower.contains("hero") ? "HERO" : null;
     }
 
-    private void addPrices(List<MarketPrice> prices, List<JsonNode> bodies, String source, Definitions definitions) {
+    private void addPrices(List<MarketPrice> prices, List<JsonNode> bodies, String source, Ctx ctx) {
         if (Objects.isNull(bodies)) {
             return;
         }
@@ -343,14 +397,14 @@ public class UtCaptureService {
                     return;
                 }
                 long assetId = item.get("assetId").asLong();
-                prices.add(new MarketPrice(source, assetId, definitions.names().get(assetId), item.path("rating").asInt(), longOrNull(auction, "buyNowPrice"),
-                        longOrNull(auction, "currentBid"), longOrNull(auction, "startingBid"), longOrNull(item, "lastSalePrice"), longOrNull(auction, "expires")));
+                prices.add(new MarketPrice(source, assetId, ctx.definitions().names().get(assetId), item.path("rating").asInt(), longOrNull(auction, "buyNowPrice"),
+                        longOrNull(auction, "currentBid"), longOrNull(auction, "startingBid"), longOrNull(item, "lastSalePrice"), longOrNull(auction, "expires"),
+                        card(item, source, ctx)));
             });
         }
     }
 
-    private ActiveSquad activeSquad(JsonNode squad, Definitions definitions, Map<Integer, String> rarities, Map<String, FormationConfig> formations,
-                                    Map<Integer, String> positionNames) {
+    private ActiveSquad activeSquad(JsonNode squad, Ctx ctx, Map<String, FormationConfig> formations, Map<Integer, String> positionNames) {
         if (Objects.isNull(squad)) {
             return null;
         }
@@ -361,7 +415,7 @@ public class UtCaptureService {
             int index = player.path("index").asInt();
             String position = Objects.nonNull(config) && index < config.positionNames().size() ? config.positionNames().get(index) : null;
             slots.add(new SquadSlot(index, index < STARTERS, position, intOrNull(player, "chemistry"),
-                    card(player.path("itemData"), "squad", definitions, rarities, Set.of())));
+                    card(player.path("itemData"), "squad", ctx)));
         });
         return new ActiveSquad(formation, Objects.nonNull(config) ? config.label() : formationLabel(formation), intOrNull(squad, "chemistry"), intOrNull(squad, "rating"),
                 squad.path("squadName").asText(null), slots);
@@ -461,6 +515,73 @@ public class UtCaptureService {
         return node.hasNonNull(field) ? node.get(field).asLong() : null;
     }
 
-    private record Definitions(Map<Long, String> names, boolean truncated) {
+    private record Definitions(Map<Long, String> names, boolean truncated, Set<Long> legends) {
+    }
+
+    private record Ctx(Definitions definitions, Map<Integer, String> rarities, Map<Long, CatalogInfo> catalog, Map<Integer, String> leagues,
+                       Map<Integer, String> nations, Map<Integer, String> clubs, Map<Long, Map<String, Integer>> attrs, Set<Long> duplicates) {
+    }
+
+    private static <T> T firstNonNull(T first, T second) {
+        return Objects.nonNull(first) ? first : second;
+    }
+
+    private List<JsonNode> allItems(Map<Kind, List<JsonNode>> bodies) {
+        List<JsonNode> items = new ArrayList<>();
+        List.of(Kind.CLUB, Kind.STORAGE, Kind.PURCHASED).forEach(k -> bodies.getOrDefault(k, List.of()).forEach(b -> b.path("itemData").forEach(items::add)));
+        List.of(Kind.TRANSFER_MARKET, Kind.TRADE_PILE, Kind.WATCH_LIST, Kind.TRADE_STATUS)
+                .forEach(k -> bodies.getOrDefault(k, List.of()).forEach(b -> b.path("auctionInfo").forEach(a -> items.add(a.path("itemData")))));
+        bodies.getOrDefault(Kind.SQUAD_ACTIVE, List.of()).forEach(b -> b.path("players").forEach(p -> items.add(p.path("itemData"))));
+        return items.stream().filter(i -> i.hasNonNull("assetId") && "player".equals(i.path("itemType").asText("player"))).toList();
+    }
+
+    private Ctx context(Definitions definitions, Map<Integer, String> rarities, Map<Kind, List<JsonNode>> bodies, List<Capture> metaCaptures, Set<Long> duplicates) {
+        List<JsonNode> items = allItems(bodies);
+        Set<Long> assetIds = new HashSet<>();
+        items.forEach(i -> assetIds.add(i.get("assetId").asLong()));
+        Map<Long, CatalogInfo> catalog = catalogJoinRepository.findByEaResourceIds(assetIds);
+        Map<Integer, String> leagues = new HashMap<>();
+        Map<Integer, String> nations = new HashMap<>();
+        Map<Integer, String> clubs = new HashMap<>();
+        items.forEach(i -> {
+            CatalogInfo info = catalog.get(i.get("assetId").asLong());
+            if (Objects.nonNull(info)) {
+                putIfPresent(leagues, i.path("leagueId").asInt(), info.league());
+                putIfPresent(nations, i.path("nation").asInt(), info.nation());
+                putIfPresent(clubs, i.path("teamid").asInt(i.path("teamId").asInt()), info.club());
+            }
+        });
+        return new Ctx(definitions, rarities, catalog, leagues, nations, clubs, metaAttributes(metaCaptures, assetIds), duplicates);
+    }
+
+    private static void putIfPresent(Map<Integer, String> map, int id, String name) {
+        if (Objects.nonNull(name)) {
+            map.putIfAbsent(id, name);
+        }
+    }
+
+    private Map<Long, Map<String, Integer>> metaAttributes(List<Capture> captures, Set<Long> assetIds) {
+        Map<Long, Map<String, Integer>> result = new HashMap<>();
+        if (Objects.isNull(captures)) {
+            return result;
+        }
+        for (Capture capture : captures) {
+            try {
+                JsonNode players = objectMapper.readTree(capture.body()).path("players");
+                for (Long id : assetIds) {
+                    JsonNode values = players.path(String.valueOf(id)).path("a");
+                    if (values.isArray() && values.size() >= attrOrder.size()) {
+                        Map<String, Integer> attrs = new LinkedHashMap<>();
+                        for (int i = 0; i < attrOrder.size(); i++) {
+                            attrs.put(attrOrder.get(i), values.get(i).asInt());
+                        }
+                        result.put(id, attrs);
+                    }
+                }
+            } catch (IOException e) {
+                log.warn("players_meta could not be parsed");
+            }
+        }
+        return result;
     }
 }

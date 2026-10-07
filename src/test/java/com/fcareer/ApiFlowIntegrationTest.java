@@ -240,6 +240,13 @@ class ApiFlowIntegrationTest {
         assertThat(squadEval.at("/data/slots/0/roleFit").isNumber()).isTrue();
         assertThat(squadEval.at("/data/slots/0/card/chemStyles")).hasSize(3);
         assertThat(squadEval.at("/data/slots/1/roleFit").isMissingNode()).isTrue();
+        JsonNode inlineEval = call(post("/api/v1/ut/squad/evaluate"), Map.of("slots", new Object[]{
+                Map.of("slotId", "S1", "position", "ST", "roleId", "poacher_attack",
+                        "card", Map.of("name", "Ozel kart", "overall", 90, "positions", new String[]{"ST"},
+                                "attrs", Map.of("Finishing", 92, "Positioning", 90, "Acceleration", 88, "SprintSpeed", 90)))}), null, 200);
+        assertThat(inlineEval.at("/success").asBoolean()).as(inlineEval.toString()).isTrue();
+        assertThat(inlineEval.at("/data/slots/0/card/metaRating").asDouble()).isGreaterThan(0);
+        assertThat(inlineEval.at("/data/slots/0/roleFit").isNumber()).isTrue();
         JsonNode tier = call(get("/api/v1/ut/meta/tier?pos=ST&limit=5"), null, null, 200);
         assertThat(tier.at("/success").asBoolean()).as(tier.toString()).isTrue();
         assertThat(tier.at("/data").isArray()).isTrue();

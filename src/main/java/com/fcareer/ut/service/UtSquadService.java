@@ -1,6 +1,8 @@
 package com.fcareer.ut.service;
 
 import com.fcareer.catalog.service.PlayerService;
+import com.fcareer.common.exception.InvalidTacticException;
+import com.fcareer.fitengine.model.Attr;
 import com.fcareer.fitengine.model.FitPlayer;
 import com.fcareer.fitengine.model.FitRole;
 import com.fcareer.fitengine.model.IntentProfile;
@@ -10,6 +12,7 @@ import com.fcareer.fitengine.service.SetupModifier;
 import com.fcareer.roles.service.RoleService;
 import com.fcareer.tactics.service.TacticResolver;
 import com.fcareer.ut.model.UtMetaModels.MetaCard;
+import com.fcareer.ut.model.UtSquadModels.InlineCard;
 import com.fcareer.ut.model.UtSquadModels.SlotEvaluation;
 import com.fcareer.ut.model.UtSquadModels.SlotInput;
 import com.fcareer.ut.model.UtSquadModels.SquadEvaluateRequest;
@@ -18,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -38,16 +42,35 @@ public class UtSquadService {
     private final UtMetaService utMetaService;
 
     public SquadEvaluation evaluate(SquadEvaluateRequest request) {
-        List<Long> ids = request.slots().stream().map(SlotInput::playerId).distinct().toList();
-        Map<Long, FitPlayer> players = playerService.fitPlayers(ids, request.gameVersionId()).stream()
+        List<Long> ids = request.slots().stream().filter(s -> Objects.isNull(s.card())).map(SlotInput::playerId).filter(Objects::nonNull).distinct().toList();
+        Map<Long, FitPlayer> players = ids.isEmpty() ? Map.of() : playerService.fitPlayers(ids, request.gameVersionId()).stream()
                 .collect(Collectors.toMap(FitPlayer::getId, Function.identity()));
         List<SlotEvaluation> slots = new ArrayList<>();
         for (SlotInput slot : request.slots()) {
-            slots.add(evaluateSlot(slot, players.get(slot.playerId()), request));
+            slots.add(evaluateSlot(slot, resolvePlayer(slot, players), request));
         }
         double meta = slots.stream().mapToDouble(s -> s.card().metaRating()).average().orElse(0);
         double overall = slots.stream().mapToInt(s -> s.card().overall()).average().orElse(0);
         return new SquadEvaluation(slots, round1(meta), round1(overall), true);
+    }
+
+    private FitPlayer resolvePlayer(SlotInput slot, Map<Long, FitPlayer> catalogPlayers) {
+        if (Objects.nonNull(slot.card())) {
+            return inlinePlayer(slot, slot.card());
+        }
+        FitPlayer player = Objects.isNull(slot.playerId()) ? null : catalogPlayers.get(slot.playerId());
+        if (Objects.isNull(player)) {
+            throw new InvalidTacticException("slot card " + slot.slotId());
+        }
+        return player;
+    }
+
+    private FitPlayer inlinePlayer(SlotInput slot, InlineCard card) {
+        Map<Attr, Integer> attrs = new EnumMap<>(Attr.class);
+        card.attrs().forEach((key, value) -> Attr.fromKey(key).ifPresent(attr -> attrs.put(attr, value)));
+        List<String> positions = Objects.isNull(card.positions()) || card.positions().isEmpty() ? List.of(slot.position()) : card.positions();
+        return FitPlayer.builder().id(-1L).name(Objects.requireNonNullElse(card.name(), slot.slotId())).overall(card.overall())
+                .positions(positions).attrs(attrs).playstyles(Map.of()).build();
     }
 
     private SlotEvaluation evaluateSlot(SlotInput slot, FitPlayer player, SquadEvaluateRequest request) {

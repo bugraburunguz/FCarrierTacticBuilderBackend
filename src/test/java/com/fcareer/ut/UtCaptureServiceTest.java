@@ -3,10 +3,15 @@ package com.fcareer.ut;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.ut.model.UtCaptureModels.Capture;
 import com.fcareer.ut.model.UtCaptureModels.CaptureResult;
+import com.fcareer.ut.repository.UtCatalogJoinRepository;
+import com.fcareer.ut.repository.UtCatalogJoinRepository.CatalogInfo;
 import com.fcareer.ut.service.UtCaptureService;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Map;
+import org.mockito.Mockito;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -15,7 +20,21 @@ class UtCaptureServiceTest {
     private static final String UT = "https://utas.mob.v1.prd.futc-ext.gcp.ea.com/ut/game/fc27";
     private static final String CDN = "https://www.ea.com/ea-sports-fc/ultimate-team/web-app/content/GUID/2027/fut";
 
-    private final UtCaptureService service = new UtCaptureService(new ObjectMapper());
+    private final UtCaptureService service = newService(Map.of());
+
+    private static UtCaptureService newService(Map<Long, CatalogInfo> catalog) {
+        try {
+            UtCatalogJoinRepository repository = Mockito.mock(UtCatalogJoinRepository.class);
+            Mockito.when(repository.findByEaResourceIds(Mockito.anyCollection())).thenReturn(catalog);
+            UtCaptureService created = new UtCaptureService(new ObjectMapper(), repository);
+            Method load = UtCaptureService.class.getDeclaredMethod("loadAttrOrder");
+            load.setAccessible(true);
+            load.invoke(created);
+            return created;
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 
     private static Capture capture(String url, long ts, String body) {
         return new Capture(url, 200, ts, body);
@@ -97,5 +116,25 @@ class UtCaptureServiceTest {
         CaptureResult result = service.process(List.of(capture(UT + "/playStats", 1, "{}"), capture(UT + "/club", 2, "not json"), new Capture(null, 200, 3L, "{}")));
         assertThat(result.stats().ignored()).isEqualTo(1);
         assertThat(result.stats().invalid()).isEqualTo(2);
+    }
+
+    @Test
+    void learnsLeagueAndNationNamesFromCatalogMatchesAndAttachesMetaAttributes() {
+        UtCaptureService withCatalog = newService(Map.of(183277L, new CatalogInfo(77L, 0, "Brazil", "Arsenal", "Premier League")));
+        StringBuilder attrs = new StringBuilder();
+        for (int i = 0; i < 34; i++) {
+            attrs.append(i == 0 ? "" : ",").append(60 + i);
+        }
+        String meta = "{\"attrKeys\":[],\"players\":{\"99\":{\"a\":[" + attrs + "]}}}";
+        CaptureResult result = withCatalog.process(List.of(
+                capture(CDN + "/items/web/players_meta.json", 1, meta),
+                capture(UT + "/club", 2, "{\"itemData\":[" + item(1, 183277, 89, "LM", 72) + "," + item(2, 99, 90, "ST", 5) + "]}")));
+        assertThat(result.cards().get(0).playerId()).isEqualTo(77L);
+        assertThat(result.cards().get(0).league()).isEqualTo("Premier League");
+        assertThat(result.cards().get(1).playerId()).isNull();
+        assertThat(result.cards().get(1).league()).isEqualTo("Premier League");
+        assertThat(result.cards().get(1).nationality()).isEqualTo("Brazil");
+        assertThat(result.cards().get(1).attrs()).containsEntry("Acceleration", 60).containsEntry("GKPositioning", 93);
+        assertThat(result.cards().get(0).attrs()).isNull();
     }
 }
