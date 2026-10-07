@@ -103,7 +103,7 @@ public class UtMetaService {
         return card(player, resolved, true);
     }
 
-    private MetaCard card(FitPlayer player, String position, boolean withStyles) {
+    MetaCard card(FitPlayer player, String position, boolean withStyles) {
         double base = metaRating(player.getAttrs(), player, position);
         List<ChemStyleResult> styles = new ArrayList<>();
         for (Map.Entry<String, List<String>> style : seed.chemStyles().entrySet()) {

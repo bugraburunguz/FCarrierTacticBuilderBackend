@@ -232,6 +232,14 @@ class ApiFlowIntegrationTest {
         assertThat(sbc.at("/data/feasible").asBoolean()).as(sbc.toString()).isTrue();
         assertThat(sbc.at("/data/totalScore").asInt()).isEqualTo(360);
         assertThat(call(get("/api/v1/ut/sbc/score-table"), null, null, 200).at("/data/rows")).isNotEmpty();
+        JsonNode squadEval = call(post("/api/v1/ut/squad/evaluate"), Map.of("slots", new Object[]{
+                Map.of("slotId", "S1", "position", "ST", "playerId", playerId, "roleId", "poacher_attack"),
+                Map.of("slotId", "S2", "position", "ST", "playerId", playerId)},
+                "setup", Map.of("buildUp", "Counter", "depth", 50)), null, 200);
+        assertThat(squadEval.at("/success").asBoolean()).as(squadEval.toString()).isTrue();
+        assertThat(squadEval.at("/data/slots/0/roleFit").isNumber()).isTrue();
+        assertThat(squadEval.at("/data/slots/0/card/chemStyles")).hasSize(3);
+        assertThat(squadEval.at("/data/slots/1/roleFit").isMissingNode()).isTrue();
         JsonNode tier = call(get("/api/v1/ut/meta/tier?pos=ST&limit=5"), null, null, 200);
         assertThat(tier.at("/success").asBoolean()).as(tier.toString()).isTrue();
         assertThat(tier.at("/data").isArray()).isTrue();
