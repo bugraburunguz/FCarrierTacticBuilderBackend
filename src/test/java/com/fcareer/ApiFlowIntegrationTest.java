@@ -211,7 +211,14 @@ class ApiFlowIntegrationTest {
         assertThat(wonderkids.at("/data").isArray()).isTrue();
         wonderkids.at("/data").forEach(k -> assertThat(k.at("/gap").asInt()).isEqualTo(k.at("/potential").asInt() - k.at("/overall").asInt()));
 
-        JsonNode metaFormations = call(get("/api/v1/ut/meta/formations"), null, null, 200);
+        JsonNode plainCb = call(post("/api/v1/recommend/preview"), Map.of("roleId", "ball_playing_defender_defend", "position", "CB", "limit", 5), null, 200);
+        JsonNode highLineCb = call(post("/api/v1/recommend/preview"), Map.of("roleId", "ball_playing_defender_defend", "position", "CB", "limit", 5,
+                "setup", Map.of("buildUp", "Short", "depth", 90)), null, 200);
+        assertThat(highLineCb.at("/success").asBoolean()).as(highLineCb.toString()).isTrue();
+        assertThat(plainCb.at("/data/items/0/setupDelta").isMissingNode()).isTrue();
+        assertThat(highLineCb.at("/data/items/0/setupDelta").isNumber()).isTrue();
+
+        JsonNode metaFormations =call(get("/api/v1/ut/meta/formations"), null, null, 200);
         assertThat(metaFormations.at("/data/formations")).isNotEmpty();
         JsonNode chemStyle = call(post("/api/v1/ut/card/" + playerId + "/chemstyle"), null, null, 200);
         assertThat(chemStyle.at("/success").asBoolean()).as(chemStyle.toString()).isTrue();

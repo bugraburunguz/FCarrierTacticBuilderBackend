@@ -1,5 +1,7 @@
 package com.fcareer.recommendation.model.request;
 
+import com.fcareer.fitengine.model.TeamSetup;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -40,6 +42,9 @@ public class RecommendSlotRequest {
     private Short gender;
 
     private Long currentPlayerId;
+
+    @Valid
+    private TeamSetup setup;
 
     private Integer leagueId;
 

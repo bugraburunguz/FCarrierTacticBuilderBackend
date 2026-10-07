@@ -86,7 +86,7 @@ public class TransferTargetService {
     private PositionTargets forSlot(TransferTargetRequest request, CareerService.CareerSquad squad, TargetSlot slot, int average,
                                     Set<Integer> bandLeagues, int perPosition, Set<Long> used) {
         FitRole role = roleService.getFitRole(slot.getRoleId());
-        IntentProfile intent = tacticResolver.slotIntent(SLOT_ID, slot.getPosition(), null, slot.getRoleId(), slot.getTags());
+        IntentProfile intent = tacticResolver.slotIntent(SLOT_ID, slot.getPosition(), null, slot.getRoleId(), slot.getTags(), request.getSetup());
         RecommendSlotRequest base = RecommendSlotRequest.builder().roleId(slot.getRoleId()).position(slot.getPosition()).tags(slot.getTags()).build();
 
         Map<Long, PlayerSummaryResponse> pool = new LinkedHashMap<>();

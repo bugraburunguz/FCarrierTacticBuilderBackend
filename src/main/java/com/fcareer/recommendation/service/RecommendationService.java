@@ -18,6 +18,7 @@ import com.fcareer.fitengine.model.response.IntentFitResponse;
 import com.fcareer.fitengine.model.response.RoleFitResponse;
 import com.fcareer.fitengine.service.IntentFitService;
 import com.fcareer.fitengine.service.RoleFitService;
+import com.fcareer.fitengine.service.SetupModifier;
 import com.fcareer.fitengine.service.SquadFitService;
 import com.fcareer.recommendation.model.request.RecommendSlotRequest;
 import com.fcareer.recommendation.model.request.SlotScope;
@@ -51,6 +52,7 @@ public class RecommendationService {
     private static final String RECOMMEND = "RECOMMEND_SLOT";
     private static final String SLOT_ID = "SLOT";
     private static final int CANDIDATE_POOL = MAX_PAGE_SIZE;
+    private static final double MAX_SCORE = 100.0;
     private static final int DEFAULT_LIMIT = 10;
     private static final int PREVIEW_LIMIT = 8;
     private static final Short DEFAULT_PREVIEW_GENDER = 0;
@@ -75,10 +77,11 @@ public class RecommendationService {
     private final CreditGuard creditGuard;
     private final BillingProperties billingProperties;
     private final FitEngineProperties fitEngineProperties;
+    private final SetupModifier setupModifier;
 
     public CreditedResponse<RecommendationResponse> recommend(Long userId, RecommendSlotRequest request) {
         FitRole role = roleService.getFitRole(request.getRoleId());
-        IntentProfile intent = tacticResolver.slotIntent(SLOT_ID, request.getPosition(), null, request.getRoleId(), request.getTags());
+        IntentProfile intent = tacticResolver.slotIntent(SLOT_ID, request.getPosition(), null, request.getRoleId(), request.getTags(), request.getSetup());
         List<Long> squadIds = List.of();
         Short gameVersion = request.getGameVersionId();
         Short gender = null;
@@ -102,7 +105,7 @@ public class RecommendationService {
 
     public RecommendationResponse preview(RecommendSlotRequest request) {
         FitRole role = roleService.getFitRole(request.getRoleId());
-        IntentProfile intent = tacticResolver.slotIntent(SLOT_ID, request.getPosition(), null, request.getRoleId(), request.getTags());
+        IntentProfile intent = tacticResolver.slotIntent(SLOT_ID, request.getPosition(), null, request.getRoleId(), request.getTags(), request.getSetup());
         Short gender = Objects.isNull(request.getGender()) ? DEFAULT_PREVIEW_GENDER : request.getGender();
         PlayerSearchRequest search = candidateSearch(role, intent, request, List.of(), request.getGameVersionId(), null, gender);
         Map<Long, PlayerSummaryResponse> summaries = playerService.search(search).getItems().stream()
@@ -115,7 +118,7 @@ public class RecommendationService {
     public RecommendationResponse slotView(Long userId, SlotViewRequest view) {
         RecommendSlotRequest request = view.getSlot();
         FitRole role = roleService.getFitRole(request.getRoleId());
-        IntentProfile intent = tacticResolver.slotIntent(SLOT_ID, request.getPosition(), null, request.getRoleId(), request.getTags());
+        IntentProfile intent = tacticResolver.slotIntent(SLOT_ID, request.getPosition(), null, request.getRoleId(), request.getTags(), request.getSetup());
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, view.getCareerId());
         if (view.getScope() == SlotScope.SQUAD && squad.playerIds().isEmpty()) {
             return RecommendationResponse.builder().roleId(role.getId()).position(request.getPosition()).items(List.of()).build();
@@ -236,8 +239,10 @@ public class RecommendationService {
                                         IntentProfile intent, String position, Double currentScore) {
         RoleFitResponse roleFit = roleFitService.calculate(player, role, intent, position);
         IntentFitResponse intentFit = intent.hasTags() ? intentFitService.calculate(player, intent) : null;
-        double combined = round1(squadFitService.combine(roleFit, intentFit, intent));
+        double setupDelta = setupModifier.delta(player, intent);
+        double combined = round1(Math.max(0, Math.min(MAX_SCORE, squadFitService.combine(roleFit, intentFit, intent) + setupDelta)));
         return RecommendationItem.builder()
+                .setupDelta(Objects.isNull(intent.getSetup()) ? null : round1(setupDelta))
                 .player(summary)
                 .roleFit(roleFit)
                 .intentFit(intentFit)

@@ -7,6 +7,7 @@ import com.fcareer.fitengine.model.Attr;
 import com.fcareer.fitengine.model.FitRole;
 import com.fcareer.fitengine.model.FitTag;
 import com.fcareer.fitengine.model.IntentProfile;
+import com.fcareer.fitengine.model.TeamSetup;
 import com.fcareer.roles.service.BehaviorTagService;
 import com.fcareer.roles.service.RoleService;
 import com.fcareer.tactics.entity.PresetEntity;
@@ -90,6 +91,24 @@ public class TacticResolver {
     public IntentProfile slotIntent(String slotId, String position, String group, String roleId, List<String> tagIds) {
         return buildProfile(slotId, position, group, null, roleId, Objects.isNull(tagIds) ? List.of() : tagIds,
                 roleService.fitRolesById(), behaviorTagService.fitTagsById());
+    }
+
+    public IntentProfile slotIntent(String slotId, String position, String group, String roleId, List<String> tagIds, TeamSetup setup) {
+        IntentProfile profile = slotIntent(slotId, position, group, roleId, tagIds);
+        if (Objects.isNull(setup)) {
+            return profile;
+        }
+        return profile.toBuilder().setup(setup).slotGroup(Objects.isNull(group) ? groupOf(position) : group).build();
+    }
+
+    private static String groupOf(String position) {
+        return switch (position) {
+            case "LB", "RB", "LWB", "RWB" -> "FB";
+            case "LM", "RM" -> "WM";
+            case "LW", "RW" -> "W";
+            case "CF" -> "ST";
+            default -> position;
+        };
     }
 
     private IntentProfile buildProfile(String slotId, String position, String group, String defaultRole, String roleId,

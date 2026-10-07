@@ -96,7 +96,7 @@ public class TacticRecommenderService {
             Map<String, List<String>> template = advisorService.styleTemplate(preset, tagCatalog);
             for (FormationDefinition formation : searchFormations) {
                 Feasibility feasibility = feasibilityService.evaluate(players, profile, formation, preset.getId());
-                Scored scored = advisorService.scoreStyle(players, preset, formation, template);
+                Scored scored = advisorService.scoreStyle(players, preset, formation, template, request.getSetup());
                 AdvisorService.Oriented oriented = advisorService.orient(players, scored);
                 ranked.add(new Ranked(preset, formation, oriented.scored(), oriented.eval(), feasibility,
                         combine(oriented.eval(), feasibility), oriented.mirrored()));

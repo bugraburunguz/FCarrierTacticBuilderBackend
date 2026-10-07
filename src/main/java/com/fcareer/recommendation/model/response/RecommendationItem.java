@@ -20,4 +20,5 @@ public class RecommendationItem {
     private IntentFitResponse intentFit;
     private double combined;
     private Double deltaVsCurrent;
+    private Double setupDelta;
 }

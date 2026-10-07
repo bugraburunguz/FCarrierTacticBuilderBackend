@@ -14,6 +14,7 @@ import com.fcareer.fitengine.model.FitPlayer;
 import com.fcareer.fitengine.model.FitRole;
 import com.fcareer.fitengine.model.FitTag;
 import com.fcareer.fitengine.model.IntentProfile;
+import com.fcareer.fitengine.model.TeamSetup;
 import com.fcareer.fitengine.model.response.IntentFitResponse;
 import com.fcareer.fitengine.model.response.RoleFitResponse;
 import com.fcareer.fitengine.model.response.SquadFitResponse;
@@ -138,6 +139,11 @@ public class AdvisorService {
     }
 
     Scored scoreStyle(List<FitPlayer> players, PresetResponse style, FormationDefinition formation, Map<String, List<String>> template) {
+        return scoreStyle(players, style, formation, template, null);
+    }
+
+    Scored scoreStyle(List<FitPlayer> players, PresetResponse style, FormationDefinition formation, Map<String, List<String>> template,
+                      TeamSetup override) {
         Map<String, List<String>> bySlot = new LinkedHashMap<>();
         Map<String, String> presetGroups = formationRegistry.get(style.getFormation()).slots().stream()
                 .collect(Collectors.toMap(FormationSlot::slotId, FormationSlot::group));
@@ -149,7 +155,8 @@ public class AdvisorService {
                 bySlot.put(slot.slotId(), tags);
             }
         }
-        List<IntentProfile> profiles = resolve(formation.id(), null, bySlot);
+        TeamSetup setup = Objects.nonNull(override) ? override : setupOf(style);
+        List<IntentProfile> profiles = resolve(formation.id(), null, bySlot, setup);
         return scored(style.getKind().equals(PERSONAL) ? STYLE : style.getKind(), style, formation.id(), profiles, evaluate(players, profiles));
     }
 
@@ -313,16 +320,35 @@ public class AdvisorService {
         });
     }
 
+    TeamSetup setupOf(PresetResponse preset) {
+        Map<String, Object> settings = preset.getSettings();
+        if (Objects.isNull(settings)) {
+            return null;
+        }
+        Object buildUp = settings.get("buildUp");
+        Object depth = settings.get("depth");
+        if (Objects.isNull(buildUp) && !(depth instanceof Number)) {
+            return null;
+        }
+        return TeamSetup.builder().buildUp(Objects.isNull(buildUp) ? null : buildUp.toString())
+                .depth(depth instanceof Number number ? number.intValue() : null).build();
+    }
+
     List<IntentProfile> resolve(String formationId, String presetId, Map<String, List<String>> tagsBySlot) {
+        return resolve(formationId, presetId, tagsBySlot, null);
+    }
+
+    List<IntentProfile> resolve(String formationId, String presetId, Map<String, List<String>> tagsBySlot, TeamSetup setup) {
         List<SlotSelection> selections = tagsBySlot.entrySet().stream()
                 .map(e -> SlotSelection.builder().slotId(e.getKey()).tags(e.getValue()).build()).toList();
-        return tacticResolver.resolve(TacticRequest.builder().formation(formationId).presetId(presetId).slots(new ArrayList<>(selections)).build()).slots();
+        return tacticResolver.resolve(TacticRequest.builder().formation(formationId).presetId(presetId).slots(new ArrayList<>(selections)).setup(setup).build()).slots();
     }
 
     TacticRequest toTactic(String formationId, String presetId, List<IntentProfile> profiles) {
         List<SlotSelection> slots = profiles.stream().map(p -> SlotSelection.builder().slotId(p.getSlotId())
                 .tags(p.getTags().stream().map(FitTag::getId).toList()).roleId(p.getResolvedRole().getId()).build()).toList();
-        return TacticRequest.builder().formation(formationId).presetId(presetId).slots(new ArrayList<>(slots)).build();
+        TeamSetup setup = profiles.isEmpty() ? null : profiles.get(0).getSetup();
+        return TacticRequest.builder().formation(formationId).presetId(presetId).slots(new ArrayList<>(slots)).setup(setup).build();
     }
 
     String label(String formationId) {

@@ -1,5 +1,7 @@
 package com.fcareer.advisor.model.request;
 
+import com.fcareer.fitengine.model.TeamSetup;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -23,6 +25,9 @@ public class TacticRecommendRequest {
     private String lockFormation;
 
     private String lockPreset;
+
+    @Valid
+    private TeamSetup setup;
 
     @Min(1)
     @Max(3)
