@@ -2,6 +2,7 @@ package com.fcareer.ut.controller;
 
 import com.fcareer.ut.model.UtMetaModels.MetaCard;
 import com.fcareer.ut.model.UtMetaModels.MetaFormations;
+import com.fcareer.ut.model.UtMetaModels.UpgradeResult;
 import com.fcareer.ut.service.UtMetaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,6 +34,15 @@ public class UtMetaController {
                                @RequestParam(name = "gv", required = false) Short gameVersionId,
                                @RequestParam(name = "limit", required = false, defaultValue = "20") int limit) {
         return utMetaService.tier(position, gender, gameVersionId, limit);
+    }
+
+    @GetMapping("/card/{id}/upgrades")
+    public UpgradeResult upgrades(@PathVariable Long id,
+                                  @RequestParam(name = "pos", required = false) String position,
+                                  @RequestParam(name = "gender", required = false, defaultValue = "0") Short gender,
+                                  @RequestParam(name = "gv", required = false) Short gameVersionId,
+                                  @RequestParam(name = "limit", required = false, defaultValue = "10") int limit) {
+        return utMetaService.upgrades(id, gender, gameVersionId, position, limit);
     }
 
     @PostMapping("/card/{id}/chemstyle")

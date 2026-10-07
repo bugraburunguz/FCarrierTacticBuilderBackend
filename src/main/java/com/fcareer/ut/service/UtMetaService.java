@@ -10,6 +10,8 @@ import com.fcareer.ut.model.UtMetaModels.ChemStyleResult;
 import com.fcareer.ut.model.UtMetaModels.MetaCard;
 import com.fcareer.ut.model.UtMetaModels.MetaFormations;
 import com.fcareer.ut.model.UtMetaModels.MetaSeed;
+import com.fcareer.ut.model.UtMetaModels.UpgradeOption;
+import com.fcareer.ut.model.UtMetaModels.UpgradeResult;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,11 +36,15 @@ public class UtMetaService {
 
     private static final String RESOURCE = "seed/ut-meta.json";
     private static final String GK = "GK";
-    private static final String DEF = "DEF";
-    private static final String MID = "MID";
-    private static final String ATT = "ATT";
-    private static final Set<String> DEF_POSITIONS = Set.of("CB", "LB", "RB", "LWB", "RWB");
-    private static final Set<String> MID_POSITIONS = Set.of("CDM", "CM", "CAM", "LM", "RM");
+    private static final String CB = "CB";
+    private static final String FB = "FB";
+    private static final String CDM = "CDM";
+    private static final String CM = "CM";
+    private static final String CAM = "CAM";
+    private static final String W = "W";
+    private static final String ST = "ST";
+    private static final Set<String> FB_POSITIONS = Set.of("LB", "RB", "LWB", "RWB");
+    private static final Set<String> WINGER_POSITIONS = Set.of("LM", "RM", "LW", "RW");
     private static final double STAT_SHARE = 0.65;
     private static final double MAX_ATTR = 99;
     private static final int POOL_SIZE = 100;
@@ -78,6 +84,17 @@ public class UtMetaService {
                 .sorted(Comparator.comparingDouble(MetaCard::metaRating).reversed())
                 .limit(Math.max(1, Math.min(limit, MAX_LIMIT)))
                 .toList();
+    }
+
+    public UpgradeResult upgrades(Long currentId, Short gender, Short gameVersionId, String position, int limit) {
+        MetaCard current = chemStyles(currentId, gameVersionId, position);
+        List<UpgradeOption> options = tier(current.position(), gender, gameVersionId, MAX_LIMIT).stream()
+                .filter(c -> !c.id().equals(currentId) && c.metaRating() > current.metaRating())
+                .map(c -> new UpgradeOption(c, round1(c.metaRating() - current.metaRating()), c.overall() - current.overall()))
+                .sorted(Comparator.comparingDouble(UpgradeOption::deltaMeta).reversed())
+                .limit(Math.max(1, Math.min(limit, MAX_LIMIT)))
+                .toList();
+        return new UpgradeResult(current, options, "Fiyat verisi olmadığı için maliyet/değer karşılaştırması yok; liste yalnızca meta rating farkına göre.");
     }
 
     public MetaCard chemStyles(Long playerId, Short gameVersionId, String position) {
@@ -142,13 +159,16 @@ public class UtMetaService {
     }
 
     private static String group(String position) {
-        if (GK.equals(position)) {
-            return GK;
+        if (FB_POSITIONS.contains(position)) {
+            return FB;
         }
-        if (DEF_POSITIONS.contains(position)) {
-            return DEF;
+        if (WINGER_POSITIONS.contains(position)) {
+            return W;
         }
-        return MID_POSITIONS.contains(position) ? MID : ATT;
+        return switch (position) {
+            case GK, CB, CDM, CM, CAM -> position;
+            default -> ST;
+        };
     }
 
     private static String normalize(String name) {

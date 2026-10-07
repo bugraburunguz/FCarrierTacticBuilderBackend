@@ -224,6 +224,14 @@ class ApiFlowIntegrationTest {
         assertThat(chemStyle.at("/success").asBoolean()).as(chemStyle.toString()).isTrue();
         assertThat(chemStyle.at("/data/chemStyles")).hasSize(3);
         assertThat(chemStyle.at("/data/assumption").asBoolean()).isTrue();
+        JsonNode upgrades = call(get("/api/v1/ut/card/" + playerId + "/upgrades?limit=3"), null, null, 200);
+        assertThat(upgrades.at("/success").asBoolean()).as(upgrades.toString()).isTrue();
+        upgrades.at("/data/options").forEach(o -> assertThat(o.at("/deltaMeta").asDouble()).isPositive());
+        JsonNode sbc = call(post("/api/v1/ut/sbc/streamlined"), Map.of("targetScore", 360,
+                "pool", new Object[]{Map.of("rating", 80, "rarity", "REGULAR", "count", 3, "untradeable", true)}), null, 200);
+        assertThat(sbc.at("/data/feasible").asBoolean()).as(sbc.toString()).isTrue();
+        assertThat(sbc.at("/data/totalScore").asInt()).isEqualTo(360);
+        assertThat(call(get("/api/v1/ut/sbc/score-table"), null, null, 200).at("/data/rows")).isNotEmpty();
         JsonNode tier = call(get("/api/v1/ut/meta/tier?pos=ST&limit=5"), null, null, 200);
         assertThat(tier.at("/success").asBoolean()).as(tier.toString()).isTrue();
         assertThat(tier.at("/data").isArray()).isTrue();

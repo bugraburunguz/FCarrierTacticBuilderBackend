@@ -24,6 +24,13 @@ public final class UtMetaModels {
     public record ChemStyleResult(String style, double metaRating, double delta, String tier) {
     }
 
+    public record UpgradeOption(MetaCard card, double deltaMeta, int deltaOverall) {
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record UpgradeResult(MetaCard current, List<UpgradeOption> options, String note) {
+    }
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record MetaCard(Long id, String name, Integer age, int overall, String position, double metaRating, String tier,
                            String bestChemStyle, List<ChemStyleResult> chemStyles, boolean assumption) {
