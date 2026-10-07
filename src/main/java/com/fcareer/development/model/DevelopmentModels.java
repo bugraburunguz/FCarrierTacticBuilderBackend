@@ -98,6 +98,7 @@ public final class DevelopmentModels {
         private Integer minPotential;
         private Integer leagueId;
         private Long budgetMax;
+        private Long careerId;
         private String roleId;
         private String sort;
         private int limit;

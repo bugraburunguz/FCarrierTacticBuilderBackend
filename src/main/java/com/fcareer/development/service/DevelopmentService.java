@@ -93,7 +93,7 @@ public class DevelopmentService {
         }
         Map<Long, FitPlayer> fitById = new HashMap<>();
         if (Objects.nonNull(role) && !pool.isEmpty()) {
-            playerService.fitPlayers(pool.stream().map(PlayerSummaryResponse::getId).toList(), query.getGameVersionId())
+            playerService.fitPlayers(pool.stream().map(PlayerSummaryResponse::getId).toList(), query.getGameVersionId(), query.getCareerId())
                     .forEach(p -> fitById.put(p.getId(), p));
         }
         List<WonderkidResponse> result = new ArrayList<>();
@@ -130,6 +130,7 @@ public class DevelopmentService {
                 .potentialMin(query.getMinPotential())
                 .leagueId(query.getLeagueId())
                 .valueMax(query.getBudgetMax())
+                .careerId(query.getCareerId())
                 .sort("potential")
                 .ascending(false)
                 .page(page)
