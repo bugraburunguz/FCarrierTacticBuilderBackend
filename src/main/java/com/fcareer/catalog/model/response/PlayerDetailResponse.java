@@ -23,4 +23,5 @@ public class PlayerDetailResponse {
     private Map<String, Integer> attrs;
     private Map<String, Integer> playstyles;
     private Map<String, Integer> positionOveralls;
+    private com.fcareer.versioning.model.VersionModels.PlayerDiff diff;
 }

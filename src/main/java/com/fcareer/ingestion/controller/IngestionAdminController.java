@@ -47,14 +47,16 @@ public class IngestionAdminController {
             @RequestParam(value = "leagueteamlinks", required = false) org.springframework.web.multipart.MultipartFile leagueLinks,
             @RequestParam(value = "leagues", required = false) org.springframework.web.multipart.MultipartFile leagues,
             @RequestParam(value = "overwrite", defaultValue = "false") boolean overwrite,
-            @RequestParam(value = "createMissing", defaultValue = "true") boolean createMissing) {
+            @RequestParam(value = "createMissing", defaultValue = "true") boolean createMissing,
+            @RequestParam(value = "full", defaultValue = "false") boolean full,
+            @RequestParam(value = "label", required = false) String label) {
         java.util.Map<String, org.springframework.web.multipart.MultipartFile> csvs = new java.util.HashMap<>();
         csvs.put("players", players);
         csvs.put("teams", teams);
         csvs.put("teamplayerlinks", links);
         csvs.put("leagueteamlinks", leagueLinks);
         csvs.put("leagues", leagues);
-        return baseCatalogImporter.importMissing(BaseUploads.toTables(log, csvs), catalogProperties.getDefaultGameVersion(), overwrite, createMissing);
+        return baseCatalogImporter.importMissing(BaseUploads.toTables(log, csvs), catalogProperties.getDefaultGameVersion(), overwrite, createMissing, full, label);
     }
 
     @PostMapping("/open-dataset")

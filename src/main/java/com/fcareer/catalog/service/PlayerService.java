@@ -51,13 +51,14 @@ public class PlayerService {
     private final CareerPlayerRatingRepository careerPlayerRatingRepository;
     private final PlayerValuationRepository playerValuationRepository;
     private final PlayerMapper playerMapper;
+    private final com.fcareer.versioning.service.VersioningService versioningService;
 
     public PageResponse<PlayerSummaryResponse> search(PlayerSearchRequest request) {
         request.setGameVersionId(resolveGameVersion(request.getGameVersionId()));
         request.setSize(request.getSize() <= 0 ? DEFAULT_PAGE_SIZE : Math.min(request.getSize(), MAX_PAGE_SIZE));
         request.setPage(Math.max(request.getPage(), 0));
         return PageResponse.<PlayerSummaryResponse>builder()
-                .items(playerSearchRepository.search(request))
+                .items(enrich(playerSearchRepository.search(request), request.getGameVersionId()))
                 .page(request.getPage())
                 .size(request.getSize())
                 .totalItems(playerSearchRepository.count(request))
@@ -78,8 +79,10 @@ public class PlayerService {
             rating = careerPlayerRatingRepository.findByCareerIdAndBasePlayerIdInAndGameVersionId(careerId, List.of(playerId), gv)
                     .stream().findFirst().map(RatingColumns.class::cast).orElse(rating);
         }
-        PlayerSummaryResponse summary = summaryOf(playerId, gv, careerId);
-        return playerMapper.toDetail(summary, base, rating);
+        PlayerSummaryResponse summary = enrich(List.of(summaryOf(playerId, gv, careerId)), gv).get(0);
+        PlayerDetailResponse detail = playerMapper.toDetail(summary, base, rating);
+        detail.setDiff(versioningService.diffFor(playerId, gv).orElse(null));
+        return detail;
     }
 
     public List<FitPlayer> fitPlayers(List<Long> playerIds, Short gameVersionId) {
@@ -168,6 +171,24 @@ public class PlayerService {
         request.setIdFilter(playerId);
         return playerSearchRepository.search(request).stream().findFirst()
                 .orElseThrow(() -> new NotFoundException(PLAYER, playerId));
+    }
+
+    /** Yüz adresi (şablondan) ve son sürümde değişmiş olma bilgisi eklenir; diff precompute edilmiştir, burada yalnızca okunur. */
+    private List<PlayerSummaryResponse> enrich(List<PlayerSummaryResponse> items, short gameVersionId) {
+        String template = catalogProperties.getFaceUrlTemplate();
+        Map<Long, com.fcareer.versioning.model.VersionModels.ChangeSummary> changes = versioningService.summaries(
+                items.stream().map(PlayerSummaryResponse::getId).toList(), gameVersionId);
+        for (PlayerSummaryResponse item : items) {
+            if (Objects.nonNull(template) && !template.isBlank() && Objects.nonNull(item.getFaceAssetId())) {
+                item.setFaceUrl(template.replace("{id}", String.valueOf(item.getFaceAssetId())));
+            }
+            com.fcareer.versioning.model.VersionModels.ChangeSummary change = changes.get(item.getId());
+            if (Objects.nonNull(change)) {
+                item.setChanged(true);
+                item.setChangeSummary(change);
+            }
+        }
+        return items;
     }
 
     private short resolveGameVersion(Short requested) {

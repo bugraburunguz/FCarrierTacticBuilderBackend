@@ -33,4 +33,8 @@ public class PlayerSummaryResponse {
     private Long valueEur;
     private boolean valuationEstimated;
     private boolean freeAgent;
+    private Long faceAssetId;
+    private String faceUrl;
+    private Boolean changed;
+    private com.fcareer.versioning.model.VersionModels.ChangeSummary changeSummary;
 }

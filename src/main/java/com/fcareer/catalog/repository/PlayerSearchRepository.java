@@ -38,7 +38,7 @@ public class PlayerSearchRepository {
                   AND v.game_version_id = r.game_version_id AND v.source = 'MODELED' AND v.owner_user_id IS NULL
             """;
     private static final String SELECT = """
-            SELECT b.id AS id, b.full_name AS name, b.dob AS dob, b.gender AS gender, b.preferred_foot AS foot,
+            SELECT b.id AS id, b.ea_resource_id AS ea_id, b.full_name AS name, b.dob AS dob, b.gender AS gender, b.preferred_foot AS foot,
                    COALESCE(cpd.overall, r.overall) AS overall, COALESCE(cpr.positions, r.positions) AS positions, COALESCE(cpr.weak_foot, r.weak_foot) AS weak_foot,
                    COALESCE(cpr.skill_moves, r.skill_moves) AS skill_moves,
                    c.id AS club_id, COALESCE(ct.name, c.name) AS club, COALESCE(ct.league_name, l.name) AS league, n.name AS nationality, COALESCE(cpr.accelerate, r.accelerate) AS accelerate, COALESCE(cpr.run_style1, r.run_style1) AS run_style,
@@ -227,6 +227,7 @@ public class PlayerSearchRepository {
                 .valueEur(nullableLong(rs, "value_eur"))
                 .valuationEstimated(rs.getBoolean("estimated"))
                 .freeAgent(rs.getBoolean("free_agent"))
+                .faceAssetId(nullableLong(rs, "ea_id"))
                 .build();
     }
 

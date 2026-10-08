@@ -5,6 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.common.exception.ImportParseException;
 import com.fcareer.fitengine.model.Attr;
 import com.fcareer.ingestion.mapper.AcceleRateDeriver;
+import com.fcareer.versioning.model.ChangeType;
+import com.fcareer.versioning.model.PlayerChange;
+import com.fcareer.versioning.model.VersionSnapshot;
+import com.fcareer.versioning.service.ChangeCalculator;
+import com.fcareer.versioning.service.VersioningService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -43,16 +48,26 @@ public class BaseCatalogImporter {
     private static final double NATIONALITY_CONFIDENCE = 0.6;
 
     public record BaseImportResult(int playersInFile, int existing, int created, int skippedNoTeam, int skippedNoPosition,
-                                   int nationalitiesCreated, int clubsCreated, int leaguesCreated, int updated) {
+                                   int nationalitiesCreated, int clubsCreated, int leaguesCreated, int updated, int changesRecorded) {
     }
 
     private final NamedParameterJdbcTemplate jdbc;
     private final AcceleRateDeriver acceleRateDeriver;
     private final ObjectMapper objectMapper;
+    private final VersioningService versioningService;
 
-    @Transactional
     public BaseImportResult importMissing(Map<String, List<Map<String, String>>> tables, short gameVersionId, boolean overwriteExisting,
                                          boolean createMissing) {
+        return importMissing(tables, gameVersionId, overwriteExisting, createMissing, false, null);
+    }
+
+    /**
+     * full=true yalnızca dosya katalogun tamamını içeriyorsa verilmeli: dosyada olmayan oyuncular REMOVED işaretlenir.
+     * Kısmi dosyada (varsayılan) eksiklik silme sayılmaz; bilinmeyen oyuncu upsert edilir. İkisi de loglanır.
+     */
+    @Transactional
+    public BaseImportResult importMissing(Map<String, List<Map<String, String>>> tables, short gameVersionId, boolean overwriteExisting,
+                                         boolean createMissing, boolean full, String label) {
         Context ctx = buildContext(tables);
         List<Map<String, String>> players = ctx.players();
         Map<Long, Integer> playerTeam = ctx.playerTeam();
@@ -116,6 +131,7 @@ public class BaseCatalogImporter {
                 INSERT INTO base_player (ea_resource_id, full_name, dob, nationality_id, height_cm, weight_kg, preferred_foot, gender)
                 VALUES (:ea, :name, :dob, :nat, :height, :weight, :foot, :gender)""", basePlayers);
 
+        List<PlayerChange> changes = new ArrayList<>(updateChanges(ratingUpdates));
         batch(BASE_UPDATE_SQL, baseUpdates);
         batch(RATING_UPDATE_SQL, ratingUpdates);
         renameNameless(players, names, edited);
@@ -129,13 +145,94 @@ public class BaseCatalogImporter {
             }
         }
         batch(RATING_SQL, ratings);
+        ratings.forEach(params -> changes.add(new PlayerChange(((Number) params.getValue("base")).longValue(), ChangeType.NEW, null, snapshotOf(params), List.of(), null)));
+        if (full) {
+            changes.addAll(removedChanges(players, existing));
+        } else {
+            log.info("Partial catalog file: missing players are NOT marked REMOVED; unknown players are upserted created : {}", ratings.size());
+        }
+        int recorded = versioningService.recordCatalogVersion(gameVersionId, "LIVE_EDITOR_EXPORT", label, full, changes).isPresent() ? changes.size() : 0;
 
-        log.info("Base catalog import players : {} created : {} existing : {} noTeam : {} noPosition : {}",
-                players.size(), ratings.size(), already, noTeam, noPosition);
+        log.info("Base catalog import players : {} created : {} existing : {} noTeam : {} noPosition : {} changes : {}",
+                players.size(), ratings.size(), already, noTeam, noPosition, recorded);
         return new BaseImportResult(players.size(), already, ratings.size(), noTeam, noPosition,
-                nationalities.created(), clubs.createdClubs(), clubs.createdLeagues(), ratingUpdates.size());
+                nationalities.created(), clubs.createdClubs(), clubs.createdLeagues(), ratingUpdates.size(), recorded);
     }
 
+
+    private List<PlayerChange> updateChanges(List<SqlParameterSource> ratingUpdates) {
+        Map<Long, VersionSnapshot> before = oldSnapshots(ratingUpdates.stream().map(p -> ((Number) p.getValue("base")).longValue()).toList());
+        List<PlayerChange> changes = new ArrayList<>();
+        for (SqlParameterSource params : ratingUpdates) {
+            Long baseId = ((Number) params.getValue("base")).longValue();
+            VersionSnapshot old = before.get(baseId);
+            if (Objects.nonNull(old)) {
+                PlayerChange change = ChangeCalculator.diff(baseId, old, snapshotOf(params));
+                if (Objects.nonNull(change)) {
+                    changes.add(change);
+                }
+            }
+        }
+        return changes;
+    }
+
+    private List<PlayerChange> removedChanges(List<Map<String, String>> players, Map<Long, Long> existing) {
+        Set<Long> inFile = new HashSet<>();
+        players.forEach(row -> {
+            Long id = toLong(row.get("playerid"));
+            if (Objects.nonNull(id)) {
+                inFile.add(id);
+            }
+        });
+        List<Long> missing = existing.entrySet().stream().filter(e -> !inFile.contains(e.getKey())).map(Map.Entry::getValue).toList();
+        log.info("Full catalog file: players missing from file marked REMOVED : {}", missing.size());
+        return oldSnapshots(missing).entrySet().stream()
+                .map(e -> new PlayerChange(e.getKey(), ChangeType.REMOVED, e.getValue(), null, List.of(), null)).toList();
+    }
+
+    private VersionSnapshot snapshotOf(SqlParameterSource params) {
+        Map<String, Integer> attrs = new LinkedHashMap<>();
+        for (Attr attr : Attr.values()) {
+            Object value = params.getValue(attr.getColumn());
+            if (value instanceof Number number) {
+                attrs.put(attr.getKey(), number.intValue());
+            }
+        }
+        Object overall = params.getValue("overall");
+        Object club = params.hasValue("club") ? params.getValue("club") : null;
+        return new VersionSnapshot(overall instanceof Number n ? n.intValue() : null, null, (String) params.getValue("accelerate"),
+                (String) params.getValue("positions"), club instanceof Number c ? c.intValue() : null, attrs, readStyles((String) params.getValue("playstyles")));
+    }
+
+    private Map<String, Integer> readStyles(String json) {
+        if (Objects.isNull(json)) {
+            return Map.of();
+        }
+        try {
+            return objectMapper.readValue(json, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Integer>>() { });
+        } catch (JsonProcessingException e) {
+            return Map.of();
+        }
+    }
+
+    private Map<Long, VersionSnapshot> oldSnapshots(List<Long> baseIds) {
+        Map<Long, VersionSnapshot> result = new HashMap<>();
+        String attrColumns = java.util.Arrays.stream(Attr.values()).map(Attr::getColumn).collect(java.util.stream.Collectors.joining(", "));
+        for (int from = 0; from < baseIds.size(); from += BATCH) {
+            List<Long> part = baseIds.subList(from, Math.min(from + BATCH, baseIds.size()));
+            jdbc.query("SELECT base_player_id, club_id, overall, array_to_string(positions, ',') AS positions, accelerate, playstyles::text AS playstyles, "
+                            + attrColumns + " FROM player_rating WHERE base_player_id IN (:ids)", Map.of("ids", part), rs -> {
+                        Map<String, Integer> attrs = new LinkedHashMap<>();
+                        for (Attr attr : Attr.values()) {
+                            attrs.put(attr.getKey(), rs.getInt(attr.getColumn()));
+                        }
+                        int club = rs.getInt("club_id");
+                        result.putIfAbsent(rs.getLong("base_player_id"), new VersionSnapshot(rs.getInt("overall"), null, rs.getString("accelerate"),
+                                rs.getString("positions"), rs.wasNull() ? null : club, attrs, readStyles(rs.getString("playstyles"))));
+                    });
+        }
+        return result;
+    }
 
     private record Context(List<Map<String, String>> players, Map<Long, Integer> playerTeam, Map<Integer, String> names,
                            Map<Long, Long> existing, NationalityResolver nationalities, ClubResolver clubs, Set<Integer> excludedTeams,
