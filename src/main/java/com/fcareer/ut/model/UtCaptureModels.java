@@ -36,7 +36,7 @@ public final class UtCaptureModels {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record ActiveSquad(String formation, String formationLabel, Integer chemistry, Integer rating, String name, List<SquadSlot> slots) {
+    public record ActiveSquad(String formation, String formationLabel, Integer chemistry, Integer rating, String name, List<SquadSlot> slots, JsonNode tactic) {
     }
 
     public record SquadSummary(long id, String name, String formation, String formationLabel, Integer rating, Integer chemistry) {

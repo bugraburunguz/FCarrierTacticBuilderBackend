@@ -435,7 +435,18 @@ public class UtCaptureService {
                     card(player.path("itemData"), "squad", ctx)));
         });
         return new ActiveSquad(formation, Objects.nonNull(config) ? config.label() : formationLabel(formation), intOrNull(squad, "chemistry"), intOrNull(squad, "rating"),
-                squad.path("squadName").asText(null), slots);
+                squad.path("squadName").asText(null), slots, activeTactic(squad));
+    }
+
+    /** Aktif taktik (isim, formasyon, slot talimatları, takım stilleri) ham haliyle taşınır; talimat değerleri henüz çözülmedi. */
+    private JsonNode activeTactic(JsonNode squad) {
+        for (JsonNode tactic : squad.path("tactics")) {
+            if ("ACTIVE".equals(tactic.path("state").asText())) {
+                return tactic;
+            }
+        }
+        JsonNode first = squad.path("tactics").path(0);
+        return first.isMissingNode() ? null : first;
     }
 
     private List<SquadSummary> squads(JsonNode body) {
