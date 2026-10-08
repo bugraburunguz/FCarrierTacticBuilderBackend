@@ -26,7 +26,7 @@ class UtCaptureServiceTest {
         try {
             UtCatalogJoinRepository repository = Mockito.mock(UtCatalogJoinRepository.class);
             Mockito.when(repository.findByEaResourceIds(Mockito.anyCollection())).thenReturn(catalog);
-            UtCaptureService created = new UtCaptureService(new ObjectMapper(), repository);
+            UtCaptureService created = new UtCaptureService(new ObjectMapper(), repository, Mockito.mock(com.fcareer.ut.repository.EaIdRepository.class));
             Method load = UtCaptureService.class.getDeclaredMethod("loadAttrOrder");
             load.setAccessible(true);
             load.invoke(created);

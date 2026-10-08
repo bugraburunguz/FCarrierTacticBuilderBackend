@@ -65,6 +65,20 @@ public final class UtCaptureModels {
                              boolean repeatable, Long endTime, int awardCount) {
     }
 
+    public record SbcRef(String kind, int id, String name) {
+    }
+
+    /** kind: TEAM_RATING, CHEMISTRY, SAME_CLUB/LEAGUE/NATION, CLUB/LEAGUE/NATION_COUNT, QUALITY, FROM, LEVEL_COUNT, UNKNOWN:*; op: MIN, MAX, EXACT. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record SbcRequirement(String kind, String op, Integer value, Integer level, List<SbcRef> refs) {
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record SbcChallengeView(long setId, String setName, long challengeId, String name, String status, String type, String formation,
+                                   String formationLabel, boolean repeatable, int timesCompleted, Long endTime, List<Reward> awards,
+                                   List<SbcRequirement> requirements) {
+    }
+
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record SbcDetail(String path, JsonNode data) {
     }
@@ -98,6 +112,6 @@ public final class UtCaptureModels {
     public record CaptureResult(CaptureStats stats, List<CaptureCard> cards, ActiveSquad activeSquad, List<SquadSummary> squads,
                                 List<MarketPrice> prices, List<ObjectiveGroupView> objectives, List<SbcSetView> sbcSets, List<SbcDetail> sbcDetails,
                                 List<EvolutionSlot> evolutions, Long coins, List<CurrencyView> currencies, CaptureConfig config,
-                                List<String> unknownPaths) {
+                                List<String> unknownPaths, List<SbcChallengeView> sbcChallenges) {
     }
 }

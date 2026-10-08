@@ -16,6 +16,7 @@ import com.fcareer.ut.model.UtCaptureModels.MarketPrice;
 import com.fcareer.ut.model.UtCaptureModels.ObjectiveGroupView;
 import com.fcareer.ut.model.UtCaptureModels.PositionConfig;
 import com.fcareer.ut.model.UtCaptureModels.Reward;
+import com.fcareer.ut.model.UtCaptureModels.SbcChallengeView;
 import com.fcareer.ut.model.UtCaptureModels.SbcDetail;
 import com.fcareer.ut.model.UtCaptureModels.SbcSetView;
 import com.fcareer.ut.model.UtCaptureModels.SquadSlot;
@@ -72,6 +73,7 @@ public class UtCaptureService {
 
     private final ObjectMapper objectMapper;
     private final UtCatalogJoinRepository catalogJoinRepository;
+    private final com.fcareer.ut.repository.EaIdRepository eaIdRepository;
 
     private List<String> attrOrder;
 
@@ -159,7 +161,8 @@ public class UtCaptureService {
         return new CaptureResult(stats, new ArrayList<>(cards.values()), activeSquad(last(bodies, Kind.SQUAD_ACTIVE), ctx, formationsByName, positionNames),
                 squads(last(bodies, Kind.SQUAD_LIST)), prices, objectives(last(bodies, Kind.OBJECTIVES)), sbcSets(bodies.get(Kind.SBC_HUB)),
                 sbcDetails(raw.get(Kind.SBC_DETAIL), bodies.get(Kind.SBC_DETAIL)), evolutions(bodies.get(Kind.ACADEMY)),
-                credits(last(bodies, Kind.CREDITS)), currencies(last(bodies, Kind.CREDITS)), config, new ArrayList<>(unknownPaths));
+                credits(last(bodies, Kind.CREDITS)), currencies(last(bodies, Kind.CREDITS)), config, new ArrayList<>(unknownPaths),
+                sbcChallenges(raw.get(Kind.SBC_DETAIL), bodies.get(Kind.SBC_DETAIL), sbcSets(bodies.get(Kind.SBC_HUB)), config, ctx));
     }
 
     private void readDiscovery(String body, Set<String> unknownPaths) {
@@ -489,6 +492,55 @@ public class UtCaptureService {
                             longOrNull(s, "endTime"), s.path("awards").size())))));
         }
         return new ArrayList<>(sets.values());
+    }
+
+    private static final Pattern SBC_SET_CHALLENGES = Pattern.compile(".*/sbs/setid/(\\d+)/challenges$");
+
+    /** setId/{id}/challenges yanıtları: şartlar normalleştirilir, kulüp/lig/ülke kimlikleri adlara çevrilir (kayıtlı EA kimlikleri + bu yakalamada öğrenilenler). */
+    private List<SbcChallengeView> sbcChallenges(List<Capture> raw, List<JsonNode> bodies, List<SbcSetView> sets, CaptureConfig config, Ctx ctx) {
+        List<SbcChallengeView> result = new ArrayList<>();
+        if (Objects.isNull(raw) || Objects.isNull(bodies)) {
+            return result;
+        }
+        Map<Long, String> setNames = new HashMap<>();
+        sets.forEach(s -> setNames.put(s.setId(), s.name()));
+        Map<String, String> formationLabels = new HashMap<>();
+        config.formations().forEach(f -> formationLabels.put(f.name(), f.label()));
+        eaIdRepository.learnLeagues(ctx.leagues());
+        eaIdRepository.learnNations(ctx.nations());
+        Set<Integer> clubIds = new HashSet<>();
+        Set<Integer> leagueIds = new HashSet<>();
+        Set<Integer> nationIds = new HashSet<>();
+        for (JsonNode body : bodies) {
+            body.path("challenges").forEach(c -> c.path("elgReq").forEach(r -> {
+                int value = r.path("eligibilityValue").asInt();
+                switch (r.path("type").asText()) {
+                    case "CLUB_ID" -> clubIds.add(value);
+                    case "LEAGUE_ID" -> leagueIds.add(value);
+                    case "NATION_ID" -> nationIds.add(value);
+                    default -> { }
+                }
+            }));
+        }
+        Map<Integer, String> clubNames = eaIdRepository.clubNames(clubIds);
+        Map<Integer, String> leagueNames = new HashMap<>(ctx.leagues());
+        leagueNames.putAll(eaIdRepository.leagueNames(leagueIds));
+        Map<Integer, String> nationNames = new HashMap<>(ctx.nations());
+        nationNames.putAll(eaIdRepository.nationNames(nationIds));
+        clubNames.putAll(ctx.clubs().entrySet().stream().filter(e -> !clubNames.containsKey(e.getKey())).collect(java.util.stream.Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+        java.util.function.BiFunction<String, Integer, String> names = (kind, id) -> switch (kind) {
+            case "CLUB" -> clubNames.get(id);
+            case "LEAGUE" -> leagueNames.get(id);
+            default -> nationNames.get(id);
+        };
+        for (int i = 0; i < Math.min(raw.size(), bodies.size()); i++) {
+            Matcher matcher = SBC_SET_CHALLENGES.matcher(path(raw.get(i).url().toLowerCase(Locale.ROOT)));
+            if (matcher.matches() && bodies.get(i).has("challenges")) {
+                long setId = Long.parseLong(matcher.group(1));
+                result.addAll(SbcChallengeParser.parse(setId, setNames.get(setId), bodies.get(i), names, formationLabels));
+            }
+        }
+        return result;
     }
 
     private List<SbcDetail> sbcDetails(List<Capture> raw, List<JsonNode> bodies) {
