@@ -41,7 +41,7 @@ public class DevelopmentController {
             @RequestParam(name = "gv", required = false) Short gameVersionId,
             @RequestParam(name = "gender", required = false) Short gender,
             @RequestParam(name = "pos", required = false) String position,
-            @RequestParam(name = "maxAge", required = false) Integer maxAge,
+            @RequestParam(name = "maxAge", required = false, defaultValue = "21") Integer maxAge,
             @RequestParam(name = "minPot", required = false) Integer minPotential,
             @RequestParam(name = "league", required = false) Integer leagueId,
             @RequestParam(name = "budgetMax", required = false) Long budgetMax,

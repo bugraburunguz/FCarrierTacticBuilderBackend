@@ -36,6 +36,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class MlValuationService {
 
+    private static final String VALUE_FORMULA_SUFFIX = "+value-formula";
+
     private final PlayerRatingRepository playerRatingRepository;
     private final BasePlayerRepository basePlayerRepository;
     private final ClubRepository clubRepository;
@@ -76,11 +78,12 @@ public class MlValuationService {
         if (response.isFc27PotFlag()) {
             log.warn("ML potential model is not calibrated for FC27 (fc27_pot_flag)");
         }
-        Integer written = transactionTemplate.execute(status -> store(response.getPredictions(), gameVersion));
+        Map<Long, MlPlayerFeatures> featuresById = features.stream().collect(Collectors.toMap(MlPlayerFeatures::getPlayerId, Function.identity(), (a, b) -> a));
+        Integer written = transactionTemplate.execute(status -> store(response.getPredictions(), featuresById, gameVersion));
         return Objects.isNull(written) ? 0 : written;
     }
 
-    private int store(List<MlPrediction> predictions, short gameVersion) {
+    private int store(List<MlPrediction> predictions, Map<Long, MlPlayerFeatures> featuresById, short gameVersion) {
         List<Long> ids = predictions.stream().map(MlPrediction::getPlayerId).toList();
         Map<Long, PlayerValuationEntity> existing = playerValuationRepository
                 .findByBasePlayerIdInAndGameVersionIdAndSourceAndOwnerUserIdIsNull(ids, gameVersion, ValuationSource.MODELED)
@@ -91,12 +94,20 @@ public class MlValuationService {
             valuation.setGameVersionId(gameVersion);
             valuation.setSource(ValuationSource.MODELED);
             valuation.setPotential(p.getPotential().shortValue());
-            valuation.setValueEur(p.getValue());
-            valuation.setModelVersion(p.getModelVersion());
+            boolean formula = Objects.isNull(p.getValue());
+            valuation.setValueEur(formula ? formulaValue(p, featuresById.get(p.getPlayerId())) : p.getValue());
+            valuation.setModelVersion(formula ? p.getModelVersion() + VALUE_FORMULA_SUFFIX : p.getModelVersion());
             return valuation;
         }).toList();
         playerValuationRepository.saveAll(toSave);
         return toSave.size();
+    }
+
+    private Long formulaValue(MlPrediction prediction, MlPlayerFeatures features) {
+        if (Objects.isNull(features) || Objects.isNull(features.getOverall())) {
+            return null;
+        }
+        return ModeledValueFormula.estimate(features.getOverall(), prediction.getPotential(), features.getAge(), features.getLeagueTier());
     }
 
     private Map<Integer, Integer> clubTiers(List<PlayerRatingEntity> ratings) {

@@ -25,6 +25,8 @@ public class FeasibilityService {
     private static final int MID_SAMPLE = 6;
     private static final int PAIR = 2;
     private static final int MIN_CENTRE_BACKS_FOR_BACK_THREE = 3;
+    private static final double USABLE_REFERENCE = 60.0;
+    private static final double RELATIVE_LEVEL_FACTOR = 0.85;
 
     private final RecommenderProperties properties;
 
@@ -40,6 +42,7 @@ public class FeasibilityService {
         private final double fullbackCrossing;
         private final double aerial;
         private final double wideStamina;
+        private final double levelScale;
 
         SquadProfile(List<FitPlayer> players, Map<Long, Map<String, Double>> scores) {
             this.scores = scores;
@@ -54,6 +57,17 @@ public class FeasibilityService {
             fullbackCrossing = average(top(outfield, PAIR, Set.of("LB", "RB")), p -> p.attr(Attr.CROSSING));
             aerial = average(top(outfield, PAIR, Set.of("ST")), p -> (p.attr(Attr.HEADING) + p.attr(Attr.JUMPING)) / 2.0);
             wideStamina = average(top(outfield, PAIR, WIDE), p -> p.attr(Attr.STAMINA));
+            levelScale = levelScale(core, scores);
+        }
+
+        /** Düşük seviye kadroda mutlak eşikler kimseyi "kullanılabilir" saymaz; eşik, kadronun kendi seviyesine göre ölçeklenir (güçlü kadroda 1). */
+        private static double levelScale(List<FitPlayer> core, Map<Long, Map<String, Double>> scores) {
+            double[] bests = core.stream().mapToDouble(p -> scores.getOrDefault(p.getId(), Map.of()).values().stream().mapToDouble(Double::doubleValue).max().orElse(0)).sorted().toArray();
+            if (bests.length == 0) {
+                return 1.0;
+            }
+            double median = bests[bests.length / 2];
+            return Math.max(0.0, Math.min(1.0, median * RELATIVE_LEVEL_FACTOR / USABLE_REFERENCE));
         }
 
         private static double pace(FitPlayer p) {
@@ -74,7 +88,7 @@ public class FeasibilityService {
         }
 
         long usable(List<FitPlayer> players, Set<String> positions, double min) {
-            return players.stream().filter(p -> best(p, positions) >= min).count();
+            return players.stream().filter(p -> best(p, positions) >= min * levelScale).count();
         }
     }
 

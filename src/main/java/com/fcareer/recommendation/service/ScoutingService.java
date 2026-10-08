@@ -3,6 +3,7 @@ package com.fcareer.recommendation.service;
 import com.fcareer.career.service.CareerService;
 import com.fcareer.catalog.model.request.PlayerSearchRequest;
 import com.fcareer.catalog.model.response.PlayerSummaryResponse;
+import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.catalog.service.PlayerService;
 import com.fcareer.fitengine.model.FitPlayer;
 import com.fcareer.fitengine.model.FitRole;
@@ -47,7 +48,6 @@ public class ScoutingService {
     private static final double OPPORTUNITY_SCALE = 10.0;
     private static final String SORT_OPPORTUNITY = "opportunity";
     private static final String SORT_POTENTIAL = "potential";
-    private static final String SOURCE_IMPORT = "IMPORT";
     private static final String SOURCE_MODELED = "MODELED";
 
     private final CareerService careerService;
@@ -56,6 +56,7 @@ public class ScoutingService {
     private final TacticResolver tacticResolver;
     private final RecommendationService recommendationService;
     private final TransferTargetService transferTargetService;
+    private final ClubRepository clubRepository;
 
     public ScoutingResponse search(Long userId, Long careerId, ScoutingSearchRequest request) {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
@@ -73,11 +74,19 @@ public class ScoutingService {
         Map<Long, PlayerSummaryResponse> candidates = new LinkedHashMap<>();
         Set<Long> inBand = new HashSet<>();
         Set<Integer> leagues = new HashSet<>(recommendationService.reachableLeagues(squad));
-        transferTargetService.search(restrict(transferTargetService.band(role, intent, base, squad, pool, rounded, leagues), request), candidates, inBand);
-        transferTargetService.search(restrict(transferTargetService.free(role, intent, base, squad, pool, rounded), request), candidates, inBand);
-        transferTargetService.search(restrict(transferTargetService.prospects(role, intent, base, squad, pool, rounded), request), candidates, new HashSet<>());
-        if (request.isDream()) {
-            transferTargetService.search(restrict(dream(role, intent, base, squad, careerId, rounded), request), candidates, new HashSet<>());
+        if (hasExplicitTarget(request)) {
+            Integer targetLeague = targetLeague(request);
+            transferTargetService.search(restrict(explicit(role, intent, base, squad, careerId, request), request), candidates, new HashSet<>());
+            if (Objects.nonNull(targetLeague) && leagues.contains(targetLeague)) {
+                inBand.addAll(candidates.keySet());
+            }
+        } else {
+            transferTargetService.search(restrict(transferTargetService.band(role, intent, base, squad, pool, rounded, leagues), request), candidates, inBand);
+            transferTargetService.search(restrict(transferTargetService.free(role, intent, base, squad, pool, rounded), request), candidates, inBand);
+            transferTargetService.search(restrict(transferTargetService.prospects(role, intent, base, squad, pool, rounded), request), candidates, new HashSet<>());
+            if (request.isDream()) {
+                transferTargetService.search(restrict(dream(role, intent, base, squad, careerId, rounded), request), candidates, new HashSet<>());
+            }
         }
         candidates.keySet().removeAll(squad.playerIds());
 
@@ -105,21 +114,57 @@ public class ScoutingService {
         return search;
     }
 
-    private PlayerSearchRequest restrict(PlayerSearchRequest search, ScoutingSearchRequest request) {
-        if (Objects.nonNull(request.getAgeMax())) {
-            search.setAgeMax(Objects.isNull(search.getAgeMax()) ? request.getAgeMax() : Math.min(search.getAgeMax(), request.getAgeMax()));
+    private boolean hasExplicitTarget(ScoutingSearchRequest request) {
+        return Objects.nonNull(request.getLeagueId()) || Objects.nonNull(request.getClubId());
+    }
+
+    private Integer targetLeague(ScoutingSearchRequest request) {
+        if (Objects.nonNull(request.getLeagueId())) {
+            return request.getLeagueId();
         }
-        if (Objects.nonNull(request.getPotentialMin())) {
-            search.setPotentialMin(Objects.isNull(search.getPotentialMin()) ? request.getPotentialMin() : Math.max(search.getPotentialMin(), request.getPotentialMin()));
+        return clubRepository.findById(request.getClubId()).map(club -> club.getLeagueId()).orElse(null);
+    }
+
+    private PlayerSearchRequest explicit(FitRole role, IntentProfile intent, RecommendSlotRequest base, CareerService.CareerSquad squad, Long careerId,
+                                         ScoutingSearchRequest request) {
+        PlayerSearchRequest search = recommendationService.candidateSearch(role, intent, base, squad.playerIds(), squad.gameVersionId(), null, squad.gender());
+        search.setCareerId(careerId);
+        search.setSize(POOL_SIZE);
+        search.setLeagueId(request.getLeagueId());
+        search.setClubId(request.getClubId());
+        return search;
+    }
+
+    private PlayerSearchRequest restrict(PlayerSearchRequest search, ScoutingSearchRequest request) {
+        search.setOverallMin(maxOf(search.getOverallMin(), request.getOverallMin()));
+        search.setOverallMax(minOf(search.getOverallMax(), request.getOverallMax()));
+        search.setPotentialMin(maxOf(search.getPotentialMin(), request.getPotentialMin()));
+        search.setPotentialMax(minOf(search.getPotentialMax(), request.getPotentialMax()));
+        if (Objects.nonNull(request.getAgeMax())) {
+            search.setAgeMax(minOf(search.getAgeMax(), request.getAgeMax()));
         }
         return search;
+    }
+
+    private static Integer maxOf(Integer a, Integer b) {
+        if (Objects.isNull(a)) {
+            return b;
+        }
+        return Objects.isNull(b) ? a : Integer.valueOf(Math.max(a, b));
+    }
+
+    private static Integer minOf(Integer a, Integer b) {
+        if (Objects.isNull(a)) {
+            return b;
+        }
+        return Objects.isNull(b) ? a : Integer.valueOf(Math.min(a, b));
     }
 
     private ScoutingCandidate toCandidate(FitPlayer player, PlayerSummaryResponse summary, FitRole role, IntentProfile intent, String position,
                                           Set<Long> inBand, Long budget, int average) {
         RecommendationItem item = recommendationService.evaluate(player, summary, role, intent, position, null);
         boolean banded = inBand.contains(summary.getId());
-        Acquisition acquisition = summary.isFreeAgent() ? Acquisition.FREE : banded ? Acquisition.BUY : Acquisition.LOAN;
+        Acquisition acquisition = acquisition(summary, banded, average);
         Double ratio = valueRatio(summary.getValueEur(), budget);
         Feasibility feasibility = FeasibilityClassifier.classify(acquisition, banded, ratio, summary.getOverall() - average);
         long fee = acquisition == Acquisition.FREE || Objects.isNull(summary.getValueEur()) ? 0L : summary.getValueEur();
@@ -130,11 +175,21 @@ public class ScoutingService {
                 .acquisition(acquisition)
                 .feasibility(feasibility)
                 .estimatedFee(Objects.isNull(summary.getValueEur()) ? null : fee)
-                .valueSource(summary.isValuationEstimated() ? SOURCE_MODELED : SOURCE_IMPORT)
+                .valueSource(SOURCE_MODELED)
                 .valueRatio(ratio)
                 .opportunity(opportunity(item.getCombined(), fee))
                 .potential(isPotential(summary, average))
                 .build();
+    }
+
+    private Acquisition acquisition(PlayerSummaryResponse summary, boolean banded, int average) {
+        if (summary.isFreeAgent()) {
+            return Acquisition.FREE;
+        }
+        if (banded) {
+            return Acquisition.BUY;
+        }
+        return isPotential(summary, average) ? Acquisition.LOAN : Acquisition.BUY;
     }
 
     static Double valueRatio(Long value, Long budget) {

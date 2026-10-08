@@ -40,6 +40,22 @@ public class ScoutingSearchRequest {
     @Max(99)
     private Integer potentialMin;
 
+    @Min(1)
+    @Max(99)
+    private Integer overallMin;
+
+    @Min(1)
+    @Max(99)
+    private Integer overallMax;
+
+    @Min(1)
+    @Max(99)
+    private Integer potentialMax;
+
+    private Integer leagueId;
+
+    private Integer clubId;
+
     private boolean dream;
 
     @Size(max = 12)
