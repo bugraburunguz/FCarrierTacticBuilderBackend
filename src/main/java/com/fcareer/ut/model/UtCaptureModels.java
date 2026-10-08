@@ -97,6 +97,7 @@ public final class UtCaptureModels {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record CaptureResult(CaptureStats stats, List<CaptureCard> cards, ActiveSquad activeSquad, List<SquadSummary> squads,
                                 List<MarketPrice> prices, List<ObjectiveGroupView> objectives, List<SbcSetView> sbcSets, List<SbcDetail> sbcDetails,
-                                List<EvolutionSlot> evolutions, Long coins, List<CurrencyView> currencies, CaptureConfig config) {
+                                List<EvolutionSlot> evolutions, Long coins, List<CurrencyView> currencies, CaptureConfig config,
+                                List<String> unknownPaths) {
     }
 }

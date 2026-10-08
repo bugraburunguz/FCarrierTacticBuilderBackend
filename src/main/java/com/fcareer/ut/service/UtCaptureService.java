@@ -56,6 +56,7 @@ public class UtCaptureService {
 
     private static final List<String> DENY = List.of("/auth", "accountinfo", "connect", "nucleus", "phishing", "/fc/user/season", "sid=");
     private static final String USER_ENDPOINT = "/fc/user";
+    private static final String DISCOVERY_URL = "fcareer://discovery";
     private static final String LEGENDS_KEY = "\"LegendsPlayers\"";
     private static final String PLAYERS_KEY = "\"Players\"";
     private static final Pattern LEGEND_ID = Pattern.compile("\"id\"\\s*:\\s*(\\d+)");
@@ -96,6 +97,7 @@ public class UtCaptureService {
         Map<Kind, List<JsonNode>> bodies = new EnumMap<>(Kind.class);
         Map<Kind, List<Capture>> raw = new EnumMap<>(Kind.class);
         List<String> warnings = new ArrayList<>();
+        Set<String> unknownPaths = new java.util.TreeSet<>();
         List<Capture> ordered = captures.stream().sorted(Comparator.comparing(c -> Objects.requireNonNullElse(c.ts(), 0L))).toList();
         for (Capture capture : ordered) {
             if (Objects.isNull(capture.url()) || capture.url().isBlank() || Objects.isNull(capture.body())) {
@@ -103,6 +105,10 @@ public class UtCaptureService {
                 continue;
             }
             String url = capture.url().toLowerCase(Locale.ROOT);
+            if (url.startsWith(DISCOVERY_URL)) {
+                readDiscovery(capture.body(), unknownPaths);
+                continue;
+            }
             if (isDenied(url)) {
                 stripped++;
                 continue;
@@ -110,6 +116,7 @@ public class UtCaptureService {
             Kind kind = classify(path(url));
             if (Objects.isNull(kind)) {
                 ignored++;
+                unknownPaths.add(path(url).replaceFirst("^https?://[^/]+", "").replaceAll("\\d{3,}", "{n}"));
                 continue;
             }
             raw.computeIfAbsent(kind, k -> new ArrayList<>()).add(capture);
@@ -152,7 +159,17 @@ public class UtCaptureService {
         return new CaptureResult(stats, new ArrayList<>(cards.values()), activeSquad(last(bodies, Kind.SQUAD_ACTIVE), ctx, formationsByName, positionNames),
                 squads(last(bodies, Kind.SQUAD_LIST)), prices, objectives(last(bodies, Kind.OBJECTIVES)), sbcSets(bodies.get(Kind.SBC_HUB)),
                 sbcDetails(raw.get(Kind.SBC_DETAIL), bodies.get(Kind.SBC_DETAIL)), evolutions(bodies.get(Kind.ACADEMY)),
-                credits(last(bodies, Kind.CREDITS)), currencies(last(bodies, Kind.CREDITS)), config);
+                credits(last(bodies, Kind.CREDITS)), currencies(last(bodies, Kind.CREDITS)), config, new ArrayList<>(unknownPaths));
+    }
+
+    private void readDiscovery(String body, Set<String> unknownPaths) {
+        try {
+            for (JsonNode node : objectMapper.readTree(body)) {
+                unknownPaths.add(node.asText());
+            }
+        } catch (IOException e) {
+            log.warn("Discovery list unreadable");
+        }
     }
 
     static boolean isDenied(String lowerUrl) {
