@@ -108,7 +108,7 @@ public class TransferTargetService {
         return PositionTargets.builder().position(slot.getPosition()).roleId(slot.getRoleId()).targets(picked).build();
     }
 
-    private PlayerSearchRequest band(FitRole role, IntentProfile intent, RecommendSlotRequest base, CareerService.CareerSquad squad,
+    PlayerSearchRequest band(FitRole role, IntentProfile intent, RecommendSlotRequest base, CareerService.CareerSquad squad,
                                      TransferTargetRequest request, int average, Set<Integer> leagues) {
         PlayerSearchRequest search = recommendationService.candidateSearch(role, intent, base, squad.playerIds(), squad.gameVersionId(),
                 squad.budgetEur(), squad.gender());
@@ -120,7 +120,7 @@ public class TransferTargetService {
         return search;
     }
 
-    private PlayerSearchRequest free(FitRole role, IntentProfile intent, RecommendSlotRequest base, CareerService.CareerSquad squad,
+    PlayerSearchRequest free(FitRole role, IntentProfile intent, RecommendSlotRequest base, CareerService.CareerSquad squad,
                                      TransferTargetRequest request, int average) {
         PlayerSearchRequest search = recommendationService.candidateSearch(role, intent, base, squad.playerIds(), squad.gameVersionId(),
                 null, squad.gender());
@@ -132,7 +132,7 @@ public class TransferTargetService {
         return search;
     }
 
-    private PlayerSearchRequest prospects(FitRole role, IntentProfile intent, RecommendSlotRequest base, CareerService.CareerSquad squad,
+    PlayerSearchRequest prospects(FitRole role, IntentProfile intent, RecommendSlotRequest base, CareerService.CareerSquad squad,
                                           TransferTargetRequest request, int average) {
         PlayerSearchRequest search = recommendationService.candidateSearch(role, intent, base, squad.playerIds(), squad.gameVersionId(),
                 null, squad.gender());
@@ -147,7 +147,7 @@ public class TransferTargetService {
         return search;
     }
 
-    private PlayerSearchRequest lowOverallHighPotential(FitRole role, IntentProfile intent, RecommendSlotRequest base,
+    PlayerSearchRequest lowOverallHighPotential(FitRole role, IntentProfile intent, RecommendSlotRequest base,
                                                         CareerService.CareerSquad squad, TransferTargetRequest request, int average) {
         PlayerSearchRequest search = prospects(role, intent, base, squad, request, average);
         search.setAgeMax(LOW_OVERALL_AGE_MAX);
@@ -156,7 +156,7 @@ public class TransferTargetService {
         return search;
     }
 
-    private void search(PlayerSearchRequest search, Map<Long, PlayerSummaryResponse> pool, Set<Long> collect) {
+    void search(PlayerSearchRequest search, Map<Long, PlayerSummaryResponse> pool, Set<Long> collect) {
         for (PlayerSummaryResponse summary : playerService.search(search).getItems()) {
             pool.putIfAbsent(summary.getId(), summary);
             collect.add(summary.getId());

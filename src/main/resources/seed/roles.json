@@ -9,7 +9,7 @@
     "weapons": [{ "attr": "GKKicking", "hardMin": 66, "target": 80 }, { "attr": "Composure", "hardMin": 60, "target": 75 }],
     "priorityPlaystyles": [], "accelerate": [], "movementTags": ["build_from_back"] },
 
-  { "id": "fullback", "name": "Fullback", "positions": ["RB", "LB"], "weightGroup": "FB", "focuses": ["Defend", "Balanced"],
+  { "id": "fullback", "name": "Fullback", "positions": ["RB", "LB"], "weightGroup": "FB", "focuses": ["Defend", "Balanced", "Versatile"],
     "weapons": [{ "attr": "DefAwareness", "hardMin": 60, "target": 78 }, { "attr": "StandingTackle", "hardMin": 62, "target": 80 }],
     "priorityPlaystyles": ["Jockey"], "accelerate": ["CONTROLLED", "LENGTHY"], "movementTags": ["hold_line"] },
   { "id": "wingback", "name": "Wingback", "positions": ["RB", "LB"], "weightGroup": "FB", "focuses": ["Balanced", "Support"],
@@ -38,7 +38,7 @@
     "weapons": [{ "attr": "Acceleration", "hardMin": 68, "target": 82 }, { "attr": "DefAwareness", "hardMin": 62, "target": 78 }],
     "priorityPlaystyles": ["Jockey"], "accelerate": ["EXPLOSIVE", "CONTROLLED"], "movementTags": ["cover_wide"] },
 
-  { "id": "holding", "name": "Holding", "positions": ["CDM"], "weightGroup": "CDM", "focuses": ["Defend", "Roaming", "Ball-Winning"],
+  { "id": "holding", "name": "Holding", "positions": ["CDM", "CM"], "weightGroup": "CDM", "focuses": ["Defend", "Roaming", "Ball-Winning"], "focusExcludePositions": {"Roaming":["CM"]},
     "weapons": [{ "attr": "DefAwareness", "hardMin": 66, "target": 82 }, { "attr": "Interceptions", "hardMin": 66, "target": 82 }, { "attr": "Stamina", "hardMin": 78, "target": 88 }],
     "priorityPlaystyles": ["Intercept"], "accelerate": ["CONTROLLED", "LENGTHY"], "movementTags": ["screen_defence"] },
   { "id": "deep_lying_playmaker", "name": "Deep-Lying Playmaker", "positions": ["CDM", "CM"], "weightGroup": "CDM", "focuses": ["Defend", "Roaming", "Build-Up"], "focusExcludePositions": {"Roaming":["CM"]},

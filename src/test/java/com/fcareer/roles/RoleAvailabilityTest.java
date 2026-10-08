@@ -45,6 +45,29 @@ class RoleAvailabilityTest {
     }
 
     @Test
+    void focusSetsFollowTheAuthoritativeTablePerPosition() {
+        assertThat(focusesAt("CB", "stopper")).containsExactlyInAnyOrder("balanced", "aggressive");
+        assertThat(focusesAt("ST", "poacher")).containsExactlyInAnyOrder("attack", "support", "versatile");
+        assertThat(focusesAt("RB", "fullback")).containsExactlyInAnyOrder("balanced", "defend", "versatile");
+        assertThat(focusesAt("LB", "fullback")).containsExactlyInAnyOrder("balanced", "defend", "versatile");
+        assertThat(focusesAt("CDM", "holding")).containsExactlyInAnyOrder("defend", "roaming", "ball_winning");
+        assertThat(focusesAt("CM", "holding")).containsExactlyInAnyOrder("defend", "ball_winning");
+        assertThat(focusesAt("CDM", "deep_lying_playmaker")).containsExactlyInAnyOrder("defend", "roaming", "build_up");
+        assertThat(focusesAt("CM", "deep_lying_playmaker")).containsExactlyInAnyOrder("defend", "build_up");
+        assertThat(focusesAt("RW", "winger")).containsExactlyInAnyOrder("balanced", "attack", "versatile");
+        assertThat(focusesAt("RM", "winger")).containsExactlyInAnyOrder("balanced", "attack");
+        assertThat(focusesAt("RW", "inside_forward")).containsExactlyInAnyOrder("balanced", "attack", "roaming");
+        assertThat(focusesAt("LM", "inside_forward")).containsExactlyInAnyOrder("balanced", "attack");
+    }
+
+    private static List<String> focusesAt(String position, String roleFamily) {
+        return roles.values().stream()
+                .filter(r -> r.getBaseRole().equals(roleFamily) && r.getPositions().contains(position))
+                .map(r -> r.getId().substring(roleFamily.length() + 1))
+                .toList();
+    }
+
+    @Test
     void everyRoleStillHasAtLeastOnePosition() {
         roles.values().forEach(role -> assertThat(role.getPositions()).as(role.getId()).isNotEmpty());
     }
