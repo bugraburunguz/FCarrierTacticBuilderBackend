@@ -51,6 +51,16 @@ public class AuthService {
     private final BillingProperties billingProperties;
     private final CreditService creditService;
     private final SecureRandom secureRandom = new SecureRandom();
+    private volatile String dummyHash;
+
+    private String dummyHash() {
+        String hash = dummyHash;
+        if (Objects.isNull(hash)) {
+            hash = passwordEncoder.encode("fcareer-dummy-password");
+            dummyHash = hash;
+        }
+        return hash;
+    }
 
     @Transactional
     public TokenResponse register(RegisterRequest request) {
@@ -77,12 +87,13 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public TokenResponse login(LoginRequest request) {
-        AppUserEntity user = appUserRepository.findByEmail(normalize(request.getEmail()))
-                .filter(candidate -> passwordEncoder.matches(request.getPassword(), candidate.getPasswordHash()))
-                .orElseThrow(() -> {
-                    log.warn("Login rejected");
-                    return new InvalidCredentialsException();
-                });
+        java.util.Optional<AppUserEntity> found = appUserRepository.findByEmail(normalize(request.getEmail()));
+        // Kullanıcı yoksa da bcrypt çalışır: yanıt süresi e-posta varlığını sızdırmaz (SEC-08).
+        boolean matches = passwordEncoder.matches(request.getPassword(), found.map(AppUserEntity::getPasswordHash).orElse(dummyHash()));
+        AppUserEntity user = found.filter(candidate -> matches).orElseThrow(() -> {
+            log.warn("Login rejected");
+            return new InvalidCredentialsException();
+        });
         log.info("User logged in userId : {}", user.getId());
         return issueTokens(user);
     }

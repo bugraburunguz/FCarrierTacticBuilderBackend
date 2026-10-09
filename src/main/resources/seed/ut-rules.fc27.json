@@ -1,0 +1,28 @@
+{
+  "version": "fc27-2026-10",
+  "verified": false,
+  "note": "Oyun kurallari FC27 icin oyun-ici dogrulanana kadar verified:false. Degerler kodda tasinmaz; bu dosyanin web kopyasi FCarrierTacticBuilderWeb/src/lib/utRules.fc27.json ile birebir ayni tutulur.",
+  "squadRating": {
+    "formula": "floor(round(sum + sum(max(0, r - avg))) / n)",
+    "size": 11
+  },
+  "chemistry": {
+    "verified": true,
+    "source": "fifauteam.com/fc-27-chemistry (08 D-21)",
+    "club": [2, 4, 7],
+    "league": [3, 5, 8],
+    "nation": [2, 5, 8]
+  },
+  "dailyRefresh": {
+    "verified": false,
+    "timezone": "Europe/London",
+    "hour": 18
+  },
+  "ratingTestVectors": [
+    { "name": "11 x 84", "ratings": [84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84], "expected": 84 },
+    { "name": "8 x 84 + 3 x 83", "ratings": [84, 84, 84, 84, 84, 84, 84, 84, 83, 83, 83], "expected": 83 },
+    { "name": "13 x 80 + 5 x 85 (18 kisi)", "ratings": [80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 85, 85, 85, 85, 85], "expected": 82 },
+    { "name": "tek yildiz 90 + 10 x 80", "ratings": [90, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80], "expected": 81 },
+    { "name": "bos", "ratings": [], "expected": 0 }
+  ]
+}
