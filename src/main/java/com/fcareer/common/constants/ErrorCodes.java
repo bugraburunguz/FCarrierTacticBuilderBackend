@@ -22,6 +22,7 @@ public final class ErrorCodes {
     public static final String PAYMENT_UNAVAILABLE = "fc.exception.0018";
     public static final String SUBSCRIPTION_ALREADY_ACTIVE = "fc.exception.0019";
     public static final String PAYLOAD_TOO_LARGE = "fc.exception.0020";
+    public static final String EXTENSION_OUTDATED = "fc.exception.0021";
     public static final String UNKNOWN_ERROR = "fc.exception.9999";
 
     private ErrorCodes() {

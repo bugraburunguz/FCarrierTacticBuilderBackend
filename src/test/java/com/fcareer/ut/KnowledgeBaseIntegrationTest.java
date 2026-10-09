@@ -172,6 +172,29 @@ class KnowledgeBaseIntegrationTest {
         call(put("/api/v1/admin/ut/unknown/1").header(ADMIN_KEY, "test-key"), body, null, 400);
     }
 
+    @Test
+    void outdatedExtensionIsAskedToUpdate() throws Exception {
+        long contributor = register();
+        admin("/api/v1/admin/ut/contributors/" + contributor + "/grant");
+        String token = login(contributor);
+        Map<String, Object> body = Map.of("captures", captures(hub("Surum"), challenge(70)));
+
+        call(post("/api/v1/ut/contrib/capture").header("X-Ext-Version", "0.2.0"), body, token, 426);
+        call(post("/api/v1/ut/contrib/capture").header("X-Ext-Version", "0.3.0"), body, token, 200);
+        call(post("/api/v1/ut/contrib/capture").header("X-Ext-Version", "1.0.0"), body, token, 200);
+    }
+
+    @Test
+    void captureRulesAndEaRolesArePublic() throws Exception {
+        JsonNode rules = call(get("/api/v1/ut/capture/rules"), null, null, 200).at("/data");
+        assertThat(rules.at("/deny").toString()).contains("sid=");
+        assertThat(rules.at("/personalOnly").toString()).contains("/club");
+
+        JsonNode roles = call(get("/api/v1/tactics/ea-roles"), null, null, 200).at("/data");
+        assertThat(roles.size()).isGreaterThan(100);
+        assertThat(roles.toString()).contains("\"position\":\"CAM\"");
+    }
+
     private long register() throws Exception {
         JsonNode registered = call(post("/api/v1/auth/register"), Map.of("email", "kb-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!"), null, 200);
         String token = registered.at("/data/accessToken").asText();

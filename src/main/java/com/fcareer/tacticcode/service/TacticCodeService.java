@@ -99,6 +99,17 @@ public class TacticCodeService {
                 .slots(slots).exact(warnings.isEmpty()).warnings(warnings).build();
     }
 
+    /** EA'nın izin verdiği (mevki, rol, focus) kombinasyonları: rol seçici yalnız bunları göstermelidir (TAC-02). */
+    public List<Map<String, String>> allowedRoles() {
+        List<Map<String, String>> allowed = new ArrayList<>();
+        for (EaCodecData.Role role : codec.roles()) {
+            for (String focus : role.focuses()) {
+                allowed.add(Map.of("position", role.position(), "baseRole", role.name(), "focus", focus));
+            }
+        }
+        return allowed;
+    }
+
     private EaSlot eaSlot(EaCodecData.Formation ea, int index, IntentProfile ourSlot, List<String> warnings) {
         String position = ea.positions().get(index);
         FitRole role = ourSlot.getResolvedRole();

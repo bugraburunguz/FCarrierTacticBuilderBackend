@@ -7,6 +7,7 @@ import com.fcareer.tacticcode.service.TacticCodeService;
 import com.fcareer.tactics.model.request.TacticRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,11 @@ import static com.fcareer.common.constants.ApiConstants.API_V1;
 public class TacticCodeController {
 
     private final TacticCodeService tacticCodeService;
+
+    @GetMapping("/ea-roles")
+    public java.util.List<java.util.Map<String, String>> eaRoles() {
+        return tacticCodeService.allowedRoles();
+    }
 
     @PostMapping("/export-code")
     public ExportResponse export(@Valid @RequestBody TacticRequest request) {

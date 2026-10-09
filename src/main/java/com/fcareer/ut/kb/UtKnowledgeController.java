@@ -66,6 +66,14 @@ public class UtKnowledgeController {
         }
     }
 
+    /** Extension'ın açılışta çektiği tek kaynaklı yakalama kuralları (EXT-04): deny listesi, kişisel/katkı uçları, minimum sürüm. */
+    @GetMapping("/capture/rules")
+    public JsonNode captureRules() throws IOException {
+        try (InputStream in = new ClassPathResource("seed/capture-rules.json").getInputStream()) {
+            return objectMapper.readTree(in);
+        }
+    }
+
     @GetMapping("/kb/sbc")
     public List<SbcSetDto> sbcSets(@RequestParam(required = false) String category, @RequestParam(defaultValue = "true") boolean active,
                                    @RequestParam(defaultValue = "false") boolean challenges) {
@@ -124,9 +132,42 @@ public class UtKnowledgeController {
 
     @PostMapping("/contrib/capture")
     public ContributionResult contribute(@AuthenticationPrincipal AuthUser user, @Valid @RequestBody CaptureRequest request,
-                                         @RequestParam(defaultValue = "CONSOLE") String platform, @RequestHeader(value = "X-Ext-Version", required = false) String extensionVersion) {
+                                         @RequestParam(defaultValue = "CONSOLE") String platform, @RequestHeader(value = "X-Ext-Version", required = false) String extensionVersion) throws IOException {
+        requireCurrentExtension(extensionVersion);
         List<Capture> captures = Objects.requireNonNull(request.captures());
         return contributionService.contribute(user.id(), captures, platform);
+    }
+
+    /** EXT-12: sürüm başlığı varsa ve minimumun altındaysa güncelleme istenir (426). Başlıksız (ham yükleme) istekler etkilenmez. */
+    private void requireCurrentExtension(String version) throws IOException {
+        if (Objects.isNull(version) || version.isBlank()) {
+            return;
+        }
+        String minimum = captureRules().path("minExtensionVersion").asText("0.0.0");
+        if (compareVersions(version, minimum) < 0) {
+            throw new com.fcareer.common.exception.ExtensionOutdatedException(minimum);
+        }
+    }
+
+    static int compareVersions(String a, String b) {
+        String[] left = a.split("[.]");
+        String[] right = b.split("[.]");
+        for (int i = 0; i < Math.max(left.length, right.length); i++) {
+            int x = i < left.length ? parse(left[i]) : 0;
+            int y = i < right.length ? parse(right[i]) : 0;
+            if (x != y) {
+                return Integer.compare(x, y);
+            }
+        }
+        return 0;
+    }
+
+    private static int parse(String part) {
+        try {
+            return Integer.parseInt(part.replaceAll("[^0-9]", ""));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     private short gameVersion() {
