@@ -3,6 +3,7 @@ package com.fcareer.common.advice;
 import com.fcareer.common.model.ApiResponse;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.server.ServerHttpRequest;
@@ -15,7 +16,7 @@ public class SuccessResponseAdvice implements ResponseBodyAdvice<Object> {
 
     @Override
     public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
-        return !StringHttpMessageConverter.class.isAssignableFrom(converterType);
+        return !StringHttpMessageConverter.class.isAssignableFrom(converterType) && !ByteArrayHttpMessageConverter.class.isAssignableFrom(converterType);
     }
 
     @Override

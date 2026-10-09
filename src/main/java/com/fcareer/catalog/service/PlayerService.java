@@ -184,7 +184,7 @@ public class PlayerService {
 
     /** Yüz adresi (şablondan) ve son sürümde değişmiş olma bilgisi eklenir; diff precompute edilmiştir, burada yalnızca okunur. */
     private List<PlayerSummaryResponse> enrich(List<PlayerSummaryResponse> items, short gameVersionId) {
-        String template = catalogProperties.getFaceUrlTemplate();
+        String template = faceTemplate();
         Map<Long, com.fcareer.versioning.model.VersionModels.ChangeSummary> changes = versioningService.summaries(
                 items.stream().map(PlayerSummaryResponse::getId).toList(), gameVersionId);
         for (PlayerSummaryResponse item : items) {
@@ -198,6 +198,12 @@ public class PlayerService {
             }
         }
         return items;
+    }
+
+    /** Yanıtlara konan yüz adresi kendi proxy'mizdir; kaynak şablonu boşsa (takedown) hiç adres dönülmez. */
+    private String faceTemplate() {
+        String upstream = catalogProperties.getFaceUrlTemplate();
+        return Objects.isNull(upstream) || upstream.isBlank() ? null : catalogProperties.getFaceProxyPath();
     }
 
     private short resolveGameVersion(Short requested) {

@@ -399,8 +399,8 @@ public class UtCaptureService {
     }
 
     private String faceUrl(long assetId) {
-        String template = catalogProperties.getFaceUrlTemplate();
-        return Objects.isNull(template) || template.isBlank() ? null : template.replace("{id}", String.valueOf(assetId));
+        String upstream = catalogProperties.getFaceUrlTemplate();
+        return Objects.isNull(upstream) || upstream.isBlank() ? null : catalogProperties.getFaceProxyPath().replace("{id}", String.valueOf(assetId));
     }
 
     private static String cardType(String rarity, boolean legend) {
