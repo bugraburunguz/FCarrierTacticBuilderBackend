@@ -44,6 +44,7 @@ public class CareerImportService {
     private final CareerService careerService;
     private final EntitlementService entitlementService;
     private final BaseCatalogImporter baseCatalogImporter;
+    private final com.fcareer.career.desk.CareerDeskService careerDeskService;
 
     @Transactional
     public ImportSummaryResponse importData(Long userId, Long careerId, MultipartFile logFile, MultipartFile players, MultipartFile teams,
@@ -152,6 +153,7 @@ public class CareerImportService {
                 SELECT t.team_id, t.name FROM career_team t JOIN club c ON c.id = :club
                 WHERE t.career_id = :c AND NOT t.free_agent_pool AND lower(t.name) = lower(c.name) LIMIT 1""",
                 new MapSqlParameterSource().addValue("c", careerId).addValue("club", career.getClubId()));
+        careerDeskService.takeSnapshot(careerId, "IMPORT", null);
         log.info("Career import done careerId : {} players : {} teams : {} freeAgents : {} unmatched : {}",
                 careerId, playerRows.size(), teamParams.size(), freeAgents, unmatched);
         Integer guessedTeam = guess.isEmpty() ? null : ((Number) guess.get(0).get("team_id")).intValue();

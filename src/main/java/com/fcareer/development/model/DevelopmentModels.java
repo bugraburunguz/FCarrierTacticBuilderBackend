@@ -115,6 +115,7 @@ public final class DevelopmentModels {
         private Integer age;
         private int overall;
         private int potential;
+        private String potentialRange;
         private int gap;
         private List<String> positions;
         private String club;

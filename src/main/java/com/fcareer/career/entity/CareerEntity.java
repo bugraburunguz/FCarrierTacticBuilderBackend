@@ -37,6 +37,14 @@ public class CareerEntity {
 
     private String name;
 
+    private String spoilerMode = "SHOW";
+
+    private Long wageBudgetEur;
+
+    private java.time.LocalDate windowEndsOn;
+
+    private String challengeId;
+
     @CreatedDate
     @Column(columnDefinition = "timestamptz", updatable = false)
     private Instant createdAt;

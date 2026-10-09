@@ -24,4 +24,11 @@ public class UpdateCareerRequest {
 
     @Positive
     private Integer season;
+    @jakarta.validation.constraints.Pattern(regexp = "SHOW|SCOUT_RANGE")
+    private String spoilerMode;
+    @PositiveOrZero
+    private Long wageBudgetEur;
+    private java.time.LocalDate windowEndsOn;
+    @Size(max = 40)
+    private String challengeId;
 }

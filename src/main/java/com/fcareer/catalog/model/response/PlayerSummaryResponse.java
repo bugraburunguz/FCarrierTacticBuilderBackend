@@ -30,6 +30,8 @@ public class PlayerSummaryResponse {
     private String accelerate;
     private Integer runStyle;
     private Integer potential;
+    /** Spoiler kontrolü açıkken (SCOUT_RANGE) tam potansiyel yerine aralık: ör. 80–84. */
+    private String potentialRange;
     private Long valueEur;
     private boolean valuationEstimated;
     private boolean freeAgent;

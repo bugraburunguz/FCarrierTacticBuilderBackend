@@ -73,6 +73,7 @@ public class CareerService {
     private final CareerMapper careerMapper;
     private final Clock clock;
     private final org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate jdbc;
+    private final com.fcareer.career.desk.SpoilerPolicy spoilerPolicy;
 
     public CareerResponse create(Long userId, CreateCareerRequest request) {
         short gameVersion = Objects.isNull(request.getGameVersionId())
@@ -112,6 +113,18 @@ public class CareerService {
         }
         if (Objects.nonNull(request.getSeason())) {
             career.setSeason(request.getSeason());
+        }
+        if (Objects.nonNull(request.getSpoilerMode())) {
+            career.setSpoilerMode(request.getSpoilerMode());
+        }
+        if (Objects.nonNull(request.getWageBudgetEur())) {
+            career.setWageBudgetEur(request.getWageBudgetEur());
+        }
+        if (Objects.nonNull(request.getWindowEndsOn())) {
+            career.setWindowEndsOn(request.getWindowEndsOn());
+        }
+        if (Objects.nonNull(request.getChallengeId())) {
+            career.setChallengeId(request.getChallengeId().isBlank() ? null : request.getChallengeId());
         }
         log.info("Career updated careerId : {}", careerId);
         return toResponse(career);
@@ -158,7 +171,12 @@ public class CareerService {
                         summary.setPotential(imported[1]);
                         summary.setValuationEstimated(false);
                     }
-                    return careerMapper.toPlayer(s, summary);
+                    spoilerPolicy.mask(careerId, summary);
+                    CareerPlayerResponse row = careerMapper.toPlayer(s, summary);
+                    if (spoilerPolicy.ranged(careerId)) {
+                        row.setDynamicPotential(null);
+                    }
+                    return row;
                 })
                 .toList();
     }

@@ -26,6 +26,10 @@ public class CareerMapper {
                 .season(career.getSeason())
                 .budgetEur(career.getBudgetEur())
                 .squadSize(squadSize)
+                .spoilerMode(career.getSpoilerMode())
+                .wageBudgetEur(career.getWageBudgetEur())
+                .windowEndsOn(career.getWindowEndsOn())
+                .challengeId(career.getChallengeId())
                 .createdAt(career.getCreatedAt())
                 .build();
     }

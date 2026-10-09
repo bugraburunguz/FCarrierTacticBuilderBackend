@@ -42,6 +42,7 @@ public class PlayerController {
     private final PlayerService playerService;
     private final CareerService careerService;
     private final FitService fitService;
+    private final com.fcareer.career.desk.SpoilerPolicy spoilerPolicy;
 
     @GetMapping
     public PageResponse<PlayerSummaryResponse> search(
@@ -79,7 +80,7 @@ public class PlayerController {
         Map<String, Integer> attrMin = new HashMap<>();
         Map<String, Integer> attrMax = new HashMap<>();
         allParams.forEach((key, value) -> collectAttrBound(key, value, attrMin, attrMax));
-        return playerService.search(PlayerSearchRequest.builder()
+        PageResponse<PlayerSummaryResponse> page0 = playerService.search(PlayerSearchRequest.builder()
                 .gameVersionId(gameVersionId)
                 .query(query)
                 .positions(orEmpty(positions))
@@ -109,6 +110,8 @@ public class PlayerController {
                 .page(page)
                 .size(size)
                 .build());
+        spoilerPolicy.maskAll(careerId, page0.getItems());
+        return page0;
     }
 
     @GetMapping("/{id}/roles")
@@ -139,7 +142,9 @@ public class PlayerController {
         if (careerId != null) {
             careerService.requireOwned(user == null ? null : user.id(), careerId);
         }
-        return playerService.detail(id, gameVersionId, careerId);
+        PlayerDetailResponse detail = playerService.detail(id, gameVersionId, careerId);
+        spoilerPolicy.mask(careerId, detail.getSummary());
+        return detail;
     }
 
     private void collectAttrBound(String key, String value, Map<String, Integer> attrMin, Map<String, Integer> attrMax) {

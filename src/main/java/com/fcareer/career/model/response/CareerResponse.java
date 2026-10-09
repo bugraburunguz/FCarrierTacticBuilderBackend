@@ -23,5 +23,9 @@ public class CareerResponse {
     private Integer season;
     private Long budgetEur;
     private int squadSize;
+    private String spoilerMode;
+    private Long wageBudgetEur;
+    private java.time.LocalDate windowEndsOn;
+    private String challengeId;
     private Instant createdAt;
 }

@@ -28,6 +28,7 @@ public class DevelopmentController {
 
     private final DevelopmentService developmentService;
     private final CareerService careerService;
+    private final com.fcareer.career.desk.SpoilerPolicy spoilerPolicy;
 
     @PostMapping("/players/{id}/development")
     public DevelopmentResponse development(@AuthenticationPrincipal AuthUser user, @PathVariable Long id, @RequestBody(required = false) DevelopmentRequest request) {
@@ -55,9 +56,18 @@ public class DevelopmentController {
         if (careerId != null) {
             careerService.requireOwned(user == null ? null : user.id(), careerId);
         }
-        return developmentService.wonderkids(WonderkidQuery.builder()
+        List<WonderkidResponse> rows = developmentService.wonderkids(WonderkidQuery.builder()
                 .gameVersionId(gameVersionId).gender(gender).position(position).maxAge(maxAge)
                 .minPotential(minPotential).leagueId(leagueId).budgetMax(budgetMax).careerId(careerId).roleId(roleId)
                 .sort(sort).limit(limit).build());
+        if (spoilerPolicy.ranged(careerId)) {
+            rows.forEach(r -> {
+                r.setPotentialRange(com.fcareer.career.desk.SpoilerPolicy.range(r.getPotential()));
+                r.setPotential(com.fcareer.career.desk.SpoilerPolicy.low(r.getPotential()));
+                r.setGap(r.getPotential() - r.getOverall());
+                r.setPotentialPerMillion(null);
+            });
+        }
+        return rows;
     }
 }
