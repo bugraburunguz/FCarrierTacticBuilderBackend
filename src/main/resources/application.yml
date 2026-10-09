@@ -34,6 +34,8 @@ fcareer:
 
 server:
   port: ${SERVER_PORT:8080}
+  # nginx/compose arkasında gerçek istemci adresi (X-Forwarded-For) rate limit için kullanılır; yalnız özel ağ aralıkları güvenilir.
+  forward-headers-strategy: native
 
 management:
   endpoints:
@@ -71,9 +73,18 @@ fcareer.billing:
   recommend-cost: 3
   advisor-cost: 8
   subscription-days: 30
+  stub-enabled: ${BILLING_STUB_ENABLED:false}
 
 # --- Faz 6: ML servisi ---
 fcareer.ml:
   base-url: ${ML_BASE_URL:http://localhost:8000}
+  shared-secret: ${ML_SHARED_SECRET:}
   batch-size: 500
   age-reference-date: ${ML_AGE_REFERENCE_DATE:2026-10-05}
+
+# Swagger yalnız geliştirmede (SWAGGER_ENABLED=true); prod'da kapalı.
+springdoc:
+  api-docs:
+    enabled: ${SWAGGER_ENABLED:false}
+  swagger-ui:
+    enabled: ${SWAGGER_ENABLED:false}

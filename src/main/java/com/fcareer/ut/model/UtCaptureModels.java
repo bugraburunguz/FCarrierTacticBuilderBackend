@@ -12,11 +12,13 @@ import java.util.Map;
 public final class UtCaptureModels {
 
     public static final int MAX_CAPTURES = 2000;
+    public static final int MAX_BODY_CHARS = 8_000_000;
+    public static final long MAX_TOTAL_CHARS = 40_000_000L;
 
     private UtCaptureModels() {
     }
 
-    public record Capture(String url, Integer status, Long ts, String body) {
+    public record Capture(String url, Integer status, Long ts, @Size(max = MAX_BODY_CHARS) String body) {
     }
 
     public record CaptureRequest(String linkToken, @NotNull @Size(max = MAX_CAPTURES) List<@Valid Capture> captures) {

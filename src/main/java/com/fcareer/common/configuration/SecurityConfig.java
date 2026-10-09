@@ -12,7 +12,7 @@ import com.fcareer.ingestion.security.AdminKeyFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import com.fcareer.common.redis.RedisCounter;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -43,7 +43,7 @@ public class SecurityConfig {
     private final JwtService jwtService;
     private final SecurityProperties securityProperties;
     private final IngestionProperties ingestionProperties;
-    private final StringRedisTemplate redisTemplate;
+    private final RedisCounter redisCounter;
     private final MessageService messageService;
     private final ObjectMapper objectMapper;
     private final Clock clock;
@@ -51,9 +51,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtService);
-        RateLimitFilter rateLimitFilter = new RateLimitFilter(securityProperties, redisTemplate, messageService,
+        RateLimitFilter rateLimitFilter = new RateLimitFilter(securityProperties, redisCounter, messageService,
                 objectMapper, clock);
-        AdminKeyFilter adminKeyFilter = new AdminKeyFilter(ingestionProperties);
+        AdminKeyFilter adminKeyFilter = new AdminKeyFilter(ingestionProperties, redisCounter);
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())

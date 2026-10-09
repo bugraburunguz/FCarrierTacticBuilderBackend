@@ -1,0 +1,3398 @@
+{
+ "_source": "EasySBC FC27 tactics hub (api-fc27.easysbc.io/tactics, 2026-10-09). Codes are published in-game EA tactic codes; roles use EA playerRoleId (same numbering as seed/ea-tactic-codec.json). Test vectors only.",
+ "_verified": "All 64 reproduced bit-exact by EaTacticCodec logic (Python port) on 2026-10-09.",
+ "vectors": [
+  {
+   "code": "AJawHEA#K?tB",
+   "formationId": "f4411a",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 60,
+   "roles": [
+    {
+     "roleId": 2,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 26,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 30,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 43,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "@JZpGDPHJ97B",
+   "formationId": "f4411a",
+   "buildUp": "Balanced",
+   "defensiveApproach": "High",
+   "lineHeight": 70,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 23,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 30,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "vYHZ2fH45tMv",
+   "formationId": "f4231a",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 50,
+   "roles": [
+    {
+     "roleId": 2,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 49,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 26,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 30,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "RZtRy3rYbN?y",
+   "formationId": "f4213",
+   "buildUp": "Short Passing",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 60,
+   "roles": [
+    {
+     "roleId": 2,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 49,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 16,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 36,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 39,
+     "focus": "Balanced"
+    }
+   ]
+  },
+  {
+   "code": "yYKc4Ck48umz",
+   "formationId": "f4231a",
+   "buildUp": "Balanced",
+   "defensiveApproach": "High",
+   "lineHeight": 61,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 16,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 16,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 26,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 30,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "v#JZ2zv15rLv",
+   "formationId": "f4411a",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 50,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 26,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 30,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "x4L761x37NNx",
+   "formationId": "f442",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 50,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 26,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 30,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "&#%eK6&8?yg1",
+   "formationId": "f4411a",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 60,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 26,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 19,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 27,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "yQKcR8k68wwz",
+   "formationId": "f4231",
+   "buildUp": "Balanced",
+   "defensiveApproach": "High",
+   "lineHeight": 62,
+   "roles": [
+    {
+     "roleId": 45,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 16,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 16,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "G5gWPUG%QEzH",
+   "formationId": "f442",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 60,
+   "roles": [
+    {
+     "roleId": 2,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 26,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 21,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 30,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 43,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "zYLdCFt59v3T",
+   "formationId": "f4231a",
+   "buildUp": "Short Passing",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 55,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 16,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 16,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 26,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 30,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "v4Jz4zv15rLP",
+   "formationId": "f442",
+   "buildUp": "Short Passing",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 50,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 26,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 30,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 43,
+     "focus": "Build-Up"
+    }
+   ]
+  },
+  {
+   "code": "6YU?TE6CE4m7",
+   "formationId": "f451a",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 60,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 26,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 20,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 30,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 43,
+     "focus": "Build-Up"
+    }
+   ]
+  },
+  {
+   "code": "7ZX5UBtBF3X7",
+   "formationId": "f4213",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 50,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 16,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 16,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 36,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 39,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "JZ$JqP7PTF1q",
+   "formationId": "f4213",
+   "buildUp": "Short Passing",
+   "defensiveApproach": "High",
+   "lineHeight": 60,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 16,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 16,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 36,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 39,
+     "focus": "Balanced"
+    }
+   ]
+  },
+  {
+   "code": "1wNfkDH9@zqW",
+   "formationId": "f4321",
+   "buildUp": "Short Passing",
+   "defensiveApproach": "High",
+   "lineHeight": 61,
+   "roles": [
+    {
+     "roleId": 2,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 20,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 21,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "7BUbaxXCF3n8",
+   "formationId": "f433a",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 60,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 49,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Ball-Winning"
+    },
+    {
+     "roleId": 18,
+     "focus": "Ball-Winning"
+    },
+    {
+     "roleId": 36,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 43,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 39,
+     "focus": "Balanced"
+    }
+   ]
+  },
+  {
+   "code": "8xUmrq&EG64?",
+   "formationId": "f4321",
+   "buildUp": "Balanced",
+   "defensiveApproach": "High",
+   "lineHeight": 70,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 21,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 19,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 21,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "BpZLy3ZKL@2i",
+   "formationId": "f4312",
+   "buildUp": "Short Passing",
+   "defensiveApproach": "High",
+   "lineHeight": 61,
+   "roles": [
+    {
+     "roleId": 2,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Ball-Winning"
+    },
+    {
+     "roleId": 19,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 18,
+     "focus": "Ball-Winning"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "wo#65UB26sdB",
+   "formationId": "f4312",
+   "buildUp": "Counter",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 60,
+   "roles": [
+    {
+     "roleId": 2,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 20,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 34,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "QZsQxaCYa%Fx",
+   "formationId": "f4213",
+   "buildUp": "Short Passing",
+   "defensiveApproach": "High",
+   "lineHeight": 61,
+   "roles": [
+    {
+     "roleId": 2,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 16,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 16,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 36,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 39,
+     "focus": "Balanced"
+    }
+   ]
+  },
+  {
+   "code": "MZoqmS?SW#6N",
+   "formationId": "f4213",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 60,
+   "roles": [
+    {
+     "roleId": 45,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 16,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 16,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 36,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 43,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 39,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "BpZRy3ZKL@uC",
+   "formationId": "f4312",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 60,
+   "roles": [
+    {
+     "roleId": 2,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Ball-Winning"
+    },
+    {
+     "roleId": 19,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 18,
+     "focus": "Ball-Winning"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 43,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "BpZxj3ZKL@tS",
+   "formationId": "f4312",
+   "buildUp": "Counter",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 60,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Ball-Winning"
+    },
+    {
+     "roleId": 19,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 18,
+     "focus": "Ball-Winning"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 43,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 43,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "6wTEr#yAE2m7",
+   "formationId": "f41212a",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 60,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 16,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 21,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "24Qg8628Ayq3",
+   "formationId": "f442",
+   "buildUp": "Balanced",
+   "defensiveApproach": "High",
+   "lineHeight": 61,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 26,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 30,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 44,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "iZ?iD#8wsmu2",
+   "formationId": "f4213",
+   "buildUp": "Counter",
+   "defensiveApproach": "High",
+   "lineHeight": 80,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 4,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 8,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 16,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 36,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 39,
+     "focus": "Balanced"
+    }
+   ]
+  },
+  {
+   "code": "2YS2Wgw8AyCF",
+   "formationId": "f4213",
+   "buildUp": "Counter",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 40,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 16,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 16,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 36,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 42,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 39,
+     "focus": "Balanced"
+    }
+   ]
+  },
+  {
+   "code": "LJ$1RXLTWJHt",
+   "formationId": "f4411a",
+   "buildUp": "Short Passing",
+   "defensiveApproach": "High",
+   "lineHeight": 70,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 12,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 26,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 20,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 30,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "G5gQPKJ%Qk6n",
+   "formationId": "f442",
+   "buildUp": "Short Passing",
+   "defensiveApproach": "High",
+   "lineHeight": 61,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 26,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 21,
+     "focus": "Roaming"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 30,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "Twsd&XrbdRPQ",
+   "formationId": "f41212a",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Deep",
+   "lineHeight": 30,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "S4scrWiacQ%P",
+   "formationId": "f442",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Deep",
+   "lineHeight": 30,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 23,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 27,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "pYFtaPBxzn$m",
+   "formationId": "f4213",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Deep",
+   "lineHeight": 30,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 35,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 38,
+     "focus": "Balanced"
+    }
+   ]
+  },
+  {
+   "code": "n4BxAr3vx$D3",
+   "formationId": "f442",
+   "buildUp": "Counter",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 50,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 23,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 27,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "xYJb4Br37t1R",
+   "formationId": "f4231a",
+   "buildUp": "Short Passing",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 55,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 16,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 16,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 26,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 30,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "vQ#zg1@35tjQ",
+   "formationId": "f433c",
+   "buildUp": "Short Passing",
+   "defensiveApproach": "High",
+   "lineHeight": 61,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 35,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 38,
+     "focus": "Balanced"
+    }
+   ]
+  },
+  {
+   "code": "@ZbDw$XHJ9bf",
+   "formationId": "f4213",
+   "buildUp": "Short Passing",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 50,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 35,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 38,
+     "focus": "Balanced"
+    }
+   ]
+  },
+  {
+   "code": "P#p5$TfXZNLM",
+   "formationId": "f4411a",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Deep",
+   "lineHeight": 30,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 23,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 27,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "DYbtZnbLNB@A",
+   "formationId": "f4231a",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Deep",
+   "lineHeight": 30,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 23,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 27,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "9ZVJEBfT6JZ9",
+   "formationId": "f4231a",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 50,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Versatile"
+    },
+    {
+     "roleId": 13,
+     "focus": "Aggressive"
+    },
+    {
+     "roleId": 13,
+     "focus": "Aggressive"
+    },
+    {
+     "roleId": 7,
+     "focus": "Versatile"
+    },
+    {
+     "roleId": 14,
+     "focus": "Ball-Winning"
+    },
+    {
+     "roleId": 16,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 23,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 30,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 31,
+     "focus": "Roaming"
+    },
+    {
+     "roleId": 41,
+     "focus": "Support"
+    }
+   ]
+  },
+  {
+   "code": "4AR4ZGYCC&16",
+   "formationId": "f433a",
+   "buildUp": "Balanced",
+   "defensiveApproach": "High",
+   "lineHeight": 70,
+   "roles": [
+    {
+     "roleId": 2,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 9,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 14,
+     "focus": "Ball-Winning"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 21,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 36,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 39,
+     "focus": "Balanced"
+    }
+   ]
+  },
+  {
+   "code": "%QnS@UeWYMKL",
+   "formationId": "f433c",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Deep",
+   "lineHeight": 30,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 35,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 38,
+     "focus": "Balanced"
+    }
+   ]
+  },
+  {
+   "code": "bw&h8@Uj$5YY",
+   "formationId": "f41212a",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Deep",
+   "lineHeight": 30,
+   "roles": [
+    {
+     "roleId": 2,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 16,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 20,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 42,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "ooByJsAwymE#",
+   "formationId": "f41212",
+   "buildUp": "Short Passing",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 50,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 23,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 27,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "4YSC%8#AC2&6",
+   "formationId": "f451a",
+   "buildUp": "Balanced",
+   "defensiveApproach": "High",
+   "lineHeight": 70,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 23,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 27,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "io6sTGzose?C",
+   "formationId": "f4312",
+   "buildUp": "Short Passing",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 50,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 20,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "PxoZYbnV7LNh",
+   "formationId": "f41212a",
+   "buildUp": "Counter",
+   "defensiveApproach": "High",
+   "lineHeight": 70,
+   "roles": [
+    {
+     "roleId": 45,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 13,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 13,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 20,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 34,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "gY6q5sAoqeed",
+   "formationId": "f451a",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Deep",
+   "lineHeight": 30,
+   "roles": [
+    {
+     "roleId": 45,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 25,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 20,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 30,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "f44f@Nvnp97f",
+   "formationId": "f433",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 50,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 19,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 21,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 36,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 42,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 39,
+     "focus": "Balanced"
+    }
+   ]
+  },
+  {
+   "code": "j#8jEN7rth@D",
+   "formationId": "f433b",
+   "buildUp": "Short Passing",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 50,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 20,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 36,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 39,
+     "focus": "Balanced"
+    }
+   ]
+  },
+  {
+   "code": "&QN&V?E8?yw2",
+   "formationId": "f433c",
+   "buildUp": "Balanced",
+   "defensiveApproach": "High",
+   "lineHeight": 70,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 36,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 39,
+     "focus": "Balanced"
+    }
+   ]
+  },
+  {
+   "code": "&gP?V4M6?yQ&",
+   "formationId": "f5212",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 50,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "VAvfu5tdfTRS",
+   "formationId": "f442a",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Deep",
+   "lineHeight": 30,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 23,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 27,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "Tgsd&5rbdRPQ",
+   "formationId": "f4222",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Deep",
+   "lineHeight": 30,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "4oRCZ8Q?C&&6",
+   "formationId": "f41212",
+   "buildUp": "Balanced",
+   "defensiveApproach": "High",
+   "lineHeight": 70,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 23,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 27,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "o4DSGs4uykEo",
+   "formationId": "f3421",
+   "buildUp": "Balanced",
+   "defensiveApproach": "High",
+   "lineHeight": 50,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 23,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 27,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "q4FU#u6w&mGK",
+   "formationId": "f3421",
+   "buildUp": "Short Passing",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 50,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 23,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 27,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 31,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "MA$Q9QkUWK#J",
+   "formationId": "f433a",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Deep",
+   "lineHeight": 30,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 35,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 38,
+     "focus": "Balanced"
+    }
+   ]
+  },
+  {
+   "code": "FBfP%1hMPBh$",
+   "formationId": "f442a",
+   "buildUp": "Short Passing",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 50,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 49,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 49,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 26,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 30,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "$Y@v7p1tvjB1",
+   "formationId": "f451a",
+   "buildUp": "Counter",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 50,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 23,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 27,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "#piSBM4QSEMK",
+   "formationId": "f3142",
+   "buildUp": "Balanced",
+   "defensiveApproach": "High",
+   "lineHeight": 71,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 14,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 24,
+     "focus": "Support"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 28,
+     "focus": "Support"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    }
+   ]
+  },
+  {
+   "code": "uAJyfy?&4KKu",
+   "formationId": "f343",
+   "buildUp": "Balanced",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 50,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 23,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 27,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 35,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 38,
+     "focus": "Balanced"
+    }
+   ]
+  },
+  {
+   "code": "moBoPK3swiKE",
+   "formationId": "f523",
+   "buildUp": "Short Passing",
+   "defensiveApproach": "Balanced",
+   "lineHeight": 35,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 3,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 7,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 20,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 18,
+     "focus": "Balanced"
+    },
+    {
+     "roleId": 36,
+     "focus": "Roaming"
+    },
+    {
+     "roleId": 41,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 39,
+     "focus": "Roaming"
+    }
+   ]
+  },
+  {
+   "code": "RQsjBXKhbN$b",
+   "formationId": "f352",
+   "buildUp": "Counter",
+   "defensiveApproach": "Deep",
+   "lineHeight": 1,
+   "roles": [
+    {
+     "roleId": 1,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 11,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 16,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 16,
+     "focus": "Defend"
+    },
+    {
+     "roleId": 25,
+     "focus": "Build-Up"
+    },
+    {
+     "roleId": 27,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 32,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 42,
+     "focus": "Attack"
+    },
+    {
+     "roleId": 42,
+     "focus": "Versatile"
+    }
+   ]
+  }
+ ]
+}

@@ -6,8 +6,10 @@ import com.fcareer.ut.model.SbcVoteModels.VoteRequest;
 import com.fcareer.ut.model.SbcVoteModels.VoteSummary;
 import com.fcareer.ut.service.SbcVoteService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import static com.fcareer.common.constants.ApiConstants.API_V1;
 
+@Validated
 @RestController
 @RequestMapping(API_V1 + "/ut/sbc/votes")
 @RequiredArgsConstructor
@@ -30,7 +33,7 @@ public class UtSbcVoteController {
     }
 
     @PutMapping("/{setId}")
-    public SetVotes vote(@AuthenticationPrincipal AuthUser user, @PathVariable Long setId, @Valid @RequestBody VoteRequest request) {
+    public SetVotes vote(@AuthenticationPrincipal AuthUser user, @PathVariable @Min(1) Long setId, @Valid @RequestBody VoteRequest request) {
         return sbcVoteService.vote(user.id(), setId, request.vote());
     }
 }

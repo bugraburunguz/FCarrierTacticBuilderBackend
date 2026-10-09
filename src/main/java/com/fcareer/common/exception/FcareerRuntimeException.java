@@ -1,6 +1,7 @@
 package com.fcareer.common.exception;
 
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 @Getter
 public class FcareerRuntimeException extends RuntimeException {
@@ -16,5 +17,9 @@ public class FcareerRuntimeException extends RuntimeException {
 
     public boolean isTechnical() {
         return false;
+    }
+
+    public HttpStatus httpStatus() {
+        return HttpStatus.BAD_REQUEST;
     }
 }

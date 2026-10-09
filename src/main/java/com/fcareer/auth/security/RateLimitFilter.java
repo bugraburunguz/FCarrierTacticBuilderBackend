@@ -3,6 +3,7 @@ package com.fcareer.auth.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.auth.configuration.SecurityProperties;
 import com.fcareer.common.model.ApiResponse;
+import com.fcareer.common.redis.RedisCounter;
 import com.fcareer.common.service.MessageService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -11,7 +12,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -35,7 +35,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final Duration WINDOW = Duration.ofMinutes(1);
 
     private final SecurityProperties properties;
-    private final StringRedisTemplate redisTemplate;
+    private final RedisCounter counter;
     private final MessageService messageService;
     private final ObjectMapper objectMapper;
     private final Clock clock;
@@ -51,7 +51,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         boolean authPath = request.getRequestURI().startsWith(AUTH_PATH);
         int limit = authPath ? properties.getRateLimit().getAuthPerMinute() : properties.getRateLimit().getApiPerMinute();
         String key = RATE_LIMIT_PREFIX + (authPath ? "auth:" : "api:") + subject(request) + ":" + minuteBucket();
-        if (isOverLimit(key, limit)) {
+        if (isOverLimit(key, limit, authPath)) {
             log.warn("Rate limit exceeded path : {}", request.getRequestURI());
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
@@ -63,16 +63,13 @@ public class RateLimitFilter extends OncePerRequestFilter {
         chain.doFilter(request, response);
     }
 
-    private boolean isOverLimit(String key, int limit) {
+    /** Redis yoksa genel API açık geçer (fail-open); kimlik uçları kapalı kalır (fail-closed) ki brute-force sınırı atlanamasın. */
+    private boolean isOverLimit(String key, int limit, boolean failClosed) {
         try {
-            Long count = redisTemplate.opsForValue().increment(key);
-            if (Objects.nonNull(count) && count == 1) {
-                redisTemplate.expire(key, WINDOW);
-            }
-            return Objects.nonNull(count) && count > limit;
+            return counter.increment(key, WINDOW) > limit;
         } catch (DataAccessException e) {
-            log.warn("Rate limit skipped reason : {}", e.getMessage());
-            return false;
+            log.warn("Rate limit store unavailable failClosed : {} reason : {}", failClosed, e.getMessage());
+            return failClosed;
         }
     }
 

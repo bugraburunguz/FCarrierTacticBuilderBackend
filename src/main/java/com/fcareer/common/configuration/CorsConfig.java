@@ -14,7 +14,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CorsConfig {
 
-    private static final List<String> METHODS = List.of("GET", "POST", "PATCH", "DELETE", "OPTIONS");
+    private static final List<String> METHODS = List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS");
     private static final List<String> HEADERS = List.of("Authorization", "Content-Type", "Accept");
     private static final long MAX_AGE_SECONDS = 3600;
 

@@ -57,11 +57,11 @@ class ApiFlowIntegrationTest {
         JsonNode registered = call(post("/api/v1/auth/register"), Map.of("email", email, "password", PASSWORD), null, 200);
         assertThat(registered.at("/success").asBoolean()).isTrue();
 
-        JsonNode duplicate = call(post("/api/v1/auth/register"), Map.of("email", email.toUpperCase(), "password", PASSWORD), null, 200);
+        JsonNode duplicate = call(post("/api/v1/auth/register"), Map.of("email", email.toUpperCase(), "password", PASSWORD), null, 409);
         assertThat(duplicate.at("/success").asBoolean()).isFalse();
         assertThat(duplicate.at("/error/0/code").asText()).isEqualTo("fc.exception.0006");
 
-        JsonNode badLogin = call(post("/api/v1/auth/login"), Map.of("email", email, "password", "wrong-password"), null, 200);
+        JsonNode badLogin = call(post("/api/v1/auth/login"), Map.of("email", email, "password", "wrong-password"), null, 401);
         assertThat(badLogin.at("/error/0/code").asText()).isEqualTo("fc.exception.0007");
 
         JsonNode login = call(post("/api/v1/auth/login"), Map.of("email", email, "password", PASSWORD), null, 200);
@@ -69,7 +69,7 @@ class ApiFlowIntegrationTest {
         JsonNode rotated = call(post("/api/v1/auth/refresh"), Map.of("refreshToken", refresh), null, 200);
         assertThat(rotated.at("/data/accessToken").asText()).isNotBlank();
 
-        JsonNode reused = call(post("/api/v1/auth/refresh"), Map.of("refreshToken", refresh), null, 200);
+        JsonNode reused = call(post("/api/v1/auth/refresh"), Map.of("refreshToken", refresh), null, 401);
         assertThat(reused.at("/error/0/code").asText()).isEqualTo("fc.exception.0008");
 
         call(post("/api/v1/auth/register"), Map.of("email", "not-an-email", "password", PASSWORD), null, 400);
@@ -102,7 +102,7 @@ class ApiFlowIntegrationTest {
         assertThat(first.at("/data/result/slots")).hasSize(11);
         assertThat(first.at("/data/result/summary").asText()).contains("Kadro taktiğe");
 
-        JsonNode invalid = call(post("/api/v1/fit/squad"), Map.of("careerId", careerId, "tactic", Map.of("formation", "9-9-9")), token, 200);
+        JsonNode invalid = call(post("/api/v1/fit/squad"), Map.of("careerId", careerId, "tactic", Map.of("formation", "9-9-9")), token, 400);
         assertThat(invalid.at("/error/0/code").asText()).isEqualTo("fc.exception.0002");
         assertThat(call(get("/api/v1/me"), null, token, 200).at("/data/creditBalance").asInt()).isEqualTo(15);
 
@@ -114,7 +114,7 @@ class ApiFlowIntegrationTest {
         for (int i = 0; i < 3; i++) {
             assertThat(call(post("/api/v1/fit/squad"), body, token, 200).at("/data/charged").asInt()).isEqualTo(5);
         }
-        JsonNode exhausted = call(post("/api/v1/fit/squad"), body, token, 200);
+        JsonNode exhausted = call(post("/api/v1/fit/squad"), body, token, 402);
         assertThat(exhausted.at("/error/0/code").asText()).isEqualTo("fc.exception.0004");
     }
 
@@ -144,7 +144,7 @@ class ApiFlowIntegrationTest {
         long outsiderId = firstPlayerNotInSquad(squad);
 
         JsonNode tooExpensive = call(post("/api/v1/careers/" + careerId + "/events"),
-                Map.of("type", "BUY", "playerId", outsiderId, "feeEur", 9_000_000), token, 200);
+                Map.of("type", "BUY", "playerId", outsiderId, "feeEur", 9_000_000), token, 422);
         assertThat(tooExpensive.at("/error/0/code").asText()).isEqualTo("fc.exception.0011");
 
         JsonNode bought = call(post("/api/v1/careers/" + careerId + "/events"),
@@ -152,7 +152,7 @@ class ApiFlowIntegrationTest {
         assertThat(bought.at("/data/budgetEurAfter").asLong()).isEqualTo(3_000_000);
 
         JsonNode duplicate = call(post("/api/v1/careers/" + careerId + "/events"),
-                Map.of("type", "BUY", "playerId", outsiderId, "feeEur", 1), token, 200);
+                Map.of("type", "BUY", "playerId", outsiderId, "feeEur", 1), token, 422);
         assertThat(duplicate.at("/error/0/code").asText()).isEqualTo("fc.exception.0010");
 
         JsonNode sold = call(post("/api/v1/careers/" + careerId + "/events"),
@@ -161,7 +161,7 @@ class ApiFlowIntegrationTest {
         assertThat(call(get("/api/v1/careers/" + careerId + "/events"), null, token, 200).at("/data")).hasSize(2);
 
         String stranger = registerAndGetToken();
-        JsonNode denied = call(get("/api/v1/careers/" + careerId), null, stranger, 200);
+        JsonNode denied = call(get("/api/v1/careers/" + careerId), null, stranger, 403);
         assertThat(denied.at("/error/0/code").asText()).isEqualTo("fc.exception.0009");
     }
 
@@ -181,7 +181,7 @@ class ApiFlowIntegrationTest {
         assertThat(fit.at("/data/intentFit/perTag/0/tagId").asText()).isEqualTo("w_cross");
 
         JsonNode conflict = call(post("/api/v1/fit/role"), Map.of("playerId", playerId, "roleId", "winger_attack",
-                "tags", new String[]{"w_cross", "w_cut_inside"}), null, 200);
+                "tags", new String[]{"w_cross", "w_cut_inside"}), null, 409);
         assertThat(conflict.at("/error/0/code").asText()).isEqualTo("fc.exception.0003");
 
         JsonNode compare = call(post("/api/v1/players/compare"), Map.of("ids", new long[]{playerId}, "roleId", "poacher_attack"), null, 200);
@@ -263,7 +263,7 @@ class ApiFlowIntegrationTest {
         JsonNode withSetup = call(post("/api/v1/fit/lineup"), Map.of("careerId", careerId, "tactic",
                 Map.of("formation", "4-3-3", "setup", Map.of("buildUp", "Short", "depth", 90))), token, 200);
         assertThat(withSetup.at("/success").asBoolean()).as(withSetup.toString()).isTrue();
-        assertThat(withSetup.at("/data/setupDelta").isNumber()).isTrue();
+        assertThat(withSetup.at("/data/setupDelta").isMissingNode()).as("setupDelta ücretli içgörü").isTrue();
 
         JsonNode exported = call(post("/api/v1/tactics/export-code"), Map.of("formation", "4-4-2",
                 "setup", Map.of("buildUp", "Counter", "depth", 60)), null, 200);
@@ -276,7 +276,7 @@ class ApiFlowIntegrationTest {
         assertThat(imported.at("/data/buildUp").asText()).isEqualTo("Counter");
         assertThat(imported.at("/data/depth").asInt()).isEqualTo(60);
         assertThat(imported.at("/data/slots")).hasSize(11);
-        JsonNode badCode = call(post("/api/v1/tactics/import-code"), Map.of("code", "AAAAAAAAAAAA"), null, 200);
+        JsonNode badCode = call(post("/api/v1/tactics/import-code"), Map.of("code", "AAAAAAAAAAAA"), null, 400);
         assertThat(badCode.at("/success").asBoolean()).isFalse();
 
         JsonNode preview = call(post("/api/v1/recommend/preview"), Map.of("roleId", "winger_attack", "position", "RW"), null, 200);
@@ -366,7 +366,12 @@ class ApiFlowIntegrationTest {
         assertThat(lineup.at("/success").asBoolean()).as(lineup.toString()).isTrue();
         assertThat(lineup.at("/data/slots")).hasSize(11);
         assertThat(lineup.at("/data/bench").isArray()).isTrue();
-        assertThat(lineup.at("/data/slots/0/depth").isArray()).isTrue();
+        assertThat(lineup.at("/data/slots/0/depth").isMissingNode()).as("depth ücretli içgörü").isTrue();
+        assertThat(lineup.at("/data/weakLinks").isMissingNode()).isTrue();
+        assertThat(lineup.at("/data/rules").isMissingNode()).isTrue();
+        assertThat(lineup.at("/data/attackPattern").isMissingNode()).isTrue();
+        assertThat(lineup.at("/data/slots/0/roleFit/reasons").isMissingNode()).isTrue();
+        assertThat(lineup.at("/data/slots/0/roleFit/badge").isTextual()).isTrue();
         assertThat(call(get("/api/v1/me"), null, token, 200).at("/data/creditBalance").asInt()).isEqualTo(before);
     }
 

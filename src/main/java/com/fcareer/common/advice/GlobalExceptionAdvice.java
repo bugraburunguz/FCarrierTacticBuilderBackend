@@ -39,7 +39,7 @@ public class GlobalExceptionAdvice {
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(buildError(ex.getErrorCode(), ex.getArgs()));
         }
         log.warn("Business error code : {} message : {}", ex.getErrorCode(), ex.getMessage());
-        return ResponseEntity.ok(buildError(ex.getErrorCode(), ex.getArgs()));
+        return ResponseEntity.status(ex.httpStatus()).body(buildError(ex.getErrorCode(), ex.getArgs()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

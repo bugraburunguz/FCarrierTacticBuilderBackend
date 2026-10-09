@@ -30,8 +30,12 @@ public class DevelopmentController {
     private final CareerService careerService;
 
     @PostMapping("/players/{id}/development")
-    public DevelopmentResponse development(@PathVariable Long id, @RequestBody(required = false) DevelopmentRequest request) {
-        return developmentService.plan(id, request == null ? new DevelopmentRequest() : request);
+    public DevelopmentResponse development(@AuthenticationPrincipal AuthUser user, @PathVariable Long id, @RequestBody(required = false) DevelopmentRequest request) {
+        DevelopmentRequest body = request == null ? new DevelopmentRequest() : request;
+        if (body.getCareerId() != null) {
+            careerService.requireOwned(user == null ? null : user.id(), body.getCareerId());
+        }
+        return developmentService.plan(id, body);
     }
 
     @GetMapping("/wonderkids")

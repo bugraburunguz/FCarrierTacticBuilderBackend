@@ -73,6 +73,9 @@ public class PlayerService {
         short gv = resolveGameVersion(gameVersionId);
         BasePlayerEntity base = basePlayerRepository.findById(playerId)
                 .orElseThrow(() -> new NotFoundException(PLAYER, playerId));
+        if (!basePlayerRepository.findForeignOwnedIds(List.of(playerId), careerId).isEmpty()) {
+            throw new NotFoundException(PLAYER, playerId);
+        }
         RatingColumns rating = playerRatingRepository.findByBasePlayerIdAndGameVersionId(playerId, gv)
                 .orElseThrow(() -> new NotFoundException(PLAYER, playerId));
         if (Objects.nonNull(careerId)) {
@@ -91,6 +94,12 @@ public class PlayerService {
 
     public List<FitPlayer> fitPlayers(List<Long> playerIds, Short gameVersionId, Long careerId) {
         short gv = resolveGameVersion(gameVersionId);
+        if (!playerIds.isEmpty()) {
+            List<Long> foreign = basePlayerRepository.findForeignOwnedIds(playerIds, careerId);
+            if (!foreign.isEmpty()) {
+                throw new NotFoundException(PLAYER, foreign.get(0));
+            }
+        }
         Map<Long, BasePlayerEntity> bases = basePlayerRepository.findAllById(playerIds).stream()
                 .collect(Collectors.toMap(BasePlayerEntity::getId, Function.identity()));
         Map<Long, RatingColumns> ratings = new HashMap<>();

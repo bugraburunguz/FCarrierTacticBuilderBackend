@@ -10,9 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,26 +26,14 @@ public class SbcVoteService {
 
     @Transactional
     public SetVotes vote(Long userId, Long setId, int vote) {
-        repository.findByUserIdAndSetId(userId, setId).ifPresentOrElse(existing -> {
-            if (vote == 0) {
-                repository.delete(existing);
-            } else {
-                existing.setVote((short) vote);
-            }
-        }, () -> {
-            if (vote != 0) {
-                SbcVoteEntity entity = new SbcVoteEntity();
-                entity.setUserId(userId);
-                entity.setSetId(setId);
-                entity.setVote((short) vote);
-                repository.save(entity);
-            }
-        });
-        repository.flush();
+        if (vote == 0) {
+            repository.remove(userId, setId);
+        } else {
+            repository.upsert(userId, setId, vote);
+        }
         Map<Long, Short> mine = new HashMap<>();
         repository.findByUserIdAndSetId(userId, setId).ifPresent(v -> mine.put(setId, v.getVote()));
-        return repository.totals().stream().filter(t -> Objects.equals(t.getSetId(), setId)).findFirst()
-                .map(t -> toView(t, mine)).orElse(new SetVotes(setId, 0, 0, 0));
+        return repository.totalsFor(setId).map(t -> toView(t, mine)).orElse(new SetVotes(setId, 0, 0, 0));
     }
 
     private static SetVotes toView(VoteTotals totals, Map<Long, Short> mine) {

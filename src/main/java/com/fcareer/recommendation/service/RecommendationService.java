@@ -55,6 +55,7 @@ public class RecommendationService {
     private static final double MAX_SCORE = 100.0;
     private static final int DEFAULT_LIMIT = 10;
     private static final int PREVIEW_LIMIT = 8;
+    private static final int SLOT_VIEW_LIMIT = 3;
     private static final Short DEFAULT_PREVIEW_GENDER = 0;
     private static final String FREE_AGENTS = "Free Agents";
     private static final int SQUAD_CORE = 18;
@@ -125,7 +126,7 @@ public class RecommendationService {
         }
         PlayerSearchRequest search = switch (view.getScope()) {
             case SQUAD -> PlayerSearchRequest.builder().gameVersionId(squad.gameVersionId()).gender(squad.gender())
-                    .ids(squad.playerIds()).sort("overall").size(CANDIDATE_POOL).build();
+                    .ids(squad.playerIds()).careerId(squad.careerId()).sort("overall").size(CANDIDATE_POOL).build();
             case LEAGUE -> {
                 PlayerSearchRequest league = candidateSearch(role, intent, request, squad.playerIds(), squad.gameVersionId(), null, squad.gender());
                 league.setLeagueId(request.getLeagueId());
@@ -136,8 +137,23 @@ public class RecommendationService {
         Map<Long, PlayerSummaryResponse> summaries = playerService.search(search).getItems().stream()
                 .collect(Collectors.toMap(PlayerSummaryResponse::getId, c -> c));
         RecommendSlotRequest capped = RecommendSlotRequest.builder().careerId(view.getCareerId()).roleId(request.getRoleId()).position(request.getPosition())
-                .limit(Math.min(Objects.isNull(request.getLimit()) ? PREVIEW_LIMIT : request.getLimit(), PREVIEW_LIMIT)).build();
-        return rank(capped, role, intent, summaries, search.getValueMax(), squad.gameVersionId());
+                .limit(Math.min(Objects.isNull(request.getLimit()) ? SLOT_VIEW_LIMIT : request.getLimit(), SLOT_VIEW_LIMIT)).build();
+        return withoutPaidInsights(rank(capped, role, intent, summaries, search.getValueMax(), squad.gameVersionId()));
+    }
+
+    /** Bedava slot görünümü (SEC-02): ilk 3 aday; gerekçe metni, silah kontrolleri ve scout sorgusu yalnız ücretli /recommend/slot'ta. */
+    private static RecommendationResponse withoutPaidInsights(RecommendationResponse full) {
+        List<RecommendationItem> items = Objects.isNull(full.getItems()) ? List.of() : full.getItems().stream().map(RecommendationService::stripped).toList();
+        return RecommendationResponse.builder().roleId(full.getRoleId()).position(full.getPosition()).budgetMax(full.getBudgetMax())
+                .current(Objects.isNull(full.getCurrent()) ? null : stripped(full.getCurrent())).items(items).build();
+    }
+
+    private static RecommendationItem stripped(RecommendationItem item) {
+        RoleFitResponse fit = item.getRoleFit();
+        RoleFitResponse light = Objects.isNull(fit) ? null : RoleFitResponse.builder().playerId(fit.getPlayerId()).playerName(fit.getPlayerName())
+                .roleId(fit.getRoleId()).roleName(fit.getRoleName()).score(fit.getScore()).projectedRating(fit.getProjectedRating())
+                .badge(fit.getBadge()).outOfPosition(fit.isOutOfPosition()).build();
+        return RecommendationItem.builder().player(item.getPlayer()).roleFit(light).combined(item.getCombined()).deltaVsCurrent(item.getDeltaVsCurrent()).build();
     }
 
     private PlayerSearchRequest marketSearch(FitRole role, IntentProfile intent, RecommendSlotRequest request,
@@ -159,7 +175,7 @@ public class RecommendationService {
             return OptionalDouble.empty();
         }
         PlayerSearchRequest own = PlayerSearchRequest.builder().gameVersionId(squad.gameVersionId()).gender(squad.gender())
-                .ids(squad.playerIds()).sort("overall").size(CANDIDATE_POOL).build();
+                .ids(squad.playerIds()).careerId(squad.careerId()).sort("overall").size(CANDIDATE_POOL).build();
         return playerService.search(own).getItems().stream()
                 .mapToInt(PlayerSummaryResponse::getOverall)
                 .sorted().skip(Math.max(0, squad.playerIds().size() - SQUAD_CORE))

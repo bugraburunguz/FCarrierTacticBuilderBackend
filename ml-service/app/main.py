@@ -4,13 +4,24 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+import hmac
+
+from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
 
 from app.store import ModelStore
 
 MAX_BATCH = 500
 MODEL_DIR = Path(os.getenv("ML_MODEL_DIR", "models"))
+
+ML_SHARED_SECRET = os.getenv("ML_SHARED_SECRET", "")
+
+
+def require_secret(x_ml_secret: Optional[str] = Header(default=None)) -> None:
+    """Tahmin ve yeniden yükleme uçları yalnız backend'in paylaşılan anahtarıyla çağrılır (SEC-07). Anahtar tanımsızsa kapı açıktır (yalnız yerel geliştirme)."""
+    if ML_SHARED_SECRET and not hmac.compare_digest(ML_SHARED_SECRET, x_ml_secret or ""):
+        raise HTTPException(status_code=401, detail="invalid_secret")
+
 
 app = FastAPI(title="fcareer-ml-service")
 store = ModelStore(MODEL_DIR)
@@ -57,13 +68,13 @@ def health() -> dict:
             "value_model": store.value_model is not None, "snapshot_date": store.meta.get("snapshot_date")}
 
 
-@app.post("/ml/reload")
+@app.post("/ml/reload", dependencies=[Depends(require_secret)])
 def reload() -> dict:
     store.load()
     return {"model_loaded": store.loaded, "model_version": store.version}
 
 
-@app.post("/ml/predict", response_model=PredictResponse)
+@app.post("/ml/predict", response_model=PredictResponse, dependencies=[Depends(require_secret)])
 def predict(request: PredictRequest) -> PredictResponse:
     if not store.loaded:
         raise HTTPException(status_code=503, detail="model_not_loaded")

@@ -137,4 +137,30 @@ class UtCaptureServiceTest {
         assertThat(result.cards().get(1).attrs()).containsEntry("Acceleration", 60).containsEntry("GKPositioning", 93);
         assertThat(result.cards().get(0).attrs()).isNull();
     }
+
+    private static String challengeBody(String name, int setId) {
+        return "{\"challenges\":[{\"name\":\"" + name + "\",\"status\":\"NOT_STARTED\",\"setId\":" + setId + ",\"challengeId\":" + (setId * 10)
+                + ",\"repeatable\":false,\"formation\":\"f442\",\"timesCompleted\":0,\"elgReq\":[],\"awards\":[],\"type\":\"OPEN_CHALLENGE\"}]}";
+    }
+
+    @Test
+    void corruptSbcBodyDoesNotShiftLaterSetsOntoWrongBodies() {
+        CaptureResult result = service.process(List.of(
+                capture(UT + "/sbs/setid/10/challenges", 1, challengeBody("Birinci", 10)),
+                capture(UT + "/sbs/setid/11/challenges", 2, "{bozuk json"),
+                capture(UT + "/sbs/setid/12/challenges", 3, challengeBody("Ucuncu", 12))));
+
+        assertThat(result.sbcChallenges()).extracting("setId", "name").containsExactly(
+                org.assertj.core.api.Assertions.tuple(10L, "Birinci"), org.assertj.core.api.Assertions.tuple(12L, "Ucuncu"));
+        assertThat(result.stats().invalid()).isEqualTo(1);
+    }
+
+    @Test
+    void rejectsPayloadsAboveTheTotalLimit() {
+        String chunk = "x".repeat(8_000_000);
+        List<Capture> captures = java.util.stream.IntStream.range(0, 6).mapToObj(n -> capture(UT + "/club", n, chunk)).toList();
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.process(captures))
+                .isInstanceOf(com.fcareer.common.exception.PayloadTooLargeException.class);
+    }
 }

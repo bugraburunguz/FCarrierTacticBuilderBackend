@@ -101,6 +101,11 @@ public class UtCaptureService {
         Map<Kind, List<Capture>> raw = new EnumMap<>(Kind.class);
         List<String> warnings = new ArrayList<>();
         Set<String> unknownPaths = new java.util.TreeSet<>();
+        long totalChars = captures.stream().filter(c -> Objects.nonNull(c.body())).mapToLong(c -> c.body().length()).sum();
+        if (totalChars > com.fcareer.ut.model.UtCaptureModels.MAX_TOTAL_CHARS) {
+            log.warn("Capture rejected: payload too large chars : {}", totalChars);
+            throw new com.fcareer.common.exception.PayloadTooLargeException();
+        }
         List<Capture> ordered = captures.stream().sorted(Comparator.comparing(c -> Objects.requireNonNullElse(c.ts(), 0L))).toList();
         for (Capture capture : ordered) {
             if (Objects.isNull(capture.url()) || capture.url().isBlank() || Objects.isNull(capture.body())) {
@@ -122,12 +127,15 @@ public class UtCaptureService {
                 unknownPaths.add(path(url).replaceFirst("^https?://[^/]+", "").replaceAll("\\d{3,}", "{n}"));
                 continue;
             }
-            raw.computeIfAbsent(kind, k -> new ArrayList<>()).add(capture);
             if (kind == Kind.DEFINITIONS || kind == Kind.META) {
+                raw.computeIfAbsent(kind, k -> new ArrayList<>()).add(capture);
                 continue;
             }
             try {
-                bodies.computeIfAbsent(kind, k -> new ArrayList<>()).add(objectMapper.readTree(capture.body()));
+                JsonNode parsed = objectMapper.readTree(capture.body());
+                // raw ve bodies aynı indekste kalır: yalnız çözülebilen yanıt ikisine birden eklenir (BUG-06).
+                raw.computeIfAbsent(kind, k -> new ArrayList<>()).add(capture);
+                bodies.computeIfAbsent(kind, k -> new ArrayList<>()).add(parsed);
             } catch (IOException e) {
                 invalid++;
                 warnings.add("Çözülemeyen yanıt: " + kind);

@@ -1,68 +1,40 @@
-# CLAUDE.md — Azerlottery Backend
+# CLAUDE.md — FCareer Backend (FCarrierTacticBuilderBackend)
 
-`com.misli.*` Spring Boot microservice'lerinde (Şanstech / Azerlottery) çalışırken
-Claude'un giriş dokümanı. Ayrıntılı kurallar aşağıda `@import` ile yüklenir.
+EA SPORTS FC 27 için offline Kariyer + Ultimate Team companion uygulamasının backend'i.
+Ürün özeti ve mimari: `docs/spec/BUILD_SPEC.md`. Motor: `docs/spec/fit_engine_spec.md`.
+İnceleme/yol haritası paketi: `docs/review/00_INDEX_READ_FIRST.md` (varsa önce oku).
 
-## Proje bağlamı
+## Stack (gerçek olan)
+- Java 17, Spring Boot 3, Jakarta, Maven, Lombok
+- PostgreSQL 16 + Flyway (`src/main/resources/db/migration`), Redis (refresh token, rate limit, referans cache)
+- Python 3.11 FastAPI ML servisi: `ml-service/` (potential/value), backend → REST
+- Base package: `com.fcareer` — feature paketleri: advisor, auth, billing, career, catalog, common, development,
+  fitengine, gameconfig, ingestion, mlclient, recommendation, roles, tacticcode, tactics, ut, versioning
+- Tek kanal: `/api/v1`. **Kafka, OpenFeign, aggregator, mobile/web kanal ayrımı YOK.**
 
-- **Stack:** Java 17, Spring Boot 3.x, Jakarta, PostgreSQL + Spring Data JPA, Redis,
-  Kafka, OpenFeign, Lombok, Maven.
-- **Servisler:**
-  - `nsoft-virtual-game-service`, `groove-virtual-game-service` — legacy layer-first layout.
-  - `campaign-aggregator` — tercih edilen modüler (feature/area + `common`) layout.
-  - `social-aggregator`, ayrıca user / finance / sportsbook servisleri.
-- **Aggregator'lar** downstream servisleri Feign ile toplar; **PHP → Java taşıma** sık bir iş tipidir.
-- **Entegrasyonlar (dış/dahili):** iddaa-wagering-service, NSoft, Sportradar, iGNITE, Risk Department.
-- **Kanallar:** Web `/api/web/v2` ve Mobile `/api/mobile/v2` **aynı service'i paylaşır**;
-  mobil, web davranışını korur. v1 kaldırıldı. Yeni endpoint eklemek mevcut iş kuralını değiştirmez.
+## House style
+Kurallar: @docs/backend-standard.md
+Uygulanabilirlik notu: o dosya başka bir projeden (Azerlottery) geliyor. **Uygulanır:** §1 review sözleşmesi,
+§5–§12 (house style, naming, DI, Lombok, controller, envelope, service, exception), §14–§16, §19–§21, §23.
+**Uygulanmaz:** `com.misli`, `/api/web|mobile/v2`, §13 Feign, §17 Kafka, §18'deki `/1000` formatlama,
+§22 aggregator & PHP→Java, `user-model/user-admin` twin kuralı, kısa JSON key'ler.
 
-## Nasıl çalışıyoruz
+## Bu projeye özel kurallar
+- Oyun kuralları (kimya eşikleri, squad rating, fiyat aralıkları, içerik yenileme saati) koda gömülmez:
+  `seed/ut-rules.*.json` / `ut_rules` tablosu. Değer FC27 için doğrulanmadıysa `verified:false`.
+- Fit engine katsayıları config'te (`fcareer.fit.*`); değişiklik = `BEHAVIOR CHANGE` + senaryo testleri (T1–T6) yeşil.
+- Public sorgular yalnız `player_valuation.source='MODELED'` okur; `IMPORT` verisi yalnız sahibine.
+- Kullanıcının kariyer/UT kulüp verisi başka kullanıcıya sızmaz: careerId alan her uçta `requireOwned`.
+- EA hesap kimlik bilgisi asla istenmez, saklanmaz, loglanmaz. Capture gövdeleri loglanmaz.
+- Veri kaynakları `docs/DATA_POLICY.md`'ye uymak zorunda; yeni dış kaynak = Buğra onayı.
+- Ücretli (kredi) iş üreten her uç `CreditGuard` arkasında; bedava önizleme uçları ücretli alanı döndürmez.
 
-- Deneyimli bir backend geliştiricisiyle konuşuyorsun. Temel syntax / başlangıç anlatımı yok;
-  doğrudan production, mimari, maintainability ve business logic seviyesinde düşün.
-- Doğrudan ve analitik ol; gereksiz diplomasi ve içi boş övgü yok. Yanlış bir yaklaşım
-  görürsen açıkça karşı çık, gerekçelendir, uygulanabilir sonuca bağla.
-- **Refactor/review'da davranış (business logic) DEĞİŞMEZ — pazarlıksız.** Yanlış bulduğun
-  davranışı bu görevde düzeltmezsin, `POTENTIAL LOGIC ISSUE` olarak raporlarsın.
-  Ayrıntı: review sözleşmesi (§1) ve edit-güvenliği A/B/C (§1.2).
-- Davranışı değiştiren her öneriyi **açıkça etiketle**; sessizce uygulama. Sadece
-  `SAFE REFACTOR` uygulanır.
-- Gereksiz abstraction / pattern / factory / wrapper açma (§1.6). Refactor kod sadeleşince
-  başarılıdır, sınıf sayısı artınca değil.
+## Çalıştırma / test
+- `mvn test` (embedded PG). Opt-in: `-Dea.live=true`, `-Dml.live=true`. ML: `cd ml-service && python -m pytest`.
+- Dev: README'deki `DevApplication` akışı.
 
-## Review'ı başlatma
-
-Tek cümle yeter (bkz. `docs/backend-standard.md` §0):
-
-```
-{servis}/{controller|path} → review-mode, backend-standard'a göre. Logic değişmesin.
-Örn: user-identity-controller → tüm endpoint flow'unu review et (§1.4). SAFE REFACTOR uygula, gerisini raporla.
-```
-
-## Kurallar (otomatik yüklenir)
-
-Backend house style & review standardı — **her** kod/review görevinde geçerli:
-
-@docs/backend-standard.md
-
-Ticket verme, Jira yorumu ve soru disiplini — iş devri ve çıktı formatı:
-
-@docs/collaboration.md
-
----
-
-### Setup / bakım notu
-
-- Bu dosyaları repo köküne koy: `CLAUDE.md` kökte, `backend-standard.md` ve
-  `collaboration.md` ise `docs/` altında. `@import` yolları köke göre çözülür.
-- Tek gerçek kaynak repo'dur; Claude'daki kopya bir aynadır — tek nüsha olarak güvenme.
-- `docs/backend-standard.md` büyük (~650 satır) ve import edildiği için **her oturumda
-  tümüyle context'e yüklenir** (`@import` bağlam tasarrufu yapmaz, içeriği inline genişletir).
-  İleride adherence düşerse: türetilebilir kısımları (paket ağaçları, tech baseline listesi)
-  Claude Code `/doctor` ile kırp, pitfall / konvansiyon / gerekçe kısımlarını koru.
-- `collaboration.md` küçük olduğu için import'ta bırakıldı; her turda gerekmiyorsa import
-  satırını kaldırıp "Jira yorumu yazarken `docs/collaboration.md`'yi oku" talimatına
-  çevirebilirsin — ama on-demand okuma import kadar güvenilir tetiklenmez.
-- Markdown içindeki Java annotation'larını (`@Service`, `@Transactional` …) her zaman
-  backtick veya kod bloğu içinde tut; düz metinde bırakılan `@kelime` yanlışlıkla import
-  olarak yorumlanabilir.
+## Çalışma biçimi
+- Doğrudan ve analitik; yanlış yaklaşıma gerekçeli itiraz.
+- Refactor'da davranış değişmez; değişen davranış commit mesajında `BEHAVIOR CHANGE:` ile açıkça yazılır.
+- API sözleşmesi değişikliği (`API CONTRACT CHANGE`) web repo ile aynı PR serisinde yapılır.
+- Gereksiz abstraction yok; refactor kod sadeleşince başarılıdır.

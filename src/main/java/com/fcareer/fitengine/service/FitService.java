@@ -17,6 +17,7 @@ import com.fcareer.fitengine.model.response.AttributeGap;
 import com.fcareer.fitengine.model.response.FitRoleResult;
 import com.fcareer.fitengine.model.response.PlayerRoleFit;
 import com.fcareer.fitengine.model.response.RoleFitResponse;
+import com.fcareer.fitengine.model.response.SlotAssignment;
 import com.fcareer.fitengine.model.response.SquadFitResponse;
 import com.fcareer.roles.service.RoleService;
 import com.fcareer.tactics.service.TacticResolver;
@@ -116,12 +117,24 @@ public class FitService {
                 () -> squadFitService.solveBest(players, slots, rules));
     }
 
-    /** Kredi harcamayan kadro dizilişi: seçili taktikte ilk 11 ve yedekler (gerekirse aynalanmış). */
+    /** Kredi harcamayan kadro dizilişi: yalnız atama + slot başına RoleFit% ve rozet. Kurallar, NLG, zayıf halka ve atak paterni ücretli /fit/squad'dadır (SEC-02). */
     public SquadFitResponse lineup(Long userId, SquadFitRequest request) {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, request.getCareerId());
         List<FitPlayer> players = playerService.fitPlayers(squad.playerIds(), squad.gameVersionId(), request.getCareerId());
         List<IntentProfile> slots = tacticResolver.resolve(request.getTactic()).slots();
-        return squadFitService.solveBest(players, slots, tacticRuleService.enabledRules());
+        return withoutPaidInsights(squadFitService.solveBest(players, slots, tacticRuleService.enabledRules()));
+    }
+
+    private static SquadFitResponse withoutPaidInsights(SquadFitResponse full) {
+        List<SlotAssignment> slots = Objects.isNull(full.getSlots()) ? List.of() : full.getSlots().stream().map(s -> SlotAssignment.builder()
+                .slotId(s.getSlotId()).position(s.getPosition()).roleId(s.getRoleId()).roleName(s.getRoleName()).tags(s.getTags())
+                .playerId(s.getPlayerId()).playerName(s.getPlayerName()).overall(s.getOverall()).combined(s.getCombined())
+                .roleFit(Objects.isNull(s.getRoleFit()) ? null : RoleFitResponse.builder().playerId(s.getRoleFit().getPlayerId())
+                        .playerName(s.getRoleFit().getPlayerName()).roleId(s.getRoleFit().getRoleId()).roleName(s.getRoleFit().getRoleName())
+                        .score(s.getRoleFit().getScore()).projectedRating(s.getRoleFit().getProjectedRating()).badge(s.getRoleFit().getBadge())
+                        .outOfPosition(s.getRoleFit().isOutOfPosition()).build())
+                .build()).toList();
+        return SquadFitResponse.builder().squadFit(full.getSquadFit()).slots(slots).bench(full.getBench()).mirrored(full.isMirrored()).build();
     }
 
     private FitRoleResult evaluate(FitPlayer player, String roleId, String position, List<String> tags) {

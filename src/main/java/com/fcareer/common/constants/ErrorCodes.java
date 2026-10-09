@@ -19,6 +19,9 @@ public final class ErrorCodes {
     public static final String VALIDATION_ERROR = "fc.exception.0015";
     public static final String UNAUTHORIZED = "fc.exception.0016";
     public static final String FORBIDDEN = "fc.exception.0017";
+    public static final String PAYMENT_UNAVAILABLE = "fc.exception.0018";
+    public static final String SUBSCRIPTION_ALREADY_ACTIVE = "fc.exception.0019";
+    public static final String PAYLOAD_TOO_LARGE = "fc.exception.0020";
     public static final String UNKNOWN_ERROR = "fc.exception.9999";
 
     private ErrorCodes() {

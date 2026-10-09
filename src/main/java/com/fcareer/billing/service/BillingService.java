@@ -10,6 +10,9 @@ import com.fcareer.billing.model.response.SubscriptionResponse;
 import com.fcareer.billing.provider.PaymentProvider;
 import com.fcareer.billing.repository.SubscriptionRepository;
 import com.fcareer.common.exception.NotFoundException;
+import com.fcareer.common.exception.PaymentUnavailableException;
+import com.fcareer.common.exception.SubscriptionAlreadyActiveException;
+import org.springframework.beans.factory.ObjectProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,15 +31,23 @@ public class BillingService {
 
     private final AppUserRepository appUserRepository;
     private final SubscriptionRepository subscriptionRepository;
-    private final PaymentProvider paymentProvider;
+    private final ObjectProvider<PaymentProvider> paymentProviders;
     private final BillingProperties properties;
     private final Clock clock;
 
     @Transactional
     public SubscriptionResponse subscribe(Long userId) {
+        PaymentProvider paymentProvider = paymentProviders.getIfAvailable();
+        if (paymentProvider == null) {
+            log.warn("Subscribe rejected: no payment provider configured userId : {}", userId);
+            throw new PaymentUnavailableException();
+        }
         AppUserEntity user = appUserRepository.findByIdForUpdate(userId)
                 .orElseThrow(() -> new NotFoundException(USER, userId));
         Instant now = clock.instant();
+        if (subscriptionRepository.findFirstByUserIdAndStatusAndExpiresAtAfterOrderByExpiresAtDesc(userId, SubscriptionStatus.ACTIVE, now).isPresent()) {
+            throw new SubscriptionAlreadyActiveException();
+        }
         String externalId = paymentProvider.createSubscription(userId, properties.getPlan());
 
         SubscriptionEntity subscription = new SubscriptionEntity();

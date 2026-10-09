@@ -16,9 +16,12 @@ public class MlClientConfiguration {
         ClientHttpRequestFactorySettings settings = ClientHttpRequestFactorySettings.DEFAULTS
                 .withConnectTimeout(properties.getTimeout())
                 .withReadTimeout(properties.getTimeout());
-        return builder
+        RestClient.Builder configured = builder
                 .requestFactory(ClientHttpRequestFactories.get(settings))
-                .baseUrl(properties.getBaseUrl())
-                .build();
+                .baseUrl(properties.getBaseUrl());
+        if (!properties.getSharedSecret().isBlank()) {
+            configured.defaultHeader("X-ML-Secret", properties.getSharedSecret());
+        }
+        return configured.build();
     }
 }
