@@ -20,7 +20,8 @@ import java.lang.annotation.Target;
         "fcareer.ingestion.mock.player-count=250",
         "fcareer.security.jwt.secret=integration-test-secret-integration-test-secret",
         "fcareer.security.rate-limit.enabled=false",
-        "fcareer.billing.stub-enabled=true"
+        "fcareer.billing.stub-enabled=true",
+        "fcareer.ut.jobs.enabled=false"
 })
 @AutoConfigureEmbeddedDatabase(provider = AutoConfigureEmbeddedDatabase.DatabaseProvider.ZONKY)
 @AutoConfigureMockMvc

@@ -71,6 +71,8 @@ class ApiFlowIntegrationTest {
 
         JsonNode reused = call(post("/api/v1/auth/refresh"), Map.of("refreshToken", refresh), null, 401);
         assertThat(reused.at("/error/0/code").asText()).isEqualTo("fc.exception.0008");
+        // Eski token yeniden kullanılınca tüm oturumlar iptal edilir (SEC-08)
+        call(post("/api/v1/auth/refresh"), Map.of("refreshToken", rotated.at("/data/refreshToken").asText()), null, 401);
 
         call(post("/api/v1/auth/register"), Map.of("email", "not-an-email", "password", PASSWORD), null, 400);
     }

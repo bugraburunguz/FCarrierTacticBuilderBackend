@@ -39,9 +39,13 @@ public class BehaviorTagService {
         return all.stream().filter(t -> t.getPosition().equalsIgnoreCase(position)).toList();
     }
 
+    private final com.fcareer.common.cache.TtlMemo<Map<String, FitTag>> fitTags = new com.fcareer.common.cache.TtlMemo<>(java.time.Duration.ofMinutes(10), this::loadFitTags);
+
     public Map<String, FitTag> fitTagsById() {
-        return behaviorTagRepository.findAll().stream()
-                .map(behaviorTagMapper::toFitTag)
-                .collect(Collectors.toMap(FitTag::getId, Function.identity()));
+        return fitTags.get();
+    }
+
+    private Map<String, FitTag> loadFitTags() {
+        return behaviorTagRepository.findAll().stream().map(behaviorTagMapper::toFitTag).collect(Collectors.toMap(FitTag::getId, Function.identity()));
     }
 }

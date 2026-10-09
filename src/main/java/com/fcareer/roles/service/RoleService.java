@@ -43,9 +43,15 @@ public class RoleService {
                 .orElseThrow(() -> new NotFoundException(ROLE, roleId));
     }
 
+    private final com.fcareer.common.cache.TtlMemo<Map<String, FitRole>> fitRoles = new com.fcareer.common.cache.TtlMemo<>(java.time.Duration.ofMinutes(10),
+            this::loadFitRoles);
+
+    /** Rol kütüphanesi nadir değişir; her slot çağrısında yeniden yüklenmesin diye 10 dk bellekte tutulur (BUG-17). */
     public Map<String, FitRole> fitRolesById() {
-        return roleRepository.findAll().stream()
-                .map(roleMapper::toFitRole)
-                .collect(Collectors.toMap(FitRole::getId, Function.identity()));
+        return fitRoles.get();
+    }
+
+    private Map<String, FitRole> loadFitRoles() {
+        return roleRepository.findAll().stream().map(roleMapper::toFitRole).collect(Collectors.toMap(FitRole::getId, Function.identity()));
     }
 }

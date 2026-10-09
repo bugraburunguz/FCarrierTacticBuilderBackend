@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @SpringBootApplication
 @ConfigurationPropertiesScan
 @EnableJpaAuditing
+@org.springframework.scheduling.annotation.EnableScheduling
 public class FcareerApplication {
 
     public static void main(String[] args) {

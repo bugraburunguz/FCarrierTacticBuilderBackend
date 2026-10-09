@@ -109,8 +109,8 @@ public class PlayerSearchRepository {
         params.addValue("careerId", request.getCareerId(), java.sql.Types.BIGINT);
         clauses.add("(b.owner_career_id IS NULL OR b.owner_career_id = CAST(:careerId AS BIGINT))");
         if (Objects.nonNull(request.getQuery()) && !request.getQuery().isBlank()) {
-            clauses.add("b.full_name ILIKE :q");
-            params.addValue("q", "%" + request.getQuery().trim() + "%");
+            clauses.add("b.full_name ILIKE :q ESCAPE '!'");
+            params.addValue("q", "%" + request.getQuery().trim().replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%");
         }
         if (!request.getPositions().isEmpty()) {
             clauses.add("COALESCE(cpr.positions, r.positions) && string_to_array(:positions, ',')");

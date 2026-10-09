@@ -51,6 +51,7 @@ public class IngestionService {
     private final RatingAttrAccessor ratingAttrAccessor;
     private final AcceleRateDeriver acceleRateDeriver;
     private final TransactionTemplate transactionTemplate;
+    private final IngestionRunRepository runs;
     private final AtomicBoolean running = new AtomicBoolean(false);
 
     public IngestionResult run() {
@@ -72,27 +73,66 @@ public class IngestionService {
         }
         int pageSize = properties.getPageSize();
         int limit = properties.getMaxPlayers();
-        int created = 0;
-        int updated = 0;
+        var resumable = runs.findResumable(provider.name());
+        long runId = resumable.map(IngestionRunRepository.Run::id).orElseGet(() -> runs.start(provider.name()));
+        resumable.ifPresent(run -> {
+            runs.resume(run.id());
+            log.info("Ingestion resuming runId : {} offset : {}", run.id(), run.nextOffset());
+        });
+        int created = resumable.map(IngestionRunRepository.Run::created).orElse(0);
+        int updated = resumable.map(IngestionRunRepository.Run::updated).orElse(0);
         int total = Integer.MAX_VALUE;
-        for (int offset = 0; offset < total; offset += pageSize) {
-            if (limit > 0 && offset >= limit) {
-                break;
+        try {
+            for (int offset = resumable.map(IngestionRunRepository.Run::nextOffset).orElse(0); offset < total; offset += pageSize) {
+                if (limit > 0 && offset >= limit) {
+                    break;
+                }
+                ExternalPlayerPage page = fetchWithRetry(offset, pageSize);
+                total = page.totalItems();
+                int pageOffset = offset;
+                List<ExternalPlayer> items = limit > 0 ? page.items().stream().limit(limit - pageOffset).toList() : page.items();
+                int[] counts = transactionTemplate.execute(status -> upsertPage(items, gameVersion));
+                created += counts[0];
+                updated += counts[1];
+                runs.progress(runId, offset + pageSize, total, created, updated);
+                log.info("Ingestion page done provider : {} offset : {} total : {}", provider.name(), offset, total);
+                if (page.items().isEmpty() && total > offset + pageSize) {
+                    log.warn("Ingestion page returned no usable items offset : {}", offset);
+                }
+                pause();
             }
-            ExternalPlayerPage page = provider.fetch(offset, pageSize);
-            total = page.totalItems();
-            List<ExternalPlayer> items = limit > 0 ? page.items().stream().limit(limit - offset).toList() : page.items();
-            int[] counts = transactionTemplate.execute(status -> upsertPage(items, gameVersion));
-            created += counts[0];
-            updated += counts[1];
-            log.info("Ingestion page done provider : {} offset : {} total : {}", provider.name(), offset, total);
-            if (page.items().isEmpty() && total > offset + pageSize) {
-                log.warn("Ingestion page returned no usable items offset : {}", offset);
-            }
-            pause();
+        } catch (RuntimeException e) {
+            runs.fail(runId, e.getMessage());
+            log.error("Ingestion failed runId : {} (will resume from last offset)", runId, e);
+            throw e;
         }
+        runs.finish(runId);
         log.info("Ingestion finished provider : {} created : {} updated : {}", provider.name(), created, updated);
         return new IngestionResult(provider.name(), gameVersion, created, updated, false);
+    }
+
+    /** Geçici hatada üstel geri çekilmeyle yeniden dener (BUG-09); üst sınır aşılırsa koşu kaldığı offset'te FAILED kalır. */
+    private ExternalPlayerPage fetchWithRetry(int offset, int pageSize) {
+        int attempts = Math.max(1, properties.getRetryAttempts());
+        long backoff = properties.getRetryBackoffMillis();
+        RuntimeException last = null;
+        for (int attempt = 1; attempt <= attempts; attempt++) {
+            try {
+                return provider.fetch(offset, pageSize);
+            } catch (RuntimeException e) {
+                last = e;
+                log.warn("Ingestion page failed offset : {} attempt : {}/{} reason : {}", offset, attempt, attempts, e.getMessage());
+                if (attempt < attempts && backoff > 0) {
+                    try {
+                        Thread.sleep(backoff << (attempt - 1));
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw e;
+                    }
+                }
+            }
+        }
+        throw last;
     }
 
     private int[] upsertPage(List<ExternalPlayer> items, short gameVersion) {

@@ -184,7 +184,7 @@ public class CareerService {
         List<Long> ids = userPlayerStateRepository.findByCareerIdOrderByIdAsc(careerId).stream()
                 .map(UserPlayerStateEntity::getBasePlayerId)
                 .toList();
-        return new CareerSquad(ids, career.getGameVersionId(), career.getBudgetEur(), clubGender(career.getClubId()), career.getClubId(), careerId);
+        return new CareerSquad(ids, career.getGameVersionId(), budget(career), clubGender(career.getClubId()), career.getClubId(), careerId);
     }
 
     public RosterEventResponse applyEvent(Long userId, Long careerId, RosterEventRequest request) {
@@ -219,7 +219,7 @@ public class CareerService {
             }
             case SELL, LOAN_OUT -> {
                 requireInSquad(inSquad, playerId);
-                career.setBudgetEur(career.getBudgetEur() + fee);
+                career.setBudgetEur(budget(career) + fee);
                 userPlayerStateRepository.delete(userPlayerStateRepository
                         .findByCareerIdAndBasePlayerId(careerId, playerId).orElseThrow());
                 fromClubId = career.getClubId();
@@ -235,7 +235,7 @@ public class CareerService {
         event.setToClubId(toClubId);
         event = rosterEventRepository.save(event);
         log.info("Roster event applied careerId : {} type : {} playerId : {}", careerId, request.getType(), playerId);
-        return toEventResponses(List.of(event), career.getBudgetEur()).get(0);
+        return toEventResponses(List.of(event), budget(career)).get(0);
     }
 
     public RosterEventResponse undoLastEvent(Long userId, Long careerId, Long eventId) {
@@ -253,20 +253,20 @@ public class CareerService {
             case BUY, LOAN_IN -> {
                 userPlayerStateRepository.findByCareerIdAndBasePlayerId(careerId, playerId)
                         .ifPresent(userPlayerStateRepository::delete);
-                career.setBudgetEur(career.getBudgetEur() + fee);
+                career.setBudgetEur(budget(career) + fee);
             }
             case PROMOTE -> userPlayerStateRepository.findByCareerIdAndBasePlayerId(careerId, playerId)
                     .ifPresent(userPlayerStateRepository::delete);
             case SELL, LOAN_OUT -> {
                 requireOutsideSquad(userPlayerStateRepository.findByCareerIdAndBasePlayerId(careerId, playerId).isPresent(), playerId);
-                if (career.getBudgetEur() < fee) {
+                if (budget(career) < fee) {
                     throw new InsufficientBudgetException();
                 }
-                career.setBudgetEur(career.getBudgetEur() - fee);
+                career.setBudgetEur(budget(career) - fee);
                 addToSquad(career, playerId, false);
             }
         }
-        RosterEventResponse response = toEventResponses(List.of(latest), career.getBudgetEur()).get(0);
+        RosterEventResponse response = toEventResponses(List.of(latest), budget(career)).get(0);
         rosterEventRepository.delete(latest);
         log.info("Roster event undone careerId : {} eventId : {}", careerId, eventId);
         return response;
@@ -327,11 +327,11 @@ public class CareerService {
     }
 
     private void spend(CareerEntity career, long fee) {
-        if (career.getBudgetEur() < fee) {
-            log.warn("Insufficient budget careerId : {} budget : {} fee : {}", career.getId(), career.getBudgetEur(), fee);
+        if (budget(career) < fee) {
+            log.warn("Insufficient budget careerId : {} budget : {} fee : {}", career.getId(), budget(career), fee);
             throw new InsufficientBudgetException();
         }
-        career.setBudgetEur(career.getBudgetEur() - fee);
+        career.setBudgetEur(budget(career) - fee);
     }
 
     private PlayerRatingEntity requirePlayerInCatalog(CareerEntity career, Long playerId) {
@@ -365,6 +365,10 @@ public class CareerService {
         jdbc.update("DELETE FROM player_valuation WHERE base_player_id IN (SELECT id FROM base_player WHERE owner_career_id = :c)", params);
         jdbc.update("DELETE FROM player_rating WHERE base_player_id IN (SELECT id FROM base_player WHERE owner_career_id = :c)", params);
         jdbc.update("DELETE FROM base_player WHERE owner_career_id = :c", params);
+    }
+
+    private static long budget(CareerEntity career) {
+        return Objects.isNull(career.getBudgetEur()) ? NO_FEE : career.getBudgetEur();
     }
 
     public CareerEntity requireOwned(Long userId, Long careerId) {

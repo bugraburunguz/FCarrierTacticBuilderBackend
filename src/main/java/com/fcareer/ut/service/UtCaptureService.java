@@ -94,6 +94,10 @@ public class UtCaptureService {
     }
 
     public CaptureResult process(List<Capture> captures) {
+        return process(captures, null);
+    }
+
+    public CaptureResult process(List<Capture> captures, Long userId) {
         int stripped = 0;
         int ignored = 0;
         int invalid = 0;
@@ -171,7 +175,7 @@ public class UtCaptureService {
                 squads(last(bodies, Kind.SQUAD_LIST)), prices, objectives(last(bodies, Kind.OBJECTIVES)), sbcSets(bodies.get(Kind.SBC_HUB)),
                 sbcDetails(raw.get(Kind.SBC_DETAIL), bodies.get(Kind.SBC_DETAIL)), evolutions(bodies.get(Kind.ACADEMY)),
                 credits(last(bodies, Kind.CREDITS)), currencies(last(bodies, Kind.CREDITS)), config, new ArrayList<>(unknownPaths),
-                sbcChallenges(raw.get(Kind.SBC_DETAIL), bodies.get(Kind.SBC_DETAIL), sbcSets(bodies.get(Kind.SBC_HUB)), config, ctx));
+                sbcChallenges(raw.get(Kind.SBC_DETAIL), bodies.get(Kind.SBC_DETAIL), sbcSets(bodies.get(Kind.SBC_HUB)), config, ctx, userId));
     }
 
     private void readDiscovery(String body, Set<String> unknownPaths) {
@@ -511,7 +515,7 @@ public class UtCaptureService {
     private static final Pattern SBC_SET_CHALLENGES = Pattern.compile(".*/sbs/setid/(\\d+)/challenges$");
 
     /** setId/{id}/challenges yanıtları: şartlar normalleştirilir, kulüp/lig/ülke kimlikleri adlara çevrilir (kayıtlı EA kimlikleri + bu yakalamada öğrenilenler). */
-    private List<SbcChallengeView> sbcChallenges(List<Capture> raw, List<JsonNode> bodies, List<SbcSetView> sets, CaptureConfig config, Ctx ctx) {
+    private List<SbcChallengeView> sbcChallenges(List<Capture> raw, List<JsonNode> bodies, List<SbcSetView> sets, CaptureConfig config, Ctx ctx, Long userId) {
         List<SbcChallengeView> result = new ArrayList<>();
         if (Objects.isNull(raw) || Objects.isNull(bodies)) {
             return result;
@@ -520,8 +524,8 @@ public class UtCaptureService {
         sets.forEach(s -> setNames.put(s.setId(), s.name()));
         Map<String, String> formationLabels = new HashMap<>();
         config.formations().forEach(f -> formationLabels.put(f.name(), f.label()));
-        eaIdRepository.learnLeagues(ctx.leagues());
-        eaIdRepository.learnNations(ctx.nations());
+        eaIdRepository.learnLeagues(ctx.leagues(), userId);
+        eaIdRepository.learnNations(ctx.nations(), userId);
         Set<Integer> clubIds = new HashSet<>();
         Set<Integer> leagueIds = new HashSet<>();
         Set<Integer> nationIds = new HashSet<>();

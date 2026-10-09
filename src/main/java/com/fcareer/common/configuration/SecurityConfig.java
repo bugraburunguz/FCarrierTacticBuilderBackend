@@ -13,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import com.fcareer.common.redis.RedisCounter;
+import com.fcareer.ut.kb.LinkTokenFilter;
+import com.fcareer.ut.kb.LinkTokenStore;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -34,7 +36,7 @@ public class SecurityConfig {
 
     private static final String[] PUBLIC_GET = {
             API_V1 + "/players/**", API_V1 + "/clubs", API_V1 + "/leagues", API_V1 + "/nationalities", API_V1 + "/roles", API_V1 + "/behavior-tags", API_V1 + "/formations",
-            API_V1 + "/presets/**", API_V1 + "/config/**", API_V1 + "/wonderkids", API_V1 + "/ut/meta/**", API_V1 + "/ut/sbc/score-table", API_V1 + "/ut/card/*/upgrades", API_V1 + "/img/**", "/actuator/health", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"};
+            API_V1 + "/presets/**", API_V1 + "/config/**", API_V1 + "/wonderkids", API_V1 + "/ut/meta/**", API_V1 + "/ut/sbc/score-table", API_V1 + "/ut/card/*/upgrades", API_V1 + "/img/**", API_V1 + "/ut/kb/**", API_V1 + "/ut/rules", "/actuator/health", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"};
     private static final String[] PUBLIC_POST = {
             API_V1 + "/auth/**", API_V1 + "/tactics/resolve", API_V1 + "/fit/role", API_V1 + "/players/compare",
             API_V1 + "/recommend/preview", API_V1 + "/tactics/export-code", API_V1 + "/tactics/import-code", API_V1 + "/players/*/development", API_V1 + "/ut/card/*/chemstyle", API_V1 + "/ut/sbc/streamlined", API_V1 + "/ut/squad/evaluate"};
@@ -44,6 +46,7 @@ public class SecurityConfig {
     private final SecurityProperties securityProperties;
     private final IngestionProperties ingestionProperties;
     private final RedisCounter redisCounter;
+    private final LinkTokenStore linkTokenStore;
     private final MessageService messageService;
     private final ObjectMapper objectMapper;
     private final Clock clock;
@@ -61,6 +64,7 @@ public class SecurityConfig {
                 .exceptionHandling(e -> e.authenticationEntryPoint(securityErrorHandler)
                         .accessDeniedHandler(securityErrorHandler))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new LinkTokenFilter(linkTokenStore), JwtAuthenticationFilter.class)
                 .addFilterAfter(adminKeyFilter, JwtAuthenticationFilter.class)
                 .addFilterAfter(rateLimitFilter, AdminKeyFilter.class)
                 .authorizeHttpRequests(auth -> auth

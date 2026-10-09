@@ -20,7 +20,7 @@ public class UtCaptureController {
     private final UtCaptureService utCaptureService;
 
     @PostMapping("/capture")
-    public CaptureResult capture(@Valid @RequestBody CaptureRequest request) {
-        return utCaptureService.process(request.captures());
+    public CaptureResult capture(@org.springframework.security.core.annotation.AuthenticationPrincipal com.fcareer.auth.security.AuthUser user, @Valid @RequestBody CaptureRequest request) {
+        return utCaptureService.process(request.captures(), user.id());
     }
 }

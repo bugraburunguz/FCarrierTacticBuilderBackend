@@ -100,8 +100,13 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public TokenResponse refresh(RefreshRequest request) {
-        Long userId = refreshTokenStore.consume(hash(request.getRefreshToken()))
+        String tokenHash = hash(request.getRefreshToken());
+        Long userId = refreshTokenStore.consume(tokenHash)
                 .orElseThrow(() -> {
+                    refreshTokenStore.usedBy(tokenHash).ifPresent(owner -> {
+                        log.warn("Refresh token reuse detected, revoking all sessions userId : {}", owner);
+                        refreshTokenStore.revokeAll(owner);
+                    });
                     log.warn("Refresh rejected, unknown or expired token");
                     return new InvalidRefreshTokenException();
                 });

@@ -15,6 +15,8 @@ public class IngestionProperties {
     private int pageSize = 100;
     private int maxPlayers = 0;
     private boolean runOnStartup = false;
+    private int retryAttempts = 4;
+    private long retryBackoffMillis = 1000;
     private String adminKey = "";
     private EaSite eaSite = new EaSite();
     private Mock mock = new Mock();
