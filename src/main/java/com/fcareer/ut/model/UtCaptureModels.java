@@ -28,7 +28,7 @@ public final class UtCaptureModels {
                               List<String> faceLabels, List<Integer> faceStats, Integer skillMoves, Integer weakFoot, Integer preferredFoot,
                               Integer playStyle, List<Integer> baseTraits, List<Integer> iconTraits, List<Integer> plusRoles,
                               Long lastSalePrice, Long marketMin, Long marketMax, Long marketAverage, boolean duplicate, String pile,
-                              Long playerId, String club, String league, String nationality, Map<String, Integer> attrs) {
+                              Long playerId, String club, String league, String nationality, Map<String, Integer> attrs, String faceUrl) {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

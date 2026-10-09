@@ -74,6 +74,7 @@ public class UtCaptureService {
     private final ObjectMapper objectMapper;
     private final UtCatalogJoinRepository catalogJoinRepository;
     private final com.fcareer.ut.repository.EaIdRepository eaIdRepository;
+    private final com.fcareer.catalog.configuration.CatalogProperties catalogProperties;
 
     private List<String> attrOrder;
 
@@ -386,7 +387,12 @@ public class UtCaptureService {
                 Objects.nonNull(info) ? info.playerId() : null,
                 firstNonNull(ctx.clubs().get(teamId), Objects.nonNull(info) ? info.club() : null),
                 firstNonNull(ctx.leagues().get(leagueId), Objects.nonNull(info) ? info.league() : null),
-                firstNonNull(ctx.nations().get(nationId), Objects.nonNull(info) ? info.nation() : null), ctx.attrs().get(assetId));
+                firstNonNull(ctx.nations().get(nationId), Objects.nonNull(info) ? info.nation() : null), ctx.attrs().get(assetId), faceUrl(assetId));
+    }
+
+    private String faceUrl(long assetId) {
+        String template = catalogProperties.getFaceUrlTemplate();
+        return Objects.isNull(template) || template.isBlank() ? null : template.replace("{id}", String.valueOf(assetId));
     }
 
     private static String cardType(String rarity, boolean legend) {
