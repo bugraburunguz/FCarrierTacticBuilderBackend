@@ -3,7 +3,9 @@ package com.fcareer.ut.kb;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fcareer.catalog.configuration.CatalogProperties;
 import com.fcareer.common.exception.InvalidTacticException;
+import com.fcareer.ingestion.service.IngestionRunRepository;
 import com.fcareer.ut.kb.KbModels.QueueItem;
+import com.fcareer.ut.repository.EaIdRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,11 +40,35 @@ public class UtAdminController {
     public record PromoRequest(String code, String name, Instant startsAt, Instant endsAt) {
     }
 
+    public record EaIdRequest(String kind, int eaId, String name) {
+    }
+
+    private final IngestionRunRepository ingestionRuns;
+    private final EaIdRepository eaIds;
     private final KnowledgeBaseRepository repository;
     private final ContributionService contributionService;
     private final ContributorService contributorService;
     private final CatalogProperties catalogProperties;
     private final Clock clock;
+
+    @GetMapping("/ingestion-runs")
+    public List<Map<String, Object>> ingestionRuns() {
+        return ingestionRuns.recent();
+    }
+
+    /** Kullanıcılardan gelen, eşiğe ulaşmamış EA lig/ülke kimlik önerileri (BUG-11). */
+    @GetMapping("/ea-ids")
+    public List<Map<String, Object>> eaIdSuggestions() {
+        return eaIds.openSuggestions();
+    }
+
+    @PostMapping("/ea-ids/apply")
+    public Map<String, Integer> applyEaId(@RequestBody EaIdRequest request) {
+        if (request.name() == null || !java.util.Set.of("LEAGUE", "NATION").contains(request.kind())) {
+            throw new InvalidTacticException("kind");
+        }
+        return Map.of("updated", eaIds.apply(request.kind(), request.eaId(), request.name()));
+    }
 
     @PostMapping("/items/sync-base")
     public Map<String, Integer> syncBase() {
