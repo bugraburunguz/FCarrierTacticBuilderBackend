@@ -56,6 +56,12 @@ public class UtAdminController {
         return ingestionRuns.recent();
     }
 
+    /** Fiyat yakalama sağlığı (BE-BUG-01): son 30 gün kayıt edilen / bilinmeyen item yüzünden atlanan gözlemler. */
+    @GetMapping("/price-stats")
+    public List<Map<String, Object>> priceStats() {
+        return repository.priceStats();
+    }
+
     /** Kullanıcılardan gelen, eşiğe ulaşmamış EA lig/ülke kimlik önerileri (BUG-11). */
     @GetMapping("/ea-ids")
     public List<Map<String, Object>> eaIdSuggestions() {

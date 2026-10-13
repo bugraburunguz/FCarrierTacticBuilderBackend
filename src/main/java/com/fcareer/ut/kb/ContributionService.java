@@ -29,6 +29,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HexFormat;
@@ -246,14 +248,19 @@ public class ContributionService {
     private int[] recordPrices(Contributor contributor, List<MarketPrice> prices, String platform) {
         short gv = catalogProperties.getDefaultGameVersion();
         int recorded = 0;
-        int skipped = 0;
+        int unknown = 0;
+        int noResource = 0;
         for (MarketPrice price : prices) {
             if (!MARKET_SOURCE.equals(price.source()) || Objects.isNull(price.expiresIn()) || price.expiresIn() <= 0) {
                 continue;
             }
-            var itemId = Objects.isNull(price.resourceId()) ? java.util.Optional.<Long>empty() : repository.itemIdByResource(price.resourceId(), gv);
+            if (Objects.isNull(price.resourceId())) {
+                noResource++;
+                continue;
+            }
+            var itemId = repository.itemIdByResource(price.resourceId(), gv);
             if (itemId.isEmpty()) {
-                skipped++;
+                unknown++;
                 continue;
             }
             if (Objects.nonNull(price.buyNow()) && price.buyNow() > 0 && price.buyNow() <= Integer.MAX_VALUE) {
@@ -262,7 +269,11 @@ public class ContributionService {
                 recorded++;
             }
         }
-        return new int[]{recorded, skipped};
+        if (unknown + noResource > 0) {
+            log.warn("Price observations skipped contributorId : {} unknownItem : {} noResourceId : {}", contributor.id(), unknown, noResource);
+        }
+        repository.addPriceStats(LocalDate.ofInstant(clock.instant(), ZoneOffset.UTC), recorded, unknown, noResource);
+        return new int[]{recorded, unknown + noResource};
     }
 
     private static String table(String kind) {

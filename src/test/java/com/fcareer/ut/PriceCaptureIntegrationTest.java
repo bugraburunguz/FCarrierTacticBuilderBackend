@@ -39,6 +39,7 @@ class PriceCaptureIntegrationTest {
     void items() {
         jdbc.update("DELETE FROM price_obs");
         jdbc.update("DELETE FROM price_agg");
+        jdbc.update("DELETE FROM price_capture_stat");
         jdbc.update("DELETE FROM ut_item WHERE ea_asset_id = ?", ASSET);
         short gv = jdbc.queryForObject("SELECT id FROM game_version ORDER BY id DESC LIMIT 1", Short.class);
         baseItem = insertItem(gv, ASSET, 90);
@@ -132,6 +133,17 @@ class PriceCaptureIntegrationTest {
 
     private void aggregate() throws Exception {
         mockMvc.perform(post("/api/v1/admin/ut/prices/aggregate").header("X-Admin-Key", "test-key")).andReturn();
+    }
+
+    @Test
+    void definitionIdIsAcceptedAndSkippedPricesAreCountedForAdmins() throws Exception {
+        String definitionOnly = auction(TOTW_RESOURCE, 91, 5000, 3000).replace("\"resourceId\":" + TOTW_RESOURCE, "\"definitionId\":" + TOTW_RESOURCE);
+        contribute("/transfermarket", definitionOnly, auction(66_666_666L, 91, 5000, 3000), auction(66_666_667L, 91, 5000, 3000));
+
+        assertThat(count(totwItem)).isEqualTo(1);
+        JsonNode stats = call(get("/api/v1/admin/ut/price-stats").header("X-Admin-Key", "test-key"), null, null, 200).at("/data/0");
+        assertThat(stats.at("/recorded").asInt()).isEqualTo(1);
+        assertThat(stats.at("/skippedUnknownItem").asInt()).isEqualTo(2);
     }
 
     private int count(long itemId) {

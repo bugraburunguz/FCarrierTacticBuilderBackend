@@ -200,6 +200,21 @@ public class KnowledgeBaseRepository {
                 (rs, n) -> new PricePoint(instant(rs.getTimestamp("bucket")), (Integer) rs.getObject("p10"), (Integer) rs.getObject("p50"), (Integer) rs.getObject("min_bin"), rs.getInt("samples"), rs.getBoolean("low_confidence")));
     }
 
+    /** Fiyat yakalama sayaçları: kayıt edilen ve atlanan (bilinmeyen item / resourceId yok) gözlemler, UTC gün bazında. */
+    public void addPriceStats(java.time.LocalDate day, int recorded, int unknownItem, int noResource) {
+        jdbc.update("""
+                INSERT INTO price_capture_stat (day, recorded, skipped_unknown_item, skipped_no_resource) VALUES (:d, :r, :u, :n)
+                ON CONFLICT (day) DO UPDATE SET recorded = price_capture_stat.recorded + EXCLUDED.recorded,
+                  skipped_unknown_item = price_capture_stat.skipped_unknown_item + EXCLUDED.skipped_unknown_item,
+                  skipped_no_resource = price_capture_stat.skipped_no_resource + EXCLUDED.skipped_no_resource
+                """, new MapSqlParameterSource().addValue("d", java.sql.Date.valueOf(day)).addValue("r", recorded).addValue("u", unknownItem).addValue("n", noResource));
+    }
+
+    public List<Map<String, Object>> priceStats() {
+        return jdbc.query("SELECT day, recorded, skipped_unknown_item, skipped_no_resource FROM price_capture_stat ORDER BY day DESC LIMIT 30", (rs, n) -> Map.of(
+                "day", rs.getDate("day").toString(), "recorded", rs.getInt("recorded"), "skippedUnknownItem", rs.getInt("skipped_unknown_item"), "skippedNoResource", rs.getInt("skipped_no_resource")));
+    }
+
     public void insertPriceObservation(long itemId, String platform, Instant at, String kind, int value, long contributorId) {
         jdbc.update("INSERT INTO price_obs (ut_item_id, platform, observed_at, kind, value, contributor_id) VALUES (:i, :p, :at, :k, :v, :c)",
                 new MapSqlParameterSource().addValue("i", itemId).addValue("p", platform).addValue("at", ts(at)).addValue("k", kind).addValue("v", value).addValue("c", contributorId));
