@@ -94,6 +94,46 @@ class PriceCaptureIntegrationTest {
         assertThat(observed).isEqualTo(1_700_000_000L);
     }
 
+    @Test
+    void singleContributorMedianIsNotDraggedToTheMinimum() throws Exception {
+        long contributor = contributorId();
+        for (int value : new int[]{1000, 1100, 1200}) {
+            observation(baseItem, value, contributor);
+        }
+        aggregate();
+
+        assertThat(jdbc.queryForObject("SELECT p50 FROM price_agg WHERE ut_item_id = ?", Integer.class, baseItem)).isEqualTo(1100);
+        assertThat(jdbc.queryForObject("SELECT low_confidence FROM price_agg WHERE ut_item_id = ?", Boolean.class, baseItem)).isTrue();
+    }
+
+    @Test
+    void aProlificContributorDoesNotDominateTheBucket() throws Exception {
+        long heavy = contributorId();
+        long light = contributorId();
+        for (int i = 0; i < 10; i++) {
+            observation(baseItem, 1000, heavy);
+        }
+        observation(baseItem, 2000, light);
+        aggregate();
+
+        assertThat(jdbc.queryForObject("SELECT p50 FROM price_agg WHERE ut_item_id = ?", Integer.class, baseItem)).isBetween(1001, 1999);
+        assertThat(jdbc.queryForObject("SELECT low_confidence FROM price_agg WHERE ut_item_id = ?", Boolean.class, baseItem)).isFalse();
+    }
+
+    private long contributorId() throws Exception {
+        long user = register();
+        jdbc.update("INSERT INTO contributor (user_id, trust) VALUES (?, 100)", user);
+        return jdbc.queryForObject("SELECT id FROM contributor WHERE user_id = ?", Long.class, user);
+    }
+
+    private void observation(long itemId, int value, long contributorId) {
+        jdbc.update("INSERT INTO price_obs (ut_item_id, platform, observed_at, kind, value, contributor_id) VALUES (?, 'CONSOLE', now(), 'BIN', ?, ?)", itemId, value, contributorId);
+    }
+
+    private void aggregate() throws Exception {
+        mockMvc.perform(post("/api/v1/admin/ut/prices/aggregate").header("X-Admin-Key", "test-key")).andReturn();
+    }
+
     private int count(long itemId) {
         return jdbc.queryForObject("SELECT count(*) FROM price_obs WHERE ut_item_id = ?", Integer.class, itemId);
     }

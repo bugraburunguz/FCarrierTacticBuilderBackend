@@ -195,9 +195,9 @@ public class KnowledgeBaseRepository {
     }
 
     public List<PricePoint> prices(long itemId, String platform, Instant since) {
-        return jdbc.query("SELECT bucket, p10, p50, min_bin, samples FROM price_agg WHERE ut_item_id = :i AND platform = :p AND bucket >= :s ORDER BY bucket",
+        return jdbc.query("SELECT bucket, p10, p50, min_bin, samples, low_confidence FROM price_agg WHERE ut_item_id = :i AND platform = :p AND bucket >= :s ORDER BY bucket",
                 new MapSqlParameterSource().addValue("i", itemId).addValue("p", platform).addValue("s", ts(since)),
-                (rs, n) -> new PricePoint(instant(rs.getTimestamp("bucket")), (Integer) rs.getObject("p10"), (Integer) rs.getObject("p50"), (Integer) rs.getObject("min_bin"), rs.getInt("samples")));
+                (rs, n) -> new PricePoint(instant(rs.getTimestamp("bucket")), (Integer) rs.getObject("p10"), (Integer) rs.getObject("p50"), (Integer) rs.getObject("min_bin"), rs.getInt("samples"), rs.getBoolean("low_confidence")));
     }
 
     public void insertPriceObservation(long itemId, String platform, Instant at, String kind, int value, long contributorId) {
@@ -205,30 +205,41 @@ public class KnowledgeBaseRepository {
                 new MapSqlParameterSource().addValue("i", itemId).addValue("p", platform).addValue("at", ts(at)).addValue("k", kind).addValue("v", value).addValue("c", contributorId));
     }
 
-    /** Son gözlemleri saatlik kovalara toplar: aykırı değerler (medyanın 0,4×–3× dışı) atılır, tek katkıcı bir kovada en çok %30 ağırlıkla sayılır. */
+    /**
+     * Son BIN gözlemlerini saatlik kovalara toplar (BE-BUG-02): aykırı değerler (medyanın 0,4×–3× dışı) atılır; her katkıcının kovadaki gözlemleri önce kendi medyanına iner,
+     * kova değeri katkıcı medyanlarının yüzdeliğidir (tek katkıcı gözlem sayısıyla ağırlık kazanamaz). Tek katkıcılı kovada gözlem bazlı yüzdelik alınır ve low_confidence işaretlenir.
+     */
     public int aggregatePrices(Instant from) {
         return jdbc.update("""
                 WITH raw AS (
-                  SELECT ut_item_id, platform, date_trunc('hour', observed_at) AS bucket, kind, value, contributor_id
-                  FROM price_obs WHERE observed_at >= :from AND kind IN ('BIN', 'LAST_SALE')
+                  SELECT ut_item_id, platform, date_trunc('hour', observed_at) AS bucket, value, contributor_id
+                  FROM price_obs WHERE observed_at >= :from AND kind = 'BIN'
                 ), meds AS (
                   SELECT ut_item_id, platform, bucket, percentile_cont(0.5) WITHIN GROUP (ORDER BY value) AS med FROM raw GROUP BY ut_item_id, platform, bucket
                 ), clean AS (
                   SELECT r.* FROM raw r JOIN meds m USING (ut_item_id, platform, bucket) WHERE r.value BETWEEN m.med * 0.4 AND m.med * 3
-                ), ranked AS (
-                  SELECT *, row_number() OVER (PARTITION BY ut_item_id, platform, bucket, contributor_id ORDER BY value) AS rn,
-                         count(*) OVER (PARTITION BY ut_item_id, platform, bucket) AS total
-                  FROM clean
-                ), capped AS (
-                  SELECT * FROM ranked WHERE rn <= GREATEST(1, CEIL(total * 0.3))
+                ), per_contributor AS (
+                  SELECT ut_item_id, platform, bucket, contributor_id, percentile_cont(0.5) WITHIN GROUP (ORDER BY value) AS med, min(value) AS min_bin, count(*) AS samples
+                  FROM clean GROUP BY ut_item_id, platform, bucket, contributor_id
+                ), buckets AS (
+                  SELECT ut_item_id, platform, bucket, count(*) AS contributors FROM per_contributor GROUP BY ut_item_id, platform, bucket
+                ), combined AS (
+                  SELECT p.ut_item_id, p.platform, p.bucket,
+                         percentile_cont(0.1) WITHIN GROUP (ORDER BY p.med)::int AS p10, percentile_cont(0.5) WITHIN GROUP (ORDER BY p.med)::int AS p50,
+                         min(p.min_bin) AS min_bin, sum(p.samples)::int AS samples, false AS low_confidence
+                  FROM per_contributor p JOIN buckets b USING (ut_item_id, platform, bucket) WHERE b.contributors >= 2
+                  GROUP BY p.ut_item_id, p.platform, p.bucket
+                ), single AS (
+                  SELECT c.ut_item_id, c.platform, c.bucket,
+                         percentile_cont(0.1) WITHIN GROUP (ORDER BY c.value)::int AS p10, percentile_cont(0.5) WITHIN GROUP (ORDER BY c.value)::int AS p50,
+                         min(c.value) AS min_bin, count(*)::int AS samples, true AS low_confidence
+                  FROM clean c JOIN buckets b USING (ut_item_id, platform, bucket) WHERE b.contributors < 2
+                  GROUP BY c.ut_item_id, c.platform, c.bucket
                 )
-                INSERT INTO price_agg (ut_item_id, platform, bucket, p10, p50, min_bin, samples)
-                SELECT ut_item_id, platform, bucket,
-                       percentile_cont(0.1) WITHIN GROUP (ORDER BY value)::int,
-                       percentile_cont(0.5) WITHIN GROUP (ORDER BY value)::int,
-                       min(value) FILTER (WHERE kind = 'BIN'), count(*)
-                FROM capped GROUP BY ut_item_id, platform, bucket
-                ON CONFLICT (ut_item_id, platform, bucket) DO UPDATE SET p10 = EXCLUDED.p10, p50 = EXCLUDED.p50, min_bin = EXCLUDED.min_bin, samples = EXCLUDED.samples
+                INSERT INTO price_agg (ut_item_id, platform, bucket, p10, p50, min_bin, samples, low_confidence)
+                SELECT * FROM combined UNION ALL SELECT * FROM single
+                ON CONFLICT (ut_item_id, platform, bucket) DO UPDATE SET p10 = EXCLUDED.p10, p50 = EXCLUDED.p50, min_bin = EXCLUDED.min_bin,
+                  samples = EXCLUDED.samples, low_confidence = EXCLUDED.low_confidence
                 """, new MapSqlParameterSource("from", ts(from)));
     }
 

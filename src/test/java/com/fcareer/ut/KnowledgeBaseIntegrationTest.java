@@ -157,7 +157,7 @@ class KnowledgeBaseIntegrationTest {
         call(post("/api/v1/admin/ut/prices/aggregate").header(ADMIN_KEY, "test-key"), null, null, 200);
         JsonNode prices = call(get("/api/v1/ut/kb/items/" + itemId + "/prices?platform=CONSOLE&range=24h"), null, null, 200).at("/data");
         assertThat(prices).isNotEmpty();
-        assertThat(prices.get(0).get("p50").asInt()).isBetween(1000, 1200);
+        assertThat(prices.get(0).get("p50").asInt()).isEqualTo(1100);
         call(get("/api/v1/ut/kb/items/" + itemId + "/prices?platform=XBOX"), null, null, 400);
     }
 

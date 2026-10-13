@@ -38,7 +38,7 @@ public final class KbModels {
                           Integer weakFoot, Integer skillMoves, String accelerate, boolean untradeableOnly, String status) {
     }
 
-    public record PricePoint(Instant bucket, Integer p10, Integer p50, Integer minBin, int samples) {
+    public record PricePoint(Instant bucket, Integer p10, Integer p50, Integer minBin, int samples, boolean lowConfidence) {
     }
 
     public record ContributionResult(int created, int updated, int unchanged, int queued, int pricesRecorded, int pricesSkipped) {
