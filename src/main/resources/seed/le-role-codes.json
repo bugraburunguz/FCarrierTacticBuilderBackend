@@ -1,0 +1,214 @@
+{
+ "verified": true,
+ "_basis": "FC 27 Live Editor v27.1.0 loc/eng_us/localize.json player_role_N dizgeleri (gözlem); kod 1-52 = Role+, kod+100 = Role++",
+ "codes": {
+  "1": {
+   "position": "GK",
+   "role": "Goalkeeper"
+  },
+  "2": {
+   "position": "GK",
+   "role": "Sweeper Keeper"
+  },
+  "3": {
+   "position": "RB",
+   "role": "Fullback"
+  },
+  "4": {
+   "position": "RB",
+   "role": "Falseback"
+  },
+  "5": {
+   "position": "RB",
+   "role": "Wingback"
+  },
+  "6": {
+   "position": "RB",
+   "role": "Attacking Wingback"
+  },
+  "7": {
+   "position": "LB",
+   "role": "Fullback"
+  },
+  "8": {
+   "position": "LB",
+   "role": "Falseback"
+  },
+  "9": {
+   "position": "LB",
+   "role": "Wingback"
+  },
+  "10": {
+   "position": "LB",
+   "role": "Attacking Wingback"
+  },
+  "11": {
+   "position": "CB",
+   "role": "Defender"
+  },
+  "12": {
+   "position": "CB",
+   "role": "Stopper"
+  },
+  "13": {
+   "position": "CB",
+   "role": "Ball-Playing Defender"
+  },
+  "14": {
+   "position": "CDM",
+   "role": "Holding"
+  },
+  "15": {
+   "position": "CDM",
+   "role": "Centre Half"
+  },
+  "16": {
+   "position": "CDM",
+   "role": "Deep-Lying Playmaker"
+  },
+  "17": {
+   "position": "CDM",
+   "role": "Wide Half"
+  },
+  "18": {
+   "position": "CM",
+   "role": "Box-to-Box"
+  },
+  "19": {
+   "position": "CM",
+   "role": "Holding"
+  },
+  "20": {
+   "position": "CM",
+   "role": "Deep-Lying Playmaker"
+  },
+  "21": {
+   "position": "CM",
+   "role": "Playmaker"
+  },
+  "22": {
+   "position": "CM",
+   "role": "Half-Winger"
+  },
+  "23": {
+   "position": "RM",
+   "role": "Winger"
+  },
+  "24": {
+   "position": "RM",
+   "role": "Wide Midfielder"
+  },
+  "25": {
+   "position": "RM",
+   "role": "Wide Playmaker"
+  },
+  "26": {
+   "position": "RM",
+   "role": "Inside Forward"
+  },
+  "27": {
+   "position": "LM",
+   "role": "Winger"
+  },
+  "28": {
+   "position": "LM",
+   "role": "Wide Midfielder"
+  },
+  "29": {
+   "position": "LM",
+   "role": "Wide Playmaker"
+  },
+  "30": {
+   "position": "LM",
+   "role": "Inside Forward"
+  },
+  "31": {
+   "position": "CAM",
+   "role": "Playmaker"
+  },
+  "32": {
+   "position": "CAM",
+   "role": "Shadow Striker"
+  },
+  "33": {
+   "position": "CAM",
+   "role": "Half Winger"
+  },
+  "34": {
+   "position": "CAM",
+   "role": "Classic 10"
+  },
+  "35": {
+   "position": "RW",
+   "role": "Winger"
+  },
+  "36": {
+   "position": "RW",
+   "role": "Inside Forward"
+  },
+  "37": {
+   "position": "RW",
+   "role": "Wide Playmaker"
+  },
+  "38": {
+   "position": "LW",
+   "role": "Winger"
+  },
+  "39": {
+   "position": "LW",
+   "role": "Inside Forward"
+  },
+  "40": {
+   "position": "LW",
+   "role": "Wide Playmaker"
+  },
+  "41": {
+   "position": "ST",
+   "role": "Advanced Forward"
+  },
+  "42": {
+   "position": "ST",
+   "role": "Poacher"
+  },
+  "43": {
+   "position": "ST",
+   "role": "False 9"
+  },
+  "44": {
+   "position": "ST",
+   "role": "Target Forward"
+  },
+  "45": {
+   "position": "GK",
+   "role": "Ball-Playing Keeper"
+  },
+  "46": {
+   "position": "RB",
+   "role": "Inverted Wingback"
+  },
+  "47": {
+   "position": "LB",
+   "role": "Inverted Wingback"
+  },
+  "48": {
+   "position": "CB",
+   "role": "Wide Back"
+  },
+  "49": {
+   "position": "CDM",
+   "role": "Box Crasher"
+  },
+  "50": {
+   "position": "ST",
+   "role": "Roaming Striker"
+  },
+  "51": {
+   "position": "RW",
+   "role": "False Winger"
+  },
+  "52": {
+   "position": "LW",
+   "role": "False Winger"
+  }
+ }
+}
