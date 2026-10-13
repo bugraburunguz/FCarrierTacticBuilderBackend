@@ -37,27 +37,41 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class CareerDeskService {
 
-    private static final int KEEP_SNAPSHOTS = 30;
     private static final int MAX_DIFF_ROWS = 400;
 
     private final NamedParameterJdbcTemplate jdbc;
     private final CareerService careerService;
     private final SpoilerPolicy spoilerPolicy;
     private final PlayerService playerService;
+    private final CareerDeskProperties properties;
 
     // ---- snapshot ----
 
-    /** Canlı kariyer verisinin (career_player_data) o anki halini geçmişe yazar; en eski kayıtlar 30'un ötesinde silinir. */
+    /** Canlı kariyer verisinin (career_player_data) o anki halini geçmişe yazar; saklama sınırı fcareer.career.snapshot-retention ile ayarlanır (varsayılan sınırsız). */
     @Transactional
     public long takeSnapshot(long careerId, String source, String note) {
         Integer season = jdbc.queryForList("SELECT season FROM career WHERE id = :c", Map.of("c", careerId), Integer.class).stream().findFirst().orElse(null);
         Long id = jdbc.queryForObject("INSERT INTO career_snapshot (career_id, season, source, note) VALUES (:c, :s, :src, :n) RETURNING id",
                 new MapSqlParameterSource().addValue("c", careerId).addValue("s", season).addValue("src", source).addValue("n", note), Long.class);
-        int count = jdbc.update("INSERT INTO career_snapshot_player (snapshot_id, base_player_id, overall, potential, team_id, free_agent) "
-                + "SELECT :id, base_player_id, overall, potential, team_id, free_agent FROM career_player_data WHERE career_id = :c", Map.of("id", id, "c", careerId));
+        int count = jdbc.update("""
+                INSERT INTO career_snapshot_player (snapshot_id, base_player_id, overall, potential, team_id, free_agent, positions, attrs, value_eur, wage_eur, age)
+                SELECT :id, d.base_player_id, d.overall, d.potential, d.team_id, d.free_agent, COALESCE(r.positions, pr.positions),
+                       COALESCE(to_jsonb(r), to_jsonb(pr)) - 'id' - 'career_id' - 'base_player_id' - 'game_version_id' - 'club_id' - 'overall' - 'positions',
+                       v.value_eur, v.wage_eur,
+                       CASE WHEN b.dob IS NULL THEN NULL ELSE date_part('year', age(COALESCE((SELECT game_date FROM career_snapshot WHERE id = :id), CURRENT_DATE), b.dob))::smallint END
+                FROM career_player_data d
+                JOIN career k ON k.id = d.career_id
+                JOIN base_player b ON b.id = d.base_player_id
+                LEFT JOIN career_player_rating r ON r.career_id = d.career_id AND r.base_player_id = d.base_player_id AND r.game_version_id = k.game_version_id
+                LEFT JOIN player_rating pr ON pr.base_player_id = d.base_player_id AND pr.game_version_id = k.game_version_id
+                LEFT JOIN player_valuation v ON v.base_player_id = d.base_player_id AND v.game_version_id = k.game_version_id AND v.source = 'IMPORT' AND v.owner_user_id = k.user_id
+                WHERE d.career_id = :c""", Map.of("id", id, "c", careerId));
         jdbc.update("UPDATE career_snapshot SET player_count = :n WHERE id = :id", Map.of("n", count, "id", id));
-        jdbc.update("DELETE FROM career_snapshot WHERE career_id = :c AND id NOT IN (SELECT id FROM career_snapshot WHERE career_id = :c ORDER BY id DESC LIMIT :k)",
-                Map.of("c", careerId, "k", KEEP_SNAPSHOTS));
+        Integer keep = properties.getSnapshotRetention();
+        if (Objects.nonNull(keep) && keep > 0) {
+            jdbc.update("DELETE FROM career_snapshot WHERE career_id = :c AND id NOT IN (SELECT id FROM career_snapshot WHERE career_id = :c ORDER BY id DESC LIMIT :k)",
+                    Map.of("c", careerId, "k", keep));
+        }
         log.info("Career snapshot taken careerId : {} snapshotId : {} source : {} players : {}", careerId, id, source, count);
         return id;
     }

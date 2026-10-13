@@ -92,6 +92,27 @@ class CareerImportIntegrationTest {
     }
 
     @Test
+    void snapshotsKeepPositionsAttributesAndAgeAndAreNeverPrunedByDefault() throws Exception {
+        String token = register();
+        var club = clubRepository.findAll().get(0);
+        long careerId = json(post("/api/v1/careers").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("clubId", club.getId(), "budgetEur", 1_000_000))), token)
+                .at("/data/id").asLong();
+        json(post("/api/v1/billing/subscribe"), token);
+
+        for (int i = 0; i < 33; i++) {
+            assertThat(upload(careerId, token, club.getName()).at("/success").asBoolean()).isTrue();
+        }
+
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM career_snapshot WHERE career_id = ?", Integer.class, careerId)).as("30'dan eski snapshot silinmez").isEqualTo(33);
+        var row = jdbc.queryForMap("""
+                SELECT p.positions, p.attrs, p.age FROM career_snapshot_player p
+                JOIN career_snapshot s ON s.id = p.snapshot_id WHERE s.career_id = ? ORDER BY s.id DESC LIMIT 1""", careerId);
+        assertThat(row.get("positions")).isNotNull();
+        assertThat(row.get("attrs").toString()).contains("finishing");
+    }
+
+    @Test
     void secondImportKeepsAManuallyBuiltSquad() throws Exception {
         String token = register();
         var club = clubRepository.findAll().get(0);
