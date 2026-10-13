@@ -190,6 +190,65 @@ class CareerImportIntegrationTest {
         assertThat(result.at("/data/warnings").toString()).contains("NOT_IN_CAREER");
     }
 
+    private static String fnv(java.util.List<String> rows) {
+        long h = 2166136261L;
+        for (String row : rows) {
+            for (byte b : row.getBytes(StandardCharsets.UTF_8)) {
+                h = ((h ^ (b & 0xFF)) * 16777619L) & 0xFFFFFFFFL;
+            }
+        }
+        return String.format("fnv1a32:%08x", h);
+    }
+
+    private static void fcx2Table(java.util.List<String> log, String name, String header, java.util.List<String> rows) {
+        String prefix = "10:00:00.1\tINFO\t[LUA API] FCX2\t";
+        log.add(prefix + "HEADER\t" + name + "\t" + header);
+        log.add(prefix + "CHUNK\t" + name + "\t1\t[" + String.join(",", rows) + "]");
+        log.add(prefix + "END\t" + name + "\t" + rows.size() + "\t" + fnv(rows) + "\t1");
+    }
+
+    private String fcx2Log(String clubName, boolean inCareer, String gameDate, int userTeamId) {
+        String prefix = "10:00:00.1\tINFO\t[LUA API] FCX2\t";
+        java.util.List<String> log = new java.util.ArrayList<>();
+        log.add(prefix + "META\t{\"schema\":\"fccareer.le-export\",\"schemaVersion\":2,\"script\":\"2.0.0\",\"context\":{\"inCareer\":" + inCareer
+                + ",\"mode\":\"MANAGER\",\"gameDate\":\"" + gameDate + "\",\"userTeamId\":" + userTeamId + "}}");
+        fcx2Table(log, "players", "[\"playerid\",\"overallrating\",\"potential\"]", java.util.List.of("[" + FIRST_MOCK_ID + ",91,95]", "[" + (FIRST_MOCK_ID + 1) + ",90,93]"));
+        fcx2Table(log, "teams", "[\"teamid\",\"teamname\",\"overallrating\",\"gender\"]", java.util.List.of("[1,\"" + clubName + "\",80,0]", "[77,\"Baska FC\",70,0]"));
+        fcx2Table(log, "teamplayerlinks", "[\"playerid\",\"teamid\"]", java.util.List.of("[" + FIRST_MOCK_ID + ",1]", "[" + (FIRST_MOCK_ID + 1) + ",77]"));
+        log.add(prefix + "DONE\t[]");
+        return String.join("\n", log);
+    }
+
+    @Test
+    void v2ExportDrivesTheUserTeamTheGameDateAndTheSnapshot() throws Exception {
+        String token = register();
+        long careerId = premiumCareer(token);
+        String club = clubRepository.findAll().get(0).getName();
+
+        JsonNode result = json(multipart("/api/v1/careers/" + careerId + "/import").file(file("log", fcx2Log(club, true, "2029-07-01", 77))), token);
+
+        assertThat(result.at("/success").asBoolean()).as(result.toString()).isTrue();
+        assertThat(result.at("/data/guessedTeamId").asInt()).as("takım adla tahmin edilmez, context.userTeamId kullanılır").isEqualTo(77);
+        assertThat(result.at("/data/squadSynced").asInt()).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT current_game_date FROM career WHERE id = ?", java.time.LocalDate.class, careerId)).isEqualTo(java.time.LocalDate.of(2029, 7, 1));
+        assertThat(jdbc.queryForObject("SELECT game_date FROM career_snapshot WHERE career_id = ? ORDER BY id DESC LIMIT 1", java.time.LocalDate.class, careerId)).isEqualTo(java.time.LocalDate.of(2029, 7, 1));
+        assertThat(jdbc.queryForObject("SELECT note FROM career_snapshot WHERE career_id = ? ORDER BY id DESC LIMIT 1", String.class, careerId)).contains("export ");
+    }
+
+    @Test
+    void v2ExportTakenOutsideACareerWarnsAndCorruptExportsAreRejected() throws Exception {
+        String token = register();
+        long careerId = premiumCareer(token);
+        String club = clubRepository.findAll().get(0).getName();
+
+        JsonNode warned = json(multipart("/api/v1/careers/" + careerId + "/import").file(file("log", fcx2Log(club, false, "2029-07-01", 0))), token);
+        assertThat(warned.at("/data/warnings").toString()).contains("NOT_IN_CAREER");
+
+        JsonNode corrupt = json(multipart("/api/v1/careers/" + careerId + "/import").file(file("log", fcx2Log(club, true, "2029-07-01", 77).replace("[" + FIRST_MOCK_ID + ",91,95]", "[" + FIRST_MOCK_ID + ",99,95]"))), token);
+        assertThat(corrupt.at("/success").asBoolean()).isFalse();
+        assertThat(corrupt.at("/message").asText() + corrupt.at("/error").toString()).contains("players");
+    }
+
     @Test
     void importAcceptsTheLiveEditorLogFileDirectly() throws Exception {
         String token = register();

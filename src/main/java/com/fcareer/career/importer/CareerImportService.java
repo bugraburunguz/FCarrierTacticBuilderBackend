@@ -7,6 +7,7 @@ import com.fcareer.career.service.CareerService;
 import com.fcareer.common.exception.ImportParseException;
 import com.fcareer.ingestion.base.BaseCatalogImporter;
 import com.fcareer.ingestion.base.BaseUploads;
+import com.fcareer.ingestion.base.LeExportV2Parser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -51,7 +52,9 @@ public class CareerImportService {
         entitlementService.requirePremium(userId);
         CareerEntity career = careerService.requireOwned(userId, careerId);
 
-        Map<String, List<Map<String, String>>> tables = BaseUploads.toTables(logFile, csvs);
+        BaseUploads.Upload upload = BaseUploads.toUpload(logFile, csvs);
+        Map<String, List<Map<String, String>>> tables = upload.tables();
+        LeExportV2Parser.LeContext context = upload.context();
         Map<Integer, String> leagueNames = new HashMap<>();
         Set<Integer> internationalLeagues = new HashSet<>();
         readLeagues(tables.get("leagues"), leagueNames, internationalLeagues);
@@ -147,11 +150,21 @@ public class CareerImportService {
                 WHERE s.career_id = :c AND d.career_id = s.career_id AND d.base_player_id = s.base_player_id""",
                 Map.of("c", careerId));
 
-        List<Map<String, Object>> guess = jdbc.queryForList("""
-                SELECT t.team_id, t.name FROM career_team t JOIN club c ON c.id = :club
-                WHERE t.career_id = :c AND NOT t.free_agent_pool AND lower(t.name) = lower(c.name) LIMIT 1""",
-                new MapSqlParameterSource().addValue("c", careerId).addValue("club", career.getClubId()));
-        careerDeskService.takeSnapshot(careerId, "IMPORT", null);
+        // Kullanıcı takımı export'un context.userTeamId'sinden gelir (BE-BUG-13); yalnız eski CSV/log yolunda adla tahmin edilir.
+        List<Map<String, Object>> guess = Objects.nonNull(context) && Objects.nonNull(context.userTeamId())
+                ? jdbc.queryForList("SELECT t.team_id, t.name FROM career_team t WHERE t.career_id = :c AND t.team_id = :t",
+                        new MapSqlParameterSource().addValue("c", careerId).addValue("t", context.userTeamId()))
+                : List.of();
+        if (guess.isEmpty()) {
+            guess = jdbc.queryForList("""
+                    SELECT t.team_id, t.name FROM career_team t JOIN club c ON c.id = :club
+                    WHERE t.career_id = :c AND NOT t.free_agent_pool AND lower(t.name) = lower(c.name) LIMIT 1""",
+                    new MapSqlParameterSource().addValue("c", careerId).addValue("club", career.getClubId()));
+        }
+        if (Objects.nonNull(context) && Objects.nonNull(context.gameDate())) {
+            jdbc.update("UPDATE career SET current_game_date = :d WHERE id = :c", Map.of("d", java.sql.Date.valueOf(context.gameDate()), "c", careerId));
+        }
+        careerDeskService.takeSnapshot(careerId, "IMPORT", Objects.nonNull(upload.exportId()) ? "export " + upload.exportId() : null);
         log.info("Career import done careerId : {} players : {} teams : {} freeAgents : {} unmatched : {}",
                 careerId, playerRows.size(), teamParams.size(), freeAgents, unmatched);
         Integer guessedTeam = guess.isEmpty() ? null : ((Number) guess.get(0).get("team_id")).intValue();
@@ -161,9 +174,10 @@ public class CareerImportService {
         if (skippedNoPosition > 0) {
             warnings.add("CAREER_PLAYERS_SKIPPED_NO_POSITIONS");
         }
-        if (notInCareer(tables.get("context"))) {
+        if (Objects.nonNull(context) && !context.inCareer()) {
             warnings.add("NOT_IN_CAREER");
         }
+        warnings.addAll(upload.warnings());
         return ImportSummaryResponse.builder()
                 .skippedNoPosition(skippedNoPosition).warnings(warnings)
                 .squadSynced(synced)
@@ -226,11 +240,6 @@ public class CareerImportService {
             List<SqlParameterSource> part = rows.subList(from, Math.min(from + BATCH, rows.size()));
             jdbc.batchUpdate(sql, part.toArray(new SqlParameterSource[0]));
         }
-    }
-
-    /** Export v2 context tablosu incareer=0 diyorsa dosya kariyer dışında (ana menüde) alınmıştır; base kadrolar kariyer verisi sanılmasın (LE-02). */
-    private static boolean notInCareer(List<Map<String, String>> context) {
-        return Objects.nonNull(context) && !context.isEmpty() && Objects.equals(toInt(context.get(0).get("incareer")), 0);
     }
 
     private Map<Long, Long> eaIdMap() {
