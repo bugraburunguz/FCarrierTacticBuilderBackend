@@ -33,5 +33,6 @@ public class SecurityProperties {
         private boolean enabled = true;
         private int authPerMinute = 10;
         private int apiPerMinute = 120;
+        private int solverPerMinute = 10;
     }
 }

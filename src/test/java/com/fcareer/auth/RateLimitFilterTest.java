@@ -38,6 +38,7 @@ class RateLimitFilterTest {
         messages.setDefaultEncoding("UTF-8");
         SecurityProperties properties = new SecurityProperties();
         properties.getRateLimit().setAuthPerMinute(3);
+        properties.getRateLimit().setSolverPerMinute(2);
         filter = new RateLimitFilter(properties, counter, new MessageService(messages), new ObjectMapper(),
                 Clock.fixed(Instant.parse("2026-10-05T12:00:00Z"), ZoneOffset.UTC));
     }
@@ -75,6 +76,17 @@ class RateLimitFilterTest {
         when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenThrow(new RedisConnectionFailureException("down"));
 
         assertThat(run("/api/v1/players", "10.0.0.1").getStatus()).isEqualTo(200);
+    }
+
+    @Test
+    void solverHasItsOwnBucketAndFailsClosed() throws Exception {
+        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(3L);
+        assertThat(run("/api/v1/ut/sbc/streamlined", "10.0.0.1").getStatus()).isEqualTo(429);
+        verify(counter).increment(org.mockito.ArgumentMatchers.contains("solver:"), eq(Duration.ofMinutes(1)));
+        assertThat(run("/api/v1/players", "10.0.0.1").getStatus()).isEqualTo(200);
+
+        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenThrow(new RedisConnectionFailureException("down"));
+        assertThat(run("/api/v1/ut/sbc/streamlined", "10.0.0.1").getStatus()).isEqualTo(429);
     }
 
     @Test

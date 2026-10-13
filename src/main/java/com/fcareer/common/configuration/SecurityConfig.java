@@ -39,7 +39,7 @@ public class SecurityConfig {
             API_V1 + "/presets/**", API_V1 + "/config/**", API_V1 + "/wonderkids", API_V1 + "/ut/meta/**", API_V1 + "/ut/sbc/score-table", API_V1 + "/ut/card/*/upgrades", API_V1 + "/img/**", API_V1 + "/ut/kb/**", API_V1 + "/ut/rules", API_V1 + "/ut/capture/rules", API_V1 + "/tactics/ea-roles", "/actuator/health", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"};
     private static final String[] PUBLIC_POST = {
             API_V1 + "/auth/**", API_V1 + "/tactics/resolve", API_V1 + "/fit/role", API_V1 + "/players/compare",
-            API_V1 + "/recommend/preview", API_V1 + "/tactics/export-code", API_V1 + "/tactics/import-code", API_V1 + "/players/*/development", API_V1 + "/ut/card/*/chemstyle", API_V1 + "/ut/sbc/streamlined", API_V1 + "/ut/squad/evaluate"};
+            API_V1 + "/recommend/preview", API_V1 + "/tactics/export-code", API_V1 + "/tactics/import-code", API_V1 + "/players/*/development", API_V1 + "/ut/card/*/chemstyle", API_V1 + "/ut/squad/evaluate"};
 
     private final SecurityErrorHandler securityErrorHandler;
     private final JwtService jwtService;

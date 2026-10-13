@@ -50,6 +50,18 @@ class SbcSolverServiceTest {
     }
 
     @Test
+    void hugeInstancesFallBackToTheGreedyPathInsteadOfAllocatingTensOfMegabytes() {
+        List<PoolEntry> pool = new java.util.ArrayList<>();
+        for (int rating = 75; rating <= 99; rating++) {
+            pool.add(new PoolEntry(rating, Rarity.REGULAR, 6, false, 1000L));
+        }
+        pool.add(new PoolEntry(70, Rarity.REGULAR, 1, false, 1000L));
+        StreamlinedResult result = service.solveStreamlined(new StreamlinedRequest(3_000_000, null, pool));
+
+        assertThat(result.approximate()).isTrue();
+    }
+
+    @Test
     void picksCheapestCombinationForTarget() {
         StreamlinedResult result = service.solveStreamlined(new StreamlinedRequest(360, null, List.of(
                 new PoolEntry(83, Rarity.REGULAR, 2, false, 1000L),

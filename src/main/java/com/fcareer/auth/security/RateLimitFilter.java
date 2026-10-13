@@ -32,6 +32,7 @@ import static com.fcareer.common.constants.RedisConstants.RATE_LIMIT_PREFIX;
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private static final String AUTH_PATH = API_V1 + "/auth";
+    private static final String SOLVER_PATH = API_V1 + "/ut/sbc/streamlined";
     private static final Duration WINDOW = Duration.ofMinutes(1);
 
     private final SecurityProperties properties;
@@ -49,9 +50,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         boolean authPath = request.getRequestURI().startsWith(AUTH_PATH);
-        int limit = authPath ? properties.getRateLimit().getAuthPerMinute() : properties.getRateLimit().getApiPerMinute();
-        String key = RATE_LIMIT_PREFIX + (authPath ? "auth:" : "api:") + subject(request) + ":" + minuteBucket();
-        if (isOverLimit(key, limit, authPath)) {
+        boolean solverPath = request.getRequestURI().startsWith(SOLVER_PATH);
+        String bucket = authPath ? "auth:" : solverPath ? "solver:" : "api:";
+        int limit = authPath ? properties.getRateLimit().getAuthPerMinute() : solverPath ? properties.getRateLimit().getSolverPerMinute() : properties.getRateLimit().getApiPerMinute();
+        String key = RATE_LIMIT_PREFIX + bucket + subject(request) + ":" + minuteBucket();
+        if (isOverLimit(key, limit, authPath || solverPath)) {
             log.warn("Rate limit exceeded path : {}", request.getRequestURI());
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
@@ -63,7 +66,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         chain.doFilter(request, response);
     }
 
-    /** Redis yoksa genel API açık geçer (fail-open); kimlik uçları kapalı kalır (fail-closed) ki brute-force sınırı atlanamasın. */
+    /** Redis yoksa genel API açık geçer (fail-open); kimlik ve pahalı çözücü uçları kapalı kalır (fail-closed) ki brute-force sınırı atlanamasın. */
     private boolean isOverLimit(String key, int limit, boolean failClosed) {
         try {
             return counter.increment(key, WINDOW) > limit;

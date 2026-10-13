@@ -33,7 +33,7 @@ public class SbcSolverService {
 
     private static final String RESOURCE = "seed/sbc-score.json";
     private static final long INF = Long.MAX_VALUE / 4;
-    private static final long MAX_DP_WORK = 60_000_000L;
+    private static final long MAX_DP_WORK = 10_000_000L;
     private static final int WORD_BITS = 64;
     private static final int MIN_RATING = 45;
     private static final int MAX_RATING = 99;
