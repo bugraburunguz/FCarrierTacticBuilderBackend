@@ -52,6 +52,7 @@ public class IngestionService {
     private final NationalityRepository nationalityRepository;
     private final LeagueRepository leagueRepository;
     private final ClubRepository clubRepository;
+    private final com.fcareer.catalog.alias.ClubAliasRepository clubAliasRepository;
     private final RatingAttrAccessor ratingAttrAccessor;
     private final AcceleRateDeriver acceleRateDeriver;
     private final TransactionTemplate transactionTemplate;
@@ -280,11 +281,11 @@ public class IngestionService {
         Integer leagueId = Objects.isNull(player.leagueName()) ? null
                 : leagues.computeIfAbsent(player.leagueName(), this::league).getId();
         Optional<ClubEntity> known = Objects.isNull(teamId) ? Optional.empty() : clubRepository.findFirstByEaTeamIdOrderByIdAsc(teamId.intValue());
-        Optional<ClubEntity> sameName = clubRepository.findByNameAndLeagueId(player.clubName(), leagueId);
-        // Tanınan satırı yeniden adlandırmak aynı ligdeki başka bir satırla (name, league) unique'ini çiğniyorsa ad/lig değişmez; satır ea id ile eşleşmeye devam eder.
-        boolean clash = known.isPresent() && sameName.isPresent() && !sameName.get().getId().equals(known.get().getId());
-        ClubEntity club = known.or(() -> sameName).orElseGet(ClubEntity::new);
-        if (!clash) {
+        ClubEntity club = known.or(() -> clubAliasRepository.findClubId(player.clubName(), leagueId, player.gender()).flatMap(clubRepository::findById))
+                .or(() -> clubRepository.findByNameAndLeagueId(player.clubName(), leagueId)).orElseGet(ClubEntity::new);
+        // Gelen ad tanınan kulübün alias'ıysa kanonik ad korunur; değilse (ad, lig) güncellenir.
+        boolean aliasOfThisClub = Objects.nonNull(club.getId()) && clubAliasRepository.findClubId(player.clubName(), leagueId, player.gender()).filter(club.getId()::equals).isPresent();
+        if (!aliasOfThisClub) {
             club.setName(player.clubName());
             club.setLeagueId(leagueId);
         }

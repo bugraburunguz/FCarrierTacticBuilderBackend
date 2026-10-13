@@ -20,3 +20,8 @@ MacOS_Dock_TD.rar
 *.rar
 *.zip
 src/test/resources/FC 27 LE v27.1.0/
+
+# Yerel yedekler ve veri döküm çıktıları (repo dışı yedekler kök backups/ altında)
+backups/*.dump
+backups/*before*.sql
+backups/*.csv

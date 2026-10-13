@@ -1,0 +1,346 @@
+{
+  "_source": "Kulüp ikizi birleştirmesi (Buğra onayı 2026-10-13, docs/review/v2/club_twins_dryrun.md). Doğal anahtarlarla (ad+lig, EA team id) yazılır; yükleyici id'leri ortamda çözer.",
+  "_resolution": "ea_team_id → club_alias(ad, lig, cinsiyet) → (ad, lig) → yeni satır",
+  "aliases": [
+    {
+      "aliasName": "Abha Club",
+      "league": "ROSHN Saudi League",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 113058
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Académico de Viseu FC",
+      "league": "Liga Portugal",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 112587
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Al Diriyah",
+      "league": "ROSHN Saudi League",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 113224
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Amed Sportif Faaliyetler",
+      "league": "Trendyol Süper Lig",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 132392
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Arezzo",
+      "league": "Serie BKT",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 110907
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Asociación Atlética Estudiantes",
+      "league": "LPF",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 115470
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Atltico de SL",
+      "league": "Liga BBVA MX",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 112678
+      },
+      "source": "encoding-repair",
+      "verified": true
+    },
+    {
+      "aliasName": "Bologna",
+      "league": "Serie A Enilive",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 189
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Cagliari",
+      "league": "Serie A Enilive",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 1842
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "CE Sabadell FC",
+      "league": "LALIGA HYPERMOTION",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 15021
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Club Len",
+      "league": "Liga BBVA MX",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 110781
+      },
+      "source": "encoding-repair",
+      "verified": true
+    },
+    {
+      "aliasName": "Denver Summit FC",
+      "league": "NWSL",
+      "gender": 1,
+      "canonical": {
+        "eaTeamId": 132698
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Dijon Football Côte d’Or",
+      "league": "Ligue 2 BKT",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 110569
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "FC Corvinul 1921 Hunedoara",
+      "league": "SUPERLIGA",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 113449
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "FC Jurez",
+      "league": "Liga BBVA MX",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 113134
+      },
+      "source": "encoding-repair",
+      "verified": true
+    },
+    {
+      "aliasName": "FK Austria Wien",
+      "league": "Ö. Bundesliga",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 256
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Frosinone",
+      "league": "Serie A Enilive",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 111657
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Genoa",
+      "league": "Serie A Enilive",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 110556
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Havre AC",
+      "league": "Ligue 1 McDonald's",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 1738
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Juventus",
+      "league": "Serie A Enilive",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 45
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Lecce",
+      "league": "Serie A Enilive",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 347
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "L. R. Vicenza",
+      "league": "Serie BKT",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 112954
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Monza",
+      "league": "Serie A Enilive",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 111811
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Neom",
+      "league": "ROSHN Saudi League",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 131798
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Paris SG",
+      "league": "Arkema PL",
+      "gender": 1,
+      "canonical": {
+        "eaTeamId": 116034
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Parma",
+      "league": "Serie A Enilive",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 50
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Quertaro FC",
+      "league": "Liga BBVA MX",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 110150
+      },
+      "source": "encoding-repair",
+      "verified": true
+    },
+    {
+      "aliasName": "SC Fortuna Köln",
+      "league": "3. Liga",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 110169
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "SC Telstar",
+      "league": "Eredivisie",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 100638
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Torino",
+      "league": "Serie A Enilive",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 54
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Udinese",
+      "league": "Serie A Enilive",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 55
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "US Boulogne",
+      "league": "Ligue 2 BKT",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 132680
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Vålerenga Fotball",
+      "league": "Eliteserien",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 920
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Venezia",
+      "league": "Serie A Enilive",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 205
+      },
+      "source": "manual-review",
+      "verified": true
+    }
+  ]
+}

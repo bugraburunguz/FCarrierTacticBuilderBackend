@@ -86,6 +86,18 @@ class AdminRoleIntegrationTest {
         call(get("/api/v1/admin/ut/queue"), null, token, 200);
     }
 
+    /** manual-test-1 yerel testte SQL ile ADMIN yapılmıştı (kod yolu değil); bootstrap yalnız yapılandırılmış e-postayı yükseltir. */
+    @Test
+    void onlyTheConfiguredEmailBecomesAdminNoOtherRegistrationPath() throws Exception {
+        jdbc.update("DELETE FROM app_user WHERE email IN (?, ?)", "manual-test-1@example.com", "someone-else@example.com");
+        String other = register("manual-test-1@example.com");
+        String plain = register("someone-else@example.com");
+
+        assertThat(call(get("/api/v1/me"), null, other, 200).at("/data/role").asText()).isEqualTo("USER");
+        assertThat(call(get("/api/v1/me"), null, plain, 200).at("/data/role").asText()).isEqualTo("USER");
+        call(get("/api/v1/admin/ut/queue"), null, other, 403);
+    }
+
     private JsonNode call(MockHttpServletRequestBuilder builder, Object body, String bearer, int expectedStatus) throws Exception {
         builder.accept(MediaType.APPLICATION_JSON);
         if (body != null) {

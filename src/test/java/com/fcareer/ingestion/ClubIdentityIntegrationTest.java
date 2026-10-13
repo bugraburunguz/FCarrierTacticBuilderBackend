@@ -58,20 +58,23 @@ class ClubIdentityIntegrationTest {
         assertThat(club.get("name")).isEqualTo("Hull City AFC");
     }
 
-    /** Canlı ingestion bulgusu: LE içe aktarımı "PSG" adıyla ea id'li satır açtı, eski EA ingestion'ın "Paris SG" satırı (ea id yok) aynı lige ait; yeniden adlandırma unique ihlaliyle çöküyordu. */
+    /** Canlı bulgu: LE'den "PSG" adıyla ea id'li satır, eski ingestion'dan "Paris SG" satırı aynı ligde; yeniden adlandırma unique ihlaliyle çöküyordu. Çözüm club_alias: gelen ad tanınan kulübün alias'ıysa ad değişmez. */
     @Test
-    void renamingToAnExistingNameInTheSameLeagueDoesNotCrashAndKeepsTheKnownRow() {
+    void anIncomingNameThatIsAnAliasOfTheKnownClubIsNotRenamed() {
         jdbc.update("DELETE FROM ingestion_run");
         doReturn(page("Rename League", "PSG Test")).when(provider).fetch(anyInt(), anyInt());
         ingestionService.run();
         Integer leagueId = jdbc.queryForObject("SELECT id FROM league WHERE name = 'Rename League'", Integer.class);
-        jdbc.update("INSERT INTO club (name, league_id, gender) VALUES ('Paris SG Test', ?, 1)", leagueId);
+        Integer knownId = jdbc.queryForObject("SELECT id FROM club WHERE ea_team_id = ?", Integer.class, (int) TEAM_ID);
+        jdbc.update("INSERT INTO club (name, league_id, gender) VALUES ('Paris SG Test', ?, 0)", leagueId);
+        jdbc.update("INSERT INTO club_alias (alias_name, league_id, gender, club_id, source) VALUES ('Paris SG Test', ?, 0, ?, 'test')", leagueId, knownId);
 
         jdbc.update("DELETE FROM ingestion_run");
         doReturn(page("Rename League", "Paris SG Test")).when(provider).fetch(anyInt(), anyInt());
         ingestionService.run();
 
         assertThat(jdbc.queryForObject("SELECT status FROM ingestion_run ORDER BY id DESC LIMIT 1", String.class)).isNotEqualTo("FAILED");
+        assertThat(jdbc.queryForObject("SELECT name FROM club WHERE id = ?", String.class, knownId)).isEqualTo("PSG Test");
         assertThat(jdbc.queryForObject("SELECT count(*) FROM club WHERE ea_team_id = ?", Integer.class, (int) TEAM_ID)).isEqualTo(1);
     }
 
