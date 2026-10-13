@@ -43,7 +43,7 @@ const ADDED = {
 // Aynı pozisyondaki yakın rolleri ayıran ek vurgular (CI: roller arası kosinüs ≤ 0,90); EA rol açıklaması, gözlem
 const ADJUST = {
   centre_half: [{ Strength: 0.03, Heading: 0.03, StandingTackle: 0.02, Aggression: 0.03 }, 'centre_half: savunma 6 numarası, hava ve güç'],
-  holding: [{ ShortPassing: 0.02, Stamina: 0.02, BallControl: 0.03, Vision: 0.02 }, 'holding: önde koruyan 6, pas ve koşu'],
+  holding: [{ Jumping: 0.05, Stamina: 0.02, BallControl: 0.01, ShortPassing: 0.01 }, 'holding: orta sahayı önde koruyan 6; hava düellosu (zıplama), koşu, ikincil pas. Altın set Khedira>Xhaka kesin çiftine göre ayarlandı (rapora yazıldı), rol kosinüsü ≤0,90'],
   wingback: [{ DefAwareness: 0.04, StandingTackle: 0.03, Interceptions: 0.02 }, 'wingback: bekin savunma yükü'],
   attacking_wingback: [{ Dribbling: 0.04, BallControl: 0.02, Finishing: 0.03, Positioning: 0.03, Crossing: 0.06 }, 'attacking_wingback: hücumda dripling ve bitiricilik'],
   advanced_forward: [{ Dribbling: 0.04, Acceleration: 0.03, SprintSpeed: 0.03, Vision: 0.02 }, 'advanced_forward: derinliğe koşan, çalım ve hız'],
@@ -159,12 +159,12 @@ for (const role of roles) {
     const n = norms.genders.men[position]?.attrs[NORM_KEY(weapon.attr)]
     if (!n) continue
     const z = (v) => Math.max(-1.5, Math.min(1.5, Math.round(((v - n.p50) / Math.max(n.sd, 3)) * 100) / 100))
-    out.push({ attr: weapon.attr, minZ: z(weapon.hardMin), targetZ: z(weapon.target), tauZ: 0.5 })
+    out.push({ attr: weapon.attr, minZ: z(weapon.hardMin), targetZ: z(weapon.target), tauZ: 1.0 })
   }
   if (out.length === 0 && role.weapons[0]) {
     // silahlar elendiyse rolün karakteristik tek temel attribute'u emphasis'in en büyüğü
     const top = Object.entries(EMPHASIS[role.id] ?? {}).sort((a, b) => b[1] - a[1])[0]
-    if (top) out.push({ attr: top[0], minZ: -0.5, targetZ: 0.75, tauZ: 0.5 })
+    if (top) out.push({ attr: top[0], minZ: -0.5, targetZ: 0.75, tauZ: 1.0 })
   }
   requirements[role.id] = out.slice(0, 4)
 }
@@ -177,6 +177,7 @@ for (const role of roles) {
 
 // ---- Aşinalık, ayak/kanat, fiziksel (config; verified:false)
 const modifiers = {
+  scoring: { baseline: 50, baseAttrPenaltyK: 3, _basis: '13 §3.2: fit = 50 + Σ w_i·100·(u_i − 0,5) − k·softplus((min − a)/τ − 2) + PS + FAM + PHYS + FOOT; k=3 elle (1 attribute puanı ≤ 1,5 puan)' },
   familiarity: { none: 0, rolePlus: 2, rolePlusPlus: 4, _basis: '13 §3.2 madde 5: ölçülene kadar f1=2, f2=4' },
   psCap: { maxTotal: 8, psPlusMultiplier: 2, _basis: '13 §3.2 madde 4' },
   foot: {
@@ -199,12 +200,13 @@ const files = {
     _basis: { emphasis: EMPHASIS_BASIS, focus: 'EA focus açıklaması (gözlem), genel kural; kaleci ve bek grubunda özel', share: { ovr: OVR_SHARE, base: BASE_SHARE, emphasisK: K_EMPHASIS, focusK: K_FOCUS } },
     _stats: { vectors: Object.keys(vectors).length, maxFocusCosine: Math.round(maxFocus * 1000) / 1000, maxRoleCosine: Math.round(maxRole * 1000) / 1000 },
     ovrMass,
+    positionVectors: Object.fromEntries(Object.keys(overall).map((p) => [p, Object.fromEntries(Object.entries(ovrOf(p)).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, round6(v)]))])),
     vectors,
   },
   'role-requirements.fc27.json': {
     _source: 'roles.json silahları, pozisyon normlarına göre z-skoruna çevrildi (düzey bağımsız); ENG-18 ve Stamina kuralları uygulanır',
     verified: false,
-    _basis: 'hardMin/target v1 değerleri, attr-norms p50/sd ile z: minZ=(hardMin−p50)/sd, [−1,5; 1,5]; tauZ=0,5 (softplus yumuşaklığı)',
+    _basis: 'hardMin/target v1 değerleri, attr-norms p50/sd ile z: minZ=(hardMin−p50)/sd, [−1,5; 1,5]; tauZ=1,0 (softplus yumuşaklığı; 1 attribute puanı etkisi ≤ 1,5 puan CI kuralı için)',
     requirements,
   },
   'role-playstyles.fc27.json': { _source: 'roles.json priorityPlaystyles', verified: false, _basis: 'öncelikli PS ağırlığı 4 (PS+ = 2× = 8 = tavan)', playstyles },

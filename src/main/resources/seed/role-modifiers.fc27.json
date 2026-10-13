@@ -1,6 +1,11 @@
 {
   "_source": "13 §3.2 madde 4-7",
   "verified": false,
+  "scoring": {
+    "baseline": 50,
+    "baseAttrPenaltyK": 3,
+    "_basis": "13 §3.2: fit = 50 + Σ w_i·100·(u_i − 0,5) − k·softplus((min − a)/τ − 2) + PS + FAM + PHYS + FOOT; k=3 elle (1 attribute puanı ≤ 1,5 puan)"
+  },
   "familiarity": {
     "none": 0,
     "rolePlus": 2,

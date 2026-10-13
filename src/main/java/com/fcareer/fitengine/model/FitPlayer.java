@@ -24,6 +24,13 @@ public class FitPlayer {
     private final AcceleRate acceleRate;
     private final Integer potential;
     private final Long valueEur;
+    /** FitEngineV3 girdileri (E3-5); catalog'da bilinmiyorsa null. Aşinalık: rol kimliği → 1 (Role+) / 2 (Role++). */
+    private final Integer gender;
+    private final String preferredFoot;
+    private final Integer weakFoot;
+    private final Integer skillMoves;
+    private final Integer heightCm;
+    private final Map<String, Integer> roleFamiliarity;
 
     public int attr(Attr attr) {
         Integer value = attrs.get(attr);

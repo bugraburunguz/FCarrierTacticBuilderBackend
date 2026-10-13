@@ -39,6 +39,11 @@ public class PlayerMapper {
                 .potential(Objects.isNull(valuation) || Objects.isNull(valuation.getPotential()) ? null
                         : valuation.getPotential().intValue())
                 .valueEur(Objects.isNull(valuation) ? null : valuation.getValueEur())
+                .gender(Objects.isNull(base.getGender()) ? null : base.getGender().intValue())
+                .preferredFoot(base.getPreferredFoot())
+                .weakFoot(Objects.isNull(rating.getWeakFoot()) ? null : rating.getWeakFoot().intValue())
+                .skillMoves(Objects.isNull(rating.getSkillMoves()) ? null : rating.getSkillMoves().intValue())
+                .heightCm(Objects.isNull(base.getHeightCm()) ? null : base.getHeightCm().intValue())
                 .build();
     }
 

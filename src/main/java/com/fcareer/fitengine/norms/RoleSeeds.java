@@ -62,6 +62,16 @@ public class RoleSeeds {
         return Optional.of(toMap(node));
     }
 
+    /** Mevki dışı oynayan oyuncu için pozisyonun genel (EA OVR) vektörü (FC27 basitleştirilmiş rol). */
+    public Map<Attr, Double> positionVector(String position) {
+        return toMap(documents.get("role-vectors").path("positionVectors").path(position));
+    }
+
+    /** Skorlama sabitleri (baseline, baseAttrPenaltyK). */
+    public JsonNode scoring() {
+        return documents.get("role-modifiers").path("scoring");
+    }
+
     public List<String> vectorKeys() {
         List<String> keys = new ArrayList<>();
         documents.get("role-vectors").path("vectors").fieldNames().forEachRemaining(keys::add);
