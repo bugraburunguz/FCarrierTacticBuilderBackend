@@ -20,6 +20,7 @@ import java.lang.annotation.Target;
         "fcareer.ingestion.mock.player-count=250",
         "fcareer.security.jwt.secret=integration-test-secret-integration-test-secret",
         "fcareer.security.rate-limit.enabled=false",
+        "fcareer.auth.registration.daily-per-ip=0",
         "fcareer.billing.stub-enabled=true",
         "fcareer.ut.jobs.enabled=false"
 })

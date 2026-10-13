@@ -21,12 +21,29 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
   servlet:
     multipart:
       max-file-size: 26MB
       max-request-size: 28MB
 
 fcareer:
+  mail:
+    from: ${MAIL_FROM:no-reply@localhost}
+  auth:
+    registration:
+      daily-per-ip: ${REGISTRATIONS_PER_IP_DAILY:5}
+    email-verification:
+      # Boş: MAIL_HOST tanımlıysa açık, değilse kapalı (kapalıyken kayıt ve kredi bugünkü gibi çalışır).
+      enabled: ${EMAIL_VERIFICATION_ENABLED:}
+      web-base-url: ${WEB_BASE_URL:http://localhost:8081}
   seed:
     enabled: true
   cache:

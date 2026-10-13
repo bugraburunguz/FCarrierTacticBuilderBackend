@@ -64,14 +64,26 @@ public class CreditService {
         log.info("Credit refunded userId : {} amount : {} reason : {}", userId, amount, reason);
     }
 
+    /** Yeni hesap günlük kredisiyle başlar; e-posta doğrulaması gerekiyorsa doğrulanana kadar 0 (BE-SEC-06). */
     public void initialize(AppUserEntity user) {
-        user.setCreditBalance(user.getDailyCreditLimit());
+        user.setCreditBalance(user.isEmailVerified() ? user.getDailyCreditLimit() : 0);
         user.setLastCreditRefresh(LocalDate.now(clock));
+    }
+
+    /** Doğrulama bağlantısı kullanılınca günlük kredi bir kez verilir. */
+    public void grantOnVerification(AppUserEntity user) {
+        user.setCreditBalance(Math.max(user.getCreditBalance(), user.getDailyCreditLimit()));
+        user.setLastCreditRefresh(LocalDate.now(clock));
+        record(user.getId(), CreditTransactionType.REFRESH, user.getDailyCreditLimit(), "EMAIL_VERIFIED");
     }
 
     private void refreshIfNeeded(AppUserEntity user) {
         LocalDate today = LocalDate.now(clock);
         if (Objects.equals(user.getLastCreditRefresh(), today)) {
+            return;
+        }
+        if (!user.isEmailVerified()) {
+            user.setLastCreditRefresh(today);
             return;
         }
         int granted = Math.max(user.getDailyCreditLimit() - user.getCreditBalance(), 0);

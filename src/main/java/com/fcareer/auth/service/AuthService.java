@@ -50,6 +50,8 @@ public class AuthService {
     private final SecurityProperties securityProperties;
     private final BillingProperties billingProperties;
     private final CreditService creditService;
+    private final RegistrationLimiter registrationLimiter;
+    private final EmailVerificationService emailVerification;
     private final SecureRandom secureRandom = new SecureRandom();
     private volatile String dummyHash;
 
@@ -63,7 +65,8 @@ public class AuthService {
     }
 
     @Transactional
-    public TokenResponse register(RegisterRequest request) {
+    public TokenResponse register(RegisterRequest request, String clientIp) {
+        registrationLimiter.check(clientIp);
         String email = normalize(request.getEmail());
         if (appUserRepository.findByEmail(email).isPresent()) {
             log.warn("Registration rejected, email exists");
@@ -74,6 +77,7 @@ public class AuthService {
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setSubscriptionType(SubscriptionType.FREE);
         user.setDailyCreditLimit(billingProperties.getDailyCredits());
+        user.setEmailVerified(!emailVerification.required());
         creditService.initialize(user);
         try {
             user = appUserRepository.saveAndFlush(user);
@@ -82,6 +86,9 @@ public class AuthService {
             throw new EmailAlreadyRegisteredException();
         }
         log.info("User registered userId : {}", user.getId());
+        if (!user.isEmailVerified()) {
+            emailVerification.issue(user);
+        }
         return issueTokens(user);
     }
 
@@ -129,6 +136,8 @@ public class AuthService {
                 .creditBalance(status.premium() ? null : status.balance())
                 .dailyCreditLimit(status.dailyLimit())
                 .showAds(!status.premium())
+                .emailVerified(user.isEmailVerified())
+                .emailVerificationRequired(emailVerification.required())
                 .createdAt(user.getCreatedAt())
                 .build();
     }

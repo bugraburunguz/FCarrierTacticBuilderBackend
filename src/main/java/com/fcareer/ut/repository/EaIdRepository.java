@@ -50,8 +50,14 @@ public class EaIdRepository {
         return suggest("NATION", byEaId, userId);
     }
 
+    /** Yalnız CONTRIBUTOR bayraklı (yasaklı olmayan) kullanıcıların oyu sayılır (BE-SEC-06): bedava hesaplar kimlik eşlemesini yazamaz. */
+    private boolean isActiveContributor(Long userId) {
+        Integer found = jdbc.queryForObject("SELECT count(*) FROM contributor WHERE user_id = :u AND NOT banned", Map.of("u", userId), Integer.class);
+        return found != null && found > 0;
+    }
+
     private int suggest(String kind, Map<Integer, String> byEaId, Long userId) {
-        if (java.util.Objects.isNull(userId)) {
+        if (java.util.Objects.isNull(userId) || !isActiveContributor(userId)) {
             return 0;
         }
         int[] applied = {0};

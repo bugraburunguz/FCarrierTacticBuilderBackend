@@ -47,6 +47,9 @@ public class AppUserEntity {
 
     private LocalDate lastCreditRefresh;
 
+    @Column(nullable = false)
+    private boolean emailVerified = true;
+
     @CreatedDate
     @Column(columnDefinition = "timestamptz", updatable = false)
     private Instant createdAt;

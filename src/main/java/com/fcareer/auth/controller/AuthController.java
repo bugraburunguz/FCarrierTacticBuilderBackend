@@ -7,6 +7,10 @@ import com.fcareer.auth.model.response.MeResponse;
 import com.fcareer.auth.model.response.TokenResponse;
 import com.fcareer.auth.security.AuthUser;
 import com.fcareer.auth.service.AuthService;
+import com.fcareer.auth.service.EmailVerificationService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,10 +28,24 @@ import static com.fcareer.common.constants.ApiConstants.API_V1;
 public class AuthController {
 
     private final AuthService authService;
+    private final EmailVerificationService emailVerificationService;
+
+    public record VerifyEmailRequest(@NotBlank @Size(max = 128) String token) {
+    }
 
     @PostMapping("/auth/register")
-    public TokenResponse register(@Valid @RequestBody RegisterRequest request) {
-        return authService.register(request);
+    public TokenResponse register(@Valid @RequestBody RegisterRequest request, HttpServletRequest http) {
+        return authService.register(request, http.getRemoteAddr());
+    }
+
+    @PostMapping("/auth/verify-email")
+    public void verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+        emailVerificationService.verify(request.token());
+    }
+
+    @PostMapping("/me/email/resend")
+    public void resendVerification(@AuthenticationPrincipal AuthUser user) {
+        emailVerificationService.resend(user.id());
     }
 
     @PostMapping("/auth/login")

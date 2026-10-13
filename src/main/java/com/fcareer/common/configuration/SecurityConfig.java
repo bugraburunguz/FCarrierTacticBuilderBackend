@@ -1,6 +1,8 @@
 package com.fcareer.common.configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import com.fcareer.auth.configuration.SecurityProperties;
 import com.fcareer.auth.security.JwtAuthenticationFilter;
 import com.fcareer.auth.security.JwtService;
@@ -50,6 +52,7 @@ public class SecurityConfig {
     private final MessageService messageService;
     private final ObjectMapper objectMapper;
     private final Clock clock;
+    private final Environment environment;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -69,10 +72,16 @@ public class SecurityConfig {
                 .addFilterAfter(rateLimitFilter, AdminKeyFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(ADMIN_PATH + "/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, devPaths()).permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET).permitAll()
                         .requestMatchers(HttpMethod.POST, PUBLIC_POST).permitAll()
                         .anyRequest().authenticated())
                 .build();
+    }
+
+    /** Dev gelen kutusu (/dev/mail/outbox) yalnız dev profilinde açılır; diğer profillerde eşleşen yol yoktur. */
+    private String[] devPaths() {
+        return environment.acceptsProfiles(Profiles.of("dev")) ? new String[]{"/dev/**"} : new String[0];
     }
 
     @Bean
