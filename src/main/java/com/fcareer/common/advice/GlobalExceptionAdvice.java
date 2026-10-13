@@ -1,5 +1,6 @@
 package com.fcareer.common.advice;
 
+import com.fcareer.common.configuration.RequestBodyLimitFilter;
 import com.fcareer.common.exception.FcareerRuntimeException;
 import com.fcareer.common.model.ApiError;
 import com.fcareer.common.model.ApiResponse;
@@ -22,6 +23,7 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import java.util.List;
@@ -29,6 +31,7 @@ import java.util.List;
 import static com.fcareer.common.constants.ErrorCodes.DATA_CONFLICT;
 import static com.fcareer.common.constants.ErrorCodes.FORBIDDEN;
 import static com.fcareer.common.constants.ErrorCodes.METHOD_NOT_ALLOWED;
+import static com.fcareer.common.constants.ErrorCodes.PAYLOAD_TOO_LARGE;
 import static com.fcareer.common.constants.ErrorCodes.ROUTE_NOT_FOUND;
 import static com.fcareer.common.constants.ErrorCodes.UNSUPPORTED_MEDIA_TYPE;
 import static com.fcareer.common.constants.ErrorCodes.UNKNOWN_ERROR;
@@ -64,8 +67,34 @@ public class GlobalExceptionAdvice {
             MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class,
             MissingServletRequestPartException.class})
     public ResponseEntity<ApiResponse<Void>> handleBadRequest(Exception ex) {
+        if (causedByTooLarge(ex)) {
+            return tooLarge();
+        }
         log.warn("Bad request : {}", ex.getMessage());
         return ResponseEntity.badRequest().body(buildError(VALIDATION_ERROR));
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMultipart(MultipartException ex) {
+        if (ex instanceof MaxUploadSizeExceededException || causedByTooLarge(ex)) {
+            return tooLarge();
+        }
+        log.warn("Multipart failure : {}", ex.getMessage());
+        return ResponseEntity.badRequest().body(buildError(VALIDATION_ERROR));
+    }
+
+    private static boolean causedByTooLarge(Throwable ex) {
+        for (Throwable t = ex; t != null; t = t.getCause()) {
+            if (t instanceof RequestBodyLimitFilter.RequestTooLargeException) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private ResponseEntity<ApiResponse<Void>> tooLarge() {
+        log.warn("Request body too large");
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(buildError(PAYLOAD_TOO_LARGE));
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
