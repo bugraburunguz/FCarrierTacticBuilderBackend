@@ -41,6 +41,8 @@ class BaseCatalogImporterIntegrationTest {
         if (basePlayerRepository.count() == 0) {
             ingestionService.run();
         }
+        // Paylaşılan test veritabanında başka sınıfların küçük (sahte) takım kimlikleri kulüplere yazılmış olabilir.
+        jdbc.update("UPDATE club SET ea_team_id = NULL WHERE ea_team_id < 1000000");
     }
 
     private Map<String, String> player(long id, int position, String name, String extra) {

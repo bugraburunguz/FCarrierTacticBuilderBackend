@@ -1,0 +1,49 @@
+countryid,isbannerenabled,iscompetitioncrowdcardsenabled,iscompetitionpoleflagenabled,iscompetitionscarfenabled,isinternationalleague,iswithintransferwindow,iswomencompetition,leagueid,leaguename,leaguetimeslice,leaguetype,level
+13,2,2,2,2,0,0,0,1,3F Superliga,8,0,1
+7,2,2,2,2,0,0,0,4,1A Pro League,7,0,1
+34,2,2,2,2,0,0,0,10,Eredivisie,12,0,1
+14,2,2,2,1,0,0,0,13,Premier League,6,0,1
+14,2,2,2,2,0,0,0,14,EFL Championship,7,0,2
+18,2,2,2,2,0,0,0,16,Ligue 1 McDonald's,6,0,1
+18,2,2,2,2,0,0,0,17,Ligue 2 BKT,6,0,2
+21,2,2,2,2,0,0,0,19,Bundesliga,6,0,1
+21,2,2,2,2,0,0,0,20,Bundesliga 2,7,0,2
+27,1,1,1,1,0,0,0,31,Serie A Enilive,7,0,1
+27,2,2,2,2,0,0,0,32,Serie BKT,6,0,2
+95,2,2,2,2,0,0,0,39,MLS,8,0,1
+36,2,2,2,2,0,0,0,41,Eliteserien,9,0,1
+42,2,2,2,2,0,0,0,50,Scottish Prem,6,0,1
+45,1,1,1,0,0,0,0,53,LALIGA EA SPORTS,6,0,1
+45,1,1,1,0,0,0,0,54,LALIGA HYPERMOTION,6,0,2
+46,2,2,2,2,0,0,0,56,Allsvenskan,9,0,1
+14,2,2,2,2,0,0,0,60,EFL League One,7,0,3
+14,2,2,2,2,0,0,0,61,EFL League Two,7,0,4
+25,2,2,2,2,0,0,0,65,SSE Airtricity PD,9,0,1
+37,2,2,2,2,0,0,0,66,PKO BP Ekstraklasa,7,0,1
+48,2,2,2,2,0,0,0,68,Trendyol Süper Lig,6,0,1
+211,2,2,2,2,0,0,0,76,Erkekler - Diğer,0,0,4
+75,2,2,2,2,1,0,0,78,Erkek Milli,0,0,5
+4,2,2,2,2,0,0,0,80,Ö. Bundesliga,7,0,1
+167,2,2,2,2,0,0,0,83,K League 1,12,0,1
+47,2,2,2,2,0,0,0,189,Brack Super League,7,0,1
+38,2,2,2,2,0,0,0,308,Liga Portugal,7,0,1
+39,2,2,2,2,0,0,0,330,SUPERLIGA,3,0,1
+83,1,0,1,1,0,0,0,341,Liga BBVA MX,3,0,1
+183,2,2,2,2,0,0,0,350,ROSHN Saudi League,7,0,1
+195,2,2,2,2,0,0,0,351,A-League,3,0,1
+52,2,2,2,2,0,0,0,353,LPF,5,0,1
+210,2,2,2,2,0,0,0,382,Serbest,0,0,1
+225,2,2,2,2,0,0,0,1003,Libertadores,0,0,1
+225,2,2,2,2,0,0,0,1014,Sudamericana,0,0,1
+0,2,2,2,2,0,0,0,2000,*LeagueName_Abbr15_2000,0,0,6
+155,2,2,2,2,0,0,0,2012,CSL,7,0,1
+0,2,2,2,2,0,0,0,2028,DÜNYA LİGİ,0,0,7
+21,2,2,2,2,0,0,0,2076,3. Liga,6,0,3
+222,2,2,2,2,1,0,1,2136,Kadın Milli Kup.,3,0,5
+159,2,2,2,2,0,0,0,2149,ISL,3,0,1
+21,2,2,2,2,0,0,1,2215,GPFBL,4,0,1
+14,2,2,2,2,0,0,1,2216,Barclays WSL,4,0,1
+18,2,2,2,2,0,0,1,2218,Arkema PL,5,0,1
+95,1,2,1,1,0,0,1,2221,NWSL,13,0,1
+45,2,2,2,2,0,0,1,2222,Liga F Moeve,3,0,1
+211,2,2,2,2,0,0,1,2226,Kadınlar - Diğer,0,0,1

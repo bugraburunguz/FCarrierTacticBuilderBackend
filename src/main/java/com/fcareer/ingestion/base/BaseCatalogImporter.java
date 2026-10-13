@@ -39,7 +39,16 @@ import static com.fcareer.career.importer.CsvStream.toLong;
 public class BaseCatalogImporter {
 
     public static final Set<Integer> FREE_AGENT_TEAM_IDS = Set.of(111592, 131368);
+    /** LE-01: lig türleri ADLA (dil değişir) değil EA lig id'siyle tanınır. 76 Erkekler - Diğer, 2000/2028 yer tutucu: katalogdan dışlanır. */
+    private static final Set<Integer> NON_CATALOG_LEAGUE_IDS = Set.of(76, 2000, 2028);
+    /** 78 Erkek Milli, 2136 Kadın Milli: milli takımlar kulüp değildir. */
+    private static final Set<Integer> NATIONAL_LEAGUE_IDS = Set.of(78, 2136);
+    private static final int FREE_AGENT_LEAGUE_ID = 382;
     private static final String FREE_AGENTS = "Free Agents";
+    /** Dökümde iki serbest takım da "Serbest"/gender 0; kadın havuzu (131368) erkek olanla aynı adı taşıyamaz (club tekilliği) ve gender 1 olur. */
+    private static final int WOMEN_FREE_AGENT_TEAM_ID = 131368;
+    private static final int MEN_FREE_AGENT_TEAM_ID = 111592;
+    private static final String FREE_AGENTS_WOMEN = "Free Agents (Women)";
     private static final long CAREER_CREATED_MIN_ID = 400_000L;
     private static final String PLACEHOLDER_TEAM_PREFIX = "*TeamName";
     private static final List<String> NON_CATALOG_LEAGUES = List.of("Custom", "FIFA Twist", "5v5", "Rest of World Men");
@@ -236,7 +245,7 @@ public class BaseCatalogImporter {
 
     private record Context(List<Map<String, String>> players, Map<Long, Integer> playerTeam, Map<Integer, String> names,
                            Map<Long, Long> existing, NationalityResolver nationalities, ClubResolver clubs, Set<Integer> excludedTeams,
-                           Map<Long, String> edited) {
+                           Map<Long, String> edited, Set<Integer> freeAgentTeams) {
     }
 
     private Context buildContext(Map<String, List<Map<String, String>>> tables) {
@@ -247,7 +256,7 @@ public class BaseCatalogImporter {
         List<Map<String, String>> leagues = tables.getOrDefault("leagues", List.of());
 
         Map<Integer, String> leagueNames = new HashMap<>();
-        Set<Integer> international = new HashSet<>();
+        Set<Integer> international = new HashSet<>(NATIONAL_LEAGUE_IDS);
         for (Map<String, String> row : leagues) {
             Integer id = toInt(row.get("leagueid"));
             if (Objects.nonNull(id)) {
@@ -266,9 +275,13 @@ public class BaseCatalogImporter {
             }
         }
         Set<Integer> nationalTeams = new HashSet<>();
+        Set<Integer> freeAgentTeams = new HashSet<>(FREE_AGENT_TEAM_IDS);
         teamLeague.forEach((team, league) -> {
             if (international.contains(league)) {
                 nationalTeams.add(team);
+            }
+            if (league == FREE_AGENT_LEAGUE_ID) {
+                freeAgentTeams.add(team);
             }
         });
         Map<Integer, Map<String, String>> teamRows = new HashMap<>();
@@ -278,23 +291,23 @@ public class BaseCatalogImporter {
                 teamRows.put(id, row);
             }
         }
-        Map<Long, Integer> playerTeam = playerTeams(links, nationalTeams);
+        Map<Long, Integer> playerTeam = playerTeams(links, nationalTeams, freeAgentTeams);
 
         List<Map<String, String>> nameRows = new ArrayList<>(tables.getOrDefault("playernames", List.of()));
         nameRows.addAll(tables.getOrDefault("dcplayernames", List.of()));
         Map<Integer, String> names = playerNames(nameRows);
         Map<Long, Long> existing = existingPlayers();
         NationalityResolver nationalities = new NationalityResolver(players, existing);
-        ClubResolver clubs = new ClubResolver(teamRows, teamLeague, leagueNames);
+        ClubResolver clubs = new ClubResolver(teamRows, teamLeague, leagueNames, freeAgentTeams);
         Set<Integer> excludedTeams = new HashSet<>();
         teamLeague.forEach((team, league) -> {
             String leagueName = Objects.requireNonNullElse(leagueNames.get(league), "");
-            if (NON_CATALOG_LEAGUES.stream().anyMatch(marker -> leagueName.contains(marker))) {
+            if (NON_CATALOG_LEAGUE_IDS.contains(league) || NON_CATALOG_LEAGUES.stream().anyMatch(marker -> leagueName.contains(marker))) {
                 excludedTeams.add(team);
             }
         });
         return new Context(players, playerTeam, names, existing, nationalities, clubs, excludedTeams,
-                editedNames(tables.getOrDefault("editedplayernames", List.of())));
+                editedNames(tables.getOrDefault("editedplayernames", List.of())), freeAgentTeams);
     }
 
     /**
@@ -492,7 +505,7 @@ public class BaseCatalogImporter {
         }
     }
 
-    private Map<Long, Integer> playerTeams(List<Map<String, String>> links, Set<Integer> nationalTeams) {
+    private Map<Long, Integer> playerTeams(List<Map<String, String>> links, Set<Integer> nationalTeams, Set<Integer> freeAgentTeams) {
         Map<Long, Integer> result = new HashMap<>();
         for (Map<String, String> row : links) {
             Long player = toLong(row.get("playerid"));
@@ -501,7 +514,7 @@ public class BaseCatalogImporter {
                 continue;
             }
             Integer current = result.get(player);
-            if (Objects.isNull(current) || (FREE_AGENT_TEAM_IDS.contains(current) && !FREE_AGENT_TEAM_IDS.contains(team))) {
+            if (Objects.isNull(current) || (freeAgentTeams.contains(current) && !freeAgentTeams.contains(team))) {
                 result.put(player, team);
             }
         }
@@ -675,15 +688,22 @@ public class BaseCatalogImporter {
         private final Map<Integer, String> leagueNames;
         private final Map<Integer, Integer> cache = new HashMap<>();
         private final Map<String, Integer> leagueByName = new HashMap<>();
+        private final Map<Integer, Integer> leagueByEaId = new HashMap<>();
+        private final Set<Integer> freeAgentTeams;
         private int createdClubs;
         private int createdLeagues;
 
-        ClubResolver(Map<Integer, Map<String, String>> teams, Map<Integer, Integer> teamLeague, Map<Integer, String> leagueNames) {
+        ClubResolver(Map<Integer, Map<String, String>> teams, Map<Integer, Integer> teamLeague, Map<Integer, String> leagueNames, Set<Integer> freeAgentTeams) {
             this.teams = teams;
+            this.freeAgentTeams = freeAgentTeams;
             this.teamLeague = teamLeague;
             this.leagueNames = leagueNames;
-            jdbc.query("SELECT id, name FROM league", rs -> {
+            jdbc.query("SELECT id, name, ea_league_id FROM league", rs -> {
                 leagueByName.put(rs.getString("name").toLowerCase(), rs.getInt("id"));
+                int eaId = rs.getInt("ea_league_id");
+                if (!rs.wasNull()) {
+                    leagueByEaId.put(eaId, rs.getInt("id"));
+                }
             });
         }
 
@@ -699,32 +719,63 @@ public class BaseCatalogImporter {
             return cache.computeIfAbsent(teamId, this::resolve);
         }
 
+        /** LE-01: kulüp önce EA takım kimliğiyle (ea_team_id), yoksa ad + cinsiyetle bulunur; bulunan kulübe ea_team_id yazılır. */
         private Integer resolve(Integer teamId) {
-            boolean freeAgent = FREE_AGENT_TEAM_IDS.contains(teamId);
+            boolean freeAgent = freeAgentTeams.contains(teamId);
             Map<String, String> team = teams.get(teamId);
-            String name = freeAgent ? FREE_AGENTS : Objects.isNull(team) ? "Team " + teamId : displayTeamName(team.get("teamname"), teamId);
-            Integer gender = Objects.isNull(team) ? null : toInt(team.get("gender"));
+            Integer gender = teamId == WOMEN_FREE_AGENT_TEAM_ID ? Integer.valueOf(1) : Objects.isNull(team) ? null : toInt(team.get("gender"));
+            String name = freeAgent ? freeAgentName(teamId) : Objects.isNull(team) ? "Team " + teamId : displayTeamName(team.get("teamname"), teamId);
+            List<Map<String, Object>> byEaId = jdbc.queryForList("SELECT id FROM club WHERE ea_team_id = :t ORDER BY id LIMIT 1", Map.of("t", teamId));
+            if (!byEaId.isEmpty()) {
+                return ((Number) byEaId.get(0).get("id")).intValue();
+            }
             List<Map<String, Object>> found = jdbc.queryForList(
-                    "SELECT id FROM club WHERE lower(name) = lower(:n) AND (gender IS NULL OR :g IS NULL OR gender = :g) ORDER BY id LIMIT 1",
+                    "SELECT id FROM club WHERE ea_team_id IS NULL AND lower(name) = lower(:n) AND (gender IS NULL OR :g IS NULL OR gender = :g) ORDER BY id LIMIT 1",
                     new MapSqlParameterSource().addValue("n", name).addValue("g", gender, java.sql.Types.INTEGER));
             if (!found.isEmpty()) {
-                return ((Number) found.get(0).get("id")).intValue();
+                Integer id = ((Number) found.get(0).get("id")).intValue();
+                jdbc.update("UPDATE club SET ea_team_id = :t WHERE id = :id", Map.of("t", teamId, "id", id));
+                return id;
             }
-            Integer leagueId = leagueFor(freeAgent ? FREE_AGENTS : leagueNames.get(teamLeague.get(teamId)));
+            Integer eaLeague = freeAgent ? Integer.valueOf(FREE_AGENT_LEAGUE_ID) : teamLeague.get(teamId);
+            Integer leagueId = leagueFor(eaLeague, freeAgent ? FREE_AGENTS : leagueNames.get(eaLeague));
             createdClubs++;
-            return jdbc.queryForObject("INSERT INTO club (name, league_id, gender) VALUES (:n, :l, :g) RETURNING id",
+            return jdbc.queryForObject("INSERT INTO club (name, league_id, gender, ea_team_id) VALUES (:n, :l, :g, :t) RETURNING id",
                     new MapSqlParameterSource().addValue("n", name).addValue("l", leagueId, java.sql.Types.INTEGER)
-                            .addValue("g", gender, java.sql.Types.INTEGER), Integer.class);
+                            .addValue("g", gender, java.sql.Types.INTEGER).addValue("t", teamId), Integer.class);
         }
 
-        private Integer leagueFor(String name) {
+        private String freeAgentName(Integer teamId) {
+            if (teamId == MEN_FREE_AGENT_TEAM_ID) {
+                return FREE_AGENTS;
+            }
+            return teamId == WOMEN_FREE_AGENT_TEAM_ID ? FREE_AGENTS_WOMEN : FREE_AGENTS + " #" + teamId;
+        }
+
+        /** Lig önce EA lig kimliğiyle, yoksa adla bulunur; yoksa oluşturulur. Bulunan/oluşan lige ea_league_id yazılır. */
+        private Integer leagueFor(Integer eaLeagueId, String name) {
+            if (Objects.nonNull(eaLeagueId) && leagueByEaId.containsKey(eaLeagueId)) {
+                return leagueByEaId.get(eaLeagueId);
+            }
             if (Objects.isNull(name) || name.isBlank()) {
                 return null;
             }
-            return leagueByName.computeIfAbsent(name.toLowerCase(), key -> {
-                createdLeagues++;
-                return jdbc.queryForObject("INSERT INTO league (name) VALUES (:n) RETURNING id", Map.of("n", name), Integer.class);
-            });
+            Integer byName = leagueByName.get(name.toLowerCase());
+            if (Objects.nonNull(byName)) {
+                if (Objects.nonNull(eaLeagueId)) {
+                    jdbc.update("UPDATE league SET ea_league_id = :e WHERE id = :id AND ea_league_id IS NULL AND NOT EXISTS (SELECT 1 FROM league WHERE ea_league_id = :e)", Map.of("e", eaLeagueId, "id", byName));
+                    leagueByEaId.put(eaLeagueId, byName);
+                }
+                return byName;
+            }
+            createdLeagues++;
+            Integer id = jdbc.queryForObject("INSERT INTO league (name, ea_league_id) VALUES (:n, :e) RETURNING id",
+                    new MapSqlParameterSource().addValue("n", name).addValue("e", eaLeagueId, java.sql.Types.INTEGER), Integer.class);
+            leagueByName.put(name.toLowerCase(), id);
+            if (Objects.nonNull(eaLeagueId)) {
+                leagueByEaId.put(eaLeagueId, id);
+            }
+            return id;
         }
 
         int createdClubs() {
