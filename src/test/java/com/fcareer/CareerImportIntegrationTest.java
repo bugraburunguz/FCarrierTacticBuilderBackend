@@ -92,6 +92,28 @@ class CareerImportIntegrationTest {
     }
 
     @Test
+    void secondImportKeepsAManuallyBuiltSquad() throws Exception {
+        String token = register();
+        var club = clubRepository.findAll().get(0);
+        long careerId = json(post("/api/v1/careers").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("clubId", club.getId(), "budgetEur", 1_000_000))), token)
+                .at("/data/id").asLong();
+        json(post("/api/v1/billing/subscribe"), token);
+
+        assertThat(upload(careerId, token, club.getName()).at("/data/squadSynced").asInt()).as("ilk import kadroyu kurar").isEqualTo(2);
+
+        long manual = jdbc.queryForObject("SELECT id FROM base_player WHERE owner_career_id IS NULL AND id NOT IN (SELECT base_player_id FROM user_player_state WHERE career_id = ?) LIMIT 1", Long.class, careerId);
+        jdbc.update("INSERT INTO user_player_state (career_id, base_player_id, club_id, acquired_at, updated_at) VALUES (?, ?, ?, now(), now())", careerId, manual, club.getId());
+        jdbc.update("INSERT INTO roster_event (career_id, base_player_id, type, fee_eur) VALUES (?, ?, 'BUY', 1000)", careerId, manual);
+
+        JsonNode second = upload(careerId, token, club.getName());
+
+        assertThat(second.at("/data/squadSynced").isMissingNode() || second.at("/data/squadSynced").isNull()).as("elle düzenlenmiş kadro yeniden kurulmaz").isTrue();
+        assertThat(second.at("/data/guessedTeamId").asInt()).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM user_player_state WHERE career_id = ? AND base_player_id = ?", Integer.class, careerId, manual)).isEqualTo(1);
+    }
+
+    @Test
     void importAcceptsTheLiveEditorLogFileDirectly() throws Exception {
         String token = register();
         var club = clubRepository.findAll().get(0);

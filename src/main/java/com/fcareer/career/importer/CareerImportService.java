@@ -157,13 +157,19 @@ public class CareerImportService {
         log.info("Career import done careerId : {} players : {} teams : {} freeAgents : {} unmatched : {}",
                 careerId, playerRows.size(), teamParams.size(), freeAgents, unmatched);
         Integer guessedTeam = guess.isEmpty() ? null : ((Number) guess.get(0).get("team_id")).intValue();
-        Integer synced = Objects.isNull(guessedTeam) ? null : rebuildSquad(career, careerId, guessedTeam);
+        Integer synced = Objects.isNull(guessedTeam) || squadEditedByUser(careerId) ? null : rebuildSquad(career, careerId, guessedTeam);
         return ImportSummaryResponse.builder()
                 .squadSynced(synced)
                 .players(playerRows.size()).generatedPlayers(generated.size()).unmatchedPlayers(unmatched).teams(teamParams.size()).freeAgents(freeAgents)
                 .guessedTeamId(guess.isEmpty() ? null : ((Number) guess.get(0).get("team_id")).intValue())
                 .guessedTeamName(guess.isEmpty() ? null : (String) guess.get(0).get("name"))
                 .build();
+    }
+
+    /** Kullanıcı kadroyu elle değiştirdiyse (transfer/terfi olayı var) otomatik yeniden kurma yapılmaz; kullanıcı /import/squad ile açıkça ister (BE-BUG-13). */
+    private boolean squadEditedByUser(Long careerId) {
+        Integer events = jdbc.queryForObject("SELECT count(*) FROM roster_event WHERE career_id = :c", Map.of("c", careerId), Integer.class);
+        return Objects.nonNull(events) && events > 0;
     }
 
     @Transactional
