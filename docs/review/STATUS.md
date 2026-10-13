@@ -73,3 +73,10 @@ Faz B'nin geri kalanı (DS-03/07/08/09/10, UX-01/03..06), Faz C (veri platformu)
 - DONE (web): WEB-BUG-08..14 (f9f9195, 5471091, 8349961, 16863fb, 84f53b2, 7a8212e+backend 5a89dbf, 367899a)
 - Açık: LE-01/02 (+ WEB-BUG-25): 5 CSV fixture `src/test/resources/le-export/fc27-2026-10/` repoda yok → Buğra'dan bekleniyor; TAC-07 (Buğra girdisi); RULE-03 UI
 - API CONTRACT CHANGE'ler: GET /careers/{id}/shortlist satırlarına `player`; POST /admin/ingestion/run → `{runId, alreadyRunning}` (arka plan); yabancı kariyer 403/0009 → 404/0001; CareerResponse/UpdateCareerRequest `gameDate`.
+
+## FAZ A3 kapanışı + FAZ E2 + LE export v2 (ara rapor 4)
+- DONE (LE): LE-01 (7a05813), LE-02 (d8d34c1; web ImportPage uyarıları), WEB-BUG-25 + LE export v2 (backend 414860f, web: tek kaynak script + senkron testi; `fc27_dump.lua`, `fc27_base_export.lua`, `dump_harness.lua` silindi)
+- DONE (ENG): ENG-01 (21c904c), ENG-02 (69374a9; web: bütçe bilinmiyor gösterimi), ENG-03 (c826c25), ENG-04 (1482215)
+- Ek düzeltmeler: FCAREER_BOOTSTRAP_ADMIN_EMAIL application.yml bağı (50b787f), link token logout'ta düşer + `fcareer.ingestion.retire-min-ratio` (9fc806a), healthcheck'ler (4bdc15f), başka kariyerin ürettiği oyuncular yeni kariyer kadrosuna sızmaz (347a49b), Transfer Merkezi `perPosition` ≤ 4 (web)
+- Elle test: bkz. final rapor. Mevcut kariyerlerde sızmış `user_player_state` satırları silinmedi (onay bekliyor).
+- Sırada: FAZ V3 (glassmorphism + yeni motor) — plan onayı bekleniyor. TAC-07 kodları bekleniyor.
