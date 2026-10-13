@@ -5,27 +5,27 @@ Kural (00 §4.6): biten görev `DONE`, kısmi olan `PARTIAL`, başlanmayan `TODO
 | ID | Durum | Not |
 |---|---|---|
 | SEC-01 | DONE | Stub ödeme yalnız `fcareer.billing.stub-enabled=true`; aksi halde `POST /billing/subscribe` 503, aktif abonelikte 409. Web'de buton yalnız `import.meta.env.DEV`. iyzico entegrasyonu `TODO` (anahtarlar gelince). |
-| SEC-02 | DONE | `/fit/lineup`: atama + RoleFit% + rozet. `/recommend/slot-view`: ilk 3 aday, gerekçe/silah/scoutQuery yok (08 D-01). Depth ve setupDelta da ücretli içgörü sayıldı. |
+| SEC-02 | PARTIAL | → BE-SEC-01 (P0): anonim `/recommend/preview` tam sıralamayı döndürüyor. |
 | SEC-03 | DONE | `POST /players/{id}/development` careerId'de sahiplik şart. |
 | SEC-04 | DONE | `owner_career_id` filtresi her aramada; `fitPlayers` ve `detail` başkasının kariyer-üretimi oyuncusunu 404 yapar. |
-| SEC-05 | DONE (sapma) | Gövde başına 8M karakter, toplam 40M, 60MB Content-Length. Paket 2MB/25MB diyordu; gerçek yakalamada `players_meta.json` 3,2MB olduğundan sınırlar yükseltildi. |
-| SEC-06 | DONE | Atomik Lua sayaç, `forward-headers-strategy: native`, auth uçları fail-closed, admin 10 hatada 15 dk kilit. |
-| SEC-07 | DONE | `X-ML-Secret` (ml-service + backend istemcisi + compose); port yayımlanmıyor. |
-| SEC-08 | PARTIAL | Login süresi sabit (dummy bcrypt). Register e-posta varlığını hâlâ söylüyor (e-posta doğrulaması olmadan genel mesaj mümkün değil); refresh token reuse/aile iptali `TODO`. |
-| BUG-01 | DONE | Tek formül `floor(round(sum+excess)/n)`; backend `SquadRatingCalculator` + web `squadRating`, ortak vektörler `seed/ut-rules.fc27.json` (web kopyası `src/lib/utRules.fc27.json`). |
+| SEC-05 | PARTIAL | → BE-SEC-02: yalnız Content-Length; chunked ve `/ut/contrib/capture` sınırsız. |
+| SEC-06 | PARTIAL | → BE-SEC-07: Redis kapalıyken admin kilidi fail-open. |
+| SEC-07 | PARTIAL | → BE-ARCH-06: ml-service secret tanımsızsa herkesi kabul ediyor. |
+| SEC-08 | PARTIAL | → BE-SEC-08: reuse tespiti + aile iptali yapılmış (STALE düzeltildi); logout token replay kenar durumu açık. |
+| BUG-01 | PARTIAL | → BE-BUG-04, RULE-02: `/ut/squad/evaluate` düz ortalama; kural dosyası size:11, web 18. |
 | BUG-02 | DONE (VERIFY) | Aynı gerçek oyuncu (katalog id / varlık id) kadroda tekrar seçilmez. Oyunun aynı oyuncunun iki kopyasına izin verip vermediği oyun içinde doğrulanmadı. |
 | BUG-03 | DONE | Havuz budama (oyuncu başına en ucuz kopya, mevki başına ≤90, rating başına 3) + Web Worker; 3000 kartlık fixture < 1,5 sn testli. |
-| BUG-04 | PARTIAL | Eşikler `utRules.fc27.json`'dan. Menajer slotunun arayüze bağlanması ve +1/+2 ayırt eden ek testler `TODO`. |
+| BUG-04 | PARTIAL | → RULE-01: yalnız 3 eşik config'te; menajer UI yok. |
 | BUG-05 | DONE | IndexedDB (Dexie) `bigStore`; eski localStorage kayıtları ilk açılışta taşınır; yazım hatası uyarı bandında görünür; sekmeler arası BroadcastChannel. |
 | BUG-06 | DONE | raw/bodies hizası. |
 | BUG-07 | DONE | CORS `PUT`. |
 | BUG-08 | DONE | Oy upsert (`ON CONFLICT`), set bazlı toplam, `setId` doğrulaması. Materialized view `TODO`. |
-| BUG-09 | TODO | Ingestion job/resume/backoff. |
-| BUG-10 | DONE | Hata kodları HTTP status ile (400/401/402/403/404/409/422/429/503); web `client.ts` zaten `!res.ok` işliyor. |
-| BUG-11 | TODO | `ea_id_suggestion` + onay akışı. |
+| BUG-09 | PARTIAL | → BE-BUG-16: backoff + resume var; async, çoklu instance kilidi, heartbeat, RETIRED eksik. |
+| BUG-10 | PARTIAL | → BE-BUG-11: framework exception'ları hâlâ 500. |
+| BUG-11 | DONE | STALE düzeltildi: `ea_id_suggestion` yapıldı (eşik 3, admin apply). Zayıflık: BE-SEC-06. |
 | BUG-12 | DONE (VERIFY) | Yenileme saati Europe/London 18:00 (yaz TRT 20:00, kış 21:00); `dailyRefresh.verified=false`. |
 | BUG-13 | DONE | Ağ hatasında oturum silinmez, Web Locks ile tek yenileyici, 204 toleransı. |
-| BUG-14 | DONE | Mutlak URL'ler. |
+| BUG-14 | PARTIAL | → WEB-BUG-12: `PlayerAvatar` göreli URL. |
 | BUG-15..18 | TODO | P2. |
 | OPS-01 | DONE | Backend ve web `CLAUDE.md`, `docs/review/`, `docs/DATA_POLICY.md` (yer tutucular Buğra'da). |
 | OPS-02 | DONE | Backend `backend-test.yml`, web `ci.yml` (lint+test+build). Testcontainers Redis `TODO`. |
@@ -46,3 +46,9 @@ Kural (00 §4.6): biten görev `DONE`, kısmi olan `PARTIAL`, başlanmayan `TODO
 
 ## Sonraki fazlar
 Faz B'nin geri kalanı (DS-03/07/08/09/10, UX-01/03..06), Faz C (veri platformu), Faz D (UT v2 + Kariyer "Menajer Masası" CAR-20..33), Faz E (backlog), Faz F (maç simülasyonu): `TODO` — Buğra'nın D-07 ekran onayından sonra.
+
+
+## v2 inceleme (2026-10-12) — docs/review/v2/
+- P0 açık: BE-SEC-01, BE-BUG-01, BE-BUG-02, BE-BUG-03, WEB-BUG-01
+- STALE düzeltildi: SEC-08 (reuse yapılmış), BUG-09 (kısmi), BUG-11 (yapılmış), BUG-17 (yapılmış), DS-01 (token'lar global)
+- Geri alınan DONE: SEC-02, SEC-05, BUG-01 (backend), BUG-14, DS-05 (EA_ASSET kapalı)
