@@ -11,6 +11,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
@@ -58,10 +59,14 @@ class PriceCaptureIntegrationTest {
     }
 
     private JsonNode contribute(String path, String... auctions) throws Exception {
+        return contributeAt(Instant.now().minusSeconds(3_600).toEpochMilli(), path, auctions);
+    }
+
+    private JsonNode contributeAt(long capturedAtMillis, String path, String... auctions) throws Exception {
         long user = register();
         jdbc.update("INSERT INTO contributor (user_id, trust) VALUES (?, 100) ON CONFLICT DO NOTHING", user);
         String body = "{\"auctionInfo\":[" + String.join(",", auctions) + "]}";
-        return call(post("/api/v1/ut/contrib/capture"), Map.of("captures", new Object[]{Map.of("url", UT + path, "ts", 1_700_000_000_000L, "body", body)}), login(user), 200);
+        return call(post("/api/v1/ut/contrib/capture"), Map.of("captures", new Object[]{Map.of("url", UT + path, "ts", capturedAtMillis, "body", body)}), login(user), 200);
     }
 
     @Test
@@ -90,9 +95,10 @@ class PriceCaptureIntegrationTest {
         contribute("/transfermarket", auction(TOTW_RESOURCE, 91, 5000, 0));
         assertThat(jdbc.queryForObject("SELECT count(*) FROM price_obs", Integer.class)).isZero();
 
-        contribute("/transfermarket", auction(TOTW_RESOURCE, 91, 5000, 3000));
+        long captured = Instant.now().minusSeconds(7_200).toEpochMilli();
+        contributeAt(captured, "/transfermarket", auction(TOTW_RESOURCE, 91, 5000, 3000));
         long observed = jdbc.queryForObject("SELECT extract(epoch FROM observed_at)::bigint FROM price_obs", Long.class);
-        assertThat(observed).isEqualTo(1_700_000_000L);
+        assertThat(observed).isCloseTo(captured / 1000, org.assertj.core.api.Assertions.within(1L));
     }
 
     @Test
@@ -153,6 +159,16 @@ class PriceCaptureIntegrationTest {
             adminBearer = com.fcareer.AdminTestSupport.adminToken(mockMvc, jdbc, objectMapper);
         }
         return adminBearer;
+    }
+
+    @Test
+    void aCaptureClockFarFromTheServerFallsBackToServerTimeAndIsCounted() throws Exception {
+        contributeAt(Instant.now().minus(java.time.Duration.ofDays(400)).toEpochMilli(), "/transfermarket", auction(TOTW_RESOURCE, 91, 5000, 3000));
+
+        long observed = jdbc.queryForObject("SELECT extract(epoch FROM observed_at)::bigint FROM price_obs", Long.class);
+        assertThat(Math.abs(observed - Instant.now().getEpochSecond())).isLessThan(120);
+        JsonNode stats = call(get("/api/v1/admin/ut/price-stats").header("Authorization", "Bearer " + adminToken()), null, null, 200).at("/data/0");
+        assertThat(stats.at("/clockSkew").asInt()).isEqualTo(1);
     }
 
     private int count(long itemId) {

@@ -214,18 +214,19 @@ public class KnowledgeBaseRepository {
     }
 
     /** Fiyat yakalama sayaçları: kayıt edilen ve atlanan (bilinmeyen item / resourceId yok) gözlemler, UTC gün bazında. */
-    public void addPriceStats(java.time.LocalDate day, int recorded, int unknownItem, int noResource) {
+    public void addPriceStats(java.time.LocalDate day, int recorded, int unknownItem, int noResource, int clockSkew) {
         jdbc.update("""
-                INSERT INTO price_capture_stat (day, recorded, skipped_unknown_item, skipped_no_resource) VALUES (:d, :r, :u, :n)
+                INSERT INTO price_capture_stat (day, recorded, skipped_unknown_item, skipped_no_resource, clock_skew) VALUES (:d, :r, :u, :n, :s)
                 ON CONFLICT (day) DO UPDATE SET recorded = price_capture_stat.recorded + EXCLUDED.recorded,
                   skipped_unknown_item = price_capture_stat.skipped_unknown_item + EXCLUDED.skipped_unknown_item,
-                  skipped_no_resource = price_capture_stat.skipped_no_resource + EXCLUDED.skipped_no_resource
-                """, new MapSqlParameterSource().addValue("d", java.sql.Date.valueOf(day)).addValue("r", recorded).addValue("u", unknownItem).addValue("n", noResource));
+                  skipped_no_resource = price_capture_stat.skipped_no_resource + EXCLUDED.skipped_no_resource,
+                  clock_skew = price_capture_stat.clock_skew + EXCLUDED.clock_skew
+                """, new MapSqlParameterSource().addValue("d", java.sql.Date.valueOf(day)).addValue("r", recorded).addValue("u", unknownItem).addValue("n", noResource).addValue("s", clockSkew));
     }
 
     public List<Map<String, Object>> priceStats() {
-        return jdbc.query("SELECT day, recorded, skipped_unknown_item, skipped_no_resource FROM price_capture_stat ORDER BY day DESC LIMIT 30", (rs, n) -> Map.of(
-                "day", rs.getDate("day").toString(), "recorded", rs.getInt("recorded"), "skippedUnknownItem", rs.getInt("skipped_unknown_item"), "skippedNoResource", rs.getInt("skipped_no_resource")));
+        return jdbc.query("SELECT day, recorded, skipped_unknown_item, skipped_no_resource, clock_skew FROM price_capture_stat ORDER BY day DESC LIMIT 30", (rs, n) -> Map.of(
+                "day", rs.getDate("day").toString(), "recorded", rs.getInt("recorded"), "skippedUnknownItem", rs.getInt("skipped_unknown_item"), "skippedNoResource", rs.getInt("skipped_no_resource"), "clockSkew", rs.getInt("clock_skew")));
     }
 
     public void insertPriceObservation(long itemId, String platform, Instant at, String kind, int value, long contributorId) {

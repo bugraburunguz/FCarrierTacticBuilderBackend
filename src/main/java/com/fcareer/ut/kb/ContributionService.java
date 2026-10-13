@@ -169,12 +169,13 @@ public class ContributionService {
 
     /** İstemci saati bozuksa (sunucudan MAX_CLOCK_SKEW kadar uzak) sunucu saati kullanılır. */
     private Instant captureTime(Long capturedAtMillis) {
-        Instant server = clock.instant();
-        if (Objects.isNull(capturedAtMillis) || capturedAtMillis <= 0) {
-            return server;
-        }
-        Instant captured = Instant.ofEpochMilli(capturedAtMillis);
-        return Duration.between(captured, server).abs().compareTo(MAX_CLOCK_SKEW) <= 0 ? captured : server;
+        return Objects.isNull(capturedAtMillis) || capturedAtMillis <= 0 || isSkewed(capturedAtMillis) ? clock.instant() : Instant.ofEpochMilli(capturedAtMillis);
+    }
+
+    /** Capture saati verilmiş ama sunucudan MAX_CLOCK_SKEW kadar uzaksa true (BE-BUG-06/07 saat koruması). */
+    private boolean isSkewed(Long capturedAtMillis) {
+        return Objects.nonNull(capturedAtMillis) && capturedAtMillis > 0
+                && Duration.between(Instant.ofEpochMilli(capturedAtMillis), clock.instant()).abs().compareTo(MAX_CLOCK_SKEW) > 0;
     }
 
     private static Integer repeatable(ObjectNode p) {
@@ -284,6 +285,7 @@ public class ContributionService {
         int recorded = 0;
         int unknown = 0;
         int noResource = 0;
+        int skewed = 0;
         for (MarketPrice price : prices) {
             if (!MARKET_SOURCE.equals(price.source()) || Objects.isNull(price.expiresIn()) || price.expiresIn() <= 0) {
                 continue;
@@ -298,7 +300,10 @@ public class ContributionService {
                 continue;
             }
             if (Objects.nonNull(price.buyNow()) && price.buyNow() > 0 && price.buyNow() <= Integer.MAX_VALUE) {
-                Instant at = Objects.isNull(price.capturedAt()) || price.capturedAt() <= 0 ? clock.instant() : Instant.ofEpochMilli(price.capturedAt());
+                Instant at = captureTime(price.capturedAt());
+                if (isSkewed(price.capturedAt())) {
+                    skewed++;
+                }
                 repository.insertPriceObservation(itemId.get(), platform, at, "BIN", price.buyNow().intValue(), contributor.id());
                 recorded++;
             }
@@ -306,7 +311,7 @@ public class ContributionService {
         if (unknown + noResource > 0) {
             log.warn("Price observations skipped contributorId : {} unknownItem : {} noResourceId : {}", contributor.id(), unknown, noResource);
         }
-        repository.addPriceStats(LocalDate.ofInstant(clock.instant(), ZoneOffset.UTC), recorded, unknown, noResource);
+        repository.addPriceStats(LocalDate.ofInstant(clock.instant(), ZoneOffset.UTC), recorded, unknown, noResource, skewed);
         return new int[]{recorded, unknown + noResource};
     }
 
