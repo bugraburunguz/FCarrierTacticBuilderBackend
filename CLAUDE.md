@@ -13,11 +13,8 @@ EA SPORTS FC 27 için offline Kariyer + Ultimate Team companion uygulamasının 
 - Tek kanal: `/api/v1`. **Kafka, OpenFeign, aggregator, mobile/web kanal ayrımı YOK.**
 
 ## House style
-Kurallar: @docs/backend-standard.md
-Uygulanabilirlik notu: o dosya başka bir projeden (Azerlottery) geliyor. **Uygulanır:** §1 review sözleşmesi,
-§5–§12 (house style, naming, DI, Lombok, controller, envelope, service, exception), §14–§16, §19–§21, §23.
-**Uygulanmaz:** `com.misli`, `/api/web|mobile/v2`, §13 Feign, §17 Kafka, §18'deki `/1000` formatlama,
-§22 aggregator & PHP→Java, `user-model/user-admin` twin kuralı, kısa JSON key'ler.
+Kurallar: @docs/fcareer-standard.md (yalnız bu projede uygulanan kurallar; HTTP status kodları D-09, yol `/api/v1`, testler zorunlu).
+Eski Azerlottery standardı `docs/archive/backend-standard.md` altında, referans için; import edilmez.
 
 ## Bu projeye özel kurallar
 - Oyun kuralları (kimya eşikleri, squad rating, fiyat aralıkları, içerik yenileme saati) koda gömülmez:

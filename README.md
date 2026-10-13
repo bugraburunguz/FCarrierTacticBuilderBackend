@@ -1,6 +1,6 @@
 # FC Kariyer — Backend
 
-Java 17 / Spring Boot 3 / PostgreSQL / Redis + Python ML servisi (`ml-service/`). Mimari ve kurallar: `docs/backend-standard.md`, spesifikasyon: `docs/spec/`.
+Java 17 / Spring Boot 3 / PostgreSQL / Redis + Python ML servisi (`ml-service/`). Mimari ve kurallar: `docs/fcareer-standard.md`, spesifikasyon: `docs/spec/`.
 
 ## Çalıştırma
 
