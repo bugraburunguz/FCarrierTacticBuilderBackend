@@ -57,6 +57,7 @@ public class IngestionService {
     private final TransactionTemplate transactionTemplate;
     private final IngestionRunRepository runs;
     private final JdbcTemplate jdbc;
+    private final com.fcareer.catalog.service.LeagueTierService leagueTierService;
     private final ExecutorService executor = Executors.newSingleThreadExecutor(runnable -> {
         Thread thread = new Thread(runnable, "ingestion");
         thread.setDaemon(true);
@@ -153,6 +154,7 @@ public class IngestionService {
             throw e;
         }
         runs.finish(runId);
+        leagueTierService.apply();
         log.info("Ingestion finished provider : {} created : {} updated : {}", provider.name(), created, updated);
         return new IngestionResult(provider.name(), gameVersion, created, updated, false);
     }
