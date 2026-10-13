@@ -92,7 +92,7 @@ public class CareerService {
         career.setBudgetEur(Objects.isNull(request.getBudgetEur()) ? NO_FEE : request.getBudgetEur());
         career = careerRepository.save(career);
 
-        List<PlayerRatingEntity> ratings = playerRatingRepository.findByClubIdAndGameVersionId(club.getId(), gameVersion);
+        List<PlayerRatingEntity> ratings = playerRatingRepository.findCatalogSquad(club.getId(), gameVersion);
         for (PlayerRatingEntity rating : ratings) {
             addToSquad(career, rating.getBasePlayerId(), false);
         }

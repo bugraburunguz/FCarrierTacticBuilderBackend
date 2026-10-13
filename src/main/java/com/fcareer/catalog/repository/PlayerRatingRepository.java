@@ -17,5 +17,9 @@ public interface PlayerRatingRepository extends JpaRepository<PlayerRatingEntity
 
     List<PlayerRatingEntity> findByClubIdAndGameVersionId(Integer clubId, Short gameVersionId);
 
+    /** Kulüp kadrosu, başka bir kariyerin ürettiği (owner_career_id) oyuncular hariç: yeni kariyerin kadrosuna sızmamalı. */
+    @org.springframework.data.jpa.repository.Query(value = "SELECT r.* FROM player_rating r JOIN base_player b ON b.id = r.base_player_id WHERE r.club_id = :clubId AND r.game_version_id = :gv AND b.owner_career_id IS NULL", nativeQuery = true)
+    List<PlayerRatingEntity> findCatalogSquad(@org.springframework.data.repository.query.Param("clubId") Integer clubId, @org.springframework.data.repository.query.Param("gv") Short gameVersionId);
+
     Page<PlayerRatingEntity> findByGameVersionId(Short gameVersionId, Pageable pageable);
 }
