@@ -1,0 +1,366 @@
+{
+ "verified": true,
+ "_basis": "FC 27 Live Editor v27.1.0 loc/eng_us/localize.json trait1_N, trait2_N, icontrait1_N, icontrait2_N dizgeleri (gözlem); katalog adlandırması 22.314 oyuncuda doğrulandı (docs/review/v2/E3-2_playstyle.md)",
+ "fields": {
+  "trait1": {
+   "0": {
+    "name": "FinesseShot",
+    "kind": "playstyle"
+   },
+   "1": {
+    "name": "ChipShot",
+    "kind": "playstyle"
+   },
+   "2": {
+    "name": "PowerShot",
+    "kind": "playstyle"
+   },
+   "3": {
+    "name": "DeadBall",
+    "kind": "playstyle"
+   },
+   "4": {
+    "name": "PrecisionHeader",
+    "kind": "playstyle"
+   },
+   "5": {
+    "name": "Acrobatic",
+    "kind": "playstyle"
+   },
+   "6": {
+    "name": "LowDrivenShot",
+    "kind": "playstyle"
+   },
+   "7": {
+    "name": "Gamechanger",
+    "kind": "playstyle"
+   },
+   "8": {
+    "name": "IncisivePass",
+    "kind": "playstyle"
+   },
+   "9": {
+    "name": "PingedPass",
+    "kind": "playstyle"
+   },
+   "10": {
+    "name": "LongBallPass",
+    "kind": "playstyle"
+   },
+   "11": {
+    "name": "TikiTaka",
+    "kind": "playstyle"
+   },
+   "12": {
+    "name": "WhippedPass",
+    "kind": "playstyle"
+   },
+   "13": {
+    "name": "Inventive",
+    "kind": "playstyle"
+   },
+   "14": {
+    "name": "Jockey",
+    "kind": "playstyle"
+   },
+   "15": {
+    "name": "Block",
+    "kind": "playstyle"
+   },
+   "16": {
+    "name": "Intercept",
+    "kind": "playstyle"
+   },
+   "17": {
+    "name": "Anticipate",
+    "kind": "playstyle"
+   },
+   "18": {
+    "name": "SlideTackle",
+    "kind": "playstyle"
+   },
+   "19": {
+    "name": "AerialFortress",
+    "kind": "playstyle"
+   },
+   "20": {
+    "name": "Technical",
+    "kind": "playstyle"
+   },
+   "21": {
+    "name": "Rapid",
+    "kind": "playstyle"
+   },
+   "22": {
+    "name": "FirstTouch",
+    "kind": "playstyle"
+   },
+   "23": {
+    "name": "Trickster",
+    "kind": "playstyle"
+   },
+   "24": {
+    "name": "PressProven",
+    "kind": "playstyle"
+   },
+   "25": {
+    "name": "QuickStep",
+    "kind": "playstyle"
+   },
+   "26": {
+    "name": "Relentless",
+    "kind": "playstyle"
+   },
+   "27": {
+    "name": "LongThrow",
+    "kind": "playstyle"
+   },
+   "28": {
+    "name": "Bruiser",
+    "kind": "playstyle"
+   },
+   "29": {
+    "name": "Enforcer",
+    "kind": "playstyle"
+   }
+  },
+  "trait2": {
+   "0": {
+    "name": "FarThrow",
+    "kind": "playstyle"
+   },
+   "1": {
+    "name": "Footwork",
+    "kind": "playstyle"
+   },
+   "2": {
+    "name": "CrossClaimer",
+    "kind": "playstyle"
+   },
+   "3": {
+    "name": "RushOut",
+    "kind": "playstyle"
+   },
+   "4": {
+    "name": "FarReach",
+    "kind": "playstyle"
+   },
+   "5": {
+    "name": "Deflector",
+    "kind": "playstyle"
+   },
+   "6": {
+    "name": "CPUAILongShotTaker",
+    "kind": "ai"
+   },
+   "7": {
+    "name": "CPUAIEarlyCrosser",
+    "kind": "ai"
+   },
+   "8": {
+    "name": "SolidPlayer",
+    "kind": "hidden"
+   },
+   "9": {
+    "name": "TeamPlayer",
+    "kind": "hidden"
+   },
+   "10": {
+    "name": "OneClubPlayer",
+    "kind": "hidden"
+   },
+   "11": {
+    "name": "InjuryProne",
+    "kind": "hidden"
+   },
+   "12": {
+    "name": "Leadership",
+    "kind": "hidden"
+   },
+   "13": {
+    "name": "SuperSub",
+    "kind": "hidden"
+   }
+  },
+  "icontrait1": {
+   "0": {
+    "name": "FinesseShot",
+    "kind": "playstyle"
+   },
+   "1": {
+    "name": "ChipShot",
+    "kind": "playstyle"
+   },
+   "2": {
+    "name": "PowerShot",
+    "kind": "playstyle"
+   },
+   "3": {
+    "name": "DeadBall",
+    "kind": "playstyle"
+   },
+   "4": {
+    "name": "PrecisionHeader",
+    "kind": "playstyle"
+   },
+   "5": {
+    "name": "Acrobatic",
+    "kind": "playstyle"
+   },
+   "6": {
+    "name": "LowDrivenShot",
+    "kind": "playstyle"
+   },
+   "7": {
+    "name": "Gamechanger",
+    "kind": "playstyle"
+   },
+   "8": {
+    "name": "IncisivePass",
+    "kind": "playstyle"
+   },
+   "9": {
+    "name": "PingedPass",
+    "kind": "playstyle"
+   },
+   "10": {
+    "name": "LongBallPass",
+    "kind": "playstyle"
+   },
+   "11": {
+    "name": "TikiTaka",
+    "kind": "playstyle"
+   },
+   "12": {
+    "name": "WhippedPass",
+    "kind": "playstyle"
+   },
+   "13": {
+    "name": "Inventive",
+    "kind": "playstyle"
+   },
+   "14": {
+    "name": "Jockey",
+    "kind": "playstyle"
+   },
+   "15": {
+    "name": "Block",
+    "kind": "playstyle"
+   },
+   "16": {
+    "name": "Intercept",
+    "kind": "playstyle"
+   },
+   "17": {
+    "name": "Anticipate",
+    "kind": "playstyle"
+   },
+   "18": {
+    "name": "SlideTackle",
+    "kind": "playstyle"
+   },
+   "19": {
+    "name": "AerialFortress",
+    "kind": "playstyle"
+   },
+   "20": {
+    "name": "Technical",
+    "kind": "playstyle"
+   },
+   "21": {
+    "name": "Rapid",
+    "kind": "playstyle"
+   },
+   "22": {
+    "name": "FirstTouch",
+    "kind": "playstyle"
+   },
+   "23": {
+    "name": "Trickster",
+    "kind": "playstyle"
+   },
+   "24": {
+    "name": "PressProven",
+    "kind": "playstyle"
+   },
+   "25": {
+    "name": "QuickStep",
+    "kind": "playstyle"
+   },
+   "26": {
+    "name": "Relentless",
+    "kind": "playstyle"
+   },
+   "27": {
+    "name": "LongThrow",
+    "kind": "playstyle"
+   },
+   "28": {
+    "name": "Bruiser",
+    "kind": "playstyle"
+   },
+   "29": {
+    "name": "Enforcer",
+    "kind": "playstyle"
+   }
+  },
+  "icontrait2": {
+   "0": {
+    "name": "FarThrow",
+    "kind": "playstyle"
+   },
+   "1": {
+    "name": "Footwork",
+    "kind": "playstyle"
+   },
+   "2": {
+    "name": "CrossClaimer",
+    "kind": "playstyle"
+   },
+   "3": {
+    "name": "RushOut",
+    "kind": "playstyle"
+   },
+   "4": {
+    "name": "FarReach",
+    "kind": "playstyle"
+   },
+   "5": {
+    "name": "Deflector",
+    "kind": "playstyle"
+   },
+   "6": {
+    "name": "CPUAILongShotTaker",
+    "kind": "ai"
+   },
+   "7": {
+    "name": "CPUAIEarlyCrosser",
+    "kind": "ai"
+   },
+   "8": {
+    "name": "SolidPlayer",
+    "kind": "hidden"
+   },
+   "9": {
+    "name": "TeamPlayer",
+    "kind": "hidden"
+   },
+   "10": {
+    "name": "OneClubPlayer",
+    "kind": "hidden"
+   },
+   "11": {
+    "name": "InjuryProne",
+    "kind": "hidden"
+   },
+   "12": {
+    "name": "Leadership",
+    "kind": "hidden"
+   },
+   "13": {
+    "name": "SuperSub",
+    "kind": "hidden"
+   }
+  }
+ }
+}

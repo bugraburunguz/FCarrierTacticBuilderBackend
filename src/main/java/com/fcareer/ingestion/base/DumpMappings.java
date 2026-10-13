@@ -25,16 +25,6 @@ public final class DumpMappings {
             Map.entry(10, "CDM"), Map.entry(12, "RM"), Map.entry(14, "CM"), Map.entry(16, "LM"),
             Map.entry(18, "CAM"), Map.entry(23, "RW"), Map.entry(25, "ST"), Map.entry(27, "LW"));
 
-    /** trait1 / icontrait1 bit sırası → PlayStyle id'si. */
-    public static final String[] OUTFIELD_PLAYSTYLES = {
-            "FinesseShot", "ChipShot", "PowerShot", "DeadBall", "PrecisionHeader", "Acrobatic", "LowDrivenShot",
-            "Gamechanger", "IncisivePass", "PingedPass", "LongBallPass", "TikiTaka", "WhippedPass", "Inventive",
-            "Jockey", "Block", "Intercept", "Anticipate", "SlideTackle", "AerialFortress", "Technical", "Rapid",
-            "FirstTouch", "Trickster", "PressProven", "QuickStep", "Relentless", "LongThrow", "Bruiser", "Enforcer"};
-
-    /** trait2 / icontrait2 bit sırası → kaleci PlayStyle id'si. */
-    public static final String[] GOALKEEPER_PLAYSTYLES = {"FarThrow", "Footwork", "CrossClaimer", "RushOut", "FarReach", "Deflector"};
-
     public static final Map<String, Attr> ATTRIBUTE_COLUMNS = attributeColumns();
 
     private DumpMappings() {

@@ -64,6 +64,7 @@ public class BaseCatalogImporter {
     private final AcceleRateDeriver acceleRateDeriver;
     private final ObjectMapper objectMapper;
     private final VersioningService versioningService;
+    private final LePlaystyleBits playstyleBits;
 
     public BaseImportResult importMissing(Map<String, List<Map<String, String>>> tables, short gameVersionId, boolean overwriteExisting,
                                          boolean createMissing) {
@@ -498,23 +499,11 @@ public class BaseCatalogImporter {
     }
 
     private String playstylesJson(Map<String, String> row) {
-        Map<String, Integer> styles = new LinkedHashMap<>();
-        collectStyles(styles, DumpMappings.OUTFIELD_PLAYSTYLES, toLong(row.get("trait1")), toLong(row.get("icontrait1")));
-        collectStyles(styles, DumpMappings.GOALKEEPER_PLAYSTYLES, toLong(row.get("trait2")), toLong(row.get("icontrait2")));
+        LePlaystyleBits.Decoded decoded = playstyleBits.decode(toLong(row.get("trait1")), toLong(row.get("trait2")), toLong(row.get("icontrait1")), toLong(row.get("icontrait2")));
         try {
-            return objectMapper.writeValueAsString(styles);
+            return objectMapper.writeValueAsString(decoded.playstyles());
         } catch (JsonProcessingException e) {
             throw new ImportParseException("playstyles");
-        }
-    }
-
-    private void collectStyles(Map<String, Integer> styles, String[] names, Long traits, Long plus) {
-        for (int bit = 0; bit < names.length; bit++) {
-            if (Objects.nonNull(plus) && ((plus >> bit) & 1L) == 1L) {
-                styles.put(names[bit], 2);
-            } else if (Objects.nonNull(traits) && ((traits >> bit) & 1L) == 1L) {
-                styles.put(names[bit], 1);
-            }
         }
     }
 
