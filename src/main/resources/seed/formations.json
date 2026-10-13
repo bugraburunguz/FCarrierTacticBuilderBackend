@@ -2,6 +2,7 @@
   {
     "id": "3-1-4-2",
     "label": "3-1-4-2",
+    "eaFormationId": "f3142",
     "slots": [
       {
         "slotId": "GK",
@@ -96,6 +97,7 @@
   {
     "id": "3-4-1-2",
     "label": "3-4-1-2",
+    "eaFormationId": "f3412",
     "slots": [
       {
         "slotId": "GK",
@@ -190,6 +192,7 @@
   {
     "id": "3-4-2-1",
     "label": "3-4-2-1",
+    "eaFormationId": "f3421",
     "slots": [
       {
         "slotId": "GK",
@@ -284,6 +287,7 @@
   {
     "id": "3-4-3",
     "label": "3-4-3",
+    "eaFormationId": "f343",
     "slots": [
       {
         "slotId": "GK",
@@ -378,6 +382,7 @@
   {
     "id": "3-5-2",
     "label": "3-5-2",
+    "eaFormationId": "f352",
     "slots": [
       {
         "slotId": "GK",
@@ -472,6 +477,7 @@
   {
     "id": "4-1-2-1-2",
     "label": "4-1-2-1-2 (dar elmas)",
+    "eaFormationId": "f41212a",
     "slots": [
       {
         "slotId": "GK",
@@ -566,6 +572,7 @@
   {
     "id": "4-1-2-1-2 (geniş)",
     "label": "4-1-2-1-2 (geniş: LM/RM)",
+    "eaFormationId": "f41212",
     "slots": [
       {
         "slotId": "GK",
@@ -660,6 +667,7 @@
   {
     "id": "4-1-3-2",
     "label": "4-1-3-2",
+    "eaFormationId": "f4132",
     "slots": [
       {
         "slotId": "GK",
@@ -754,6 +762,7 @@
   {
     "id": "4-1-4-1",
     "label": "4-1-4-1",
+    "eaFormationId": "f4141",
     "slots": [
       {
         "slotId": "GK",
@@ -848,6 +857,7 @@
   {
     "id": "4-2-2-2",
     "label": "4-2-2-2",
+    "eaFormationId": "f4222",
     "slots": [
       {
         "slotId": "GK",
@@ -942,6 +952,7 @@
   {
     "id": "4-2-3-1",
     "label": "4-2-3-1 (LAM-CAM-RAM)",
+    "eaFormationId": "f4231",
     "slots": [
       {
         "slotId": "GK",
@@ -1036,6 +1047,7 @@
   {
     "id": "4-2-3-1 (2)",
     "label": "4-2-3-1 (2) (LM-CAM-RM)",
+    "eaFormationId": "f4231a",
     "slots": [
       {
         "slotId": "GK",
@@ -1130,6 +1142,7 @@
   {
     "id": "4-2-4",
     "label": "4-2-4",
+    "eaFormationId": "f424",
     "slots": [
       {
         "slotId": "GK",
@@ -1224,6 +1237,7 @@
   {
     "id": "4-3-1-2",
     "label": "4-3-1-2",
+    "eaFormationId": "f4312",
     "slots": [
       {
         "slotId": "GK",
@@ -1318,6 +1332,7 @@
   {
     "id": "4-3-2-1",
     "label": "4-3-2-1",
+    "eaFormationId": "f4321",
     "slots": [
       {
         "slotId": "GK",
@@ -1412,6 +1427,7 @@
   {
     "id": "4-3-3",
     "label": "4-3-3 (1 CDM + 2 CM)",
+    "eaFormationId": "f433a",
     "slots": [
       {
         "slotId": "GK",
@@ -1506,6 +1522,7 @@
   {
     "id": "4-3-3 (3 CM)",
     "label": "4-3-3 (3 CM)",
+    "eaFormationId": "f433",
     "slots": [
       {
         "slotId": "GK",
@@ -1600,6 +1617,7 @@
   {
     "id": "4-3-3 (2 CDM)",
     "label": "4-3-3 (2 CDM + CM)",
+    "eaFormationId": "f433b",
     "slots": [
       {
         "slotId": "GK",
@@ -1694,6 +1712,7 @@
   {
     "id": "4-3-3 (CAM)",
     "label": "4-3-3 (2 CM + CAM)",
+    "eaFormationId": "f433c",
     "slots": [
       {
         "slotId": "GK",
@@ -1788,6 +1807,7 @@
   {
     "id": "4-4-2",
     "label": "4-4-2",
+    "eaFormationId": "f442",
     "slots": [
       {
         "slotId": "GK",
@@ -1882,6 +1902,7 @@
   {
     "id": "4-4-2 (2 CDM)",
     "label": "4-4-2 (2 CDM)",
+    "eaFormationId": "f442a",
     "slots": [
       {
         "slotId": "GK",
@@ -1976,6 +1997,7 @@
   {
     "id": "4-5-1",
     "label": "4-5-1 (2) (3 CM)",
+    "eaFormationId": "f451a",
     "slots": [
       {
         "slotId": "GK",
@@ -2070,6 +2092,7 @@
   {
     "id": "5-2-1-2",
     "label": "5-2-1-2",
+    "eaFormationId": "f5212",
     "slots": [
       {
         "slotId": "GK",
@@ -2164,6 +2187,7 @@
   {
     "id": "5-2-3",
     "label": "5-2-3",
+    "eaFormationId": "f523",
     "slots": [
       {
         "slotId": "GK",
@@ -2258,6 +2282,7 @@
   {
     "id": "5-3-2",
     "label": "5-3-2",
+    "eaFormationId": "f532",
     "slots": [
       {
         "slotId": "GK",
@@ -2316,12 +2341,12 @@
         "y": 50
       },
       {
-        "slotId": "CM",
-        "position": "CM",
-        "group": "CM",
-        "defaultRole": "box_to_box_balanced",
+        "slotId": "CDM",
+        "position": "CDM",
+        "group": "CDM",
+        "defaultRole": "holding_defend",
         "x": 50,
-        "y": 52
+        "y": 62
       },
       {
         "slotId": "RCM",
@@ -2352,6 +2377,7 @@
   {
     "id": "5-4-1",
     "label": "5-4-1",
+    "eaFormationId": "f541a",
     "slots": [
       {
         "slotId": "GK",
@@ -2446,6 +2472,7 @@
   {
     "id": "4-2-1-3",
     "label": "4-2-1-3",
+    "eaFormationId": "f4213",
     "slots": [
       {
         "slotId": "GK",
@@ -2540,6 +2567,7 @@
   {
     "id": "4-4-1-1",
     "label": "4-4-1-1 (2)",
+    "eaFormationId": "f4411a",
     "slots": [
       {
         "slotId": "GK",
@@ -2634,6 +2662,7 @@
   {
     "id": "4-5-1 (CAM)",
     "label": "4-5-1 (LM-CM-RM + 2 CAM)",
+    "eaFormationId": "f451",
     "slots": [
       {
         "slotId": "GK",

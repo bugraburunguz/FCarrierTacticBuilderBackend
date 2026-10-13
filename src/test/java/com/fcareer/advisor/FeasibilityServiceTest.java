@@ -37,7 +37,7 @@ class FeasibilityServiceTest {
         for (int i = 0; i < positions.length; i++) {
             slots.add(new FormationSlot("S" + i, positions[i], positions[i], "x", 50, 50));
         }
-        return new FormationDefinition(id, id, slots);
+        return new FormationDefinition(id, id, null, slots);
     }
 
     private SquadProfile profile(List<FitPlayer> players, Map<Long, Map<String, Double>> scores) {

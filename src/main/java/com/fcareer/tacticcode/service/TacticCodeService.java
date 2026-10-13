@@ -142,16 +142,11 @@ public class TacticCodeService {
     }
 
     private Optional<EaCodecData.Formation> eaFormationFor(FormationDefinition ours) {
-        List<String> positions = ours.slots().stream().map(FormationSlot::position).sorted().toList();
-        return codec.formations().stream()
-                .filter(f -> f.positions().stream().sorted().toList().equals(positions)).findFirst();
+        return Optional.ofNullable(ours.eaFormationId()).flatMap(codec::formation);
     }
 
     private Optional<FormationDefinition> ourFormationFor(EaCodecData.Formation ea) {
-        List<String> positions = ea.positions().stream().sorted().toList();
-        return formationRegistry.findAll().stream()
-                .filter(f -> f.slots().stream().map(FormationSlot::position).sorted().toList().equals(positions))
-                .min(Comparator.comparing((FormationDefinition f) -> !normalize(f.id()).equals(normalize(ea.label()))));
+        return formationRegistry.findAll().stream().filter(f -> ea.id().equals(f.eaFormationId())).findFirst();
     }
 
     /** EA, aynı mevkideki slotları sağdan sola (x azalan) sıralar; bizim slotları da aynı kurala göre eşleriz. */

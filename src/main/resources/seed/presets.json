@@ -1487,7 +1487,7 @@
     "roleHints": {
       "CB": "Libero / süpürücü (Picchi tipi)",
       "LB": "Bindiren bek — çağının devrimi (Facchetti tipi)",
-      "CM": "Geriden uzun kuran (Luis Suárez tipi)"
+      "CDM": "Geriden uzun kuran (Luis Suárez tipi)"
     },
     "slotTags": {
       "LCB": [
@@ -1505,8 +1505,8 @@
       "RB": [
         "fb_stay_back"
       ],
-      "CM": [
-        "cm_deep_build"
+      "CDM": [
+        "cdm_deep_build"
       ],
       "LCM": [
         "cm_ball_winner"
