@@ -23,6 +23,7 @@ public final class SbcChallengeParser {
     static final String SCOPE = "SCOPE";
     private static final int SCOPE_MAX = 1;
     private static final int SCOPE_EXACT = 2;
+    private static final int SCOPE_RANGE = 3;
 
     private SbcChallengeParser() {
     }
@@ -35,7 +36,7 @@ public final class SbcChallengeParser {
             challenge.path("awards").forEach(a -> awards.add(new Reward(a.path("type").asText(null), a.hasNonNull("value") ? a.get("value").asLong() : null, a.path("count").asInt(1))));
             String formation = challenge.path("formation").asText(null);
             result.add(new SbcChallengeView(setId, setName, challenge.path("challengeId").asLong(), challenge.path("name").asText(null),
-                    challenge.path("status").asText(null), challenge.path("type").asText(null), formation, formationLabels.get(formation),
+                    challenge.path("status").asText(null), challenge.path("type").asText(null), formation, Objects.isNull(formation) ? null : formationLabels.get(formation),
                     challenge.path("repeatable").asBoolean(), challenge.path("timesCompleted").asInt(), challenge.hasNonNull("endTime") ? challenge.get("endTime").asLong() : null,
                     awards, requirements(challenge.path("elgReq"), refName)));
         }
@@ -48,45 +49,51 @@ public final class SbcChallengeParser {
         List<SbcRequirement> result = new ArrayList<>();
         for (List<JsonNode> group : bySlot.values()) {
             String op = "MIN";
-            String main = null;
-            Integer mainValue = null;
             Integer count = null;
             Integer level = null;
             List<SbcRef> refs = new ArrayList<>();
+            List<Map.Entry<String, Integer>> mains = new ArrayList<>();
             for (JsonNode r : group) {
                 String type = r.path("type").asText();
                 int value = r.path("eligibilityValue").asInt();
                 switch (type) {
-                    case SCOPE -> op = value == SCOPE_MAX ? "MAX" : value == SCOPE_EXACT ? "EXACT" : "MIN";
+                    case SCOPE -> op = value == SCOPE_MAX ? "MAX" : value == SCOPE_EXACT ? "EXACT" : value == SCOPE_RANGE ? "RANGE" : "MIN";
                     case "CLUB_ID" -> refs.add(new SbcRef("CLUB", value, refName.apply("CLUB", value)));
                     case "LEAGUE_ID" -> refs.add(new SbcRef("LEAGUE", value, refName.apply("LEAGUE", value)));
                     case "NATION_ID" -> refs.add(new SbcRef("NATION", value, refName.apply("NATION", value)));
-                    case "PLAYER_COUNT" -> count = value;
+                    case "PLAYER_COUNT", "PLAYER_COUNT_COMBINED" -> count = value;
                     case "PLAYER_LEVEL" -> level = value;
-                    default -> {
-                        main = type;
-                        mainValue = value;
-                    }
+                    default -> mains.add(Map.entry(type, value));
                 }
             }
-            result.add(requirement(op, main, mainValue, count, level, refs));
+            if (mains.isEmpty()) {
+                result.add(withoutMain(op, count, level, refs, group));
+                continue;
+            }
+            for (Map.Entry<String, Integer> main : mains) {
+                result.add(new SbcRequirement(kindOf(main.getKey()), op, main.getValue(), level, refs, count, group));
+            }
         }
         return result;
     }
 
-    private static SbcRequirement requirement(String op, String main, Integer mainValue, Integer count, Integer level, List<SbcRef> refs) {
-        if (Objects.isNull(main)) {
-            if (!refs.isEmpty()) {
-                return new SbcRequirement("FROM", op, count, null, refs);
-            }
-            if (Objects.nonNull(level)) {
-                return new SbcRequirement("LEVEL_COUNT", op, count, level, List.of());
-            }
-            return new SbcRequirement("UNKNOWN", op, count, null, List.of());
+    private static SbcRequirement withoutMain(String op, Integer count, Integer level, List<SbcRef> refs, List<JsonNode> raw) {
+        if (!refs.isEmpty()) {
+            return new SbcRequirement("FROM", op, count, null, refs, count, raw);
         }
-        String kind = switch (main) {
+        if (Objects.nonNull(level)) {
+            return new SbcRequirement("LEVEL_COUNT", op, count, level, List.of(), count, raw);
+        }
+        return new SbcRequirement(Objects.nonNull(count) ? "PLAYER_COUNT" : "UNKNOWN", op, count, null, List.of(), count, raw);
+    }
+
+    /** EA eligibility type → normalize kind (05 §2.1/§2.2). Bilinmeyen tip UNKNOWN olur; ham hâli requirement.raw'da kalır. */
+    private static String kindOf(String type) {
+        return switch (type) {
             case "TEAM_RATING_1_TO_100" -> "TEAM_RATING";
+            case "TEAM_STAR_RATING" -> "TEAM_STAR_RATING";
             case "CHEMISTRY_POINTS" -> "CHEMISTRY";
+            case "ALL_PLAYERS_CHEMISTRY_POINTS" -> "CHEMISTRY_PER_PLAYER";
             case "SAME_CLUB_COUNT" -> "SAME_CLUB";
             case "SAME_LEAGUE_COUNT" -> "SAME_LEAGUE";
             case "SAME_NATION_COUNT" -> "SAME_NATION";
@@ -94,8 +101,15 @@ public final class SbcChallengeParser {
             case "LEAGUE_COUNT" -> "LEAGUE_COUNT";
             case "NATION_COUNT" -> "NATION_COUNT";
             case "PLAYER_QUALITY" -> "QUALITY";
-            default -> "UNKNOWN:" + main;
+            case "PLAYER_RARITY" -> "RARITY";
+            case "PLAYER_RARITY_GROUP" -> "RARITY_GROUP";
+            case "PLAYER_MIN_OVR" -> "MIN_OVR";
+            case "PLAYER_MAX_OVR" -> "MAX_OVR";
+            case "PLAYER_EXACT_OVR" -> "EXACT_OVR";
+            case "FIRST_OWNER_PLAYERS_COUNT" -> "FIRST_OWNER";
+            case "PLAYER_TRADABILITY" -> "TRADABILITY";
+            case "LEGEND_COUNT" -> "LEGEND_COUNT";
+            default -> "UNKNOWN";
         };
-        return new SbcRequirement(kind, op, mainValue, level, refs);
     }
 }

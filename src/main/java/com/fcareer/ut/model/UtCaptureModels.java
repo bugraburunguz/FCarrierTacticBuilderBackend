@@ -70,9 +70,9 @@ public final class UtCaptureModels {
     public record SbcRef(String kind, int id, String name) {
     }
 
-    /** kind: TEAM_RATING, CHEMISTRY, SAME_CLUB/LEAGUE/NATION, CLUB/LEAGUE/NATION_COUNT, QUALITY, FROM, LEVEL_COUNT, UNKNOWN:*; op: MIN, MAX, EXACT. */
+    /** kind: 05 §2.2 listesi (TEAM_RATING, CHEMISTRY, RARITY_GROUP, MIN_OVR, FROM, LEVEL_COUNT, UNKNOWN ...); op: MIN, MAX, EXACT, RANGE; count: aynı slottaki PLAYER_COUNT; raw: ham elgReq girdileri. */
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record SbcRequirement(String kind, String op, Integer value, Integer level, List<SbcRef> refs) {
+    public record SbcRequirement(String kind, String op, Integer value, Integer level, List<SbcRef> refs, Integer count, List<JsonNode> raw) {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

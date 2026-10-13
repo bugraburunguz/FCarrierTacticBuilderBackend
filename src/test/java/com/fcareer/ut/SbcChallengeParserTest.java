@@ -71,4 +71,54 @@ class SbcChallengeParserTest {
         assertThat(challenge.requirements().get(6).kind()).isEqualTo("TEAM_RATING");
         assertThat(challenge.requirements().get(7).kind()).isEqualTo("CHEMISTRY");
     }
+    private static java.util.List<SbcRequirement> parseElg(String elgReq) throws Exception {
+        JsonNode body = new ObjectMapper().readTree("{\"challenges\":[{\"challengeId\":1,\"name\":\"t\",\"elgReq\":" + elgReq + "}]}");
+        return SbcChallengeParser.parse(1, "s", body, (kind, id) -> null, Map.of()).get(0).requirements();
+    }
+
+    private static String req(String type, int slot, int value) {
+        return "{\"type\":\"" + type + "\",\"eligibilitySlot\":" + slot + ",\"eligibilityValue\":" + value + "}";
+    }
+
+    @Test
+    void mainTypeKeepsItsPlayerCount() throws Exception {
+        java.util.List<SbcRequirement> result = parseElg("[" + req("PLAYER_RARITY_GROUP", 1, 4) + "," + req("PLAYER_COUNT", 1, 1) + "," + req("SCOPE", 1, 0) + "]");
+
+        assertThat(result).singleElement().satisfies(r -> {
+            assertThat(r.kind()).isEqualTo("RARITY_GROUP");
+            assertThat(r.value()).isEqualTo(4);
+            assertThat(r.count()).isEqualTo(1);
+            assertThat(r.op()).isEqualTo("MIN");
+        });
+    }
+
+    @Test
+    void everyKnownEaTypeMapsToANamedKind() throws Exception {
+        Map<String, String> expected = Map.of("PLAYER_RARITY", "RARITY", "PLAYER_MIN_OVR", "MIN_OVR", "PLAYER_EXACT_OVR", "EXACT_OVR", "PLAYER_MAX_OVR", "MAX_OVR",
+                "PLAYER_TRADABILITY", "TRADABILITY", "TEAM_STAR_RATING", "TEAM_STAR_RATING", "ALL_PLAYERS_CHEMISTRY_POINTS", "CHEMISTRY_PER_PLAYER",
+                "FIRST_OWNER_PLAYERS_COUNT", "FIRST_OWNER", "LEGEND_COUNT", "LEGEND_COUNT", "PLAYER_COUNT_COMBINED", "PLAYER_COUNT");
+        for (Map.Entry<String, String> e : expected.entrySet()) {
+            assertThat(parseElg("[" + req(e.getKey(), 1, 3) + "," + req("SCOPE", 1, 0) + "]")).as(e.getKey()).singleElement()
+                    .satisfies(r -> assertThat(r.kind()).isEqualTo(e.getValue()));
+        }
+    }
+
+    @Test
+    void secondMainTypeInTheSameSlotDoesNotOverwriteTheFirst() throws Exception {
+        java.util.List<SbcRequirement> result = parseElg("[" + req("PLAYER_RARITY", 1, 3) + "," + req("PLAYER_MIN_OVR", 1, 80) + "," + req("PLAYER_COUNT", 1, 2) + "," + req("SCOPE", 1, 0) + "]");
+
+        assertThat(result).extracting(SbcRequirement::kind).containsExactly("RARITY", "MIN_OVR");
+        assertThat(result).extracting(SbcRequirement::count).containsExactly(2, 2);
+    }
+
+    @Test
+    void unknownTypesKeepTheirRawFormAndEveryRequirementCarriesRaw() throws Exception {
+        java.util.List<SbcRequirement> result = parseElg("[" + req("BRAND_NEW_KEY", 1, 9) + "," + req("SCOPE", 1, 0) + "]");
+
+        assertThat(result).singleElement().satisfies(r -> {
+            assertThat(r.kind()).isEqualTo("UNKNOWN");
+            assertThat(r.raw()).hasSize(2);
+            assertThat(r.raw().get(0).path("type").asText()).isEqualTo("BRAND_NEW_KEY");
+        });
+    }
 }
