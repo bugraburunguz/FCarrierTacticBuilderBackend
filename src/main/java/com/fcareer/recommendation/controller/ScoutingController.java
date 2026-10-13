@@ -21,10 +21,14 @@ import static com.fcareer.common.constants.ApiConstants.API_V1;
 public class ScoutingController {
 
     private final ScoutingService scoutingService;
+    private final com.fcareer.career.desk.SpoilerPolicy spoilerPolicy;
 
     @PostMapping("/{careerId}/search")
     public ScoutingResponse search(@AuthenticationPrincipal AuthUser user, @PathVariable Long careerId,
                                    @Valid @RequestBody ScoutingSearchRequest request) {
-        return scoutingService.search(user.id(), careerId, request);
+        request.setPotentialMin(spoilerPolicy.minBand(careerId, request.getPotentialMin()));
+        ScoutingResponse response = scoutingService.search(user.id(), careerId, request);
+        spoilerPolicy.maskScouting(careerId, response.getItems());
+        return response;
     }
 }

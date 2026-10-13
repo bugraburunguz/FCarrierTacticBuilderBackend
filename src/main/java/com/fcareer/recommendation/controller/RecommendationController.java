@@ -2,6 +2,7 @@ package com.fcareer.recommendation.controller;
 
 import com.fcareer.auth.security.AuthUser;
 import com.fcareer.billing.model.response.CreditedResponse;
+import com.fcareer.career.desk.SpoilerPolicy;
 import com.fcareer.recommendation.model.request.RecommendSlotRequest;
 import com.fcareer.recommendation.model.request.SlotViewRequest;
 import com.fcareer.recommendation.model.request.TransferTargetRequest;
@@ -26,6 +27,7 @@ public class RecommendationController {
 
     private final RecommendationService recommendationService;
     private final TransferTargetService transferTargetService;
+    private final SpoilerPolicy spoilerPolicy;
 
     @PostMapping("/preview")
     public RecommendationResponse preview(@Valid @RequestBody RecommendSlotRequest request) {
@@ -35,18 +37,24 @@ public class RecommendationController {
     @PostMapping("/slot-view")
     public RecommendationResponse slotView(@AuthenticationPrincipal AuthUser user,
                                            @Valid @RequestBody SlotViewRequest request) {
-        return recommendationService.slotView(user.id(), request);
+        RecommendationResponse response = recommendationService.slotView(user.id(), request);
+        spoilerPolicy.maskItems(request.getCareerId(), response.getItems());
+        return response;
     }
 
     @PostMapping("/transfer-targets")
     public TransferTargetsResponse transferTargets(@AuthenticationPrincipal AuthUser user,
                                                    @Valid @RequestBody TransferTargetRequest request) {
-        return transferTargetService.targets(user.id(), request);
+        TransferTargetsResponse response = transferTargetService.targets(user.id(), request);
+        spoilerPolicy.maskTargets(request.getCareerId(), response.getPositions());
+        return response;
     }
 
     @PostMapping("/slot")
     public CreditedResponse<RecommendationResponse> slot(@AuthenticationPrincipal AuthUser user,
                                                          @Valid @RequestBody RecommendSlotRequest request) {
-        return recommendationService.recommend(user.id(), request);
+        CreditedResponse<RecommendationResponse> response = recommendationService.recommend(user.id(), request);
+        spoilerPolicy.maskItems(request.getCareerId(), response.getResult().getItems());
+        return response;
     }
 }

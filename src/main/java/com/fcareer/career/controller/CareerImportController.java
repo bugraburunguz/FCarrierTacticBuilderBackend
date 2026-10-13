@@ -31,6 +31,7 @@ public class CareerImportController {
 
     private final CareerImportService careerImportService;
     private final TeamInsightService teamInsightService;
+    private final com.fcareer.career.desk.SpoilerPolicy spoilerPolicy;
 
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ImportSummaryResponse importData(@AuthenticationPrincipal AuthUser user, @PathVariable Long id,
@@ -58,6 +59,8 @@ public class CareerImportController {
 
     @GetMapping("/teams/{teamId}")
     public TeamProfileResponse team(@AuthenticationPrincipal AuthUser user, @PathVariable Long id, @PathVariable Integer teamId) {
-        return teamInsightService.profile(user.id(), id, teamId);
+        TeamProfileResponse profile = teamInsightService.profile(user.id(), id, teamId);
+        spoilerPolicy.maskAll(id, profile.getTopPlayers());
+        return profile;
     }
 }

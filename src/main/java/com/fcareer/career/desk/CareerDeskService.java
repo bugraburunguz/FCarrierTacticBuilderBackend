@@ -39,6 +39,7 @@ public class CareerDeskService {
 
     private final NamedParameterJdbcTemplate jdbc;
     private final CareerService careerService;
+    private final SpoilerPolicy spoilerPolicy;
 
     // ---- snapshot ----
 
@@ -95,7 +96,9 @@ public class CareerDeskService {
             return new DiffRow(rs.getLong("pid"), rs.getString("full_name"), kind, (Integer) rs.getObject("a_ovr"), (Integer) rs.getObject("b_ovr"),
                     (Integer) rs.getObject("a_pot"), (Integer) rs.getObject("b_pot"), teamFrom, teamTo);
         });
-        return new DiffResult(fromId, toId, count(rows, "CHANGED"), count(rows, "TRANSFER"), count(rows, "NEW"), count(rows, "REMOVED"), rows);
+        List<DiffRow> shown = rows.stream().map(r -> new DiffRow(r.playerId(), r.name(), r.kind(), r.overallFrom(), r.overallTo(), spoilerPolicy.bandOrSame(careerId, r.potentialFrom()),
+                spoilerPolicy.bandOrSame(careerId, r.potentialTo()), r.teamFrom(), r.teamTo())).toList();
+        return new DiffResult(fromId, toId, count(rows, "CHANGED"), count(rows, "TRANSFER"), count(rows, "NEW"), count(rows, "REMOVED"), shown);
     }
 
     private static int count(List<DiffRow> rows, String kind) {
@@ -118,7 +121,7 @@ public class CareerDeskService {
                 JOIN career_snapshot_player p ON p.snapshot_id = s.id AND p.base_player_id = :p
                 WHERE s.career_id = :c ORDER BY s.id
                 """, Map.of("c", careerId, "p", playerId), (rs, i) -> new HistoryPoint(rs.getLong("id"), rs.getTimestamp("taken_at").toInstant(), (Integer) rs.getObject("season"),
-                rs.getInt("overall"), rs.getInt("potential"), (Integer) rs.getObject("team_id")));
+                rs.getInt("overall"), spoilerPolicy.bandOrSame(careerId, rs.getInt("potential")), (Integer) rs.getObject("team_id")));
     }
 
     /** Konsol oyuncusu için sezon arası hızlı güncelleme: yalnız değişen OVR/POT girilir, canlı veri güncellenir ve MANUAL snapshot alınır. */

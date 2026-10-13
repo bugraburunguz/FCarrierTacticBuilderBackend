@@ -90,8 +90,8 @@ public class PlayerController {
                 .attrMax(attrMax)
                 .overallMin(overallMin)
                 .overallMax(overallMax)
-                .potentialMin(potentialMin)
-                .potentialMax(potentialMax)
+                .potentialMin(spoilerPolicy.minBand(careerId, potentialMin))
+                .potentialMax(spoilerPolicy.maxBand(careerId, potentialMax))
                 .valueMax(valueMax)
                 .ageMin(ageMin)
                 .ageMax(ageMax)
@@ -105,7 +105,7 @@ public class PlayerController {
                 .leagueId(leagueId)
                 .nationalityId(nationalityId)
                 .gender(gender)
-                .sort(sort)
+                .sort(sortFor(careerId, sort))
                 .ascending(!ORDER_DESC.equalsIgnoreCase(order))
                 .page(page)
                 .size(size)
@@ -125,13 +125,24 @@ public class PlayerController {
         return fitService.rolesFor(id, gameVersionId, careerId);
     }
 
+    /** Aralık modunda potansiyele göre sıralama sıra bilgisiyle tam değeri sızdırır; OVR sıralamasına düşer. */
+    private String sortFor(Long careerId, String sort) {
+        return spoilerPolicy.ranged(careerId) && sort != null && sort.toLowerCase(java.util.Locale.ROOT).contains("pot") ? "overall" : sort;
+    }
+
     @GetMapping("/{id}/similar")
-    public List<SimilarPlayerResponse> similar(@PathVariable Long id,
+    public List<SimilarPlayerResponse> similar(@AuthenticationPrincipal AuthUser user, @PathVariable Long id,
+                                               @RequestParam(name = "career", required = false) Long careerId,
                                                @RequestParam(name = "gv", required = false) Short gameVersionId,
                                                @RequestParam(name = "age_max", required = false) Integer ageMax,
                                                @RequestParam(name = "pot_min", required = false) Integer potentialMin,
                                                @RequestParam(name = "limit", required = false, defaultValue = "8") int limit) {
-        return playerService.similar(id, gameVersionId, ageMax, potentialMin, Math.max(1, Math.min(limit, MAX_SIMILAR)));
+        if (careerId != null) {
+            careerService.requireOwned(user == null ? null : user.id(), careerId);
+        }
+        List<SimilarPlayerResponse> similar = playerService.similar(id, gameVersionId, ageMax, spoilerPolicy.minBand(careerId, potentialMin), Math.max(1, Math.min(limit, MAX_SIMILAR)));
+        similar.forEach(s -> spoilerPolicy.mask(careerId, s.getPlayer()));
+        return similar;
     }
 
     @GetMapping("/{id}")

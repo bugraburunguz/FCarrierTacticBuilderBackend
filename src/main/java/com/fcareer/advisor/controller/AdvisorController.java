@@ -32,10 +32,15 @@ public class AdvisorController {
     private final AdvisorService advisorService;
     private final PositionAdviceService positionAdviceService;
     private final TacticRecommenderService tacticRecommenderService;
+    private final com.fcareer.career.desk.SpoilerPolicy spoilerPolicy;
 
     @PostMapping("/squad")
     public CreditedResponse<Advice> advise(@AuthenticationPrincipal AuthUser user, @Valid @RequestBody AdvisorRequest request) {
-        return advisorService.advise(user.id(), request);
+        CreditedResponse<Advice> response = advisorService.advise(user.id(), request);
+        if (response.getResult().getTransferSuggestions() != null) {
+            response.getResult().getTransferSuggestions().forEach(s -> spoilerPolicy.maskItems(request.getCareerId(), s.getItems()));
+        }
+        return response;
     }
 
     @PostMapping("/tactic")

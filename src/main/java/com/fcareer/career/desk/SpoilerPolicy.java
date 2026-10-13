@@ -53,6 +53,47 @@ public class SpoilerPolicy {
         }
     }
 
+    /** Aralık modunda geçmiş/fark gibi tek sayılık potansiyel alanları bandın alt sınırına iner (BE-SEC-05). */
+    public Integer bandOrSame(Long careerId, Integer potential) {
+        if (Objects.nonNull(potential) && ranged(careerId)) {
+            return low(potential);
+        }
+        return potential;
+    }
+
+    public void maskItems(Long careerId, java.util.Collection<com.fcareer.recommendation.model.response.RecommendationItem> items) {
+        if (Objects.nonNull(items) && ranged(careerId)) {
+            items.forEach(i -> mask(careerId, i.getPlayer()));
+        }
+    }
+
+    public void maskTargets(Long careerId, java.util.Collection<com.fcareer.recommendation.model.response.PositionTargets> positions) {
+        if (Objects.nonNull(positions) && ranged(careerId)) {
+            positions.forEach(p -> Objects.requireNonNullElse(p.getTargets(), java.util.List.<com.fcareer.recommendation.model.response.TransferTarget>of()).forEach(t -> mask(careerId, t.getPlayer())));
+        }
+    }
+
+    public void maskScouting(Long careerId, java.util.Collection<com.fcareer.recommendation.model.response.ScoutingCandidate> candidates) {
+        if (Objects.nonNull(candidates) && ranged(careerId)) {
+            candidates.forEach(c -> mask(careerId, c.getPlayer()));
+        }
+    }
+
+    /** Potansiyel filtresi bantlara yuvarlanır: pot_min bandın altına, pot_max bandın üstüne (ikili aramayla tam değer bulunamaz). */
+    public Integer minBand(Long careerId, Integer potentialMin) {
+        if (Objects.nonNull(potentialMin) && ranged(careerId)) {
+            return low(potentialMin);
+        }
+        return potentialMin;
+    }
+
+    public Integer maxBand(Long careerId, Integer potentialMax) {
+        if (Objects.nonNull(potentialMax) && ranged(careerId)) {
+            return low(potentialMax) + BAND - 1;
+        }
+        return potentialMax;
+    }
+
     private static void apply(PlayerSummaryResponse summary) {
         summary.setPotentialRange(range(summary.getPotential()));
         summary.setPotential(null);
