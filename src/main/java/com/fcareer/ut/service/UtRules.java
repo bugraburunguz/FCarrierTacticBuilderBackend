@@ -17,6 +17,7 @@ import java.util.List;
 public class UtRules {
 
     private static final String RESOURCE = "seed/ut-rules.fc27.json";
+    private static final com.fasterxml.jackson.databind.ObjectMapper QUOTER = new com.fasterxml.jackson.databind.ObjectMapper();
 
     private final JsonNode document;
 
@@ -45,6 +46,49 @@ public class UtRules {
         }
         JsonNode type = document.at("/rarities/byId/" + rarityId + "/cardType");
         return type.isMissingNode() || type.isNull() ? null : type.asText();
+    }
+
+    /** İçeriğin sha256'sı (BE-ARCH-03): anahtarları sıralı, sayıları normalize kanonik JSON üzerinden; web aynı algoritmayla paketli kopyayı doğrular. */
+    public String hash() {
+        try {
+            return java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(canonical(withoutHash(document)).getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        } catch (java.security.NoSuchAlgorithmException | com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static JsonNode withoutHash(JsonNode node) {
+        if (node.isObject() && node.has("rulesHash")) {
+            com.fasterxml.jackson.databind.node.ObjectNode copy = node.deepCopy();
+            copy.remove("rulesHash");
+            return copy;
+        }
+        return node;
+    }
+
+    private static String canonical(JsonNode node) throws com.fasterxml.jackson.core.JsonProcessingException {
+        if (node.isObject()) {
+            java.util.List<String> keys = new ArrayList<>();
+            node.fieldNames().forEachRemaining(keys::add);
+            java.util.Collections.sort(keys);
+            StringBuilder out = new StringBuilder("{");
+            for (int i = 0; i < keys.size(); i++) {
+                out.append(i == 0 ? "" : ",").append(QUOTER.writeValueAsString(keys.get(i))).append(':').append(canonical(node.get(keys.get(i))));
+            }
+            return out.append('}').toString();
+        }
+        if (node.isArray()) {
+            StringBuilder out = new StringBuilder("[");
+            for (int i = 0; i < node.size(); i++) {
+                out.append(i == 0 ? "" : ",").append(canonical(node.get(i)));
+            }
+            return out.append(']').toString();
+        }
+        if (node.isNumber()) {
+            java.math.BigDecimal decimal = node.decimalValue().stripTrailingZeros();
+            return decimal.scale() <= 0 ? decimal.toBigInteger().toString() : decimal.toPlainString();
+        }
+        return QUOTER.writeValueAsString(node.isTextual() ? node.asText() : node.isNull() ? null : node.asBoolean());
     }
 
     public JsonNode document() {

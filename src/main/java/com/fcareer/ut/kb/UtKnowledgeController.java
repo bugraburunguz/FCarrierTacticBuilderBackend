@@ -59,12 +59,19 @@ public class UtKnowledgeController {
     private final ObjectMapper objectMapper;
     private final Clock clock;
     private final CaptureRules captureRules;
+    private final com.fcareer.ut.service.UtRules utRules;
 
+    /** Kural dokümanı + içerik hash'i; ETag/If-None-Match ile 304 döner (BE-ARCH-03). */
     @GetMapping("/rules")
-    public JsonNode rules() throws IOException {
-        try (InputStream in = new ClassPathResource(RULES_RESOURCE).getInputStream()) {
-            return objectMapper.readTree(in);
+    public JsonNode rules(org.springframework.web.context.request.WebRequest request, jakarta.servlet.http.HttpServletResponse response) {
+        String hash = utRules.hash();
+        response.setHeader("Cache-Control", "public, max-age=300");
+        if (request.checkNotModified("\"" + hash + "\"")) {
+            return null;
         }
+        com.fasterxml.jackson.databind.node.ObjectNode body = utRules.document().deepCopy();
+        body.put("rulesHash", hash);
+        return body;
     }
 
     /** Extension'ın açılışta çektiği tek kaynaklı yakalama kuralları (EXT-04): deny listesi, kişisel/katkı uçları, minimum sürüm. */
