@@ -58,3 +58,7 @@ Faz B'nin geri kalanı (DS-03/07/08/09/10, UX-01/03..06), Faz C (veri platformu)
 - BE-SEC-01 DONE (ac4bf01) · BE-BUG-01 DONE (9c09747 + V16 TRUNCATE) · BE-BUG-02 DONE (54249aa) · BE-BUG-03 DONE (9c09747)
 - WEB-BUG-01 DONE (8a5c018) · TAC-08 DONE (be0d422) · TAC-09 DONE (3dd82c1) · TAC-10 DONE (web e224e5f)
 - TAC-07: Buğra'nın 14 §5 oyun içi kodları bekleniyor; doğrulanmamış rol/taban değerlerine dokunulmaz.
+
+## FAZ A3 ilerleme (ara rapor 1)
+- DONE: BE-BUG-04 + RULE-01..06 (ut-rules v2, ChemistryCalculator, squadRating(size), ortak vektörler, SBC skoru monoton), WEB-ARCH-02 (useUtRules/rulesStore), BE-BUG-10 (EA/FUT.GG görünen adlar), BE-BUG-05 (parser v2), BE-BUG-06, BE-BUG-07, BE-BUG-08 (rarity id eşlemesi; `byId` boş, VERIFY), BE-BUG-09, BE-BUG-11, BE-BUG-25 (monoton skor), TAC-09 veri taşıması (V18 + web localStorage migration)
+- Açık: BE-SEC-02..07, WEB-BUG-02..14, LE-01/02, RULE-03 UI, BE-ARCH-03 (ETag + ut_rules tablosu), TAC-07 (Buğra girdisi)
