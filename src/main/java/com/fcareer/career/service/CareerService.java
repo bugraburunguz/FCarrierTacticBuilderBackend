@@ -202,10 +202,11 @@ public class CareerService {
     @Transactional(readOnly = true)
     public CareerSquad squadPlayerIds(Long userId, Long careerId) {
         CareerEntity career = owned(userId, careerId);
-        List<Long> ids = userPlayerStateRepository.findByCareerIdOrderByIdAsc(careerId).stream()
-                .map(UserPlayerStateEntity::getBasePlayerId)
-                .toList();
-        return new CareerSquad(ids, career.getGameVersionId(), knownBudget(career), clubGender(career.getClubId()), career.getClubId(), careerId);
+        List<UserPlayerStateEntity> states = userPlayerStateRepository.findByCareerIdOrderByIdAsc(careerId);
+        List<Long> owned = states.stream().map(UserPlayerStateEntity::getBasePlayerId).toList();
+        // Başka kulübe kiralık verilenler müsait değildir (ilk 11, advisor, setup-check, market bandı); ama hâlâ bizimdir (ENG-03).
+        List<Long> available = states.stream().filter(s -> !s.isLoanedOut()).map(UserPlayerStateEntity::getBasePlayerId).toList();
+        return new CareerSquad(available, career.getGameVersionId(), knownBudget(career), clubGender(career.getClubId()), career.getClubId(), careerId, owned);
     }
 
     public RosterEventResponse applyEvent(Long userId, Long careerId, RosterEventRequest request) {
@@ -430,6 +431,7 @@ public class CareerService {
         return Objects.isNull(name) || name.isBlank() ? null : name.trim();
     }
 
-    public record CareerSquad(List<Long> playerIds, Short gameVersionId, Long budgetEur, Short gender, Integer clubId, Long careerId) {
+    /** playerIds: müsait oyuncular (kiralık verilenler hariç); ownedIds: sahip olunan herkes (pazarda aday olmasın diye dışlanır). */
+    public record CareerSquad(List<Long> playerIds, Short gameVersionId, Long budgetEur, Short gender, Integer clubId, Long careerId, List<Long> ownedIds) {
     }
 }

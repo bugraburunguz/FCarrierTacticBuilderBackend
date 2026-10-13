@@ -88,7 +88,7 @@ public class ScoutingService {
                 transferTargetService.search(restrict(dream(role, intent, base, squad, careerId, rounded), request), candidates, new HashSet<>());
             }
         }
-        candidates.keySet().removeAll(squad.playerIds());
+        candidates.keySet().removeAll(squad.ownedIds());
 
         Map<Long, FitPlayer> fit = playerService.fitPlayers(new ArrayList<>(candidates.keySet()), squad.gameVersionId(), careerId).stream()
                 .collect(Collectors.toMap(FitPlayer::getId, p -> p, (a, b) -> a));
@@ -107,7 +107,7 @@ public class ScoutingService {
     }
 
     private PlayerSearchRequest dream(FitRole role, IntentProfile intent, RecommendSlotRequest base, CareerService.CareerSquad squad, Long careerId, int average) {
-        PlayerSearchRequest search = recommendationService.candidateSearch(role, intent, base, squad.playerIds(), squad.gameVersionId(), null, squad.gender());
+        PlayerSearchRequest search = recommendationService.candidateSearch(role, intent, base, squad.ownedIds(), squad.gameVersionId(), null, squad.gender());
         search.setCareerId(careerId);
         search.setSize(POOL_SIZE);
         search.setOverallMin(average + DREAM_OVERALL_ABOVE);
@@ -127,7 +127,7 @@ public class ScoutingService {
 
     private PlayerSearchRequest explicit(FitRole role, IntentProfile intent, RecommendSlotRequest base, CareerService.CareerSquad squad, Long careerId,
                                          ScoutingSearchRequest request) {
-        PlayerSearchRequest search = recommendationService.candidateSearch(role, intent, base, squad.playerIds(), squad.gameVersionId(), null, squad.gender());
+        PlayerSearchRequest search = recommendationService.candidateSearch(role, intent, base, squad.ownedIds(), squad.gameVersionId(), null, squad.gender());
         search.setCareerId(careerId);
         search.setSize(POOL_SIZE);
         search.setLeagueId(request.getLeagueId());

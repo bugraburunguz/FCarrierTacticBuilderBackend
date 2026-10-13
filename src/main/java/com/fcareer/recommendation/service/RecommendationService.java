@@ -89,7 +89,7 @@ public class RecommendationService {
         Long budget = request.getBudgetMax();
         if (Objects.nonNull(request.getCareerId())) {
             CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, request.getCareerId());
-            squadIds = squad.playerIds();
+            squadIds = squad.ownedIds();
             gameVersion = squad.gameVersionId();
             gender = squad.gender();
             budget = Objects.isNull(budget) ? squad.budgetEur() : budget;
@@ -136,7 +136,7 @@ public class RecommendationService {
             case SQUAD -> PlayerSearchRequest.builder().gameVersionId(squad.gameVersionId()).gender(squad.gender())
                     .ids(squad.playerIds()).careerId(squad.careerId()).sort("overall").size(CANDIDATE_POOL).build();
             case LEAGUE -> {
-                PlayerSearchRequest league = candidateSearch(role, intent, request, squad.playerIds(), squad.gameVersionId(), null, squad.gender());
+                PlayerSearchRequest league = candidateSearch(role, intent, request, squad.ownedIds(), squad.gameVersionId(), null, squad.gender());
                 league.setLeagueId(request.getLeagueId());
                 yield league;
             }
@@ -167,7 +167,7 @@ public class RecommendationService {
     private PlayerSearchRequest marketSearch(FitRole role, IntentProfile intent, RecommendSlotRequest request,
                                              CareerService.CareerSquad squad) {
         Long budget = Objects.isNull(request.getBudgetMax()) ? squad.budgetEur() : request.getBudgetMax();
-        PlayerSearchRequest search = candidateSearch(role, intent, request, squad.playerIds(), squad.gameVersionId(), budget, squad.gender());
+        PlayerSearchRequest search = candidateSearch(role, intent, request, squad.ownedIds(), squad.gameVersionId(), budget, squad.gender());
         OptionalDouble squadAverage = squadCoreAverage(squad);
         if (squadAverage.isPresent()) {
             long average = Math.round(squadAverage.getAsDouble());

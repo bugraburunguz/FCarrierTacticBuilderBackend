@@ -110,7 +110,7 @@ public class TransferTargetService {
 
     PlayerSearchRequest band(FitRole role, IntentProfile intent, RecommendSlotRequest base, CareerService.CareerSquad squad,
                                      TransferTargetRequest request, int average, Set<Integer> leagues) {
-        PlayerSearchRequest search = recommendationService.candidateSearch(role, intent, base, squad.playerIds(), squad.gameVersionId(),
+        PlayerSearchRequest search = recommendationService.candidateSearch(role, intent, base, squad.ownedIds(), squad.gameVersionId(),
                 squad.budgetEur(), squad.gender());
         search.setCareerId(request.getCareerId());
         search.setSize(POOL_PER_QUERY);
@@ -122,7 +122,7 @@ public class TransferTargetService {
 
     PlayerSearchRequest free(FitRole role, IntentProfile intent, RecommendSlotRequest base, CareerService.CareerSquad squad,
                                      TransferTargetRequest request, int average) {
-        PlayerSearchRequest search = recommendationService.candidateSearch(role, intent, base, squad.playerIds(), squad.gameVersionId(),
+        PlayerSearchRequest search = recommendationService.candidateSearch(role, intent, base, squad.ownedIds(), squad.gameVersionId(),
                 null, squad.gender());
         search.setCareerId(request.getCareerId());
         search.setSize(POOL_PER_QUERY);
@@ -134,7 +134,7 @@ public class TransferTargetService {
 
     PlayerSearchRequest prospects(FitRole role, IntentProfile intent, RecommendSlotRequest base, CareerService.CareerSquad squad,
                                           TransferTargetRequest request, int average) {
-        PlayerSearchRequest search = recommendationService.candidateSearch(role, intent, base, squad.playerIds(), squad.gameVersionId(),
+        PlayerSearchRequest search = recommendationService.candidateSearch(role, intent, base, squad.ownedIds(), squad.gameVersionId(),
                 null, squad.gender());
         search.setCareerId(request.getCareerId());
         search.setSize(POOL_PER_QUERY);
