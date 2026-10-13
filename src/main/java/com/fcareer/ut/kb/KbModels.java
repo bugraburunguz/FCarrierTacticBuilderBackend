@@ -35,7 +35,7 @@ public final class KbModels {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record ItemDto(long id, long eaAssetId, long eaResourceId, String name, int rating, String position, List<String> altPositions,
                           Integer clubId, Integer leagueId, Integer nationId, String cardType, boolean rare, String promo, JsonNode faceStats,
-                          Integer weakFoot, Integer skillMoves, String accelerate, boolean untradeableOnly, String status) {
+                          Integer weakFoot, Integer skillMoves, String accelerate, boolean untradeableOnly, String status, String quality) {
     }
 
     public record PricePoint(Instant bucket, Integer p10, Integer p50, Integer minBin, int samples, boolean lowConfidence) {

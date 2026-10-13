@@ -35,6 +35,7 @@ public class KnowledgeBaseRepository {
 
     private static final String JSONB = "CAST(:%s AS jsonb)";
 
+    private final com.fcareer.ut.service.UtRules rules;
     private final NamedParameterJdbcTemplate jdbc;
     private final ObjectMapper objectMapper;
 
@@ -196,11 +197,13 @@ public class KnowledgeBaseRepository {
                 INSERT INTO ut_item (game_version_id, ea_asset_id, ea_resource_id, base_player_id, name, rating, position, alt_positions, club_id, league_id, nation_id,
                                      card_type, is_rare, weak_foot, skill_moves, accelerate, source, status, updated_at)
                 SELECT r.game_version_id, b.ea_resource_id, b.ea_resource_id, b.id, b.full_name, r.overall, r.positions[1], COALESCE(r.positions[2:], '{}'),
-                       r.club_id, c.league_id, b.nationality_id, 'NORMAL', r.overall >= 65, r.weak_foot, r.skill_moves, r.accelerate, 'EA_SITE', 'CONFIRMED', now()
+                       c.ea_team_id, l.ea_league_id, n.ea_nation_id, 'NORMAL', false, r.weak_foot, r.skill_moves, r.accelerate, 'EA_SITE', 'CONFIRMED', now()
                 FROM base_player b JOIN player_rating r ON r.base_player_id = b.id AND r.game_version_id = :gv LEFT JOIN club c ON c.id = r.club_id
+                LEFT JOIN league l ON l.id = c.league_id LEFT JOIN nationality n ON n.id = b.nationality_id
                 WHERE b.ea_resource_id IS NOT NULL AND b.owner_career_id IS NULL
-                ON CONFLICT (game_version_id, ea_resource_id) DO UPDATE SET rating = EXCLUDED.rating, position = EXCLUDED.position, alt_positions = EXCLUDED.alt_positions,
-                  club_id = EXCLUDED.club_id, league_id = EXCLUDED.league_id, nation_id = EXCLUDED.nation_id, updated_at = now()
+                ON CONFLICT (game_version_id, ea_resource_id) DO UPDATE SET name = EXCLUDED.name, base_player_id = EXCLUDED.base_player_id, rating = EXCLUDED.rating,
+                  position = EXCLUDED.position, alt_positions = EXCLUDED.alt_positions, club_id = EXCLUDED.club_id, league_id = EXCLUDED.league_id, nation_id = EXCLUDED.nation_id,
+                  weak_foot = EXCLUDED.weak_foot, skill_moves = EXCLUDED.skill_moves, accelerate = EXCLUDED.accelerate, updated_at = now()
                 """, Map.of("gv", gameVersion));
     }
 
@@ -335,7 +338,7 @@ public class KnowledgeBaseRepository {
         return (rs, i) -> new ItemDto(rs.getLong("id"), rs.getLong("ea_asset_id"), rs.getLong("ea_resource_id"), rs.getString("name"), rs.getInt("rating"), rs.getString("position"),
                 strings(rs, "alt_positions"), (Integer) rs.getObject("club_id"), (Integer) rs.getObject("league_id"), (Integer) rs.getObject("nation_id"), rs.getString("card_type"),
                 rs.getBoolean("is_rare"), rs.getString("promo_code"), read(rs.getString("face_stats")), (Integer) rs.getObject("weak_foot"), (Integer) rs.getObject("skill_moves"),
-                rs.getString("accelerate"), rs.getBoolean("untradeable_only"), rs.getString("status"));
+                rs.getString("accelerate"), rs.getBoolean("untradeable_only"), rs.getString("status"), rules.qualityOf(rs.getInt("rating")));
     }
 
     private static List<String> strings(ResultSet rs, String column) throws SQLException {
