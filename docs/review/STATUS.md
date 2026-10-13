@@ -62,3 +62,8 @@ Faz B'nin geri kalanı (DS-03/07/08/09/10, UX-01/03..06), Faz C (veri platformu)
 ## FAZ A3 ilerleme (ara rapor 1)
 - DONE: BE-BUG-04 + RULE-01..06 (ut-rules v2, ChemistryCalculator, squadRating(size), ortak vektörler, SBC skoru monoton), WEB-ARCH-02 (useUtRules/rulesStore), BE-BUG-10 (EA/FUT.GG görünen adlar), BE-BUG-05 (parser v2), BE-BUG-06, BE-BUG-07, BE-BUG-08 (rarity id eşlemesi; `byId` boş, VERIFY), BE-BUG-09, BE-BUG-11, BE-BUG-25 (monoton skor), TAC-09 veri taşıması (V18 + web localStorage migration)
 - Açık: BE-SEC-02..07, WEB-BUG-02..14, LE-01/02, RULE-03 UI, BE-ARCH-03 (ETag + ut_rules tablosu), TAC-07 (Buğra girdisi)
+
+## FAZ A3 ilerleme (ara rapor 2)
+- DONE: BE-SEC-02 (gövde bütçeleri), BE-SEC-03 (solver auth + 10/dk + 10M), BE-SEC-04 (JobLock), BE-SEC-05 (spoiler sızıntıları), BE-SEC-06 (e-posta doğrulama + IP limiti + EA-id katkıcı oyu), BE-SEC-07 (ADMIN rolü), BE-ARCH-03 (rulesHash/ETag), fiyat saat koruması (48 sa, clock_skew), WEB-BUG-02..07
+- Açık: WEB-BUG-08..14, LE-01/02, BE-SEC-08..11, BE-BUG-12..18, TAC-07 (Buğra girdisi)
+- FC28 ratings sitesi: canlı site FC27 sayfasını sunuyor; log'daki "FC 28" sentetik birim testinden (EaSiteProviderTest.refusesToIngestWhenThePageIsNotFc27, MockRestServiceServer).
