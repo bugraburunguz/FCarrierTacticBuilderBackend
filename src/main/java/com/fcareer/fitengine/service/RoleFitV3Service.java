@@ -81,7 +81,7 @@ public class RoleFitV3Service {
                 .badgeText(messageService.getMessage(label.messageKey()))
                 .fitLabel(label.name())
                 .outOfPosition(!result.inPosition())
-                .reasons(List.of())
+                .reasons(result.top(TOP_CONTRIBUTIONS).stream().map((c) -> String.format(java.util.Locale.ROOT, "%s %+.1f", c.key(), c.points())).toList())
                 .engineVersion(FitEngineV3.VERSION)
                 .currentFit(round1(result.currentFit()))
                 .levelFit(level.map(LevelFitService.LevelFit::value).orElse(null))

@@ -65,6 +65,7 @@ public class TacticRecommenderService {
     private final PositionAdviceService positionAdviceService;
     private final FeasibilityService feasibilityService;
     private final SquadFitService squadFitService;
+    private final com.fcareer.fitengine.service.RoleFitRouter roleFitRouter;
     private final TacticRuleService tacticRuleService;
     private final RecommenderProperties properties;
     private final CreditGuard creditGuard;
@@ -183,7 +184,7 @@ public class TacticRecommenderService {
     }
 
     private Combo toCombo(List<FitPlayer> players, Ranked item, List<Ranked> all) {
-        SquadFitResponse lineup = squadFitService.solve(players, item.scored().profiles(), tacticRuleService.enabledRules());
+        SquadFitResponse lineup = squadFitService.solve(players, item.scored().profiles(), tacticRuleService.enabledRules(), roleFitRouter.careerEngineVersion());
         List<String> reasons = new ArrayList<>();
         reasons.add(String.format(Locale.ROOT, "Kadro uyumu %%%.0f%s, yedek derinliği %%%.0f.", item.eval().squadFit(),
                 Objects.isNull(item.eval().intentFit()) ? "" : String.format(Locale.ROOT, ", niyet uyumu %%%.0f", item.eval().intentFit()),

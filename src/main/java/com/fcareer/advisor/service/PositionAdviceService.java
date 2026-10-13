@@ -9,7 +9,7 @@ import com.fcareer.fitengine.model.FitPlayer;
 import com.fcareer.fitengine.model.FitRole;
 import com.fcareer.fitengine.model.WeaponState;
 import com.fcareer.fitengine.model.response.RoleFitResponse;
-import com.fcareer.fitengine.service.RoleFitService;
+import com.fcareer.fitengine.service.RoleFitRouter;
 import com.fcareer.roles.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,7 +33,7 @@ public class PositionAdviceService {
     private static final String GOALKEEPER = "GK";
 
     private final RoleService roleService;
-    private final RoleFitService roleFitService;
+    private final RoleFitRouter roleFitRouter;
     private final CareerService careerService;
     private final PlayerService playerService;
     private final PositionOverallService positionOverallService;
@@ -60,7 +60,7 @@ public class PositionAdviceService {
                     if (!role.getPositions().contains(position)) {
                         continue;
                     }
-                    RoleFitResponse fit = roleFitService.calculate(player, role, null, position);
+                    RoleFitResponse fit = roleFitRouter.forCareer(player, role, null, position);
                     if (!plausible(player, position, fit, positionOveralls)) {
                         continue;
                     }
@@ -94,7 +94,7 @@ public class PositionAdviceService {
             for (String position : candidates) {
                 for (FitRole role : roles.values()) {
                     if (role.getPositions().contains(position)) {
-                        RoleFitResponse fit = roleFitService.calculate(player, role, null, position);
+                        RoleFitResponse fit = roleFitRouter.forCareer(player, role, null, position);
                         if (plausible(player, position, fit, positionOveralls)) {
                             byPosition.merge(position, fit.getScore(), Math::max);
                         }

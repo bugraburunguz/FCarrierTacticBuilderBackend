@@ -21,7 +21,7 @@ import com.fcareer.fitengine.model.response.SquadFitResponse;
 import com.fcareer.fitengine.model.response.WeakLink;
 import com.fcareer.fitengine.service.HungarianSolver;
 import com.fcareer.fitengine.service.IntentFitService;
-import com.fcareer.fitengine.service.RoleFitService;
+import com.fcareer.fitengine.service.RoleFitRouter;
 import com.fcareer.fitengine.service.SquadFitService;
 import com.fcareer.fitengine.service.TacticMirror;
 import com.fcareer.recommendation.model.request.RecommendSlotRequest;
@@ -82,7 +82,7 @@ public class AdvisorService {
     private final BehaviorTagService behaviorTagService;
     private final FormationRegistry formationRegistry;
     private final PresetService presetService;
-    private final RoleFitService roleFitService;
+    private final RoleFitRouter roleFitRouter;
     private final IntentFitService intentFitService;
     private final SquadFitService squadFitService;
     private final HungarianSolver hungarianSolver;
@@ -174,7 +174,7 @@ public class AdvisorService {
                 if (Objects.isNull(holder) || !role.getPositions().contains(slot.getSlotPosition())) {
                     continue;
                 }
-                double score = roleFitService.calculate(holder, role, null, slot.getSlotPosition()).getScore();
+                double score = roleFitRouter.forCareer(holder, role, null, slot.getSlotPosition()).getScore();
                 if (score > bestScore) {
                     bestScore = score;
                     best = role;
@@ -246,7 +246,7 @@ public class AdvisorService {
     }
 
     private Candidate withLineup(List<FitPlayer> players, Scored scored) {
-        SquadFitResponse lineup = squadFitService.solve(players, scored.profiles(), tacticRuleService.enabledRules());
+        SquadFitResponse lineup = squadFitService.solve(players, scored.profiles(), tacticRuleService.enabledRules(), roleFitRouter.careerEngineVersion());
         Candidate source = scored.candidate();
         return Candidate.builder().kind(source.getKind()).presetId(source.getPresetId()).name(source.getName())
                 .formation(source.getFormation()).formationLabel(source.getFormationLabel()).score(source.getScore())
@@ -360,7 +360,7 @@ public class AdvisorService {
         for (int p = 0; p < players.size(); p++) {
             for (int s = 0; s < slots.size(); s++) {
                 IntentProfile slot = slots.get(s);
-                combined[p][s] = roleFitService.calculate(players.get(p), slot.getResolvedRole(), slot, slot.getSlotPosition()).getScore();
+                combined[p][s] = roleFitRouter.forCareer(players.get(p), slot.getResolvedRole(), slot, slot.getSlotPosition()).getScore();
             }
         }
         return hungarianSolver.maximize(combined);
@@ -384,7 +384,7 @@ public class AdvisorService {
         for (int p = 0; p < playerCount; p++) {
             for (int s = 0; s < slotCount; s++) {
                 IntentProfile slot = slots.get(s);
-                RoleFitResponse roleFit = roleFitService.calculate(players.get(p), slot.getResolvedRole(), slot, slot.getSlotPosition());
+                RoleFitResponse roleFit = roleFitRouter.forCareer(players.get(p), slot.getResolvedRole(), slot, slot.getSlotPosition());
                 IntentFitResponse intentFit = slot.hasTags() ? intentFitService.calculate(players.get(p), slot) : null;
                 roleScores[p][s] = roleFit.getScore();
                 intentScores[p][s] = Objects.isNull(intentFit) ? 0 : intentFit.getScore();
