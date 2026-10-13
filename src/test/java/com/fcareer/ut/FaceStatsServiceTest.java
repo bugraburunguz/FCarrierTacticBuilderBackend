@@ -21,9 +21,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 class FaceStatsServiceTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    /** Stat başına izin verilen en büyük sapma: DRI ağırlıkları doğrulanmadı (ölçülen sapma ±3; rapora yazıldı, ağırlık değiştirilmedi). */
+    /** Stat başına izin verilen en büyük sapma (DRI ağırlıkları holdout ile düzeltildi: 19.789 kartta tam isabet). */
     private static int tolerance(String label) {
-        return "DRI".equals(label) ? 3 : 1;
+        return 1;
     }
 
     private final FaceStatsService service = new FaceStatsService(new UtRules(MAPPER));

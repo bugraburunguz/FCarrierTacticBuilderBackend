@@ -472,10 +472,12 @@
       "freeKickAccuracy": 5
     },
     "DRI": {
-      "dribbling": 50,
-      "ballControl": 35,
+      "dribbling": 45,
+      "ballControl": 30,
       "agility": 10,
-      "balance": 5
+      "balance": 5,
+      "reactions": 5,
+      "composure": 5
     },
     "DEF": {
       "defensiveAwareness": 30,
@@ -489,7 +491,9 @@
       "stamina": 25,
       "aggression": 20,
       "jumping": 5
-    }
+    },
+    "_basis": "empirical-holdout",
+    "_holdout": "19.789 resmî kart, rastgele yarı/yarı (seed 42): 6 stat da uydurma ve test yarısında %100 tam isabet; docs/review/v2/V3-04_progress.md"
   },
   "holographic": {
     "regularMaxOvr": 87,
@@ -540,6 +544,8 @@
     },
     "POS": {
       "gkPositioning": 100
-    }
+    },
+    "_basis": "empirical-holdout",
+    "_holdout": "2.204 resmî kaleci kartı, yarı/yarı: SPD 45/55 (PAC) tutmadı (±1 içinde %88, tam %32); 60/40 test yarısında %100 tam isabet"
   }
 }
