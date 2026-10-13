@@ -28,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -59,6 +60,7 @@ public class ContributionService {
     private static final int CONFIRMING_CONTRIBUTORS = 2;
     private static final int CONFIRM_REWARD = 1;
     private static final int CONFLICT_PENALTY = -3;
+    private static final Duration MAX_CLOCK_SKEW = Duration.ofHours(48);
     private static final String MARKET_SOURCE = "transfermarket";
     private static final Set<String> PLATFORMS = Set.of("CONSOLE", "PC");
 
@@ -112,6 +114,7 @@ public class ContributionService {
             return Outcome.CREATED;
         }
         if (stored.get().equals(hash)) {
+            repository.touch(table, entity.id(), entity.endsAt());
             return Outcome.UNCHANGED;
         }
         if (repository.distinctContributors(entity.kind(), entity.key(), hash) >= CONFIRMING_CONTRIBUTORS) {
@@ -159,12 +162,29 @@ public class ContributionService {
         return hash;
     }
 
+    /** İstemci saati bozuksa (sunucudan MAX_CLOCK_SKEW kadar uzak) sunucu saati kullanılır. */
+    private Instant captureTime(Long capturedAtMillis) {
+        Instant server = clock.instant();
+        if (Objects.isNull(capturedAtMillis) || capturedAtMillis <= 0) {
+            return server;
+        }
+        Instant captured = Instant.ofEpochMilli(capturedAtMillis);
+        return Duration.between(captured, server).abs().compareTo(MAX_CLOCK_SKEW) <= 0 ? captured : server;
+    }
+
+    private static Integer repeatable(ObjectNode p) {
+        if (p.hasNonNull("repeatCount") && p.get("repeatCount").asInt() > 0) {
+            return p.get("repeatCount").asInt();
+        }
+        return p.path("repeatable").asBoolean(false) ? -1 : null;
+    }
+
     private void apply(Entity entity, String hash, String status) {
         short gv = catalogProperties.getDefaultGameVersion();
         ObjectNode p = entity.payload();
         switch (entity.kind()) {
             case SBC_SET -> repository.upsertSbcSet(entity.id(), gv, p.path("name").asText("SBC #" + entity.id()), text(p, "description"), p.path("category").asText("OTHER"),
-                    p.path("repeatable").asBoolean(false) ? -1 : null, entity.endsAt(), p.path("reward").isMissingNode() ? objectMapper.createArrayNode() : p.path("reward"), status, hash);
+                    repeatable(p), entity.endsAt(), p.path("reward").isMissingNode() ? objectMapper.createArrayNode() : p.path("reward"), status, hash);
             case SBC_CHALLENGE -> {
                 long setId = p.path("setId").asLong();
                 repository.ensureSetStub(setId, gv, text(p, "setName"));
@@ -188,8 +208,9 @@ public class ContributionService {
         }
     }
 
+    /** Bitiş zamanı capture anına göre hesaplanır (kalan saniye o an ölçüldü); ts yoksa sunucu saati. */
     private List<Entity> entities(CaptureResult result) {
-        Instant now = clock.instant();
+        Instant now = captureTime(result.capturedAt());
         List<Entity> entities = new ArrayList<>();
         for (SbcSetView set : result.sbcSets()) {
             ObjectNode p = objectMapper.createObjectNode();
@@ -198,6 +219,10 @@ public class ContributionService {
             p.put("challengesCount", set.challengesCount());
             p.put("repeatable", set.repeatable());
             p.put("awardCount", set.awardCount());
+            p.set("reward", objectMapper.valueToTree(set.awards()));
+            if (Objects.nonNull(set.repeatCount())) {
+                p.put("repeatCount", set.repeatCount());
+            }
             entities.add(new Entity(SBC_SET, set.setId(), p, remainingToInstant(set.endTime(), now)));
         }
         for (SbcChallengeView challenge : result.sbcChallenges()) {
@@ -213,6 +238,9 @@ public class ContributionService {
             p.put("type", challenge.type());
             p.set("awards", objectMapper.valueToTree(challenge.awards()));
             p.set("requirements", objectMapper.valueToTree(challenge.requirements()));
+            if (Objects.nonNull(challenge.scoreRequirement())) {
+                p.put("itemScoreTarget", challenge.scoreRequirement());
+            }
             entities.add(new Entity(SBC_CHALLENGE, challenge.challengeId(), p, null));
         }
         for (ObjectiveGroupView group : result.objectives()) {

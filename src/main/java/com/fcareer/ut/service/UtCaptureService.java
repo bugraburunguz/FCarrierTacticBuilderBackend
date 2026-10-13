@@ -175,7 +175,8 @@ public class UtCaptureService {
                 squads(last(bodies, Kind.SQUAD_LIST)), prices, objectives(last(bodies, Kind.OBJECTIVES)), sbcSets(bodies.get(Kind.SBC_HUB)),
                 sbcDetails(raw.get(Kind.SBC_DETAIL), bodies.get(Kind.SBC_DETAIL)), evolutions(bodies.get(Kind.ACADEMY)),
                 credits(last(bodies, Kind.CREDITS)), currencies(last(bodies, Kind.CREDITS)), config, new ArrayList<>(unknownPaths),
-                sbcChallenges(raw.get(Kind.SBC_DETAIL), bodies.get(Kind.SBC_DETAIL), sbcSets(bodies.get(Kind.SBC_HUB)), config, ctx, userId));
+                sbcChallenges(raw.get(Kind.SBC_DETAIL), bodies.get(Kind.SBC_DETAIL), sbcSets(bodies.get(Kind.SBC_HUB)), config, ctx, userId),
+                ordered.stream().map(Capture::ts).filter(Objects::nonNull).max(Long::compare).orElse(null));
     }
 
     private void readDiscovery(String body, Set<String> unknownPaths) {
@@ -514,9 +515,16 @@ public class UtCaptureService {
             bodies.forEach(body -> body.path("categories").forEach(category -> category.path("sets").forEach(s -> sets.put(s.path("setId").asLong(),
                     new SbcSetView(s.path("setId").asLong(), s.path("name").asText(null), category.path("categoryId").asInt(), category.path("name").asText(null),
                             s.path("challengesCount").asInt(), s.path("challengesCompletedCount").asInt(), s.path("repeatable").asBoolean(),
-                            longOrNull(s, "endTime"), s.path("awards").size())))));
+                            longOrNull(s, "endTime"), s.path("awards").size(), hubRewards(s.path("awards")),
+                            s.hasNonNull("repeats") ? s.get("repeats").asInt() : null)))));
         }
         return new ArrayList<>(sets.values());
+    }
+
+    private static List<Reward> hubRewards(JsonNode awards) {
+        List<Reward> result = new ArrayList<>();
+        awards.forEach(a -> result.add(new Reward(a.path("type").asText(null), a.hasNonNull("value") ? a.get("value").asLong() : null, a.path("count").asInt(1))));
+        return result;
     }
 
     private static final Pattern SBC_SET_CHALLENGES = Pattern.compile(".*/sbs/setid/(\\d+)/challenges$");

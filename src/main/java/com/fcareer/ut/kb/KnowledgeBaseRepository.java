@@ -95,6 +95,16 @@ public class KnowledgeBaseRepository {
                 """, new MapSqlParameterSource().addValue("gv", gameVersion).addValue("code", code).addValue("name", name).addValue("s", ts(startsAt)).addValue("e", ts(endsAt)));
     }
 
+    private static final java.util.Set<String> TOUCHABLE = java.util.Set.of("sbc_set", "objective_group", "evolution");
+
+    /** İçerik aynı kaldığında da son görülme ve (biliniyorsa) bitiş zamanı yenilenir. */
+    public void touch(String table, long id, Instant endsAt) {
+        if (!TOUCHABLE.contains(table)) {
+            return;
+        }
+        jdbc.update("UPDATE " + safeTable(table) + " SET last_seen_at = now(), ends_at = COALESCE(:e, ends_at) WHERE id = :id", new MapSqlParameterSource().addValue("e", ts(endsAt)).addValue("id", id));
+    }
+
     public Optional<String> hashOf(String table, long id) {
         List<String> found = jdbc.queryForList("SELECT content_hash FROM " + safeTable(table) + " WHERE id = :id", Map.of("id", id), String.class);
         return found.stream().findFirst();

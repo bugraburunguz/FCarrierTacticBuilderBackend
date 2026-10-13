@@ -38,7 +38,8 @@ public final class SbcChallengeParser {
             result.add(new SbcChallengeView(setId, setName, challenge.path("challengeId").asLong(), challenge.path("name").asText(null),
                     challenge.path("status").asText(null), challenge.path("type").asText(null), formation, Objects.isNull(formation) ? null : formationLabels.get(formation),
                     challenge.path("repeatable").asBoolean(), challenge.path("timesCompleted").asInt(), challenge.hasNonNull("endTime") ? challenge.get("endTime").asLong() : null,
-                    awards, requirements(challenge.path("elgReq"), refName)));
+                    awards, requirements(challenge.path("elgReq"), refName),
+                    challenge.hasNonNull("scoreRequirement") ? challenge.get("scoreRequirement").asInt() : null));
         }
         return result;
     }

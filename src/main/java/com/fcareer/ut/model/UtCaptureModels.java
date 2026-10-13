@@ -64,7 +64,7 @@ public final class UtCaptureModels {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record SbcSetView(long setId, String name, int categoryId, String category, int challengesCount, int challengesCompleted,
-                             boolean repeatable, Long endTime, int awardCount) {
+                             boolean repeatable, Long endTime, int awardCount, List<Reward> awards, Integer repeatCount) {
     }
 
     public record SbcRef(String kind, int id, String name) {
@@ -78,7 +78,7 @@ public final class UtCaptureModels {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record SbcChallengeView(long setId, String setName, long challengeId, String name, String status, String type, String formation,
                                    String formationLabel, boolean repeatable, int timesCompleted, Long endTime, List<Reward> awards,
-                                   List<SbcRequirement> requirements) {
+                                   List<SbcRequirement> requirements, Integer scoreRequirement) {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -114,6 +114,6 @@ public final class UtCaptureModels {
     public record CaptureResult(CaptureStats stats, List<CaptureCard> cards, ActiveSquad activeSquad, List<SquadSummary> squads,
                                 List<MarketPrice> prices, List<ObjectiveGroupView> objectives, List<SbcSetView> sbcSets, List<SbcDetail> sbcDetails,
                                 List<EvolutionSlot> evolutions, Long coins, List<CurrencyView> currencies, CaptureConfig config,
-                                List<String> unknownPaths, List<SbcChallengeView> sbcChallenges) {
+                                List<String> unknownPaths, List<SbcChallengeView> sbcChallenges, Long capturedAt) {
     }
 }
