@@ -218,7 +218,7 @@ class ApiFlowIntegrationTest {
                 "setup", Map.of("buildUp", "Short", "depth", 90)), null, 200);
         assertThat(highLineCb.at("/success").asBoolean()).as(highLineCb.toString()).isTrue();
         assertThat(plainCb.at("/data/items/0/setupDelta").isMissingNode()).isTrue();
-        assertThat(highLineCb.at("/data/items/0/setupDelta").isNumber()).isTrue();
+        assertThat(highLineCb.at("/data/items/0/setupDelta").isMissingNode()).isTrue();
 
         JsonNode metaFormations =call(get("/api/v1/ut/meta/formations"), null, null, 200);
         assertThat(metaFormations.at("/data/formations")).isNotEmpty();

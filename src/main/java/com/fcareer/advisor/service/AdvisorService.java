@@ -268,7 +268,7 @@ public class AdvisorService {
         for (WeakLink weak : lineup.getWeakLinks().stream().limit(TRANSFER_SLOTS).toList()) {
             lineup.getSlots().stream().filter(s -> s.getSlotId().equals(weak.getSlotId())).findFirst().ifPresent(slot ->
                     suggestions.add(TransferSuggestion.builder().slotId(slot.getSlotId()).position(slot.getPosition()).roleId(slot.getRoleId())
-                            .items(recommendationService.preview(RecommendSlotRequest.builder().roleId(slot.getRoleId())
+                            .items(recommendationService.rankPreview(RecommendSlotRequest.builder().roleId(slot.getRoleId())
                                     .position(slot.getPosition()).tags(slot.getTags()).gender(squad.gender()).limit(TRANSFER_ITEMS).build())
                                     .getItems()).build()));
         }

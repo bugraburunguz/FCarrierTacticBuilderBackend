@@ -101,6 +101,21 @@ class SecurityHardeningIntegrationTest {
     }
 
     @Test
+    void anonymousPreviewIsCappedAndHasNoPaidInsights() throws Exception {
+        JsonNode preview = call(post("/api/v1/recommend/preview"), Map.of("roleId", "winger_attack", "position", "RW", "limit", 8,
+                "setup", Map.of("buildUp", "Short", "depth", 90)), null, 200);
+
+        assertThat(preview.at("/data/items").size()).isBetween(1, 3);
+        assertThat(preview.at("/data/scoutQuery").isMissingNode()).isTrue();
+        preview.at("/data/items").forEach(i -> {
+            assertThat(i.at("/roleFit/reasons").isMissingNode()).isTrue();
+            assertThat(i.at("/roleFit/weaponChecks").isMissingNode()).isTrue();
+            assertThat(i.at("/intentFit").isMissingNode()).isTrue();
+            assertThat(i.at("/setupDelta").isMissingNode()).isTrue();
+        });
+    }
+
+    @Test
     void votesUpsertChangeAndRevoke() throws Exception {
         String token = register();
         JsonNode up = call(put("/api/v1/ut/sbc/votes/36"), Map.of("vote", 1), token, 200);

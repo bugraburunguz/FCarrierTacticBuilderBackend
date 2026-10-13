@@ -104,7 +104,15 @@ public class RecommendationService {
                 () -> rank(request, role, intent, summaries, finalBudget, finalVersion));
     }
 
+    /** Anonim önizleme (BE-SEC-01, D-01): ilk  aday, gerekçe/silah/intent/setup içgörüsü yok; tam sonuç yalnız ücretli akışlarda (advisor, /recommend/slot). */
     public RecommendationResponse preview(RecommendSlotRequest request) {
+        RecommendSlotRequest limited = RecommendSlotRequest.builder().roleId(request.getRoleId()).position(request.getPosition()).tags(request.getTags())
+                .setup(request.getSetup()).gender(request.getGender()).gameVersionId(request.getGameVersionId())
+                .limit(Math.min(Objects.isNull(request.getLimit()) ? SLOT_VIEW_LIMIT : request.getLimit(), SLOT_VIEW_LIMIT)).build();
+        return withoutPaidInsights(rankPreview(limited));
+    }
+
+    public RecommendationResponse rankPreview(RecommendSlotRequest request) {
         FitRole role = roleService.getFitRole(request.getRoleId());
         IntentProfile intent = tacticResolver.slotIntent(SLOT_ID, request.getPosition(), null, request.getRoleId(), request.getTags(), request.getSetup());
         Short gender = Objects.isNull(request.getGender()) ? DEFAULT_PREVIEW_GENDER : request.getGender();
