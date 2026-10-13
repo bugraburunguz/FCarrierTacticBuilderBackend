@@ -192,12 +192,12 @@ public class ScoutingService {
         return isPotential(summary, average) ? Acquisition.LOAN : Acquisition.BUY;
     }
 
-    static Double valueRatio(Long value, Long budget) {
+    public static Double valueRatio(Long value, Long budget) {
         if (Objects.isNull(value)) {
             return null;
         }
         if (Objects.isNull(budget) || budget <= 0) {
-            return value > 0 ? Double.MAX_VALUE : 0.0;
+            return null; // bütçe bilinmiyor: oran da bilinmiyor, aday "gerçekçi değil" diye gizlenmez (ENG-02)
         }
         return value.doubleValue() / budget;
     }

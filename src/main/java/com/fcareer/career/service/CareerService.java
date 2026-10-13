@@ -89,7 +89,8 @@ public class CareerService {
         career.setClubId(club.getId());
         career.setName(cleanName(request.getName()));
         career.setSeason(Objects.isNull(request.getSeason()) ? FIRST_SEASON : request.getSeason());
-        career.setBudgetEur(Objects.isNull(request.getBudgetEur()) ? NO_FEE : request.getBudgetEur());
+        // Bütçe girilmediyse NULL = bilinmiyor (0 değil, ENG-02).
+        career.setBudgetEur(request.getBudgetEur());
         career = careerRepository.save(career);
 
         List<PlayerRatingEntity> ratings = playerRatingRepository.findCatalogSquad(club.getId(), gameVersion);
@@ -204,7 +205,7 @@ public class CareerService {
         List<Long> ids = userPlayerStateRepository.findByCareerIdOrderByIdAsc(careerId).stream()
                 .map(UserPlayerStateEntity::getBasePlayerId)
                 .toList();
-        return new CareerSquad(ids, career.getGameVersionId(), budget(career), clubGender(career.getClubId()), career.getClubId(), careerId);
+        return new CareerSquad(ids, career.getGameVersionId(), knownBudget(career), clubGender(career.getClubId()), career.getClubId(), careerId);
     }
 
     public RosterEventResponse applyEvent(Long userId, Long careerId, RosterEventRequest request) {
@@ -385,6 +386,11 @@ public class CareerService {
         jdbc.update("DELETE FROM player_valuation WHERE base_player_id IN (SELECT id FROM base_player WHERE owner_career_id = :c)", params);
         jdbc.update("DELETE FROM player_rating WHERE base_player_id IN (SELECT id FROM base_player WHERE owner_career_id = :c)", params);
         jdbc.update("DELETE FROM base_player WHERE owner_career_id = :c", params);
+    }
+
+    /** Öneri/piyasa sorguları için bütçe: boş ya da 0 "bilinmiyor"dur (null) ve bütçe filtresi uygulanmaz (ENG-02). */
+    private static Long knownBudget(CareerEntity career) {
+        return Objects.isNull(career.getBudgetEur()) || career.getBudgetEur() <= 0 ? null : career.getBudgetEur();
     }
 
     private static long budget(CareerEntity career) {
