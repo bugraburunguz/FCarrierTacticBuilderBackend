@@ -14,3 +14,8 @@ ml-service/data/fc27-dump/
 
 # Extension yakalama dosyaları oturum/hesap verisi içerebilir
 fcareer-captures*.json
+
+# Arşiv ve paket dosyaları (docs/spec.zip takipte kalır, BE-ARCH-06)
+MacOS_Dock_TD.rar
+*.rar
+*.zip

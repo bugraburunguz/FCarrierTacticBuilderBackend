@@ -34,3 +34,6 @@ Karar kaydı `docs/review/08_DECISIONS_LOG.md`; çelişkide o geçerlidir.
 
 ## Commit
 `<ID>: kısa açıklama` (+ `BEHAVIOR CHANGE:` / `API CONTRACT CHANGE:` satırı gerekirse). Bir PR'da tek konu.
+
+## Bilinen sorunlar
+- **Gömülü Postgres önbelleği bozulabilir:** Entegrasyon testleri toplu düşer ve loglarda `FATAL: invalid value for parameter "TimeZone"` ile "Gave up waiting for server to start" görünür. Önbellek klasörünü silip testi yeniden çalıştır: `%TEMP%\embedded-pg` (Windows) / `$TMPDIR/embedded-pg`.

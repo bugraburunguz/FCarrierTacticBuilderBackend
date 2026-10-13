@@ -53,3 +53,8 @@ Faz B'nin geri kalanı (DS-03/07/08/09/10, UX-01/03..06), Faz C (veri platformu)
 - STALE düzeltildi: SEC-08 (reuse yapılmış), BUG-09 (kısmi), BUG-11 (yapılmış), BUG-17 (yapılmış), DS-01 (token'lar global)
 - Geri alınan DONE: SEC-02, SEC-05, BUG-01 (backend), BUG-14, DS-05 (EA_ASSET kapalı)
 - BE-SEC-01: DONE (ac4bf01)
+
+## FAZ A2 kayıtları
+- BE-SEC-01 DONE (ac4bf01) · BE-BUG-01 DONE (9c09747 + V16 TRUNCATE) · BE-BUG-02 DONE (54249aa) · BE-BUG-03 DONE (9c09747)
+- WEB-BUG-01 DONE (8a5c018) · TAC-08 DONE (be0d422) · TAC-09 DONE (3dd82c1) · TAC-10 DONE (web e224e5f)
+- TAC-07: Buğra'nın 14 §5 oyun içi kodları bekleniyor; doğrulanmamış rol/taban değerlerine dokunulmaz.
