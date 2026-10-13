@@ -7,21 +7,30 @@ import com.fcareer.common.service.MessageService;
 import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import java.util.List;
 
+import static com.fcareer.common.constants.ErrorCodes.DATA_CONFLICT;
 import static com.fcareer.common.constants.ErrorCodes.FORBIDDEN;
+import static com.fcareer.common.constants.ErrorCodes.METHOD_NOT_ALLOWED;
+import static com.fcareer.common.constants.ErrorCodes.ROUTE_NOT_FOUND;
+import static com.fcareer.common.constants.ErrorCodes.UNSUPPORTED_MEDIA_TYPE;
 import static com.fcareer.common.constants.ErrorCodes.UNKNOWN_ERROR;
 import static com.fcareer.common.constants.ErrorCodes.VALIDATION_ERROR;
 
@@ -69,6 +78,42 @@ public class GlobalExceptionAdvice {
     public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
         log.warn("Access denied : {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(buildError(FORBIDDEN));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoRoute(NoResourceFoundException ex) {
+        log.warn("No route : {}", ex.getResourcePath());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(buildError(ROUTE_NOT_FOUND));
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex) {
+        log.warn("Method not allowed : {}", ex.getMethod());
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(buildError(METHOD_NOT_ALLOWED));
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMediaType(HttpMediaTypeNotSupportedException ex) {
+        log.warn("Unsupported media type : {}", ex.getContentType());
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(buildError(UNSUPPORTED_MEDIA_TYPE));
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMethodValidation(HandlerMethodValidationException ex) {
+        log.warn("Method validation failed : {}", ex.getMessage());
+        return ResponseEntity.badRequest().body(buildError(VALIDATION_ERROR));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrity(DataIntegrityViolationException ex) {
+        log.warn("Data integrity violation : {}", ex.getMostSpecificCause().getClass().getSimpleName());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(buildError(DATA_CONFLICT));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException ex) {
+        log.warn("Illegal argument : {}", ex.getMessage());
+        return ResponseEntity.badRequest().body(buildError(VALIDATION_ERROR));
     }
 
     @ExceptionHandler(Exception.class)

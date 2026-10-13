@@ -23,6 +23,10 @@ public final class ErrorCodes {
     public static final String SUBSCRIPTION_ALREADY_ACTIVE = "fc.exception.0019";
     public static final String PAYLOAD_TOO_LARGE = "fc.exception.0020";
     public static final String EXTENSION_OUTDATED = "fc.exception.0021";
+    public static final String ROUTE_NOT_FOUND = "fc.exception.0022";
+    public static final String METHOD_NOT_ALLOWED = "fc.exception.0023";
+    public static final String UNSUPPORTED_MEDIA_TYPE = "fc.exception.0024";
+    public static final String DATA_CONFLICT = "fc.exception.0025";
     public static final String UNKNOWN_ERROR = "fc.exception.9999";
 
     private ErrorCodes() {
