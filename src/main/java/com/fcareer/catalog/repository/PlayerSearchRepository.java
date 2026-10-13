@@ -151,6 +151,9 @@ public class PlayerSearchRepository {
         }
         addBound(request.getIdFilter(), "b.id = :playerId", "playerId", clauses, params);
         addIds(request.getIds(), "b.id IN (:ids)", "ids", clauses, params);
+        if (Objects.isNull(request.getIds()) || request.getIds().isEmpty()) {
+            clauses.add("b.retired_at IS NULL");
+        }
         addIds(request.getExcludeIds(), "b.id NOT IN (:excludeIds)", "excludeIds", clauses, params);
         return " WHERE " + String.join(" AND ", clauses);
     }

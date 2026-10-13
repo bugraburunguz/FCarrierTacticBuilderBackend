@@ -27,8 +27,8 @@ public class IngestionAdminController {
     private final com.fcareer.catalog.configuration.CatalogProperties catalogProperties;
 
     @PostMapping("/run")
-    public IngestionResult run() {
-        return ingestionService.run();
+    public IngestionService.Started run() {
+        return ingestionService.startAsync();
     }
 
     @PostMapping(value = "/enrich-dump", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)

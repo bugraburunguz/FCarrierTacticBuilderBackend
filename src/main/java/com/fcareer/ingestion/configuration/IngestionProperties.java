@@ -17,6 +17,10 @@ public class IngestionProperties {
     private boolean runOnStartup = false;
     private int retryAttempts = 4;
     private long retryBackoffMillis = 1000;
+    /** RUNNING bir koşunun heartbeat'i bu süreden eskiyse çökmüş sayılır ve devralınabilir. */
+    private Duration staleAfter = Duration.ofMinutes(10);
+    /** Tam koşuda emeklilik için görülen oyuncu sayısının önceki görülene oranı alt sınırı (site kısmen çökerse toplu emeklilik olmaz). */
+    private double retireMinSeenRatio = 0.9;
     private String adminKey = "";
     private EaSite eaSite = new EaSite();
     private Mock mock = new Mock();

@@ -39,4 +39,10 @@ public class BasePlayerEntity {
 
     @Column(nullable = false)
     private Short gender = 0;
+
+    /** Bu oyuncuyu en son gören ingestion koşusu; boşsa siteden hiç gelmemiş (LE, kariyer). */
+    private Long lastSeenRun;
+
+    /** Tam bir koşuda siteden kalkmışsa emeklilik zamanı; göz atma/aramada gizlenir, kimlikle erişim sürer. */
+    private java.time.Instant retiredAt;
 }

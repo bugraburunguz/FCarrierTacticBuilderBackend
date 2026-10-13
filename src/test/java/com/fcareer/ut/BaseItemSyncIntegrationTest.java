@@ -71,14 +71,14 @@ class BaseItemSyncIntegrationTest {
     void resyncRefreshesNameAndAttributes() throws Exception {
         sync();
         Long id = jdbc.queryForObject("SELECT id FROM ut_item ORDER BY id LIMIT 1", Long.class);
-        jdbc.update("UPDATE ut_item SET name = 'ESKI AD', weak_foot = 1, skill_moves = 1, accelerate = 'ESKI' WHERE id = ?", id);
+        jdbc.update("UPDATE ut_item SET name = 'ESKI AD', weak_foot = 0, skill_moves = 0, accelerate = 'ESKI' WHERE id = ?", id);
 
         sync();
 
         Map<String, Object> item = jdbc.queryForMap("SELECT name, weak_foot, skill_moves, accelerate FROM ut_item WHERE id = ?", id);
         assertThat(item.get("name")).isNotEqualTo("ESKI AD");
         assertThat(item.get("accelerate")).isNotEqualTo("ESKI");
-        assertThat(item.get("weak_foot")).isNotEqualTo(1);
+        assertThat(item.get("weak_foot")).isNotEqualTo(0);
     }
 
     private JsonNode call(MockHttpServletRequestBuilder builder, Object body, int expectedStatus) throws Exception {

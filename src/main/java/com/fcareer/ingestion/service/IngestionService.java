@@ -20,8 +20,10 @@ import com.fcareer.ingestion.model.ExternalPlayer;
 import com.fcareer.ingestion.model.ExternalPlayerPage;
 import com.fcareer.ingestion.model.IngestionResult;
 import com.fcareer.ingestion.provider.ExternalDataProvider;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -30,7 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -53,54 +56,96 @@ public class IngestionService {
     private final AcceleRateDeriver acceleRateDeriver;
     private final TransactionTemplate transactionTemplate;
     private final IngestionRunRepository runs;
-    private final AtomicBoolean running = new AtomicBoolean(false);
+    private final JdbcTemplate jdbc;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "ingestion");
+        thread.setDaemon(true);
+        return thread;
+    });
 
-    public IngestionResult run() {
-        if (!running.compareAndSet(false, true)) {
-            log.warn("Ingestion already running provider : {}", provider.name());
-            return IngestionResult.alreadyRunning(provider.name());
-        }
-        try {
-            return ingest();
-        } finally {
-            running.set(false);
-        }
+    /** Başlatılan koşu: runId yeni ya da devam eden koşunun kimliği; alreadyRunning true ise başka bir koşu sürüyor. */
+    public record Started(Long runId, boolean alreadyRunning) {
     }
 
-    private IngestionResult ingest() {
+    private record Claim(long runId, Optional<IngestionRunRepository.Run> resumed) {
+    }
+
+    @PreDestroy
+    void shutdown() {
+        executor.shutdown();
+    }
+
+    /** Koşuyu bu thread'de çalıştırır (başlangıç koşucusu ve testler). */
+    public IngestionResult run() {
+        return claim().map(this::ingest).orElseGet(() -> {
+            log.warn("Ingestion already running provider : {}", provider.name());
+            return IngestionResult.alreadyRunning(provider.name());
+        });
+    }
+
+    /** Koşuyu DB'de sahiplenip arka planda çalıştırır; HTTP isteği dakikalarca beklemez (BE-BUG-16). */
+    public Started startAsync() {
+        return claim().map(claim -> {
+            executor.submit(() -> {
+                try {
+                    ingest(claim);
+                } catch (RuntimeException e) {
+                    log.error("Background ingestion failed runId : {}", claim.runId(), e);
+                }
+            });
+            return new Started(claim.runId(), false);
+        }).orElseGet(() -> new Started(null, true));
+    }
+
+    /** Bayat RUNNING koşuları FAILED yapar, ardından son FAILED koşuyu sürdürür ya da yenisini açar; başka bir canlı koşu varsa boş döner. */
+    private Optional<Claim> claim() {
+        runs.expireStale(provider.name(), properties.getStaleAfter());
+        Optional<IngestionRunRepository.Run> resumable = runs.findResumable(provider.name());
+        if (resumable.isPresent()) {
+            return runs.resume(resumable.get().id()) ? Optional.of(new Claim(resumable.get().id(), resumable)) : Optional.empty();
+        }
+        return runs.start(provider.name()).map(id -> new Claim(id, Optional.empty()));
+    }
+
+    private IngestionResult ingest(Claim claim) {
         short gameVersion = properties.getGameVersionId();
+        long runId = claim.runId();
         if (!gameVersionRepository.existsById(gameVersion)) {
+            runs.fail(runId, "unknown game version " + gameVersion);
             throw new NotFoundException(GAME_VERSION, gameVersion);
         }
         int pageSize = properties.getPageSize();
         int limit = properties.getMaxPlayers();
-        var resumable = runs.findResumable(provider.name());
-        long runId = resumable.map(IngestionRunRepository.Run::id).orElseGet(() -> runs.start(provider.name()));
-        resumable.ifPresent(run -> {
-            runs.resume(run.id());
-            log.info("Ingestion resuming runId : {} offset : {}", run.id(), run.nextOffset());
-        });
-        int created = resumable.map(IngestionRunRepository.Run::created).orElse(0);
-        int updated = resumable.map(IngestionRunRepository.Run::updated).orElse(0);
+        claim.resumed().ifPresent(run -> log.info("Ingestion resuming runId : {} offset : {}", run.id(), run.nextOffset()));
+        int created = claim.resumed().map(IngestionRunRepository.Run::created).orElse(0);
+        int updated = claim.resumed().map(IngestionRunRepository.Run::updated).orElse(0);
         int total = Integer.MAX_VALUE;
+        int offset = claim.resumed().map(IngestionRunRepository.Run::nextOffset).orElse(0);
         try {
-            for (int offset = resumable.map(IngestionRunRepository.Run::nextOffset).orElse(0); offset < total; offset += pageSize) {
+            while (offset < total) {
                 if (limit > 0 && offset >= limit) {
                     break;
                 }
                 ExternalPlayerPage page = fetchWithRetry(offset, pageSize);
+                if (page.totalItems() <= 0) {
+                    throw new IllegalStateException("provider returned no total item count at offset " + offset);
+                }
                 total = page.totalItems();
                 int pageOffset = offset;
                 List<ExternalPlayer> items = limit > 0 ? page.items().stream().limit(limit - pageOffset).toList() : page.items();
-                int[] counts = transactionTemplate.execute(status -> upsertPage(items, gameVersion));
+                int[] counts = transactionTemplate.execute(status -> upsertPage(items, gameVersion, runId));
                 created += counts[0];
                 updated += counts[1];
-                runs.progress(runId, offset + pageSize, total, created, updated);
-                log.info("Ingestion page done provider : {} offset : {} total : {}", provider.name(), offset, total);
-                if (page.items().isEmpty() && total > offset + pageSize) {
-                    log.warn("Ingestion page returned no usable items offset : {}", offset);
+                offset += pageSize;
+                runs.progress(runId, offset, total, created, updated);
+                log.info("Ingestion page done provider : {} offset : {} total : {}", provider.name(), offset - pageSize, total);
+                if (page.items().isEmpty() && total > offset) {
+                    log.warn("Ingestion page returned no usable items offset : {}", offset - pageSize);
                 }
                 pause();
+            }
+            if (limit == 0) {
+                retireUnseen(runId);
             }
         } catch (RuntimeException e) {
             runs.fail(runId, e.getMessage());
@@ -110,6 +155,24 @@ public class IngestionService {
         runs.finish(runId);
         log.info("Ingestion finished provider : {} created : {} updated : {}", provider.name(), created, updated);
         return new IngestionResult(provider.name(), gameVersion, created, updated, false);
+    }
+
+    /**
+     * Tam koşuda bu koşuda görülmeyen (daha önce siteden gelmiş) oyuncuları emekliye ayırır; kariyer oyuncuları ve LE'den gelen
+     * (hiç görülmemiş) oyuncular etkilenmez. Site bir anda çok küçük dönerse (görülen < önceki görülenin oranı) toplu emeklilik yapılmaz.
+     */
+    private void retireUnseen(long runId) {
+        Integer seen = jdbc.queryForObject("SELECT count(*) FROM base_player WHERE last_seen_run = ?", Integer.class, runId);
+        Integer before = jdbc.queryForObject("SELECT count(*) FROM base_player WHERE last_seen_run IS NOT NULL AND last_seen_run <> ? AND retired_at IS NULL", Integer.class, runId);
+        if (Objects.isNull(seen) || Objects.isNull(before) || before == 0) {
+            return;
+        }
+        if (seen < before * properties.getRetireMinSeenRatio()) {
+            log.warn("Ingestion retirement skipped, catalog suspiciously small runId : {} seen : {} previouslySeen : {}", runId, seen, before);
+            return;
+        }
+        int retired = jdbc.update("UPDATE base_player SET retired_at = now() WHERE owner_career_id IS NULL AND last_seen_run IS NOT NULL AND last_seen_run <> ? AND retired_at IS NULL", runId);
+        log.info("Ingestion retired unseen players runId : {} retired : {}", runId, retired);
     }
 
     /** Geçici hatada üstel geri çekilmeyle yeniden dener (BUG-09); üst sınır aşılırsa koşu kaldığı offset'te FAILED kalır. */
@@ -136,7 +199,7 @@ public class IngestionService {
         throw last;
     }
 
-    private int[] upsertPage(List<ExternalPlayer> items, short gameVersion) {
+    private int[] upsertPage(List<ExternalPlayer> items, short gameVersion, long runId) {
         Map<Long, BasePlayerEntity> existing = basePlayerRepository
                 .findByEaResourceIdIn(items.stream().map(ExternalPlayer::externalId).toList()).stream()
                 .collect(Collectors.toMap(BasePlayerEntity::getEaResourceId, Function.identity()));
@@ -156,6 +219,8 @@ public class IngestionService {
                 base.setEaResourceId(player.externalId());
             }
             applyBase(base, player, nationalities);
+            base.setLastSeenRun(runId);
+            base.setRetiredAt(null);
             base = basePlayerRepository.save(base);
             PlayerRatingEntity rating = ratings.getOrDefault(base.getId(), new PlayerRatingEntity());
             rating.setBasePlayerId(base.getId());
