@@ -29,6 +29,7 @@ public class CareerMapper {
                 .spoilerMode(career.getSpoilerMode())
                 .wageBudgetEur(career.getWageBudgetEur())
                 .windowEndsOn(career.getWindowEndsOn())
+                .gameDate(career.getGameDate())
                 .challengeId(career.getChallengeId())
                 .createdAt(career.getCreatedAt())
                 .build();

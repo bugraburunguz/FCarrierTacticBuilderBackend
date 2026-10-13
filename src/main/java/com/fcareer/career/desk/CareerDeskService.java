@@ -51,7 +51,7 @@ public class CareerDeskService {
     @Transactional
     public long takeSnapshot(long careerId, String source, String note) {
         Integer season = jdbc.queryForList("SELECT season FROM career WHERE id = :c", Map.of("c", careerId), Integer.class).stream().findFirst().orElse(null);
-        Long id = jdbc.queryForObject("INSERT INTO career_snapshot (career_id, season, source, note) VALUES (:c, :s, :src, :n) RETURNING id",
+        Long id = jdbc.queryForObject("INSERT INTO career_snapshot (career_id, season, source, note, game_date) VALUES (:c, :s, :src, :n, (SELECT current_game_date FROM career WHERE id = :c)) RETURNING id",
                 new MapSqlParameterSource().addValue("c", careerId).addValue("s", season).addValue("src", source).addValue("n", note), Long.class);
         int count = jdbc.update("""
                 INSERT INTO career_snapshot_player (snapshot_id, base_player_id, overall, potential, team_id, free_agent, positions, attrs, value_eur, wage_eur, age)

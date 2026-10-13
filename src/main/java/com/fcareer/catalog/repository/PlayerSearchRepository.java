@@ -37,15 +37,17 @@ public class PlayerSearchRepository {
              LEFT JOIN player_valuation v ON v.base_player_id = r.base_player_id
                   AND v.game_version_id = r.game_version_id AND v.source = 'MODELED' AND v.owner_user_id IS NULL
             """;
+    /** Kariyer sorgusunda oyun tarihi (BE-BUG-18), yoksa bugün: yaş hesabının referansı. */
+    private static final String GAME_DATE = "COALESCE((SELECT g.current_game_date FROM career g WHERE g.id = CAST(:careerId AS BIGINT)), CURRENT_DATE)";
     private static final String SELECT = """
             SELECT b.id AS id, b.ea_resource_id AS ea_id, b.full_name AS name, b.dob AS dob, b.gender AS gender, b.preferred_foot AS foot,
                    COALESCE(cpd.overall, r.overall) AS overall, COALESCE(cpr.positions, r.positions) AS positions, COALESCE(cpr.weak_foot, r.weak_foot) AS weak_foot,
                    COALESCE(cpr.skill_moves, r.skill_moves) AS skill_moves,
                    c.id AS club_id, COALESCE(ct.name, c.name) AS club, COALESCE(ct.league_name, l.name) AS league, n.name AS nationality, COALESCE(cpr.accelerate, r.accelerate) AS accelerate, COALESCE(cpr.run_style1, r.run_style1) AS run_style,
                    COALESCE(cpd.potential, v.potential) AS potential, v.value_eur AS value_eur, (cpd.base_player_id IS NULL AND v.id IS NOT NULL) AS estimated,
-                   (COALESCE(cpd.free_agent, false) OR l.name = 'Free Agents') AS free_agent
-            """;
-    private static final String AGE_YEARS = "EXTRACT(YEAR FROM age(b.dob))";
+                   (COALESCE(cpd.free_agent, false) OR l.name = 'Free Agents') AS free_agent,
+                   """ + GAME_DATE + " AS ref_date\n";
+    private static final String AGE_YEARS = "EXTRACT(YEAR FROM age(" + GAME_DATE + ", b.dob))";
     private static final String AGE_SORT = "age";
     private static final Map<String, String> SORTS = Map.ofEntries(
             Map.entry("overall", "COALESCE(cpd.overall, r.overall)"),
@@ -211,7 +213,7 @@ public class PlayerSearchRepository {
         return PlayerSummaryResponse.builder()
                 .id(rs.getLong("id"))
                 .name(rs.getString("name"))
-                .age(Objects.isNull(dob) ? null : Period.between(dob.toLocalDate(), LocalDate.now()).getYears())
+                .age(Objects.isNull(dob) ? null : Period.between(dob.toLocalDate(), rs.getDate("ref_date").toLocalDate()).getYears())
                 .overall(rs.getInt("overall"))
                 .positions(Arrays.asList((String[]) positions.getArray()))
                 .clubId(nullableInt(rs, "club_id"))

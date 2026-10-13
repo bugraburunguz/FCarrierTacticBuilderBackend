@@ -122,6 +122,9 @@ public class CareerService {
         if (Objects.nonNull(request.getWindowEndsOn())) {
             career.setWindowEndsOn(request.getWindowEndsOn());
         }
+        if (Objects.nonNull(request.getGameDate())) {
+            career.setGameDate(request.getGameDate());
+        }
         if (Objects.nonNull(request.getChallengeId())) {
             career.setChallengeId(request.getChallengeId().isBlank() ? null : request.getChallengeId());
         }

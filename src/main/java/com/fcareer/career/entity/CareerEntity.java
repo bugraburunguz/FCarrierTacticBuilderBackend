@@ -43,6 +43,10 @@ public class CareerEntity {
 
     private java.time.LocalDate windowEndsOn;
 
+    /** Kariyerin oyun içi tarihi (BE-BUG-18); boşsa yaş gerçek tarihe göre hesaplanır. */
+    @Column(name = "current_game_date")
+    private java.time.LocalDate gameDate;
+
     private String challengeId;
 
     @CreatedDate

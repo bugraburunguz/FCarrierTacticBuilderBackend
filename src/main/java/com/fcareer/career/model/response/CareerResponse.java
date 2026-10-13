@@ -26,6 +26,7 @@ public class CareerResponse {
     private String spoilerMode;
     private Long wageBudgetEur;
     private java.time.LocalDate windowEndsOn;
+    private java.time.LocalDate gameDate;
     private String challengeId;
     private Instant createdAt;
 }

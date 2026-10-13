@@ -29,6 +29,7 @@ public class UpdateCareerRequest {
     @PositiveOrZero
     private Long wageBudgetEur;
     private java.time.LocalDate windowEndsOn;
+    private java.time.LocalDate gameDate;
     @Size(max = 40)
     private String challengeId;
 }
