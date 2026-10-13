@@ -56,14 +56,14 @@ class SecurityHardeningIntegrationTest {
     }
 
     @Test
-    void developmentWithForeignCareerIsForbidden() throws Exception {
+    void developmentWithForeignCareerLooksLikeAMissingOne() throws Exception {
         String owner = register();
         String stranger = register();
         long careerId = createCareer(owner);
         long playerId = call(get("/api/v1/players?size=1"), null, null, 200).at("/data/items/0/id").asLong();
 
-        call(post("/api/v1/players/" + playerId + "/development"), Map.of("careerId", careerId), stranger, 403);
-        call(post("/api/v1/players/" + playerId + "/development"), Map.of("careerId", careerId), null, 403);
+        call(post("/api/v1/players/" + playerId + "/development"), Map.of("careerId", careerId), stranger, 404);
+        call(post("/api/v1/players/" + playerId + "/development"), Map.of("careerId", careerId), null, 404);
         call(post("/api/v1/players/" + playerId + "/development"), Map.of("careerId", careerId), owner, 200);
         call(post("/api/v1/players/" + playerId + "/development"), Map.of(), null, 200);
     }

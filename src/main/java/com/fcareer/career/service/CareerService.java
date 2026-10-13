@@ -27,7 +27,6 @@ import com.fcareer.catalog.repository.GameVersionRepository;
 import com.fcareer.catalog.repository.PlayerRatingRepository;
 import com.fcareer.catalog.repository.PlayerValuationRepository;
 import com.fcareer.catalog.service.PlayerService;
-import com.fcareer.common.exception.CareerAccessDeniedException;
 import com.fcareer.common.exception.InsufficientBudgetException;
 import com.fcareer.common.exception.InvalidRosterEventException;
 import com.fcareer.common.exception.NotFoundException;
@@ -399,10 +398,11 @@ public class CareerService {
         return career;
     }
 
+    /** Başkasının kariyeri olmayan kariyerle aynı görünür (404): varlık durum koduyla sızmaz (BE-SEC-09). */
     private void assertOwner(CareerEntity career, Long userId) {
         if (!Objects.equals(career.getUserId(), userId)) {
             log.warn("Career access denied careerId : {} userId : {}", career.getId(), userId);
-            throw new CareerAccessDeniedException();
+            throw new NotFoundException(CAREER, career.getId());
         }
     }
 

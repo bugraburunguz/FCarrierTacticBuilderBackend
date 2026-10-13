@@ -129,9 +129,9 @@ class CareerDeskIntegrationTest {
     void otherUsersCannotTouchTheCareer() throws Exception {
         long careerId = createCareer(register());
         String stranger = register();
-        call(get("/api/v1/careers/" + careerId + "/snapshots"), null, stranger, 403);
-        call(put("/api/v1/careers/" + careerId + "/tags/1"), Map.of("tag", "LOCKED"), stranger, 403);
-        call(get("/api/v1/careers/" + careerId + "/backup"), null, stranger, 403);
+        call(get("/api/v1/careers/" + careerId + "/snapshots"), null, stranger, 404);
+        call(put("/api/v1/careers/" + careerId + "/tags/1"), Map.of("tag", "LOCKED"), stranger, 404);
+        call(get("/api/v1/careers/" + careerId + "/backup"), null, stranger, 404);
     }
 
     private long createCareer(String token) throws Exception {

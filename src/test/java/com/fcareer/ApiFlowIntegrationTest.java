@@ -163,8 +163,8 @@ class ApiFlowIntegrationTest {
         assertThat(call(get("/api/v1/careers/" + careerId + "/events"), null, token, 200).at("/data")).hasSize(2);
 
         String stranger = registerAndGetToken();
-        JsonNode denied = call(get("/api/v1/careers/" + careerId), null, stranger, 403);
-        assertThat(denied.at("/error/0/code").asText()).isEqualTo("fc.exception.0009");
+        JsonNode denied = call(get("/api/v1/careers/" + careerId), null, stranger, 404);
+        assertThat(denied.at("/error/0/code").asText()).isEqualTo("fc.exception.0001");
     }
 
     @Test
