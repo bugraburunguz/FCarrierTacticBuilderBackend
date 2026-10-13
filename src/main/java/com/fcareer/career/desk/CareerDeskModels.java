@@ -19,6 +19,9 @@ public final class CareerDeskModels {
     }
 
     public static final int MAX_OVR_UPDATES = 600;
+    public static final int MAX_BACKUP_TAGS = 1000;
+    public static final int MAX_BACKUP_SHORTLIST = 500;
+    public static final int MAX_BACKUP_SEASONS = 100;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record SnapshotDto(long id, Instant takenAt, Integer season, String transferWindow, String source, int playerCount, String note) {
@@ -45,14 +48,14 @@ public final class CareerDeskModels {
     public record TagRequest(@NotNull @Pattern(regexp = "LOCKED|ROTATION|DEVELOPING|FOR_SALE|LOAN_OK") String tag) {
     }
 
-    public record TagDto(long playerId, String tag) {
+    public record TagDto(long playerId, @NotNull @Pattern(regexp = "LOCKED|ROTATION|DEVELOPING|FOR_SALE|LOAN_OK") String tag) {
     }
 
     public record ShortlistRequest(@Size(max = 300) String note, @Min(0) Long maxFeeEur) {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record ShortlistDto(long playerId, String note, Long maxFeeEur, Instant createdAt) {
+    public record ShortlistDto(long playerId, @Size(max = 300) String note, @Min(0) Long maxFeeEur, Instant createdAt) {
     }
 
     /** Kısa liste satırı + gömülü oyuncu özeti (WEB-BUG-13); yedekte kullanılan ShortlistDto değişmez. */
@@ -61,14 +64,16 @@ public final class CareerDeskModels {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record SeasonRecordDto(int season, Integer leaguePosition, List<String> trophies, Long topScorerId, String note) {
+    public record SeasonRecordDto(@Min(1) int season, @Min(0) Integer leaguePosition, @Size(max = 20) List<@Size(max = 60) String> trophies, Long topScorerId, @Size(max = 300) String note) {
     }
 
     public record SeasonRecordRequest(@Min(0) Integer leaguePosition, @Size(max = 20) List<@Size(max = 60) String> trophies, Long topScorerId, @Size(max = 300) String note) {
     }
 
     /** Kariyer yedeği: elle girilen her şey (canlı oyuncu verisi Live Editor import'undan yeniden gelir). */
-    public record Backup(int version, String name, Integer season, Long budgetEur, String spoilerMode, Long wageBudgetEur, String challengeId,
-                         List<TagDto> tags, List<ShortlistDto> shortlist, List<SeasonRecordDto> seasons) {
+    public record Backup(int version, @Size(max = 60) String name, Integer season, @Min(0) Long budgetEur,
+                         @Pattern(regexp = "SHOW|SCOUT_RANGE") String spoilerMode, @Min(0) Long wageBudgetEur, @Size(max = 60) String challengeId,
+                         @Size(max = MAX_BACKUP_TAGS) List<@Valid TagDto> tags, @Size(max = MAX_BACKUP_SHORTLIST) List<@Valid ShortlistDto> shortlist,
+                         @Size(max = MAX_BACKUP_SEASONS) List<@Valid SeasonRecordDto> seasons) {
     }
 }

@@ -103,7 +103,7 @@ public class CareerDeskController {
     }
 
     @PostMapping("/backup")
-    public Backup restore(@AuthenticationPrincipal AuthUser user, @PathVariable Long careerId, @RequestBody Backup backup) {
+    public Backup restore(@AuthenticationPrincipal AuthUser user, @PathVariable Long careerId, @Valid @RequestBody Backup backup) {
         return service.restore(user.id(), careerId, backup);
     }
 }

@@ -126,6 +126,28 @@ class CareerDeskIntegrationTest {
     }
 
     @Test
+    void invalidBackupsAreRejectedWith400NotA500() throws Exception {
+        String token = register();
+        long careerId = createCareer(token);
+        String url = "/api/v1/careers/" + careerId + "/backup";
+        long playerId = call(get("/api/v1/careers/" + careerId + "/squad"), null, token, 200).at("/data/0/player/id").asLong();
+
+        call(post(url), backup(Map.of("tags", List.of(Map.of("playerId", playerId, "tag", "X")))), token, 400);
+        call(post(url), backup(Map.of("spoilerMode", "BOZUK")), token, 400);
+        call(post(url), backup(Map.of("shortlist", List.of(Map.of("playerId", playerId, "maxFeeEur", -1)))), token, 400);
+        call(post(url), backup(Map.of("seasons", List.of(Map.of("season", 2027, "leaguePosition", -3)))), token, 400);
+        call(post(url), backup(Map.of("tags", java.util.Collections.nCopies(5_000, Map.of("playerId", playerId, "tag", "LOCKED")))), token, 400);
+        call(post(url), backup(Map.of("version", 7)), token, 422);
+        call(post(url), backup(Map.of("tags", List.of(Map.of("playerId", playerId, "tag", "LOCKED")))), token, 200);
+    }
+
+    private static Map<String, Object> backup(Map<String, Object> overrides) {
+        Map<String, Object> body = new java.util.HashMap<>(Map.of("version", 1));
+        body.putAll(overrides);
+        return body;
+    }
+
+    @Test
     void otherUsersCannotTouchTheCareer() throws Exception {
         long careerId = createCareer(register());
         String stranger = register();
