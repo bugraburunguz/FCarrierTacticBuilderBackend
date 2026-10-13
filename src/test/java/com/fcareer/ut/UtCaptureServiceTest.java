@@ -23,16 +23,30 @@ class UtCaptureServiceTest {
     private final UtCaptureService service = newService(Map.of());
 
     private static UtCaptureService newService(Map<Long, CatalogInfo> catalog) {
+        return newService(catalog, new ObjectMapper().createObjectNode());
+    }
+
+    private static UtCaptureService newService(Map<Long, CatalogInfo> catalog, com.fasterxml.jackson.databind.JsonNode rarityOverrides) {
         try {
             UtCatalogJoinRepository repository = Mockito.mock(UtCatalogJoinRepository.class);
             Mockito.when(repository.findByEaResourceIds(Mockito.anyCollection())).thenReturn(catalog);
-            UtCaptureService created = new UtCaptureService(new ObjectMapper(), repository, Mockito.mock(com.fcareer.ut.repository.EaIdRepository.class), new com.fcareer.catalog.configuration.CatalogProperties());
+            UtCaptureService created = new UtCaptureService(new ObjectMapper(), repository, Mockito.mock(com.fcareer.ut.repository.EaIdRepository.class), new com.fcareer.catalog.configuration.CatalogProperties(), rulesWithRarities(rarityOverrides));
             Method load = UtCaptureService.class.getDeclaredMethod("loadAttrOrder");
             load.setAccessible(true);
             load.invoke(created);
             return created;
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException(e);
+        }
+    }
+
+    private static com.fcareer.ut.service.UtRules rulesWithRarities(com.fasterxml.jackson.databind.JsonNode byId) {
+        try {
+            com.fasterxml.jackson.databind.node.ObjectNode document = (com.fasterxml.jackson.databind.node.ObjectNode) new ObjectMapper().readTree(new org.springframework.core.io.ClassPathResource("seed/ut-rules.fc27.json").getInputStream());
+            ((com.fasterxml.jackson.databind.node.ObjectNode) document.get("rarities")).set("byId", byId);
+            return com.fcareer.ut.service.UtRules.of(document);
+        } catch (java.io.IOException e) {
+            throw new java.io.UncheckedIOException(e);
         }
     }
 
@@ -162,5 +176,16 @@ class UtCaptureServiceTest {
 
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.process(captures))
                 .isInstanceOf(com.fcareer.common.exception.PayloadTooLargeException.class);
+    }
+
+    @Test
+    void cardTypeComesFromTheRarityIdNotTheLocalizedName() throws Exception {
+        UtCaptureService localized = newService(Map.of(), new ObjectMapper().readTree("{\"77\":{\"cardType\":\"HERO\"},\"78\":{\"cardType\":\"HOF\"}}"));
+        String rarities = "{\"rarities\":[{\"id\":77,\"name\":\"Kahraman Özel\"},{\"id\":78,\"name\":\"Şöhret Salonu\"},{\"id\":72,\"name\":\"Rare Gold\"}]}";
+        CaptureResult result = localized.process(List.of(
+                capture(CDN + "/items/images/backgrounds/itemBGs/futcompitemraritytunables.json", 1, rarities),
+                capture(UT + "/club", 2, "{\"itemData\":[" + item(1, 501, 88, "ST", 77) + "," + item(2, 502, 90, "ST", 78) + "," + item(3, 503, 85, "ST", 72) + "]}")));
+
+        assertThat(result.cards()).extracting("cardType").containsExactly("HERO", "HOF", null);
     }
 }

@@ -2,6 +2,7 @@ package com.fcareer.ut.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
@@ -19,12 +20,31 @@ public class UtRules {
 
     private final JsonNode document;
 
+    @Autowired
     public UtRules(ObjectMapper objectMapper) {
         try (InputStream in = new ClassPathResource(RESOURCE).getInputStream()) {
             document = objectMapper.readTree(in);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    private UtRules(JsonNode document) {
+        this.document = document;
+    }
+
+    /** Test ve araçlar için hazır dokümandan. */
+    public static UtRules of(JsonNode document) {
+        return new UtRules(document);
+    }
+
+    /** Rarity id → kart tipi (ICON/HERO/HOF); eşleme rules.rarities.byId'dedir ve katkı capture'ından doldurulur (VERIFY). Bilinmeyen id için null. */
+    public String cardTypeOfRarity(Integer rarityId) {
+        if (rarityId == null) {
+            return null;
+        }
+        JsonNode type = document.at("/rarities/byId/" + rarityId + "/cardType");
+        return type.isMissingNode() || type.isNull() ? null : type.asText();
     }
 
     public JsonNode document() {

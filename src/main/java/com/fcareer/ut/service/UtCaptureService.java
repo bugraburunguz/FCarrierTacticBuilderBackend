@@ -75,6 +75,7 @@ public class UtCaptureService {
     private final UtCatalogJoinRepository catalogJoinRepository;
     private final com.fcareer.ut.repository.EaIdRepository eaIdRepository;
     private final com.fcareer.catalog.configuration.CatalogProperties catalogProperties;
+    private final UtRules rules;
 
     private List<String> attrOrder;
 
@@ -391,7 +392,7 @@ public class UtCaptureService {
         List<String> face = GOALKEEPER.equals(position) ? GOALKEEPER_FACE : OUTFIELD_FACE;
         Integer gender = item.hasNonNull("gender") ? Integer.valueOf(item.get("gender").asInt()) : (Objects.nonNull(info) ? info.gender() : null);
         return new CaptureCard(item.path("id").asLong(), assetId, ctx.definitions().names().get(assetId), item.path("rating").asInt(), position, positions, rarity,
-                rarityId < 0 ? null : rarityId, cardType(rarity, ctx.definitions().legends().contains(assetId)), teamId, leagueId,
+                rarityId < 0 ? null : rarityId, cardType(rarityId < 0 ? null : rarityId, rarity, ctx.definitions().legends().contains(assetId)), teamId, leagueId,
                 nationId, gender, item.path("untradeable").asBoolean(), face,
                 ints(item.path("attributeArray")), intOrNull(item, "skillmoves"), intOrNull(item, "weakfootabilitytypecode"), intOrNull(item, "preferredfoot"),
                 intOrNull(item, "playStyle"), ints(item.path("baseTraits")), ints(item.path("iconTraits")), ints(item.path("plusRoles")),
@@ -408,7 +409,12 @@ public class UtCaptureService {
         return Objects.isNull(upstream) || upstream.isBlank() ? null : catalogProperties.getFaceProxyPath().replace("{id}", String.valueOf(assetId));
     }
 
-    private static String cardType(String rarity, boolean legend) {
+    /** Kart tipi önce rarity id'den (dilden bağımsız, rules.rarities.byId), yoksa efsane listesinden, son olarak İngilizce ad eşleşmesinden gelir. */
+    private String cardType(Integer rarityId, String rarity, boolean legend) {
+        String mapped = rules.cardTypeOfRarity(rarityId);
+        if (mapped != null) {
+            return mapped;
+        }
         if (legend) {
             return "ICON";
         }

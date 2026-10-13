@@ -488,7 +488,8 @@
   },
   "transferTax": 0.05,
   "rarities": {
-    "_verify": "rarity id → {cardType, designCode, chemKind} katkıcı capture'ından (rareflag) doldurulacak. Bilinen: PLAYER_RARITY_GROUP 23 = TOTW (Auto-SBC FC26)"
+    "_verify": "rarity id → {cardType, designCode, chemKind} katkıcı capture'ından (rareflag) doldurulacak. Bilinen: PLAYER_RARITY_GROUP 23 = TOTW (Auto-SBC FC26)",
+    "byId": {}
   },
   "cardDesign": {
     "mode": "EA_RENDER",
