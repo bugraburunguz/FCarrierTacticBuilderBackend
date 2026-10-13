@@ -11,7 +11,7 @@ Her madde: **Sorun → Düzeltme → Kabul**. Davranış değiştiren her düzel
 - **Düzeltme:** `return withoutPaidInsights(rank(...))` ve limit `SLOT_VIEW_LIMIT` (3). İstersen login zorunlu yap. `/players/compare` ve `/fit/role` ücretli sayılıyorsa aynı kırpmayı uygula.
 - **Kabul:** Anonim preview yanıtında `reasons`, `weaponChecks`, `intentFit` yok, en fazla 3 öğe. Entegrasyon testi.
 
-### BE-BUG-01 · Promo kart fiyatı base karta yazılıyor (veri bozulması)
+### BE-BUG-01 · Promo kart fiyatı base karta yazılıyor (veri bozulması) — DONE (9c09747; TRUNCATE migration bekliyor: veri silme onayı)
 `J/ut/kb/KnowledgeBaseRepository.java:180-184` (`itemIdByAsset`), `J/ut/kb/ContributionService.java:250`, `J/ut/service/UtCaptureService.java:438`
 - **Sorun:** Fiyat `ea_asset_id` ile eşleniyor (oyuncunun tüm versiyonlarında aynı), `ORDER BY (rating = :r) DESC, id`. Capture `resourceId`/`definitionId`'yi hiç tutmuyor. TOTW fiyatı base item'a düşüyor.
 - **Düzeltme:**
@@ -20,13 +20,13 @@ Her madde: **Sorun → Düzeltme → Kabul**. Davranış değiştiren her düzel
   3. `price_obs` ve `price_agg`'yi temizle (migration: `TRUNCATE price_obs, price_agg;` + not).
 - **Kabul:** Base kartı `ut_item`'da olan bir oyuncunun TOTW müzayedesini içeren capture → base item'a 0 gözlem. TOTW item varsa ona yazılır.
 
-### BE-BUG-02 · Fiyat agregasyonu aşağı yanlı
+### BE-BUG-02 · Fiyat agregasyonu aşağı yanlı — DONE (54249aa)
 `J/ut/kb/KnowledgeBaseRepository.java:221-226`
 - **Sorun:** Katkıcı başına %30 sınırı `row_number() OVER (PARTITION BY contributor ORDER BY value)` + `rn <= ceil(total*0.3)` ile yapılıyor. Tek katkıcıda gözlemlerin **en ucuz %30'u** kalıyor, p50 minimuma çöküyor. `KnowledgeBaseIntegrationTest.java:153-160` testi 1000/1100/1200 ile geçiyor çünkü beklenen aralık 1000'i içeriyor.
 - **Düzeltme:** Önce katkıcı×bucket başına medyan, sonra katkıcılar arası yüzdelik (her katkıcının ağırlığı ≤ %30). <2 katkıcıda gözlem bazlı yüzdelik + `low_confidence=true`. Testin beklenen aralığını daralt.
 - **Kabul:** Tek katkıcı {1000,1100,1200} → p50 = 1100. İki katkıcı {1000×10} ve {2000×1} → p50 1000-2000 arası, tek katkıcı baskın değil.
 
-### BE-BUG-03 · Kullanıcının kendi listeleri "market fiyatı" sayılıyor
+### BE-BUG-03 · Kullanıcının kendi listeleri "market fiyatı" sayılıyor — DONE (9c09747)
 `J/ut/service/UtCaptureService.java:163-166,438-439`, `J/ut/kb/ContributionService.java:246-262`
 - **Sorun:** Tradepile, watchlist, trade-status kayıtları `BIN` gözlemi olarak yazılıyor. Tradepile'da kullanıcının **kendi** istediği fiyat var. `item.lastSalePrice` (sahibinin bir zamanlar ödediği) sunucu saatiyle `LAST_SALE` yazılıyor. Sunucu kendi `capture-rules.json` `personalOnly` listesini uygulamıyor.
 - **Düzeltme:** Yalnız `TRANSFER_MARKET` arama sonuçları (`expires > 0`) fiyat olur. `observed_at` = capture `ts`. Item verisinden `LAST_SALE` çıkar. `capture-rules.json`'u `ContributionService`'te sunucu tarafında uygula.
