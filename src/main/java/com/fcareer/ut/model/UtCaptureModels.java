@@ -46,7 +46,7 @@ public final class UtCaptureModels {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record MarketPrice(String source, long assetId, String name, int rating, Long buyNow, Long currentBid, Long startingBid, Long lastSale,
-                              Long expiresIn, CaptureCard card) {
+                              Long expiresIn, CaptureCard card, Long resourceId, Long capturedAt) {
     }
 
     public record Reward(String type, Long value, int count) {

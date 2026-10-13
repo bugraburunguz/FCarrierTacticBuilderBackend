@@ -57,6 +57,7 @@ public class ContributionService {
     private static final int CONFIRMING_CONTRIBUTORS = 2;
     private static final int CONFIRM_REWARD = 1;
     private static final int CONFLICT_PENALTY = -3;
+    private static final String MARKET_SOURCE = "transfermarket";
     private static final Set<String> PLATFORMS = Set.of("CONSOLE", "PC");
 
     private final UtCaptureService captureService;
@@ -65,6 +66,7 @@ public class ContributionService {
     private final CatalogProperties catalogProperties;
     private final ObjectMapper objectMapper;
     private final Clock clock;
+    private final CaptureRules captureRules;
     private final ObjectMapper canonical = com.fasterxml.jackson.databind.json.JsonMapper.builder().enable(com.fasterxml.jackson.databind.SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS).build();
 
     private record Entity(String kind, long id, ObjectNode payload, Instant endsAt) {
@@ -77,7 +79,7 @@ public class ContributionService {
     public ContributionResult contribute(Long userId, List<Capture> captures, String platform) {
         Contributor contributor = contributorService.require(userId);
         String normalizedPlatform = Objects.nonNull(platform) && PLATFORMS.contains(platform.toUpperCase()) ? platform.toUpperCase() : "CONSOLE";
-        CaptureResult result = captureService.process(captures, userId);
+        CaptureResult result = captureService.process(captures.stream().filter(c -> Objects.isNull(c.url()) || !captureRules.isPersonalOnly(c.url())).toList(), userId);
         int created = 0;
         int updated = 0;
         int unchanged = 0;
@@ -240,24 +242,23 @@ public class ContributionService {
         return entities;
     }
 
-    /** Market fiyatı gözlemi: satıcı/alıcı kimliği hiç taşınmaz; yalnız (kart, platform, zaman, fiyat). Tanınmayan kart atlanır. */
+    /** Market fiyatı gözlemi (BE-BUG-01/03): yalnız canlı transfer pazarı sonuçları, yalnız (oyun sürümü, EA resourceId) ile eşlenen item; satıcı/alıcı kimliği taşınmaz. */
     private int[] recordPrices(Contributor contributor, List<MarketPrice> prices, String platform) {
         short gv = catalogProperties.getDefaultGameVersion();
-        Instant now = clock.instant();
         int recorded = 0;
         int skipped = 0;
         for (MarketPrice price : prices) {
-            var itemId = repository.itemIdByAsset(price.assetId(), price.rating(), gv);
+            if (!MARKET_SOURCE.equals(price.source()) || Objects.isNull(price.expiresIn()) || price.expiresIn() <= 0) {
+                continue;
+            }
+            var itemId = Objects.isNull(price.resourceId()) ? java.util.Optional.<Long>empty() : repository.itemIdByResource(price.resourceId(), gv);
             if (itemId.isEmpty()) {
                 skipped++;
                 continue;
             }
             if (Objects.nonNull(price.buyNow()) && price.buyNow() > 0 && price.buyNow() <= Integer.MAX_VALUE) {
-                repository.insertPriceObservation(itemId.get(), platform, now, "BIN", price.buyNow().intValue(), contributor.id());
-                recorded++;
-            }
-            if (Objects.nonNull(price.lastSale()) && price.lastSale() > 0 && price.lastSale() <= Integer.MAX_VALUE) {
-                repository.insertPriceObservation(itemId.get(), platform, now, "LAST_SALE", price.lastSale().intValue(), contributor.id());
+                Instant at = Objects.isNull(price.capturedAt()) || price.capturedAt() <= 0 ? clock.instant() : Instant.ofEpochMilli(price.capturedAt());
+                repository.insertPriceObservation(itemId.get(), platform, at, "BIN", price.buyNow().intValue(), contributor.id());
                 recorded++;
             }
         }

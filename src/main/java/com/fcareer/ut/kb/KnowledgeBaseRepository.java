@@ -177,10 +177,8 @@ public class KnowledgeBaseRepository {
                 Map.of("a", eaAssetId, "gv", gameVersion), itemMapper());
     }
 
-    public Optional<Long> itemIdByAsset(long eaAssetId, int rating, short gameVersion) {
-        List<Long> found = jdbc.queryForList("SELECT id FROM ut_item WHERE ea_asset_id = :a AND game_version_id = :gv ORDER BY (rating = :r) DESC, id LIMIT 1",
-                Map.of("a", eaAssetId, "gv", gameVersion, "r", rating), Long.class);
-        return found.stream().findFirst();
+    public Optional<Long> itemIdByResource(long eaResourceId, short gameVersion) {
+        return jdbc.queryForList("SELECT id FROM ut_item WHERE ea_resource_id = :r AND game_version_id = :gv", Map.of("r", eaResourceId, "gv", gameVersion), Long.class).stream().findFirst();
     }
 
     public int syncBaseItems(short gameVersion) {

@@ -58,6 +58,7 @@ public class UtKnowledgeController {
     private final CatalogProperties catalogProperties;
     private final ObjectMapper objectMapper;
     private final Clock clock;
+    private final CaptureRules captureRules;
 
     @GetMapping("/rules")
     public JsonNode rules() throws IOException {
@@ -68,10 +69,8 @@ public class UtKnowledgeController {
 
     /** Extension'ın açılışta çektiği tek kaynaklı yakalama kuralları (EXT-04): deny listesi, kişisel/katkı uçları, minimum sürüm. */
     @GetMapping("/capture/rules")
-    public JsonNode captureRules() throws IOException {
-        try (InputStream in = new ClassPathResource("seed/capture-rules.json").getInputStream()) {
-            return objectMapper.readTree(in);
-        }
+    public JsonNode captureRules() {
+        return captureRules.rules();
     }
 
     @GetMapping("/kb/sbc")

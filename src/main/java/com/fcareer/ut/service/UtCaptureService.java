@@ -160,10 +160,10 @@ public class UtCaptureService {
         addCards(cards, bodies.get(Kind.PURCHASED), "purchased", ctx);
 
         List<MarketPrice> prices = new ArrayList<>();
-        addPrices(prices, bodies.get(Kind.TRANSFER_MARKET), "transfermarket", ctx);
-        addPrices(prices, bodies.get(Kind.TRADE_PILE), "tradepile", ctx);
-        addPrices(prices, bodies.get(Kind.WATCH_LIST), "watchlist", ctx);
-        addPrices(prices, bodies.get(Kind.TRADE_STATUS), "tradestatus", ctx);
+        addPrices(prices, bodies.get(Kind.TRANSFER_MARKET), raw.get(Kind.TRANSFER_MARKET), "transfermarket", ctx);
+        addPrices(prices, bodies.get(Kind.TRADE_PILE), raw.get(Kind.TRADE_PILE), "tradepile", ctx);
+        addPrices(prices, bodies.get(Kind.WATCH_LIST), raw.get(Kind.WATCH_LIST), "watchlist", ctx);
+        addPrices(prices, bodies.get(Kind.TRADE_STATUS), raw.get(Kind.TRADE_STATUS), "tradestatus", ctx);
 
         Map<String, Integer> byKind = new LinkedHashMap<>();
         raw.forEach((k, v) -> byKind.put(k.name(), v.size()));
@@ -424,11 +424,13 @@ public class UtCaptureService {
         return lower.contains("hero") ? "HERO" : null;
     }
 
-    private void addPrices(List<MarketPrice> prices, List<JsonNode> bodies, String source, Ctx ctx) {
+    private void addPrices(List<MarketPrice> prices, List<JsonNode> bodies, List<Capture> captures, String source, Ctx ctx) {
         if (Objects.isNull(bodies)) {
             return;
         }
-        for (JsonNode body : bodies) {
+        for (int i = 0; i < bodies.size(); i++) {
+            JsonNode body = bodies.get(i);
+            Long capturedAt = captures.get(i).ts();
             body.path("auctionInfo").forEach(auction -> {
                 JsonNode item = auction.path("itemData");
                 if (!item.hasNonNull("assetId")) {
@@ -437,9 +439,14 @@ public class UtCaptureService {
                 long assetId = item.get("assetId").asLong();
                 prices.add(new MarketPrice(source, assetId, ctx.definitions().names().get(assetId), item.path("rating").asInt(), longOrNull(auction, "buyNowPrice"),
                         longOrNull(auction, "currentBid"), longOrNull(auction, "startingBid"), longOrNull(item, "lastSalePrice"), longOrNull(auction, "expires"),
-                        card(item, source, ctx)));
+                        card(item, source, ctx), resourceId(item), capturedAt));
             });
         }
+    }
+
+    private static Long resourceId(JsonNode item) {
+        Long resource = longOrNull(item, "resourceId");
+        return Objects.nonNull(resource) ? resource : longOrNull(item, "definitionId");
     }
 
     private ActiveSquad activeSquad(JsonNode squad, Ctx ctx, Map<String, FormationConfig> formations, Map<Integer, String> positionNames) {
