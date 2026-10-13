@@ -29,6 +29,12 @@ services:
     # Port yayımlanmaz: yalnız compose ağındaki backend erişir.
     volumes:
       - ./ml-service/models:/srv/models:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
 
   backend:
     build: .
@@ -36,6 +42,8 @@ services:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      ml:
         condition: service_healthy
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/fcareer
@@ -60,13 +68,26 @@ services:
       WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:8081}
       FCAREER_BOOTSTRAP_ADMIN_EMAIL: ${FCAREER_BOOTSTRAP_ADMIN_EMAIL:-}
       REGISTRATIONS_PER_IP_DAILY: ${REGISTRATIONS_PER_IP_DAILY:-5}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
 
   web:
     build: ../FCarrierTacticBuilderWeb
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
       - "8081:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 5s
 
 volumes:
   pgdata:

@@ -56,6 +56,10 @@ server:
   forward-headers-strategy: native
 
 management:
+  health:
+    # Posta sunucusu opsiyonel (E-posta doğrulaması kapalıyken yok); göstergesi servisi DOWN yapmasın.
+    mail:
+      enabled: false
   endpoints:
     web:
       exposure:
