@@ -20,6 +20,7 @@ import static com.fcareer.common.constants.ApiConstants.BEARER_PREFIX;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     public static final String ROLE_USER = "ROLE_USER";
+    public static final String ROLE_ADMIN = "ROLE_ADMIN";
 
     private final JwtService jwtService;
 
@@ -30,7 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (Objects.nonNull(header) && header.startsWith(BEARER_PREFIX)) {
             jwtService.parseAccessToken(header.substring(BEARER_PREFIX.length()).trim()).ifPresent(user ->
                     SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
-                            user, null, AuthorityUtils.createAuthorityList(ROLE_USER))));
+                            user, null, user.admin() ? AuthorityUtils.createAuthorityList(ROLE_USER, ROLE_ADMIN) : AuthorityUtils.createAuthorityList(ROLE_USER))));
         }
         chain.doFilter(request, response);
     }

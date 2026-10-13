@@ -42,7 +42,7 @@ class BaseItemSyncIntegrationTest {
     }
 
     private void sync() throws Exception {
-        call(post("/api/v1/admin/ut/items/sync-base").header("X-Admin-Key", "test-key"), null, 200);
+        call(post("/api/v1/admin/ut/items/sync-base").header("Authorization", "Bearer " + com.fcareer.AdminTestSupport.adminToken(mockMvc, jdbc, objectMapper)), null, 200);
     }
 
     @Test

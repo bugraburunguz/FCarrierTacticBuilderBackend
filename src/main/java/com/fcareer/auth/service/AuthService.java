@@ -9,6 +9,7 @@ import com.fcareer.auth.model.request.RegisterRequest;
 import com.fcareer.auth.model.response.MeResponse;
 import com.fcareer.auth.model.response.TokenResponse;
 import com.fcareer.auth.repository.AppUserRepository;
+import com.fcareer.auth.security.AuthUser;
 import com.fcareer.auth.security.JwtService;
 import com.fcareer.auth.security.RefreshTokenStore;
 import com.fcareer.billing.configuration.BillingProperties;
@@ -52,6 +53,7 @@ public class AuthService {
     private final CreditService creditService;
     private final RegistrationLimiter registrationLimiter;
     private final EmailVerificationService emailVerification;
+    private final BootstrapAdmin bootstrapAdmin;
     private final SecureRandom secureRandom = new SecureRandom();
     private volatile String dummyHash;
 
@@ -78,6 +80,10 @@ public class AuthService {
         user.setSubscriptionType(SubscriptionType.FREE);
         user.setDailyCreditLimit(billingProperties.getDailyCredits());
         user.setEmailVerified(!emailVerification.required());
+        if (bootstrapAdmin.matches(email)) {
+            user.setRole(AuthUser.ROLE_ADMIN);
+            log.info("bootstrap admin atandı");
+        }
         creditService.initialize(user);
         try {
             user = appUserRepository.saveAndFlush(user);
@@ -136,6 +142,7 @@ public class AuthService {
                 .creditBalance(status.premium() ? null : status.balance())
                 .dailyCreditLimit(status.dailyLimit())
                 .showAds(!status.premium())
+                .role(user.getRole())
                 .emailVerified(user.isEmailVerified())
                 .emailVerificationRequired(emailVerification.required())
                 .createdAt(user.getCreatedAt())
@@ -148,7 +155,7 @@ public class AuthService {
         String refreshToken = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
         refreshTokenStore.save(hash(refreshToken), user.getId(), securityProperties.getJwt().getRefreshTtl());
         return TokenResponse.builder()
-                .accessToken(jwtService.createAccessToken(user.getId(), user.getEmail()))
+                .accessToken(jwtService.createAccessToken(user.getId(), user.getEmail(), user.getRole()))
                 .refreshToken(refreshToken)
                 .tokenType(BEARER)
                 .expiresInSeconds(jwtService.accessTtlSeconds())

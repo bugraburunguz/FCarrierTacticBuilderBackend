@@ -1,7 +1,9 @@
 package com.fcareer.ut.kb;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fcareer.auth.security.AuthUser;
 import com.fcareer.catalog.configuration.CatalogProperties;
+import org.springframework.security.core.Authentication;
 import com.fcareer.common.exception.InvalidTacticException;
 import com.fcareer.ingestion.service.IngestionRunRepository;
 import com.fcareer.ut.kb.KbModels.QueueItem;
@@ -29,7 +31,7 @@ import static com.fcareer.common.constants.ApiConstants.ADMIN_PATH;
 @RequiredArgsConstructor
 public class UtAdminController {
 
-    private static final String ACTOR = "admin-key";
+    private static final String MACHINE_ACTOR = "admin-key";
     private static final Map<String, String> KINDS = Map.of(
             "sbc-set", ContributionService.SBC_SET, "sbc-challenge", ContributionService.SBC_CHALLENGE,
             "objective-group", ContributionService.OBJECTIVE_GROUP, "evolution", ContributionService.EVOLUTION);
@@ -50,6 +52,11 @@ public class UtAdminController {
     private final ContributorService contributorService;
     private final CatalogProperties catalogProperties;
     private final Clock clock;
+
+    /** Denetim kaydında admin kullanıcı kimliği (user:<id>); makine anahtarı yalnız ingestion uçlarına girebildiği için burada çıkmaz. */
+    private static String actor(Authentication authentication) {
+        return authentication != null && authentication.getPrincipal() instanceof AuthUser user ? "user:" + user.id() : MACHINE_ACTOR;
+    }
 
     @GetMapping("/ingestion-runs")
     public List<Map<String, Object>> ingestionRuns() {
@@ -112,14 +119,14 @@ public class UtAdminController {
     }
 
     @PostMapping("/contributors/{userId}/grant")
-    public Map<String, String> grant(@PathVariable long userId) {
-        contributorService.grant(userId, ACTOR);
+    public Map<String, String> grant(@PathVariable long userId, Authentication authentication) {
+        contributorService.grant(userId, actor(authentication));
         return Map.of("status", "GRANTED");
     }
 
     @PostMapping("/contributors/{userId}/revoke")
-    public Map<String, String> revoke(@PathVariable long userId) {
-        contributorService.revoke(userId, ACTOR);
+    public Map<String, String> revoke(@PathVariable long userId, Authentication authentication) {
+        contributorService.revoke(userId, actor(authentication));
         return Map.of("status", "REVOKED");
     }
 

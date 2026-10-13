@@ -132,7 +132,7 @@ class PriceCaptureIntegrationTest {
     }
 
     private void aggregate() throws Exception {
-        mockMvc.perform(post("/api/v1/admin/ut/prices/aggregate").header("X-Admin-Key", "test-key")).andReturn();
+        mockMvc.perform(post("/api/v1/admin/ut/prices/aggregate").header("Authorization", "Bearer " + adminToken())).andReturn();
     }
 
     @Test
@@ -141,9 +141,18 @@ class PriceCaptureIntegrationTest {
         contribute("/transfermarket", definitionOnly, auction(66_666_666L, 91, 5000, 3000), auction(66_666_667L, 91, 5000, 3000));
 
         assertThat(count(totwItem)).isEqualTo(1);
-        JsonNode stats = call(get("/api/v1/admin/ut/price-stats").header("X-Admin-Key", "test-key"), null, null, 200).at("/data/0");
+        JsonNode stats = call(get("/api/v1/admin/ut/price-stats").header("Authorization", "Bearer " + adminToken()), null, null, 200).at("/data/0");
         assertThat(stats.at("/recorded").asInt()).isEqualTo(1);
         assertThat(stats.at("/skippedUnknownItem").asInt()).isEqualTo(2);
+    }
+
+    private String adminBearer;
+
+    private String adminToken() throws Exception {
+        if (adminBearer == null) {
+            adminBearer = com.fcareer.AdminTestSupport.adminToken(mockMvc, jdbc, objectMapper);
+        }
+        return adminBearer;
     }
 
     private int count(long itemId) {

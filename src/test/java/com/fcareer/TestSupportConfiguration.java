@@ -1,6 +1,7 @@
 package com.fcareer;
 
 import com.fcareer.auth.security.RefreshTokenStore;
+import com.fcareer.common.redis.RedisCounter;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -30,6 +31,25 @@ public class TestSupportConfiguration {
             @Override
             public Optional<LinkGrant> resolve(String token) {
                 return Optional.ofNullable(grants.get(token));
+            }
+        };
+    }
+
+    /** Testlerde Redis yok: sayaç bellek içi (fail-closed kapıların test edilebilmesi için). */
+    @Bean
+    @Primary
+    public RedisCounter inMemoryCounter() {
+        Map<String, java.util.concurrent.atomic.AtomicLong> counts = new ConcurrentHashMap<>();
+        return new RedisCounter(null) {
+            @Override
+            public long increment(String key, Duration window) {
+                return counts.computeIfAbsent(key, k -> new java.util.concurrent.atomic.AtomicLong()).incrementAndGet();
+            }
+
+            @Override
+            public long current(String key) {
+                java.util.concurrent.atomic.AtomicLong value = counts.get(key);
+                return value == null ? 0 : value.get();
             }
         };
     }

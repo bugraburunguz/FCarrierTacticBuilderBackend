@@ -93,7 +93,7 @@ class KnowledgeBaseIntegrationTest {
 
         JsonNode conflict = call(post("/api/v1/ut/contrib/capture"), Map.of("captures", captures(hub("Marquee"), challenge(80))), token1, 200);
         assertThat(conflict.at("/data/queued").asInt()).isEqualTo(1);
-        assertThat(call(get("/api/v1/admin/ut/queue").header(ADMIN_KEY, "test-key"), null, null, 200).at("/data")).hasSize(1);
+        assertThat(call(get("/api/v1/admin/ut/queue").header("Authorization", admin()), null, null, 200).at("/data")).hasSize(1);
 
         JsonNode agreed = call(post("/api/v1/ut/contrib/capture"), Map.of("captures", captures(hub("Marquee"), challenge(80))), token2, 200);
         assertThat(agreed.at("/data/updated").asInt()).isEqualTo(1);
@@ -109,13 +109,13 @@ class KnowledgeBaseIntegrationTest {
         call(post("/api/v1/ut/contrib/capture"), Map.of("captures", captures(hub("Marquee"), challenge(75))), token, 200);
         call(post("/api/v1/ut/contrib/capture"), Map.of("captures", captures(hub("Marquee"), challenge(81))), token, 200);
 
-        JsonNode queue = call(get("/api/v1/admin/ut/queue").header(ADMIN_KEY, "test-key"), null, null, 200).at("/data");
+        JsonNode queue = call(get("/api/v1/admin/ut/queue").header("Authorization", admin()), null, null, 200).at("/data");
         long queueId = queue.get(0).get("id").asLong();
         String candidate = queue.get(0).at("/candidates/1/hash").asText();
-        call(post("/api/v1/admin/ut/queue/" + queueId + "/resolve").header(ADMIN_KEY, "test-key"), Map.of("hash", candidate), null, 200);
+        call(post("/api/v1/admin/ut/queue/" + queueId + "/resolve").header("Authorization", admin()), Map.of("hash", candidate), null, 200);
 
         assertThat(call(get("/api/v1/ut/kb/sbc/9036"), null, null, 200).at("/data/challenges/0/requirements").toString()).contains("81");
-        assertThat(call(get("/api/v1/admin/ut/queue").header(ADMIN_KEY, "test-key"), null, null, 200).at("/data")).isEmpty();
+        assertThat(call(get("/api/v1/admin/ut/queue").header("Authorization", admin()), null, null, 200).at("/data")).isEmpty();
     }
 
     @Test
@@ -142,7 +142,7 @@ class KnowledgeBaseIntegrationTest {
     void publicRulesItemsAndPriceAggregation() throws Exception {
         assertThat(call(get("/api/v1/ut/rules"), null, null, 200).at("/data/squadRating/sizes/sbc").asInt()).isEqualTo(11);
 
-        call(post("/api/v1/admin/ut/items/sync-base").header(ADMIN_KEY, "test-key"), null, null, 200);
+        call(post("/api/v1/admin/ut/items/sync-base").header("Authorization", admin()), null, null, 200);
         JsonNode items = call(get("/api/v1/ut/kb/items?limit=3"), null, null, 200).at("/data");
         assertThat(items.size()).isEqualTo(3);
         long itemId = items.get(0).get("id").asLong();
@@ -154,7 +154,7 @@ class KnowledgeBaseIntegrationTest {
         for (int value : List.of(1000, 1100, 1200, 90000)) {
             jdbc.update("INSERT INTO price_obs (ut_item_id, platform, observed_at, kind, value, contributor_id) VALUES (?, 'CONSOLE', now(), 'BIN', ?, ?)", itemId, value, contributorId);
         }
-        call(post("/api/v1/admin/ut/prices/aggregate").header(ADMIN_KEY, "test-key"), null, null, 200);
+        call(post("/api/v1/admin/ut/prices/aggregate").header("Authorization", admin()), null, null, 200);
         JsonNode prices = call(get("/api/v1/ut/kb/items/" + itemId + "/prices?platform=CONSOLE&range=24h"), null, null, 200).at("/data");
         assertThat(prices).isNotEmpty();
         assertThat(prices.get(0).get("p50").asInt()).isEqualTo(1100);
@@ -164,12 +164,12 @@ class KnowledgeBaseIntegrationTest {
     @Test
     void adminCanEnterSetsByHand() throws Exception {
         JsonNode body = objectMapper.readTree("{\"name\":\"Elle\",\"category\":\"Upgrades\",\"repeatable\":true,\"reward\":[{\"type\":\"pack\",\"name\":\"Gold\"}]}");
-        call(put("/api/v1/admin/ut/sbc-set/9100").header(ADMIN_KEY, "test-key"), body, null, 200);
-        call(put("/api/v1/admin/ut/promos").header(ADMIN_KEY, "test-key"), Map.of("code", "totw", "name", "Team of the Week"), null, 200);
+        call(put("/api/v1/admin/ut/sbc-set/9100").header("Authorization", admin()), body, null, 200);
+        call(put("/api/v1/admin/ut/promos").header("Authorization", admin()), Map.of("code", "totw", "name", "Team of the Week"), null, 200);
 
         assertThat(call(get("/api/v1/ut/kb/sbc/9100"), null, null, 200).at("/data/name").asText()).isEqualTo("Elle");
         assertThat(call(get("/api/v1/ut/kb/promos"), null, null, 200).at("/data").toString()).contains("TOTW");
-        call(put("/api/v1/admin/ut/unknown/1").header(ADMIN_KEY, "test-key"), body, null, 400);
+        call(put("/api/v1/admin/ut/unknown/1").header("Authorization", admin()), body, null, 400);
     }
 
     @Test
@@ -206,8 +206,17 @@ class KnowledgeBaseIntegrationTest {
         return call(post("/api/v1/auth/login"), Map.of("email", email, "password", "Sup3rSecret!"), null, 200).at("/data/accessToken").asText();
     }
 
+    private String adminBearer;
+
+    private String admin() throws Exception {
+        if (adminBearer == null) {
+            adminBearer = com.fcareer.AdminTestSupport.adminToken(mockMvc, jdbc, objectMapper);
+        }
+        return "Bearer " + adminBearer;
+    }
+
     private void admin(String path) throws Exception {
-        call(post(path).header(ADMIN_KEY, "test-key"), null, null, 200);
+        call(post(path).header("Authorization", admin()), null, null, 200);
     }
 
     private JsonNode call(MockHttpServletRequestBuilder builder, Object body, String token, int expectedStatus) throws Exception {

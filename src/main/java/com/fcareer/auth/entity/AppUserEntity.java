@@ -50,6 +50,10 @@ public class AppUserEntity {
     @Column(nullable = false)
     private boolean emailVerified = true;
 
+    /** USER | ADMIN; admin yetkisi JWT role claim ile taşınır (BE-SEC-07). */
+    @Column(nullable = false)
+    private String role = "USER";
+
     @CreatedDate
     @Column(columnDefinition = "timestamptz", updatable = false)
     private Instant createdAt;

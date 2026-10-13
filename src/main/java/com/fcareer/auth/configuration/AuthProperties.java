@@ -12,6 +12,8 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "fcareer.auth")
 public class AuthProperties {
 
+    /** Açılışta ve kayıtta bu e-posta ADMIN olur (FCAREER_BOOTSTRAP_ADMIN_EMAIL); boşsa kapalı. */
+    private String bootstrapAdminEmail = "";
     private Registration registration = new Registration();
     private EmailVerification emailVerification = new EmailVerification();
 

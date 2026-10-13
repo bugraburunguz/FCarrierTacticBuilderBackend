@@ -21,6 +21,7 @@ public class MeResponse {
     private Integer creditBalance;
     private int dailyCreditLimit;
     private boolean showAds;
+    private String role;
     private boolean emailVerified;
     private boolean emailVerificationRequired;
     private Instant createdAt;

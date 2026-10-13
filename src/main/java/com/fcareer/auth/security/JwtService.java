@@ -21,6 +21,7 @@ public class JwtService {
 
     private static final int MIN_SECRET_BYTES = 32;
     private static final String EMAIL_CLAIM = "email";
+    private static final String ROLE_CLAIM = "role";
 
     private final SecurityProperties.Jwt config;
     private final SecretKey key;
@@ -36,12 +37,13 @@ public class JwtService {
         this.key = Keys.hmacShaKeyFor(secret);
     }
 
-    public String createAccessToken(Long userId, String email) {
+    public String createAccessToken(Long userId, String email, String role) {
         Instant now = clock.instant();
         return Jwts.builder()
                 .issuer(config.getIssuer())
                 .subject(String.valueOf(userId))
                 .claim(EMAIL_CLAIM, email)
+                .claim(ROLE_CLAIM, role)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plus(config.getAccessTtl())))
                 .signWith(key)
@@ -57,7 +59,8 @@ public class JwtService {
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
-            return Optional.of(new AuthUser(Long.valueOf(claims.getSubject()), claims.get(EMAIL_CLAIM, String.class)));
+            String role = claims.get(ROLE_CLAIM, String.class);
+            return Optional.of(new AuthUser(Long.valueOf(claims.getSubject()), claims.get(EMAIL_CLAIM, String.class), AuthUser.ROLE_ADMIN.equals(role) ? AuthUser.ROLE_ADMIN : AuthUser.ROLE_USER));
         } catch (JwtException | IllegalArgumentException e) {
             log.debug("Access token rejected reason : {}", e.getMessage());
             return Optional.empty();

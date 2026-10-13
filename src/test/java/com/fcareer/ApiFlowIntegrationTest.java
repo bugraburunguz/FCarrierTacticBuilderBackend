@@ -81,7 +81,7 @@ class ApiFlowIntegrationTest {
     void protectedEndpointsRequireTokenAndAdminRequiresKey() throws Exception {
         call(get("/api/v1/me"), null, null, 401);
         call(get("/api/v1/me"), null, "garbage.token.value", 401);
-        call(post("/api/v1/admin/ingestion/run"), null, null, 403);
+        call(post("/api/v1/admin/ingestion/run"), null, null, 401);
         JsonNode admin = call(post("/api/v1/admin/ingestion/run").header("X-Admin-Key", "test-key"), null, null, 200);
         assertThat(admin.at("/success").asBoolean()).isTrue();
         call(get("/api/v1/roles"), null, null, 200);
