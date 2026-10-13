@@ -1,5 +1,6 @@
 package com.fcareer.tacticcode.service;
 
+import com.fcareer.common.exception.EaRoleUnavailableException;
 import com.fcareer.common.exception.InvalidTacticException;
 import com.fcareer.fitengine.model.FitRole;
 import com.fcareer.fitengine.model.IntentProfile;
@@ -117,13 +118,11 @@ public class TacticCodeService {
                 .filter(r -> r.position().equals(position) && normalize(r.name()).equals(normalize(role.getBaseRole())))
                 .findFirst();
         if (eaRole.isEmpty()) {
-            warnings.add(ourSlot.getSlotId() + ": " + role.getName() + " EA'da " + position + " için yok; formasyonun varsayılan rolü kullanıldı");
-            return new EaSlot(ea.roleIds().get(index), 0);
+            throw new EaRoleUnavailableException(ourSlot.getSlotId() + ": " + role.getName() + " EA'da " + position + " için yok");
         }
         int focusIndex = focusIndex(eaRole.get(), role.getFocus());
         if (focusIndex < 0) {
-            warnings.add(ourSlot.getSlotId() + ": " + role.getName() + " odağı EA'da yok; " + eaRole.get().focuses().get(0) + " odağı kullanıldı");
-            return new EaSlot(eaRole.get().id(), 0);
+            throw new EaRoleUnavailableException(ourSlot.getSlotId() + ": " + role.getName() + " odağı EA'da " + position + " için yok");
         }
         return new EaSlot(eaRole.get().id(), focusIndex);
     }
