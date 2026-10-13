@@ -75,6 +75,11 @@ public class TestSupportConfiguration {
             }
 
             @Override
+            public void delete(String tokenHash) {
+                tokens.remove(tokenHash);
+            }
+
+            @Override
             public Optional<Long> usedBy(String tokenHash) {
                 return Optional.ofNullable(used.get(tokenHash));
             }

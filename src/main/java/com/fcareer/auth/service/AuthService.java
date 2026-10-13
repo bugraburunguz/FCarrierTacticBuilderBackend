@@ -128,7 +128,7 @@ public class AuthService {
     }
 
     public void logout(RefreshRequest request) {
-        refreshTokenStore.consume(hash(request.getRefreshToken()));
+        refreshTokenStore.delete(hash(request.getRefreshToken()));
     }
 
     @Transactional

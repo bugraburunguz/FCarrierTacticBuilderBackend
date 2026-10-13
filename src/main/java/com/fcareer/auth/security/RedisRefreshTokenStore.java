@@ -54,6 +54,19 @@ public class RedisRefreshTokenStore implements RefreshTokenStore {
     }
 
     @Override
+    public void delete(String tokenHash) {
+        try {
+            String userId = redisTemplate.opsForValue().getAndDelete(REFRESH_TOKEN_PREFIX + tokenHash);
+            if (Objects.nonNull(userId)) {
+                redisTemplate.opsForSet().remove(USER_PREFIX + userId, tokenHash);
+            }
+        } catch (DataAccessException e) {
+            log.error("Refresh token delete failed", e);
+            throw new DownstreamServiceException(REDIS);
+        }
+    }
+
+    @Override
     public Optional<Long> usedBy(String tokenHash) {
         try {
             String userId = redisTemplate.opsForValue().get(USED_PREFIX + tokenHash);
