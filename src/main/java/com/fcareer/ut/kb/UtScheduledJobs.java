@@ -1,17 +1,16 @@
 package com.fcareer.ut.kb;
 
+import com.fcareer.common.scheduling.JobLock;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.time.Duration;
-import java.util.Objects;
 
-/** Zamanlanmış işler; çok örnekli çalışmada Postgres advisory lock ile tek örnek çalışır (ShedLock yerine bağımlılıksız). */
+/** Zamanlanmış işler; çok örnekli çalışmada transaction ömürlü Postgres advisory lock ile tek örnek çalışır (JobLock). */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -22,24 +21,14 @@ public class UtScheduledJobs {
     private static final Duration PRICE_WINDOW = Duration.ofHours(3);
 
     private final KnowledgeBaseRepository repository;
-    private final JdbcTemplate jdbc;
+    private final JobLock jobLock;
     private final Clock clock;
 
     @Scheduled(cron = "0 7 * * * *")
     public void aggregatePrices() {
-        Boolean locked = jdbc.queryForObject("SELECT pg_try_advisory_lock(?)", Boolean.class, PRICE_LOCK);
-        if (!Boolean.TRUE.equals(locked)) {
-            return;
-        }
-        try {
+        jobLock.runExclusive(PRICE_LOCK, () -> {
             int buckets = repository.aggregatePrices(clock.instant().minus(PRICE_WINDOW));
             log.info("Price aggregation done buckets : {}", buckets);
-        } finally {
-            jdbc.queryForObject("SELECT pg_advisory_unlock(?)", Boolean.class, PRICE_LOCK);
-        }
-    }
-
-    static boolean enabled(Boolean value) {
-        return Objects.nonNull(value) && value;
+        });
     }
 }
