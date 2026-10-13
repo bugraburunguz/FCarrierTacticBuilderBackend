@@ -70,18 +70,18 @@ Her madde: **Sorun → Düzeltme → Kabul**. Davranış değiştiren her düzel
 - **Düzeltme:** `app_user.role` (USER/ADMIN), JWT'de rol, `/admin/**` ADMIN rolüne. Anahtar yalnız makineden makineye ingestion için kalsın. Kilit fail-closed. `contributor_audit.actor` = user id.
 - **Kabul:** Admin sayfası JWT ile çalışır. Audit satırında user id.
 
-### BE-SEC-08 (P2) · Token/şifre kenar durumları
+### BE-SEC-08 (P2) · Token/şifre kenar durumları — **DONE(830fbd2)**
 - Logout token'ı "used" işaretliyor → sonra replay edilirse kullanıcının tüm oturumları iptal (`RedisRefreshTokenStore.java:48`). **Düzelt:** logout ayrı `delete` kullansın.
 - `RefreshRequest`'te `@Size` yok. **Düzelt:** `@Size(max=128)`.
 - Şifre 72 **karakter** sınırı, bcrypt sınırı 72 **byte**. Türkçe çok baytlı 72 byte üstü şifre Spring Security 6.5 bcrypt'te exception → 500 (`RegisterRequest.java:23`). **Düzelt:** UTF-8 byte uzunluğunu doğrula. **Kabul:** 2 byte'lık 40 karakter şifre → 400.
 
-### BE-SEC-09 (P2) · Kariyer varlığı durum koduyla sızıyor
+### BE-SEC-09 (P2) · Kariyer varlığı durum koduyla sızıyor — **DONE(1b7454d)**
 `CareerService.java:392-405`: olmayan kariyer 404, başkasınınki 403. **Düzelt:** ikisi de 404.
 
-### BE-SEC-10 (P2) · Link token tekrar kullanılabilir, mod kontrolsüz
+### BE-SEC-10 (P2) · Link token tekrar kullanılabilir, mod kontrolsüz — **DONE(abef62a)**
 `RedisLinkTokenStore.java:42-53`, `LinkTokenFilter.java:33`: 15 dk tekrar kullanılabilir (V13 yorumu tek kullanımlık diyor). PERSONAL token `/ut/contrib/*`'da kabul ediliyor. Gövdedeki `CaptureRequest.linkToken` yok sayılıyor. **Düzelt:** contrib ucunda `fc.linkMode == CONTRIB` zorunlu. Gövde alanını ya uygula ya kaldır.
 
-### BE-SEC-11 (P2) · Yüz proxy cache'i takedown ve bellekle çelişiyor
+### BE-SEC-11 (P2) · Yüz proxy cache'i takedown ve bellekle çelişiyor — **DONE(a3468cc)**
 `FaceImageController.java:31`, `FaceImageService.java:27-28,51-69`
 - 30 gün `immutable` public cache ↔ 48 saat takedown sözü. 400 giriş × 2 MB = 800 MB heap riski. Miss cache'lenmiyor, EA'ya istek yükseltiyor.
 - **Düzelt:** `Cache-Control: public, max-age=86400` (immutable değil). Disk/Redis cache, anahtar `(kind, id, locale, template_version)`, negatif cache 1 saat, toplam byte sınırı (64 MB). Content-Type upstream'den. Detay: 06 §3.
@@ -139,34 +139,34 @@ Her madde: **Sorun → Düzeltme → Kabul**. Davranış değiştiren her düzel
 ### BE-BUG-11 · Framework exception'ları 500 oluyor
 `GlobalExceptionAdvice.java:74-78`. Açık handler ekle: `NoResourceFoundException`→404, `HttpRequestMethodNotSupportedException`→405, `HttpMediaTypeNotSupportedException`→415, `HandlerMethodValidationException`→400, `DataIntegrityViolationException`→409, `PlayerSearchRepository.java:169`'daki `Attr.fromKey` `IllegalArgumentException`→400. **Kabul:** `GET /api/v1/nope` → 404.
 
-### BE-BUG-12 · Yedek geri yükleme doğrulamasız
+### BE-BUG-12 · Yedek geri yükleme doğrulamasız — **DONE(37c090b)**
 `CareerDeskController.java:105-107`, `CareerDeskService.java:231-249`: `@RequestBody Backup`'ta `@Valid` yok. Kötü tag/spoilerMode → DB CHECK → 500. Liste boyutları sınırsız. **Düzelt:** `@Valid`, listelere `@Size`, tag için `TagRequest` kalıbı. **Kabul:** `tags=[{"tag":"X"}]` → 400.
 
-### BE-BUG-13 · Tekrar import elle kurulan kadroyu siliyor
+### BE-BUG-13 · Tekrar import elle kurulan kadroyu siliyor — **DONE(420bb31)**
 `J/career/importer/CareerImportService.java:152-160,183-191`
 - **Sorun:** Her import'tan sonra takım adı tahmin edilebiliyorsa `rebuildSquad` tüm `user_player_state` satırlarını siliyor. Kadro olay günlüğü kadroyla uyuşmaz hâle geliyor.
 - **Düzeltme:** Kullanıcı takımı LE export'undan (`context.userTeamId`, 07 §3) gelir, adla tahmin edilmez. Otomatik rebuild yalnız kadro boşken. Aksi halde `guessedTeamId` dön, kullanıcı `/import/squad`'ı açıkça çağırsın ya da birleştir ve PROMOTE/SELL olaylarını yaz.
 - **Kabul:** İkinci import elle eklenen oyuncuyu korur.
 
-### BE-BUG-14 · Snapshot budanıyor ve çok ince
+### BE-BUG-14 · Snapshot budanıyor ve çok ince — **DONE(98e9b17)**
 `CareerDeskService.java:36,54-55`; V14 satır 26-33. 30'dan eski snapshot siliniyor ("hiçbir şey kaybolmaz" ilkesine aykırı). Snapshot yalnız OVR/POT/takım tutuyor. **Düzelt:** saklama süresi config (varsayılan sınırsız), `attrs JSONB`, `positions`, `value`, `wage`, `age`, `game_date` kolonları.
 
-### BE-BUG-15 · Ingestion kulübü ad + lig ile tanıyor
+### BE-BUG-15 · Ingestion kulübü ad + lig ile tanıyor — **DONE(793e0aa)**
 `IngestionService.java:201-215`, `J/ingestion/provider/RatingItemMapper.java:52`
 - Kulüp küme düşünce/çıkınca ligi değişir → kopya kulüp satırı. EA `team.id` parse ediliyor ama kullanılmıyor. Her oyuncu için kulüp lookup + save (N+1).
 - **Düzelt:** Kulübü `ea_team_id` ile upsert et (`team.id`'den), sayfa başına cache, lig değişince güncelle. **Kabul:** Küme değiştiren kulüp yeniden ingest'te aynı `club.id`.
 
-### BE-BUG-16 · BUG-09'un kalanı
+### BE-BUG-16 · BUG-09'un kalanı — **DONE(80d6f52)**
 `IngestionService.java:57-112`, `IngestionRunRepository.java:23`: HTTP thread'inde senkron (~180 sayfa, dakikalar). Kilit tek JVM `AtomicBoolean`. İkinci instance RUNNING satırı eşzamanlı "resume" edebilir. `totalItems` yoksa bir sayfa sonra DONE. Siteden kalkan oyuncu emekliye ayrılmıyor. **Düzelt:** arka plan executor + runId dön, DB kilidi (advisory xact lock/ShedLock), `heartbeat_at` (eskiyse resume edilebilir), DONE yalnız `fetched >= total > 0`, tam çalışmada görülmeyenleri RETIRED.
 
-### BE-BUG-17 · Lig seviyesi (tier) hiç set edilmiyor
+### BE-BUG-17 · Lig seviyesi (tier) hiç set edilmiyor — **DONE(a3f217d)**
 `J/catalog/entity/LeagueEntity.java:27`; `J/mlclient/service/MlValuationService.java:113-124`, `ModeledValueFormula.java:15,60-65`. ML `league_tier` hep null, modellenmiş değer herkes için 0.7 "bilinmiyor" çarpanı. **Düzelt:** `ea_league_id`'ye göre tier seed'i (aşağıda), ya da LE export'undan `leagues.leaguelevel` (07). Başlangıç seed'i (Buğra'nın `leagues.csv` id'leriyle):
 ```json
 {"1":2,"4":2,"10":1,"13":1,"14":2,"16":1,"17":2,"19":1,"20":2,"31":1,"32":2,"39":2,"41":3,"50":2,"53":1,"54":2,"56":3,"60":3,"61":4,"65":4,"66":3,"68":2,"80":3,"83":3,"189":3,"308":2,"330":3,"341":2,"350":2,"351":3,"353":2,"2012":3,"2076":3,"2149":4}
 ```
 (1 = top-5, 2 = güçlü ikinci grup, 3-4 = alt. `VERIFY` kalibrasyonu ML ile.)
 
-### BE-BUG-18 · Yaş gerçek tarihe göre, oyun tarihine göre değil
+### BE-BUG-18 · Yaş gerçek tarihe göre, oyun tarihine göre değil — **DONE(958bf2c)**
 `PlayerSearchRepository.java:48,211`, `MlFeatureBuilder.java:67-72`: ikinci oyun sezonundan sonra `maxAge=21` wonderkid araması yanlış. **Düzelt:** `career.current_game_date` (LE export'tan `context.gameDate` ya da elle), careerId varken yaşı buna göre hesapla.
 
 ---

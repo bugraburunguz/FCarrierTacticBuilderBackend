@@ -67,3 +67,9 @@ Faz B'nin geri kalanı (DS-03/07/08/09/10, UX-01/03..06), Faz C (veri platformu)
 - DONE: BE-SEC-02 (gövde bütçeleri), BE-SEC-03 (solver auth + 10/dk + 10M), BE-SEC-04 (JobLock), BE-SEC-05 (spoiler sızıntıları), BE-SEC-06 (e-posta doğrulama + IP limiti + EA-id katkıcı oyu), BE-SEC-07 (ADMIN rolü), BE-ARCH-03 (rulesHash/ETag), fiyat saat koruması (48 sa, clock_skew), WEB-BUG-02..07
 - Açık: WEB-BUG-08..14, LE-01/02, BE-SEC-08..11, BE-BUG-12..18, TAC-07 (Buğra girdisi)
 - FC28 ratings sitesi: canlı site FC27 sayfasını sunuyor; log'daki "FC 28" sentetik birim testinden (EaSiteProviderTest.refusesToIngestWhenThePageIsNotFc27, MockRestServiceServer).
+
+## FAZ A3 ilerleme (ara rapor 3)
+- DONE (backend): BE-SEC-08 (830fbd2), BE-SEC-09 (1b7454d; web 64080b4), BE-SEC-10 (abef62a), BE-SEC-11 (a3468cc; disk cache + /img/card CARD-01'e kaldı), BE-BUG-12 (37c090b), BE-BUG-13 (420bb31; userTeamId LE v2 ile), BE-BUG-14 (98e9b17; game_date LE v2 ile dolacak), BE-BUG-15 (793e0aa), BE-BUG-16 (80d6f52), BE-BUG-17 (a3f217d; seed verified:false), BE-BUG-18 (958bf2c)
+- DONE (web): WEB-BUG-08..14 (f9f9195, 5471091, 8349961, 16863fb, 84f53b2, 7a8212e+backend 5a89dbf, 367899a)
+- Açık: LE-01/02 (+ WEB-BUG-25): 5 CSV fixture `src/test/resources/le-export/fc27-2026-10/` repoda yok → Buğra'dan bekleniyor; TAC-07 (Buğra girdisi); RULE-03 UI
+- API CONTRACT CHANGE'ler: GET /careers/{id}/shortlist satırlarına `player`; POST /admin/ingestion/run → `{runId, alreadyRunning}` (arka plan); yabancı kariyer 403/0009 → 404/0001; CareerResponse/UpdateCareerRequest `gameDate`.
