@@ -38,6 +38,7 @@ fcareer:
   mail:
     from: ${MAIL_FROM:no-reply@localhost}
   auth:
+    bootstrap-admin-email: ${FCAREER_BOOTSTRAP_ADMIN_EMAIL:}
     registration:
       daily-per-ip: ${REGISTRATIONS_PER_IP_DAILY:5}
     email-verification:
