@@ -90,7 +90,7 @@ class RoleFamiliarityValidationTest {
                 byGenderPosition.computeIfAbsent(e.gender() + "|" + p, (k) -> new ArrayList<>()).add(e);
             }
         }
-        Map<String, Group> groups = new TreeMap<>();
+        Map<Entry, Map<String, Double>> levelByRole = new java.util.IdentityHashMap<>();
         for (String key : SEEDS.vectorKeys()) {
             String[] parts = key.split("\\|");
             String position = parts[0];
@@ -101,33 +101,77 @@ class RoleFamiliarityValidationTest {
                     continue;
                 }
                 double[] levels = levelFits(pool, position, role, parts[2]);
-                Group group = groups.computeIfAbsent(position + "|" + role, (k) -> new Group(position, role, new ArrayList<>(), new ArrayList<>(), new ArrayList<>()));
                 for (int i = 0; i < pool.size(); i++) {
-                    Integer level = pool.get(i).roles().get(position + "|" + role);
-                    List<Double> target = level == null ? group.none() : level >= 2 ? group.plusPlus() : group.plus();
-                    mergeMax(target, group, pool.get(i), levels[i], key);
+                    levelByRole.computeIfAbsent(pool.get(i), (e) -> new HashMap<>()).merge(position + "|" + role, levels[i], Math::max);
                 }
             }
         }
+        Map<String, Group> groups = new TreeMap<>();
+        for (Map.Entry<Entry, Map<String, Double>> e : levelByRole.entrySet()) {
+            for (Map.Entry<String, Double> r : e.getValue().entrySet()) {
+                String[] pr = r.getKey().split("\\|");
+                Group group = groups.computeIfAbsent(r.getKey(), (k) -> new Group(pr[0], pr[1], new ArrayList<>(), new ArrayList<>(), new ArrayList<>()));
+                Integer familiarity = e.getKey().roles().get(r.getKey());
+                (familiarity == null ? group.none() : familiarity >= 2 ? group.plusPlus() : group.plus()).add(r.getValue());
+            }
+        }
         writeReport(entries.size(), groups);
+        writeWithinPlayerReport(levelByRole);
     }
 
-    /** Aynı oyuncu için focus'lar arasında en yüksek levelFit kullanılır; kovada oyuncu başına tek değer tutulur. */
-    private final Map<String, Double> best = new HashMap<>();
-
-    private void mergeMax(List<Double> target, Group group, Entry entry, double level, String vectorKey) {
-        String id = System.identityHashCode(entry.player()) + "#" + group.position() + "#" + group.role() + "#" + System.identityHashCode(target);
-        Double previous = best.get(id);
-        if (previous == null) {
-            best.put(id, level);
-            target.add(level);
-            return;
+    /**
+     * Oyuncu içi AUC: her oyuncu için, bir mevkideki roller arasında Role+/++ aldıkları ile almadıklarının levelFit'leri karşılaştırılır
+     * (mevki, OVR ve popülasyon karışmaz). Çift sayısı ağırlıklı genel ve oyuncu ortalaması raporlanır.
+     */
+    private void writeWithinPlayerReport(Map<Entry, Map<String, Double>> levelByRole) throws Exception {
+        Map<String, double[]> perRole = new TreeMap<>();
+        double wins = 0;
+        double pairs = 0;
+        double playerAucSum = 0;
+        int players = 0;
+        for (Map.Entry<Entry, Map<String, Double>> e : levelByRole.entrySet()) {
+            double playerWins = 0;
+            double playerPairs = 0;
+            Map<String, List<String>> rolesByPosition = new HashMap<>();
+            for (String key : e.getValue().keySet()) {
+                rolesByPosition.computeIfAbsent(key.split("\\|")[0], (k) -> new ArrayList<>()).add(key);
+            }
+            for (List<String> keys : rolesByPosition.values()) {
+                for (String positive : keys) {
+                    if (!e.getKey().roles().containsKey(positive)) {
+                        continue;
+                    }
+                    for (String negative : keys) {
+                        if (e.getKey().roles().containsKey(negative)) {
+                            continue;
+                        }
+                        double p = e.getValue().get(positive);
+                        double n = e.getValue().get(negative);
+                        double score = p > n ? 1 : p == n ? 0.5 : 0;
+                        playerWins += score;
+                        playerPairs++;
+                        double[] acc = perRole.computeIfAbsent(positive, (k) -> new double[2]);
+                        acc[0] += score;
+                        acc[1]++;
+                    }
+                }
+            }
+            if (playerPairs > 0) {
+                wins += playerWins;
+                pairs += playerPairs;
+                playerAucSum += playerWins / playerPairs;
+                players++;
+            }
         }
-        if (level > previous) {
-            target.remove(previous);
-            target.add(level);
-            best.put(id, level);
+        Set<String> defaults = Set.of("GK|goalkeeper", "ST|advanced_forward", "RW|winger", "LW|winger", "RM|winger", "LM|winger", "RB|fullback", "LB|fullback");
+        StringBuilder md = new StringBuilder("| Mevki · rol (pozitif olduğunda) | çift | oyuncu içi AUC | not |\n|---|---|---|---|\n");
+        for (Map.Entry<String, double[]> r : perRole.entrySet()) {
+            if (r.getValue()[1] >= MIN_GROUP) {
+                md.append(String.format("| %s | %.0f | %.3f | %s |%n", r.getKey().replace("|", " · "), r.getValue()[1], r.getValue()[0] / r.getValue()[1], defaults.contains(r.getKey()) ? "varsayılan rol" : ""));
+            }
         }
+        md.append(String.format("%nOyuncu içi AUC: çift-ağırlıklı %.3f · oyuncu ortalaması %.3f · oyuncu sayısı %d · çift %.0f (hedef ≥ 0,70)%n", wins / pairs, playerAucSum / players, players, pairs));
+        Files.writeString(Path.of("target", "role-validation-within.md"), md.toString(), StandardCharsets.UTF_8);
     }
 
     private double[] levelFits(List<Entry> pool, String position, String role, String focus) {
