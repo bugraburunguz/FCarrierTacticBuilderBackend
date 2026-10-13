@@ -5,7 +5,7 @@ Her madde: **Sorun → Düzeltme → Kabul**. Davranış değiştiren her düzel
 ---
 ## P0
 
-### BE-SEC-01 · `/recommend/preview` ücretli analizi anonim veriyor
+### BE-SEC-01 · `/recommend/preview` ücretli analizi anonim veriyor — DONE (ac4bf01)
 `J/recommendation/service/RecommendationService.java:107-117`, `J/common/configuration/SecurityConfig.java:42`
 - **Sorun:** `preview()` `rank(...)` çıktısını filtresiz dönüyor: tam `RoleFitResponse` (reasons, weaponChecks), `intentFit`, setupDelta, 8 oyuncuya kadar. Giriş yapmış kullanıcıya bedava verilen `slot-view`'dan bile fazla. D-01'e aykırı.
 - **Düzeltme:** `return withoutPaidInsights(rank(...))` ve limit `SLOT_VIEW_LIMIT` (3). İstersen login zorunlu yap. `/players/compare` ve `/fit/role` ücretli sayılıyorsa aynı kırpmayı uygula.
