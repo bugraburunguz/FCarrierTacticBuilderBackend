@@ -37,10 +37,11 @@ spring:
 fcareer:
   mail:
     from: ${MAIL_FROM:no-reply@localhost}
+  ratelimit:
+    register:
+      daily-per-ip: ${FCAREER_RATELIMIT_REGISTER_DAILY_PER_IP:5}
   auth:
     bootstrap-admin-email: ${FCAREER_BOOTSTRAP_ADMIN_EMAIL:}
-    registration:
-      daily-per-ip: ${REGISTRATIONS_PER_IP_DAILY:5}
     email-verification:
       # Boş: MAIL_HOST tanımlıysa açık, değilse kapalı (kapalıyken kayıt ve kredi bugünkü gibi çalışır).
       enabled: ${EMAIL_VERIFICATION_ENABLED:}

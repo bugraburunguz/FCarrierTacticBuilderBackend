@@ -1,6 +1,6 @@
 package com.fcareer.auth.service;
 
-import com.fcareer.auth.configuration.AuthProperties;
+import com.fcareer.auth.configuration.RateLimitProperties;
 import com.fcareer.common.exception.RateLimitExceededException;
 import com.fcareer.common.redis.RedisCounter;
 import lombok.RequiredArgsConstructor;
@@ -23,12 +23,12 @@ public class RegistrationLimiter {
 
     private static final Duration WINDOW = Duration.ofHours(24);
 
-    private final AuthProperties properties;
+    private final RateLimitProperties properties;
     private final RedisCounter counter;
     private final Clock clock;
 
     public void check(String ip) {
-        int limit = properties.getRegistration().getDailyPerIp();
+        int limit = properties.getRegister().getDailyPerIp();
         if (limit <= 0) {
             return;
         }

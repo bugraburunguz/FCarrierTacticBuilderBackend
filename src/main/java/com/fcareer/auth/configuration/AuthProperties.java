@@ -14,15 +14,7 @@ public class AuthProperties {
 
     /** Açılışta ve kayıtta bu e-posta ADMIN olur (FCAREER_BOOTSTRAP_ADMIN_EMAIL); boşsa kapalı. */
     private String bootstrapAdminEmail = "";
-    private Registration registration = new Registration();
     private EmailVerification emailVerification = new EmailVerification();
-
-    /** IP başına günlük kayıt sınırı; 0 kapatır. */
-    @Getter
-    @Setter
-    public static class Registration {
-        private int dailyPerIp = 5;
-    }
 
     /** enabled null ise SMTP (spring.mail.host) tanımlıysa açılır; kapalıyken kayıt ve kredi bugünkü gibi çalışır. */
     @Getter

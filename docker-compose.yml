@@ -67,7 +67,8 @@ services:
       MAIL_FROM: ${MAIL_FROM:-no-reply@localhost}
       WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:8081}
       FCAREER_BOOTSTRAP_ADMIN_EMAIL: ${FCAREER_BOOTSTRAP_ADMIN_EMAIL:-}
-      REGISTRATIONS_PER_IP_DAILY: ${REGISTRATIONS_PER_IP_DAILY:-5}
+      FCAREER_RATELIMIT_REGISTER_DAILY_PER_IP: ${FCAREER_RATELIMIT_REGISTER_DAILY_PER_IP:-5}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
       interval: 10s

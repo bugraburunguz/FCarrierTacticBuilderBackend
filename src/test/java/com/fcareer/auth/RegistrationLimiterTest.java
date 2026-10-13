@@ -1,6 +1,6 @@
 package com.fcareer.auth;
 
-import com.fcareer.auth.configuration.AuthProperties;
+import com.fcareer.auth.configuration.RateLimitProperties;
 import com.fcareer.auth.service.RegistrationLimiter;
 import com.fcareer.common.exception.RateLimitExceededException;
 import com.fcareer.common.redis.RedisCounter;
@@ -23,12 +23,12 @@ import static org.mockito.Mockito.when;
 class RegistrationLimiterTest {
 
     private final RedisCounter counter = mock(RedisCounter.class);
-    private final AuthProperties properties = new AuthProperties();
+    private final RateLimitProperties properties = new RateLimitProperties();
     private final Clock clock = Clock.fixed(Instant.parse("2026-10-13T12:00:00Z"), ZoneOffset.UTC);
 
     @Test
     void allowsUpToTheDailyLimitThenRejects() {
-        properties.getRegistration().setDailyPerIp(5);
+        properties.getRegister().setDailyPerIp(5);
         RegistrationLimiter limiter = new RegistrationLimiter(properties, counter, clock);
         when(counter.increment(anyString(), eq(Duration.ofHours(24)))).thenReturn(5L);
         assertThatCode(() -> limiter.check("10.0.0.1")).doesNotThrowAnyException();
@@ -39,11 +39,11 @@ class RegistrationLimiterTest {
 
     @Test
     void zeroDisablesTheLimitAndAnUnreachableStoreFailsClosed() {
-        properties.getRegistration().setDailyPerIp(0);
+        properties.getRegister().setDailyPerIp(0);
         new RegistrationLimiter(properties, counter, clock).check("10.0.0.1");
         verifyNoInteractions(counter);
 
-        properties.getRegistration().setDailyPerIp(5);
+        properties.getRegister().setDailyPerIp(5);
         when(counter.increment(anyString(), eq(Duration.ofHours(24)))).thenThrow(new RedisConnectionFailureException("down"));
         assertThatThrownBy(() -> new RegistrationLimiter(properties, counter, clock).check("10.0.0.1")).isInstanceOf(RateLimitExceededException.class);
     }

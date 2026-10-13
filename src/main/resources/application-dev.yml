@@ -1,0 +1,5 @@
+# Yerel geliştirme (SPRING_PROFILES_ACTIVE=dev): gate/Q17 betikleri günde çok hesap açıp siler. Prod değeri application.yml'dedir (5) ve değişmez.
+fcareer:
+  ratelimit:
+    register:
+      daily-per-ip: 1000

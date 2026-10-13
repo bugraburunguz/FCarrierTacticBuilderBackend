@@ -1,0 +1,260 @@
+{
+  "_source": "13_KARIYER_MOTORU_YENIDEN.md §3.2 madde 8 + bölge kuralı; elle belirlenmiş, ölçülmemiş",
+  "verified": false,
+  "_verify": "FC27 mevki geçiş ceza değerleri ölçülmedi; golden set ikinci turunda (mevki dışı çiftler) doğrulanır. Mevki dışında rol vektörü yerine pozisyonun genel vektörü kullanılır (FC27 basitleştirilmiş rol).",
+  "_rules": {
+    "sameZone": 0.75,
+    "adjacentZone": 0.6,
+    "defenceToAttack": 0.45,
+    "goalkeeper": 0
+  },
+  "_explicit": [
+    {
+      "from": "RB",
+      "to": "LB",
+      "value": 0.97,
+      "direction": "both",
+      "basis": "13 §3.2 madde 8"
+    },
+    {
+      "from": "CM",
+      "to": "CDM",
+      "value": 0.93,
+      "direction": "both",
+      "basis": "13 §3.2 madde 8"
+    },
+    {
+      "from": "CB",
+      "to": "CDM",
+      "value": 0.9,
+      "direction": "forward",
+      "basis": "13 §3.2 madde 8 (CB→CDM)"
+    },
+    {
+      "from": "CAM",
+      "to": "ST",
+      "value": 0.9,
+      "direction": "both",
+      "basis": "13 §3.2 madde 8"
+    },
+    {
+      "from": "RW",
+      "to": "RM",
+      "value": 0.97,
+      "direction": "both",
+      "basis": "13 §3.2 madde 8"
+    },
+    {
+      "from": "LW",
+      "to": "LM",
+      "value": 0.97,
+      "direction": "both",
+      "basis": "RW↔RM simetrisi (tahmin)"
+    },
+    {
+      "from": "LM",
+      "to": "RM",
+      "value": 0.97,
+      "direction": "both",
+      "basis": "tahmin"
+    },
+    {
+      "from": "LW",
+      "to": "RW",
+      "value": 0.97,
+      "direction": "both",
+      "basis": "RB↔LB simetrisi (tahmin)"
+    },
+    {
+      "from": "CM",
+      "to": "CAM",
+      "value": 0.93,
+      "direction": "both",
+      "basis": "CM↔CDM benzeri (tahmin)"
+    }
+  ],
+  "positions": [
+    "GK",
+    "CB",
+    "LB",
+    "RB",
+    "CDM",
+    "CM",
+    "CAM",
+    "LM",
+    "RM",
+    "LW",
+    "RW",
+    "ST"
+  ],
+  "matrix": {
+    "GK": {
+      "GK": 1,
+      "CB": 0,
+      "LB": 0,
+      "RB": 0,
+      "CDM": 0,
+      "CM": 0,
+      "CAM": 0,
+      "LM": 0,
+      "RM": 0,
+      "LW": 0,
+      "RW": 0,
+      "ST": 0
+    },
+    "CB": {
+      "GK": 0,
+      "CB": 1,
+      "LB": 0.75,
+      "RB": 0.75,
+      "CDM": 0.9,
+      "CM": 0.6,
+      "CAM": 0.6,
+      "LM": 0.6,
+      "RM": 0.6,
+      "LW": 0.45,
+      "RW": 0.45,
+      "ST": 0.45
+    },
+    "LB": {
+      "GK": 0,
+      "CB": 0.75,
+      "LB": 1,
+      "RB": 0.97,
+      "CDM": 0.6,
+      "CM": 0.6,
+      "CAM": 0.6,
+      "LM": 0.6,
+      "RM": 0.6,
+      "LW": 0.45,
+      "RW": 0.45,
+      "ST": 0.45
+    },
+    "RB": {
+      "GK": 0,
+      "CB": 0.75,
+      "LB": 0.97,
+      "RB": 1,
+      "CDM": 0.6,
+      "CM": 0.6,
+      "CAM": 0.6,
+      "LM": 0.6,
+      "RM": 0.6,
+      "LW": 0.45,
+      "RW": 0.45,
+      "ST": 0.45
+    },
+    "CDM": {
+      "GK": 0,
+      "CB": 0.6,
+      "LB": 0.6,
+      "RB": 0.6,
+      "CDM": 1,
+      "CM": 0.93,
+      "CAM": 0.75,
+      "LM": 0.75,
+      "RM": 0.75,
+      "LW": 0.6,
+      "RW": 0.6,
+      "ST": 0.6
+    },
+    "CM": {
+      "GK": 0,
+      "CB": 0.6,
+      "LB": 0.6,
+      "RB": 0.6,
+      "CDM": 0.93,
+      "CM": 1,
+      "CAM": 0.93,
+      "LM": 0.75,
+      "RM": 0.75,
+      "LW": 0.6,
+      "RW": 0.6,
+      "ST": 0.6
+    },
+    "CAM": {
+      "GK": 0,
+      "CB": 0.6,
+      "LB": 0.6,
+      "RB": 0.6,
+      "CDM": 0.75,
+      "CM": 0.93,
+      "CAM": 1,
+      "LM": 0.75,
+      "RM": 0.75,
+      "LW": 0.6,
+      "RW": 0.6,
+      "ST": 0.9
+    },
+    "LM": {
+      "GK": 0,
+      "CB": 0.6,
+      "LB": 0.6,
+      "RB": 0.6,
+      "CDM": 0.75,
+      "CM": 0.75,
+      "CAM": 0.75,
+      "LM": 1,
+      "RM": 0.97,
+      "LW": 0.97,
+      "RW": 0.6,
+      "ST": 0.6
+    },
+    "RM": {
+      "GK": 0,
+      "CB": 0.6,
+      "LB": 0.6,
+      "RB": 0.6,
+      "CDM": 0.75,
+      "CM": 0.75,
+      "CAM": 0.75,
+      "LM": 0.97,
+      "RM": 1,
+      "LW": 0.6,
+      "RW": 0.97,
+      "ST": 0.6
+    },
+    "LW": {
+      "GK": 0,
+      "CB": 0.45,
+      "LB": 0.45,
+      "RB": 0.45,
+      "CDM": 0.6,
+      "CM": 0.6,
+      "CAM": 0.6,
+      "LM": 0.97,
+      "RM": 0.6,
+      "LW": 1,
+      "RW": 0.97,
+      "ST": 0.75
+    },
+    "RW": {
+      "GK": 0,
+      "CB": 0.45,
+      "LB": 0.45,
+      "RB": 0.45,
+      "CDM": 0.6,
+      "CM": 0.6,
+      "CAM": 0.6,
+      "LM": 0.6,
+      "RM": 0.97,
+      "LW": 0.97,
+      "RW": 1,
+      "ST": 0.75
+    },
+    "ST": {
+      "GK": 0,
+      "CB": 0.45,
+      "LB": 0.45,
+      "RB": 0.45,
+      "CDM": 0.6,
+      "CM": 0.6,
+      "CAM": 0.9,
+      "LM": 0.6,
+      "RM": 0.6,
+      "LW": 0.75,
+      "RW": 0.75,
+      "ST": 1
+    }
+  }
+}
