@@ -73,6 +73,14 @@ public class PlayerSearchRepository {
 
     private final NamedParameterJdbcTemplate jdbc;
 
+    /** Kariyerin oyun içi tarihi; kariyer yok ya da tarih girilmemişse boş (ENG-04). */
+    public java.util.Optional<java.time.LocalDate> careerGameDate(Long careerId) {
+        if (Objects.isNull(careerId)) {
+            return java.util.Optional.empty();
+        }
+        return jdbc.queryForList("SELECT current_game_date FROM career WHERE id = :c AND current_game_date IS NOT NULL", Map.of("c", careerId), java.time.LocalDate.class).stream().findFirst();
+    }
+
     public List<PlayerSummaryResponse> search(PlayerSearchRequest request) {
         MapSqlParameterSource params = new MapSqlParameterSource();
         String where = where(request, params);

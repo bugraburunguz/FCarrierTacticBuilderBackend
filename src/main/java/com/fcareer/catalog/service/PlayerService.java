@@ -111,21 +111,22 @@ public class PlayerService {
         Map<Long, PlayerValuationEntity> valuations = playerValuationRepository
                 .findByBasePlayerIdInAndGameVersionIdAndSourceAndOwnerUserIdIsNull(playerIds, gv, ValuationSource.MODELED)
                 .stream().collect(Collectors.toMap(PlayerValuationEntity::getBasePlayerId, Function.identity()));
+        java.time.LocalDate gameDate = playerSearchRepository.careerGameDate(careerId).orElse(null);
         return playerIds.stream().map(id -> {
             if (!bases.containsKey(id) || !ratings.containsKey(id)) {
                 throw new NotFoundException(PLAYER, id);
             }
-            return playerMapper.toFitPlayer(bases.get(id), ratings.get(id), valuations.get(id));
+            return playerMapper.toFitPlayer(bases.get(id), ratings.get(id), valuations.get(id), gameDate);
         }).toList();
     }
 
-    public List<SimilarPlayerResponse> similar(Long playerId, Short gameVersionId, Integer ageMax, Integer potentialMin, int limit) {
+    public List<SimilarPlayerResponse> similar(Long playerId, Short gameVersionId, Long careerId, Integer ageMax, Integer potentialMin, int limit) {
         short gv = resolveGameVersion(gameVersionId);
-        FitPlayer target = fitPlayers(List.of(playerId), gv).get(0);
-        PlayerSummaryResponse summary = summaryOf(playerId, gv);
+        FitPlayer target = fitPlayers(List.of(playerId), gv, careerId).get(0);
+        PlayerSummaryResponse summary = summaryOf(playerId, gv, careerId);
         boolean keeper = target.getPositions().contains(GOALKEEPER);
         PlayerSearchRequest request = PlayerSearchRequest.builder()
-                .gameVersionId(gv).gender(Objects.isNull(summary.getGender()) ? null : summary.getGender().shortValue())
+                .gameVersionId(gv).careerId(careerId).gender(Objects.isNull(summary.getGender()) ? null : summary.getGender().shortValue())
                 .positions(List.of(target.getPositions().get(0)))
                 .overallMin(target.getOverall() - SIMILAR_OVERALL_RANGE).overallMax(target.getOverall() + SIMILAR_OVERALL_RANGE)
                 .ageMax(ageMax).potentialMin(potentialMin).excludeIds(List.of(playerId))
@@ -133,7 +134,7 @@ public class PlayerService {
         Map<Long, PlayerSummaryResponse> pool = playerSearchRepository.search(request).stream()
                 .collect(Collectors.toMap(PlayerSummaryResponse::getId, Function.identity(), (a, b) -> a, java.util.LinkedHashMap::new));
         List<Attr> axes = java.util.Arrays.stream(Attr.values()).filter(a -> a.getKey().startsWith("GK") == keeper).toList();
-        return fitPlayers(new java.util.ArrayList<>(pool.keySet()), gv).stream()
+        return fitPlayers(new java.util.ArrayList<>(pool.keySet()), gv, careerId).stream()
                 .map(candidate -> SimilarPlayerResponse.builder().player(pool.get(candidate.getId()))
                         .similarity(similarity(target, candidate, axes)).build())
                 .sorted(java.util.Comparator.comparingDouble(SimilarPlayerResponse::getSimilarity).reversed())

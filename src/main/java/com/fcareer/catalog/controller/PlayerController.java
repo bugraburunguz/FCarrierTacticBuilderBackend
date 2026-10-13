@@ -140,7 +140,7 @@ public class PlayerController {
         if (careerId != null) {
             careerService.requireOwned(user == null ? null : user.id(), careerId);
         }
-        List<SimilarPlayerResponse> similar = playerService.similar(id, gameVersionId, ageMax, spoilerPolicy.minBand(careerId, potentialMin), Math.max(1, Math.min(limit, MAX_SIMILAR)));
+        List<SimilarPlayerResponse> similar = playerService.similar(id, gameVersionId, careerId, ageMax, spoilerPolicy.minBand(careerId, potentialMin), Math.max(1, Math.min(limit, MAX_SIMILAR)));
         similar.forEach(s -> spoilerPolicy.mask(careerId, s.getPlayer()));
         return similar;
     }

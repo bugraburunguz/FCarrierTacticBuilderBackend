@@ -45,6 +45,24 @@ class MlFeatureBuilderTest {
     }
 
     @Test
+    void anExplicitCareerGameDateOverridesTheConfiguredReference() {
+        MlProperties properties = new MlProperties();
+        properties.setAgeReferenceDate(LocalDate.of(2026, 10, 5));
+        BasePlayerEntity base = new BasePlayerEntity();
+        base.setId(1L);
+        base.setDob(LocalDate.of(2005, 3, 1));
+        PlayerRatingEntity rating = new PlayerRatingEntity();
+        rating.setOverall((short) 70);
+        rating.setPositions(List.of("ST"));
+
+        MlPlayerFeatures career = new MlFeatureBuilder(accessor, properties).build(base, rating, null, LocalDate.of(2030, 7, 1));
+        MlPlayerFeatures catalog = new MlFeatureBuilder(accessor, properties).build(base, rating, null);
+
+        assertThat(career.getAge()).as("ENG-04: 4. sezonda oyun tarihi 2030").isEqualTo(25);
+        assertThat(catalog.getAge()).isEqualTo(21);
+    }
+
+    @Test
     void usesFirstPositionForGroupAndMeansAttributeGroups() {
         MlPlayerFeatures features = build(LocalDate.of(2026, 10, 5), LocalDate.of(1998, 12, 20), "LWB", (short) 90, (short) 80);
 

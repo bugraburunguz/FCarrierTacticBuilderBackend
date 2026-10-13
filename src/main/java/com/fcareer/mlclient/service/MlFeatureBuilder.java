@@ -42,12 +42,18 @@ public class MlFeatureBuilder {
     private final RatingAttrAccessor ratingAttrAccessor;
     private final MlProperties properties;
 
+    /** Katalog (genel) değerlemesi: yaş yapılandırılmış referans tarihine göre. */
     public MlPlayerFeatures build(BasePlayerEntity base, PlayerRatingEntity rating, Integer leagueTier) {
+        return build(base, rating, leagueTier, null);
+    }
+
+    /** Kariyer değerlemesi için oyun tarihi (ENG-04); null ise yapılandırılmış katalog referansı kullanılır. */
+    public MlPlayerFeatures build(BasePlayerEntity base, PlayerRatingEntity rating, Integer leagueTier, LocalDate gameDate) {
         Map<Attr, Integer> attrs = ratingAttrAccessor.read(rating);
         String group = rating.getPositions().isEmpty() ? null : POSITION_GROUPS.get(rating.getPositions().get(0));
         return MlPlayerFeatures.builder()
                 .playerId(base.getId())
-                .age(age(base))
+                .age(age(base, gameDate))
                 .overall(rating.getOverall().intValue())
                 .positionGroup(group)
                 .leagueTier(leagueTier)
@@ -64,11 +70,12 @@ public class MlFeatureBuilder {
                 .build();
     }
 
-    private Integer age(BasePlayerEntity base) {
+    private Integer age(BasePlayerEntity base, LocalDate gameDate) {
         if (Objects.isNull(base.getDob())) {
             return null;
         }
-        LocalDate reference = Objects.isNull(properties.getAgeReferenceDate()) ? LocalDate.now() : properties.getAgeReferenceDate();
+        LocalDate configured = Objects.isNull(properties.getAgeReferenceDate()) ? LocalDate.now() : properties.getAgeReferenceDate();
+        LocalDate reference = Objects.isNull(gameDate) ? configured : gameDate;
         return Period.between(base.getDob(), reference).getYears();
     }
 

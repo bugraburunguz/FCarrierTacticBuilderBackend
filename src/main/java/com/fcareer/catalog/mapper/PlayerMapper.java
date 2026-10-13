@@ -25,11 +25,11 @@ public class PlayerMapper {
     private final RatingAttrAccessor ratingAttrAccessor;
     private final PositionOverallService positionOverallService;
 
-    public FitPlayer toFitPlayer(BasePlayerEntity base, RatingColumns rating, PlayerValuationEntity valuation) {
+    public FitPlayer toFitPlayer(BasePlayerEntity base, RatingColumns rating, PlayerValuationEntity valuation, LocalDate gameDate) {
         return FitPlayer.builder()
                 .id(base.getId())
                 .name(base.getFullName())
-                .age(age(base))
+                .age(age(base, gameDate))
                 .overall(rating.getOverall().intValue())
                 .positions(rating.getPositions())
                 .attrs(ratingAttrAccessor.read(rating))
@@ -59,8 +59,9 @@ public class PlayerMapper {
                 .build();
     }
 
-    public static Integer age(BasePlayerEntity base) {
-        return Objects.isNull(base.getDob()) ? null : Period.between(base.getDob(), LocalDate.now()).getYears();
+    /** Yaş oyun tarihine göre (kariyer), gameDate yoksa bugüne göre (ENG-04). */
+    public static Integer age(BasePlayerEntity base, LocalDate gameDate) {
+        return Objects.isNull(base.getDob()) ? null : Period.between(base.getDob(), Objects.isNull(gameDate) ? LocalDate.now() : gameDate).getYears();
     }
 
     public static Attr normalizeAttr(String raw) {
