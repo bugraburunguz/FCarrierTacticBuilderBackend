@@ -1,6 +1,7 @@
 package com.fcareer.career.desk;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fcareer.catalog.model.response.PlayerSummaryResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -52,6 +53,11 @@ public final class CareerDeskModels {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record ShortlistDto(long playerId, String note, Long maxFeeEur, Instant createdAt) {
+    }
+
+    /** Kısa liste satırı + gömülü oyuncu özeti (WEB-BUG-13); yedekte kullanılan ShortlistDto değişmez. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record ShortlistViewDto(long playerId, String note, Long maxFeeEur, Instant createdAt, PlayerSummaryResponse player) {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

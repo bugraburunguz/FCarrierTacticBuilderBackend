@@ -106,7 +106,11 @@ class CareerDeskIntegrationTest {
         call(put("/api/v1/careers/" + careerId + "/tags/" + playerId), Map.of("tag", "BOZUK"), token, 400);
 
         call(put("/api/v1/careers/" + careerId + "/shortlist/" + target), Map.of("note", "sol bek", "maxFeeEur", 8_000_000), token, 200);
-        assertThat(call(get("/api/v1/careers/" + careerId + "/shortlist"), null, token, 200).at("/data/0/maxFeeEur").asLong()).isEqualTo(8_000_000L);
+        JsonNode listed = call(get("/api/v1/careers/" + careerId + "/shortlist"), null, token, 200).at("/data/0");
+        assertThat(listed.at("/maxFeeEur").asLong()).isEqualTo(8_000_000L);
+        assertThat(listed.at("/player/id").asLong()).isEqualTo(target);
+        assertThat(listed.at("/player/name").asText()).isNotBlank();
+        assertThat(listed.at("/player/overall").asInt()).isPositive();
         call(put("/api/v1/careers/" + careerId + "/seasons/2027"), Map.of("leaguePosition", 2, "trophies", List.of("Kupa"), "note", "iyi sezon"), token, 200);
 
         JsonNode backup = call(get("/api/v1/careers/" + careerId + "/backup"), null, token, 200).at("/data");

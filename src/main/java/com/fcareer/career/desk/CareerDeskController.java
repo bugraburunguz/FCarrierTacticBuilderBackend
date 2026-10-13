@@ -7,7 +7,7 @@ import com.fcareer.career.desk.CareerDeskModels.HistoryPoint;
 import com.fcareer.career.desk.CareerDeskModels.OvrBatch;
 import com.fcareer.career.desk.CareerDeskModels.SeasonRecordDto;
 import com.fcareer.career.desk.CareerDeskModels.SeasonRecordRequest;
-import com.fcareer.career.desk.CareerDeskModels.ShortlistDto;
+import com.fcareer.career.desk.CareerDeskModels.ShortlistViewDto;
 import com.fcareer.career.desk.CareerDeskModels.ShortlistRequest;
 import com.fcareer.career.desk.CareerDeskModels.SnapshotDto;
 import com.fcareer.career.desk.CareerDeskModels.TagDto;
@@ -73,8 +73,8 @@ public class CareerDeskController {
     }
 
     @GetMapping("/shortlist")
-    public List<ShortlistDto> shortlist(@AuthenticationPrincipal AuthUser user, @PathVariable Long careerId) {
-        return service.shortlist(user.id(), careerId);
+    public List<ShortlistViewDto> shortlist(@AuthenticationPrincipal AuthUser user, @PathVariable Long careerId) {
+        return service.shortlistView(user.id(), careerId);
     }
 
     @PutMapping("/shortlist/{playerId}")

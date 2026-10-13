@@ -10,10 +10,13 @@ import com.fcareer.career.desk.CareerDeskModels.SeasonRecordDto;
 import com.fcareer.career.desk.CareerDeskModels.SeasonRecordRequest;
 import com.fcareer.career.desk.CareerDeskModels.ShortlistDto;
 import com.fcareer.career.desk.CareerDeskModels.ShortlistRequest;
+import com.fcareer.career.desk.CareerDeskModels.ShortlistViewDto;
 import com.fcareer.career.desk.CareerDeskModels.SnapshotDto;
 import com.fcareer.career.desk.CareerDeskModels.TagDto;
 import com.fcareer.career.entity.CareerEntity;
 import com.fcareer.career.service.CareerService;
+import com.fcareer.catalog.model.response.PlayerSummaryResponse;
+import com.fcareer.catalog.service.PlayerService;
 import com.fcareer.common.exception.InvalidRosterEventException;
 import com.fcareer.common.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +43,7 @@ public class CareerDeskService {
     private final NamedParameterJdbcTemplate jdbc;
     private final CareerService careerService;
     private final SpoilerPolicy spoilerPolicy;
+    private final PlayerService playerService;
 
     // ---- snapshot ----
 
@@ -180,6 +184,16 @@ public class CareerDeskService {
         careerService.requireOwned(userId, careerId);
         return jdbc.query("SELECT base_player_id, note, max_fee_eur, created_at FROM career_shortlist WHERE career_id = :c ORDER BY created_at DESC", Map.of("c", careerId),
                 (rs, i) -> new ShortlistDto(rs.getLong("base_player_id"), rs.getString("note"), (Long) rs.getObject("max_fee_eur"), rs.getTimestamp("created_at").toInstant()));
+    }
+
+    /** Kısa liste oyuncu özetiyle (WEB-BUG-13); spoiler modu özet üzerinde uygulanır, katalogdan kalkmış oyuncu özetsiz döner. */
+    @Transactional(readOnly = true)
+    public List<ShortlistViewDto> shortlistView(Long userId, Long careerId) {
+        CareerEntity career = careerService.requireOwned(userId, careerId);
+        List<ShortlistDto> rows = shortlist(userId, careerId);
+        Map<Long, PlayerSummaryResponse> summaries = playerService.summaries(rows.stream().map(ShortlistDto::playerId).toList(), career.getGameVersionId(), careerId);
+        spoilerPolicy.maskAll(careerId, summaries.values());
+        return rows.stream().map(r -> new ShortlistViewDto(r.playerId(), r.note(), r.maxFeeEur(), r.createdAt(), summaries.get(r.playerId()))).toList();
     }
 
     @Transactional
