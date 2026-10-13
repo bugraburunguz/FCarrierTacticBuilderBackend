@@ -137,9 +137,9 @@ public class IngestionService {
                 int[] counts = transactionTemplate.execute(status -> upsertPage(items, gameVersion, runId));
                 created += counts[0];
                 updated += counts[1];
-                offset += pageSize;
+                offset = Math.min(offset + pageSize, total);
                 runs.progress(runId, offset, total, created, updated);
-                log.info("Ingestion page done provider : {} offset : {} total : {}", provider.name(), offset - pageSize, total);
+                log.info("Ingestion page done provider : {} offset : {} total : {}", provider.name(), pageOffset, total);
                 if (page.items().isEmpty() && total > offset) {
                     log.warn("Ingestion page returned no usable items offset : {}", offset - pageSize);
                 }

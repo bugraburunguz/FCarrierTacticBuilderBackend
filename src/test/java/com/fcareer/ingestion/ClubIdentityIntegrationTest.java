@@ -74,4 +74,15 @@ class ClubIdentityIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT status FROM ingestion_run ORDER BY id DESC LIMIT 1", String.class)).isNotEqualTo("FAILED");
         assertThat(jdbc.queryForObject("SELECT count(*) FROM club WHERE ea_team_id = ?", Integer.class, (int) TEAM_ID)).isEqualTo(1);
     }
+
+    /** Canlı koşuda sayaç 19.800 / 19.789 gösterdi: son sayfa sayacı toplamın ötesine taşıyordu (kayıt çift yazılmamıştı, yalnız ilerleme sayacı). */
+    @Test
+    void progressNeverExceedsTheTotal() {
+        jdbc.update("DELETE FROM ingestion_run");
+        doReturn(page("Counter League", "Counter FC")).when(provider).fetch(anyInt(), anyInt());
+        ingestionService.run();
+
+        Map<String, Object> run = jdbc.queryForMap("SELECT next_offset, total FROM ingestion_run ORDER BY id DESC LIMIT 1");
+        assertThat(((Number) run.get("next_offset")).intValue()).isLessThanOrEqualTo(((Number) run.get("total")).intValue());
+    }
 }
