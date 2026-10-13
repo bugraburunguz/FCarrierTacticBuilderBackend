@@ -29,6 +29,10 @@ public class FitRoleRequest {
 
     private String position;
 
+    /** Opsiyonel geçersiz kılma: v1 | v3 (yoksa yapılandırmadaki engineVersion). */
+    @jakarta.validation.constraints.Pattern(regexp = "v1|v3")
+    private String engineVersion;
+
     @Size(max = 6)
     @Builder.Default
     private List<String> tags = new ArrayList<>();

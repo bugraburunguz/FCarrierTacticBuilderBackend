@@ -10,7 +10,8 @@ const COLS = ['acceleration', 'sprint_speed', 'agility', 'balance', 'reactions',
 
 // ad → id (katalog); Crewe oyuncuları kariyer 4'ün overlay'inden (career_player_rating)
 const NAMES = ['Cristiano Ronaldo', 'Lucas Passerini', 'Alexander Hofleitner', 'Hugo Ekitiké', 'Matthis Abline', 'Alieu Njie', 'Antoine Griezmann', 'Alexis Sánchez', 'Filippo Distefano', 'Yan Diomande', 'Ismael Díaz', 'Abdul Abdulmalik', 'Adama Traoré', 'Bradley Barcola', 'Emilio Rodríguez', 'Kevin De Bruyne', 'Dominik Szoboszlai', 'Nikolas Nartey', 'Anastasios Bakasetas', 'Isaque', 'Scott McTominay', 'Eduard Löwen', 'Kim Dong Hyun', 'Luka Modrić', 'Riqui Puig', 'Granit Xhaka', 'Nicolò Fagioli', 'Jonas Martin', 'Moisés Caicedo', 'Rani Khedira', 'Leonardo Freijão', 'Aymeric Laporte', 'Gautier Lloris', 'Uroš Radaković', 'Bright Arrey-Mbi', 'Pau Cubarsí', 'Kenan Toibibou', 'Marcos Llorente', 'Álvaro Angulo', 'Henry Rorig', 'Cucurella', 'Bernardo', 'Craig Forsyth', 'Marco Carnesecchi', 'Colin Coosemans', 'Simon Ngapandouetnbu', 'Mikel Santos', 'Owen Jochmans']
-const CREWE = ['Keisuke Osako', 'Ian Lawlor', 'Jesse Eugen Bisiwu', 'Jordan Gibson', 'Givairo Read', 'Lewis Billington']
+const CREWE = ['Keisuke Osako', 'Ian Lawlor', 'Jesse Eugen Bisiwu', 'Jordan Gibson', 'Givairo Read', 'Lewis Billington', 'Iván Román', 'Mickey Demetriou', 'Joe White', 'Joel Tabiner']
+const DIAG_CATALOG = ['Robert Kampa', 'Dominik Reimann', 'Torben Müsel', 'Thibaut Courtois', 'Kylian Mbappé']
 const players = {}
 const fetchPlayer = (name, career) => {
   const esc = name.replace(/'/g, "''")
@@ -25,6 +26,7 @@ const fetchPlayer = (name, career) => {
 }
 for (const n of NAMES) players[n] = fetchPlayer(n, false)
 for (const n of CREWE) players[n] = fetchPlayer(n, true)
+for (const n of DIAG_CATALOG) players[n] = fetchPlayer(n, false)
 
 const blocks = [
   { id: 'TF', label: 'Target Forward · Attack', role: 'target_forward', focus: 'Attack', strict: [['Cristiano Ronaldo', 'Lucas Passerini'], ['Lucas Passerini', 'Alexander Hofleitner'], ['Cristiano Ronaldo', 'Alexander Hofleitner'], ['Lucas Passerini', 'Alieu Njie'], ['Alexander Hofleitner', 'Alieu Njie'], ['Cristiano Ronaldo', 'Hugo Ekitiké']], observe: [['Matthis Abline', 'Alexander Hofleitner']] },
@@ -50,5 +52,16 @@ blocks.forEach((b) => (b.positions = BLOCK_POSITIONS[b.id]))
 const names = new Set(blocks.flatMap((b) => [...b.strict.flat(), ...b.observe.flat()]))
 const missing = [...names].filter((n) => !players[n])
 if (missing.length) throw new Error('fixture eksik: ' + missing.join(', '))
-writeFileSync(new URL('../../src/test/resources/golden-set.fc27.json', import.meta.url), JSON.stringify({ _source: 'docs/review/v2/golden_set.md (KESİN sürüm); attribute değerleri 2026-10-14 DB dökümü', players, blocks }, null, 1) + '\n')
+// Teşhis tablosu (eng_audit_E3.md §3): v1 skorları o gün canlı POST /fit/role ile ölçüldü.
+const diagnosis = [
+  { name: 'Robert Kampa', position: 'GK', role: 'goalkeeper', focus: 'Defend', v1: 2.1 },
+  { name: 'Dominik Reimann', position: 'GK', role: 'goalkeeper', focus: 'Defend', v1: 51.1 },
+  { name: 'Torben Müsel', position: 'CDM', role: 'holding', focus: 'Defend', v1: 7.5 },
+  { name: 'Ian Lawlor', position: 'GK', role: 'goalkeeper', focus: 'Defend', v1: 25.0 },
+  { name: 'Iván Román', position: 'CB', role: 'defender', focus: 'Defend', v1: 9.7 },
+  { name: 'Joe White', position: 'CM', role: 'box_to_box', focus: 'Balanced', v1: 36.0 },
+  { name: 'Thibaut Courtois', position: 'GK', role: 'goalkeeper', focus: 'Defend', v1: 83.7 },
+  { name: 'Kylian Mbappé', position: 'ST', role: 'advanced_forward', focus: 'Attack', v1: 94.6 },
+]
+writeFileSync(new URL('../../src/test/resources/golden-set.fc27.json', import.meta.url), JSON.stringify({ _source: 'docs/review/v2/golden_set.md (KESİN sürüm); attribute değerleri 2026-10-14 DB dökümü', players, blocks, diagnosis }, null, 1) + String.fromCharCode(10))
 console.log('oyuncu:', Object.keys(players).length, 'blok:', blocks.length)

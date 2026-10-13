@@ -18,6 +18,10 @@ public class FitEngineProperties {
     private Playstyle playstyle = new Playstyle();
     private Accelerate accelerate = new Accelerate();
     private String roleWeightsVersion = "v1";
+    /** Motor sürümü (v1|v3). engineVersion: katalog/UT yolları; careerEngineVersion: kariyer kadrosu yolları. Geri alma = bu değerleri v1 yapmak (E3-5). */
+    private String engineVersion = "v1";
+    private String careerEngineVersion = "v3";
+    private V3 v3 = new V3();
     private DefensiveGate defensiveGate = new DefensiveGate();
     private double outOfPositionPenalty = 15;
     private double globalFloorPenaltyPerPoint = 0.8;
@@ -26,6 +30,14 @@ public class FitEngineProperties {
     private Squad squad = new Squad();
     private Map<String, List<String>> positionEquivalents = defaultPositionEquivalents();
     private Map<String, List<String>> playstyleRelevance = defaultPlaystyleRelevance();
+
+    /** v3 rozet eşikleri (levelFit yüzdeliği; yoksa currentFit). verified:false, UX ayarı. */
+    @Getter
+    @Setter
+    public static class V3 {
+        private double greenFrom = 60;
+        private double yellowFrom = 35;
+    }
 
     @Getter
     @Setter

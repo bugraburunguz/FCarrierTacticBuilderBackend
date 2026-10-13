@@ -64,7 +64,7 @@ public class FitEngineV3 {
     public Result currentFit(FitPlayer player, String position, String baseRole, String focus, Set<AcceleRate> preferredAccelerate) {
         int gender = Objects.isNull(player.getGender()) ? 0 : player.getGender();
         boolean inPosition = Objects.nonNull(player.getPositions()) && player.getPositions().contains(position);
-        Map<Attr, Double> roleVector = inPosition ? seeds.vector(position, baseRole, focus).orElse(null) : null;
+        Map<Attr, Double> roleVector = seeds.vector(position, baseRole, focus).orElse(null);
         Map<Attr, Double> vector = Objects.nonNull(roleVector) ? roleVector : seeds.positionVector(position);
         boolean roleApplies = Objects.nonNull(roleVector);
 

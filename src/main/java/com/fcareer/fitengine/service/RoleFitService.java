@@ -96,6 +96,7 @@ public class RoleFitService {
                 .outOfPosition(outOfPosition)
                 .reasons(reasons)
                 .weaponChecks(weaponChecks)
+                .engineVersion("v1")
                 .breakdown(RoleFitBreakdown.builder()
                         .base(round1(base * MAX_SCORE))
                         .playstyleBonus(round1(playstyleBonus))

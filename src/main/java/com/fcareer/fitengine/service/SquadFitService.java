@@ -46,8 +46,13 @@ public class SquadFitService {
     private final NlgService nlgService;
     private final FitEngineProperties properties;
     private final SetupModifier setupModifier;
+    private final RoleFitV3Service roleFitV3Service;
 
     public SquadFitResponse solve(List<FitPlayer> squad, List<IntentProfile> slots, List<TacticRuleDefinition> rules) {
+        return solve(squad, slots, rules, "v1");
+    }
+
+    public SquadFitResponse solve(List<FitPlayer> squad, List<IntentProfile> slots, List<TacticRuleDefinition> rules, String engineVersion) {
         int playerCount = squad.size();
         int slotCount = slots.size();
         RoleFitResponse[][] roleFits = new RoleFitResponse[playerCount][slotCount];
@@ -58,7 +63,9 @@ public class SquadFitService {
         for (int p = 0; p < playerCount; p++) {
             for (int s = 0; s < slotCount; s++) {
                 IntentProfile slot = slots.get(s);
-                roleFits[p][s] = roleFitService.calculate(squad.get(p), slot.getResolvedRole(), slot, slot.getSlotPosition());
+                roleFits[p][s] = FitEngineV3.VERSION.equals(engineVersion)
+                        ? roleFitV3Service.calculate(squad.get(p), slot.getResolvedRole(), slot, slot.getSlotPosition())
+                        : roleFitService.calculate(squad.get(p), slot.getResolvedRole(), slot, slot.getSlotPosition());
                 intentFits[p][s] = intentFitService.calculate(squad.get(p), slot);
                 setupDeltas[p][s] = setupModifier.delta(squad.get(p), slot);
                 combined[p][s] = combine(roleFits[p][s], intentFits[p][s], slot) + setupDeltas[p][s];
@@ -139,11 +146,15 @@ public class SquadFitService {
 
     /** Taktiği olduğu gibi ve sağ-sol aynalanmış haliyle çözer; kadroya daha uygun olanı döner. */
     public SquadFitResponse solveBest(List<FitPlayer> squad, List<IntentProfile> slots, List<TacticRuleDefinition> rules) {
-        SquadFitResponse original = solve(squad, slots, rules);
+        return solveBest(squad, slots, rules, "v1");
+    }
+
+    public SquadFitResponse solveBest(List<FitPlayer> squad, List<IntentProfile> slots, List<TacticRuleDefinition> rules, String engineVersion) {
+        SquadFitResponse original = solve(squad, slots, rules, engineVersion);
         if (!TacticMirror.isMirrorable(slots)) {
             return original;
         }
-        SquadFitResponse flipped = solve(squad, TacticMirror.mirror(slots), rules);
+        SquadFitResponse flipped = solve(squad, TacticMirror.mirror(slots), rules, engineVersion);
         if (overall(flipped) > overall(original) + MIRROR_MARGIN) {
             flipped.setMirrored(true);
             log.info("Tactic mirrored original : {} mirrored : {}", overall(original), overall(flipped));
