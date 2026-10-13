@@ -280,9 +280,14 @@ public class IngestionService {
         Integer leagueId = Objects.isNull(player.leagueName()) ? null
                 : leagues.computeIfAbsent(player.leagueName(), this::league).getId();
         Optional<ClubEntity> known = Objects.isNull(teamId) ? Optional.empty() : clubRepository.findFirstByEaTeamIdOrderByIdAsc(teamId.intValue());
-        ClubEntity club = known.or(() -> clubRepository.findByNameAndLeagueId(player.clubName(), leagueId)).orElseGet(ClubEntity::new);
-        club.setName(player.clubName());
-        club.setLeagueId(leagueId);
+        Optional<ClubEntity> sameName = clubRepository.findByNameAndLeagueId(player.clubName(), leagueId);
+        // Tanınan satırı yeniden adlandırmak aynı ligdeki başka bir satırla (name, league) unique'ini çiğniyorsa ad/lig değişmez; satır ea id ile eşleşmeye devam eder.
+        boolean clash = known.isPresent() && sameName.isPresent() && !sameName.get().getId().equals(known.get().getId());
+        ClubEntity club = known.or(() -> sameName).orElseGet(ClubEntity::new);
+        if (!clash) {
+            club.setName(player.clubName());
+            club.setLeagueId(leagueId);
+        }
         club.setGender((short) player.gender());
         if (Objects.nonNull(teamId)) {
             club.setEaTeamId(teamId.intValue());

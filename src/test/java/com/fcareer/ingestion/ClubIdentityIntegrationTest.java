@@ -57,4 +57,21 @@ class ClubIdentityIntegrationTest {
         assertThat(club.get("league")).isEqualTo("Premier League");
         assertThat(club.get("name")).isEqualTo("Hull City AFC");
     }
+
+    /** Canlı ingestion bulgusu: LE içe aktarımı "PSG" adıyla ea id'li satır açtı, eski EA ingestion'ın "Paris SG" satırı (ea id yok) aynı lige ait; yeniden adlandırma unique ihlaliyle çöküyordu. */
+    @Test
+    void renamingToAnExistingNameInTheSameLeagueDoesNotCrashAndKeepsTheKnownRow() {
+        jdbc.update("DELETE FROM ingestion_run");
+        doReturn(page("Rename League", "PSG Test")).when(provider).fetch(anyInt(), anyInt());
+        ingestionService.run();
+        Integer leagueId = jdbc.queryForObject("SELECT id FROM league WHERE name = 'Rename League'", Integer.class);
+        jdbc.update("INSERT INTO club (name, league_id, gender) VALUES ('Paris SG Test', ?, 1)", leagueId);
+
+        jdbc.update("DELETE FROM ingestion_run");
+        doReturn(page("Rename League", "Paris SG Test")).when(provider).fetch(anyInt(), anyInt());
+        ingestionService.run();
+
+        assertThat(jdbc.queryForObject("SELECT status FROM ingestion_run ORDER BY id DESC LIMIT 1", String.class)).isNotEqualTo("FAILED");
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM club WHERE ea_team_id = ?", Integer.class, (int) TEAM_ID)).isEqualTo(1);
+    }
 }
