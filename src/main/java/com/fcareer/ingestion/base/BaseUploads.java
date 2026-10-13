@@ -16,7 +16,8 @@ import java.util.Set;
 
 public final class BaseUploads {
 
-    private static final Set<String> KEYS = Set.of("players", "teams", "teamplayerlinks", "leagueteamlinks", "leagues");
+    private static final Set<String> KEYS = Set.of("players", "teams", "teamplayerlinks", "leagueteamlinks", "leagues",
+            "playerloans", "playernames", "dcplayernames", "editedplayernames", "context");
 
     private BaseUploads() {
     }

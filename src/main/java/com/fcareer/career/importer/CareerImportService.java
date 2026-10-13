@@ -47,30 +47,28 @@ public class CareerImportService {
     private final com.fcareer.career.desk.CareerDeskService careerDeskService;
 
     @Transactional
-    public ImportSummaryResponse importData(Long userId, Long careerId, MultipartFile logFile, MultipartFile players, MultipartFile teams,
-                                            MultipartFile links, MultipartFile leagueLinks, MultipartFile leagues) {
+    public ImportSummaryResponse importData(Long userId, Long careerId, MultipartFile logFile, Map<String, MultipartFile> csvs) {
         entitlementService.requirePremium(userId);
         CareerEntity career = careerService.requireOwned(userId, careerId);
 
-        Map<String, MultipartFile> csvs = new HashMap<>();
-        csvs.put("players", players);
-        csvs.put("teams", teams);
-        csvs.put("teamplayerlinks", links);
-        csvs.put("leagueteamlinks", leagueLinks);
-        csvs.put("leagues", leagues);
         Map<String, List<Map<String, String>>> tables = BaseUploads.toTables(logFile, csvs);
         Map<Integer, String> leagueNames = new HashMap<>();
         Set<Integer> internationalLeagues = new HashSet<>();
         readLeagues(tables.get("leagues"), leagueNames, internationalLeagues);
+        internationalLeagues.addAll(BaseCatalogImporter.NATIONAL_LEAGUE_IDS);
         Map<Integer, Integer> teamLeague = readLeagueLinks(tables.get("leagueteamlinks"));
         Map<Integer, Map<String, String>> teamRows = readTeams(tables.get("teams"));
         Set<Integer> nationalTeams = new HashSet<>();
+        Set<Integer> freeAgentTeams = new HashSet<>(FREE_AGENT_TEAM_IDS);
         teamLeague.forEach((team, league) -> {
             if (internationalLeagues.contains(league)) {
                 nationalTeams.add(team);
             }
+            if (league == BaseCatalogImporter.FREE_AGENT_LEAGUE_ID) {
+                freeAgentTeams.add(team);
+            }
         });
-        Map<Long, Integer> playerTeam = readLinks(tables.get("teamplayerlinks"), nationalTeams);
+        Map<Long, Integer> playerTeam = readLinks(tables.get("teamplayerlinks"), nationalTeams, freeAgentTeams);
         Map<Long, Integer> loanedFrom = readLoans(tables.get("playerloans"));
         Map<Long, Long> eaToBase = eaIdMap();
         Map<Long, Long> generated = baseCatalogImporter.upsertCareerPlayers(careerId, tables, career.getGameVersionId());
@@ -88,7 +86,7 @@ public class CareerImportService {
                 unmatched++;
                 continue;
             }
-            boolean freeAgent = FREE_AGENT_TEAM_IDS.contains(teamId);
+            boolean freeAgent = freeAgentTeams.contains(teamId);
             if (freeAgent) {
                 freeAgents++;
             }
@@ -123,7 +121,7 @@ public class CareerImportService {
                     .addValue("career", careerId).addValue("team", teamId).addValue("name", BaseCatalogImporter.displayTeamName(row.get("teamname"), teamId))
                     .addValue("league", leagueNames.get(teamLeague.get(teamId)))
                     .addValue("gender", toInt(row.get("gender")))
-                    .addValue("pool", FREE_AGENT_TEAM_IDS.contains(teamId))
+                    .addValue("pool", freeAgentTeams.contains(teamId))
                     .addValue("overall", toInt(row.get("overallrating"))).addValue("attack", toInt(row.get("attackrating")))
                     .addValue("midfield", toInt(row.get("midfieldrating"))).addValue("defence", toInt(row.get("defenserating")))
                     .addValue("buildUp", toInt(row.get("buildupplay"))).addValue("depth", toInt(row.get("defensivedepth")))
@@ -158,7 +156,16 @@ public class CareerImportService {
                 careerId, playerRows.size(), teamParams.size(), freeAgents, unmatched);
         Integer guessedTeam = guess.isEmpty() ? null : ((Number) guess.get(0).get("team_id")).intValue();
         Integer synced = Objects.isNull(guessedTeam) || squadEditedByUser(careerId) ? null : rebuildSquad(career, careerId, guessedTeam);
+        int skippedNoPosition = baseCatalogImporter.careerPlayersWithoutPositions(tables.get("players"), eaToBase.keySet());
+        List<String> warnings = new ArrayList<>();
+        if (skippedNoPosition > 0) {
+            warnings.add("CAREER_PLAYERS_SKIPPED_NO_POSITIONS");
+        }
+        if (notInCareer(tables.get("context"))) {
+            warnings.add("NOT_IN_CAREER");
+        }
         return ImportSummaryResponse.builder()
+                .skippedNoPosition(skippedNoPosition).warnings(warnings)
                 .squadSynced(synced)
                 .players(playerRows.size()).generatedPlayers(generated.size()).unmatchedPlayers(unmatched).teams(teamParams.size()).freeAgents(freeAgents)
                 .guessedTeamId(guess.isEmpty() ? null : ((Number) guess.get(0).get("team_id")).intValue())
@@ -221,6 +228,11 @@ public class CareerImportService {
         }
     }
 
+    /** Export v2 context tablosu incareer=0 diyorsa dosya kariyer dışında (ana menüde) alınmıştır; base kadrolar kariyer verisi sanılmasın (LE-02). */
+    private static boolean notInCareer(List<Map<String, String>> context) {
+        return Objects.nonNull(context) && !context.isEmpty() && Objects.equals(toInt(context.get(0).get("incareer")), 0);
+    }
+
     private Map<Long, Long> eaIdMap() {
         Map<Long, Long> map = new HashMap<>();
         jdbc.query("SELECT id, ea_resource_id FROM base_player WHERE ea_resource_id IS NOT NULL",
@@ -252,7 +264,7 @@ public class CareerImportService {
         return teams;
     }
 
-    private Map<Long, Integer> readLinks(List<Map<String, String>> rows, Set<Integer> nationalTeams) {
+    private Map<Long, Integer> readLinks(List<Map<String, String>> rows, Set<Integer> nationalTeams, Set<Integer> freeAgentTeams) {
         Map<Long, Integer> links = new HashMap<>();
         for (Map<String, String> row : required(rows, "teamplayerlinks")) {
             Long player = toLong(row.get("playerid"));
@@ -261,7 +273,7 @@ public class CareerImportService {
                 continue;
             }
             Integer existing = links.get(player);
-            if (Objects.isNull(existing) || (FREE_AGENT_TEAM_IDS.contains(existing) && !FREE_AGENT_TEAM_IDS.contains(team))) {
+            if (Objects.isNull(existing) || (freeAgentTeams.contains(existing) && !freeAgentTeams.contains(team))) {
                 links.put(player, team);
             }
         }

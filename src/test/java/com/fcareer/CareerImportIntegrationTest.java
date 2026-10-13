@@ -134,6 +134,62 @@ class CareerImportIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT count(*) FROM user_player_state WHERE career_id = ? AND base_player_id = ?", Integer.class, careerId, manual)).isEqualTo(1);
     }
 
+    private long premiumCareer(String token) throws Exception {
+        var club = clubRepository.findAll().get(0);
+        long careerId = json(post("/api/v1/careers").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("clubId", club.getId(), "budgetEur", 1_000_000))), token).at("/data/id").asLong();
+        json(post("/api/v1/billing/subscribe"), token);
+        return careerId;
+    }
+
+    @Test
+    void csvPathAcceptsLoansAndTheNameTablesNotJustTheFiveBaseTables() throws Exception {
+        String token = register();
+        long careerId = premiumCareer(token);
+        String club = clubRepository.findAll().get(0).getName();
+
+        JsonNode result = json(multipart("/api/v1/careers/" + careerId + "/import")
+                .file(file("players", "playerid,overallrating,potential\n" + FIRST_MOCK_ID + ",91,95\n" + (FIRST_MOCK_ID + 1) + ",90,93\n"))
+                .file(file("teams", "teamid,teamname,overallrating,gender\n1,\"" + club + "\",80,0\n99,Baska,70,0\n"))
+                .file(file("teamplayerlinks", "playerid,teamid\n" + FIRST_MOCK_ID + ",1\n" + (FIRST_MOCK_ID + 1) + ",1\n"))
+                .file(file("playerloans", "playerid,teamidloanedfrom\n" + FIRST_MOCK_ID + ",99\n"))
+                .file(file("playernames", "nameid,name\n1,Ad\n")), token);
+
+        assertThat(result.at("/success").asBoolean()).as(result.toString()).isTrue();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM user_player_state WHERE career_id = ? AND on_loan", Integer.class, careerId))
+                .as("playerloans CSV'si artık okunuyor").isEqualTo(1);
+    }
+
+    @Test
+    void importWarnsWhenGeneratedCareerPlayersHaveNoPositionColumns() throws Exception {
+        String token = register();
+        long careerId = premiumCareer(token);
+        String club = clubRepository.findAll().get(0).getName();
+
+        JsonNode result = json(multipart("/api/v1/careers/" + careerId + "/import")
+                .file(file("players", "playerid,overallrating,potential\n" + FIRST_MOCK_ID + ",91,95\n460000,60,80\n460001,61,82\n"))
+                .file(file("teams", "teamid,teamname,overallrating,gender\n1,\"" + club + "\",80,0\n"))
+                .file(file("teamplayerlinks", "playerid,teamid\n" + FIRST_MOCK_ID + ",1\n460000,1\n460001,1\n")), token);
+
+        assertThat(result.at("/data/skippedNoPosition").asInt()).isEqualTo(2);
+        assertThat(result.at("/data/warnings").toString()).contains("CAREER_PLAYERS_SKIPPED_NO_POSITIONS");
+    }
+
+    @Test
+    void importWarnsWhenTheExportWasNotTakenInsideACareer() throws Exception {
+        String token = register();
+        long careerId = premiumCareer(token);
+        String club = clubRepository.findAll().get(0).getName();
+
+        JsonNode result = json(multipart("/api/v1/careers/" + careerId + "/import")
+                .file(file("players", "playerid,overallrating,potential\n" + FIRST_MOCK_ID + ",91,95\n"))
+                .file(file("teams", "teamid,teamname,overallrating,gender\n1,\"" + club + "\",80,0\n"))
+                .file(file("teamplayerlinks", "playerid,teamid\n" + FIRST_MOCK_ID + ",1\n"))
+                .file(file("context", "incareer,savetype\n0,0\n")), token);
+
+        assertThat(result.at("/data/warnings").toString()).contains("NOT_IN_CAREER");
+    }
+
     @Test
     void importAcceptsTheLiveEditorLogFileDirectly() throws Exception {
         String token = register();

@@ -33,15 +33,12 @@ public class CareerImportController {
     private final TeamInsightService teamInsightService;
     private final com.fcareer.career.desk.SpoilerPolicy spoilerPolicy;
 
+    /** log (tek dosya) ya da tablo başına bir CSV: players, teams, teamplayerlinks, leagueteamlinks, leagues, playerloans, playernames, dcplayernames, editedplayernames, context. */
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ImportSummaryResponse importData(@AuthenticationPrincipal AuthUser user, @PathVariable Long id,
                                             @RequestParam(value = "log", required = false) MultipartFile log,
-                                            @RequestParam(value = "players", required = false) MultipartFile players,
-                                            @RequestParam(value = "teams", required = false) MultipartFile teams,
-                                            @RequestParam(value = "teamplayerlinks", required = false) MultipartFile links,
-                                            @RequestParam(value = "leagueteamlinks", required = false) MultipartFile leagueLinks,
-                                            @RequestParam(value = "leagues", required = false) MultipartFile leagues) {
-        return careerImportService.importData(user.id(), id, log, players, teams, links, leagueLinks, leagues);
+                                            @RequestParam Map<String, MultipartFile> files) {
+        return careerImportService.importData(user.id(), id, log, files);
     }
 
     @PostMapping("/import/squad")

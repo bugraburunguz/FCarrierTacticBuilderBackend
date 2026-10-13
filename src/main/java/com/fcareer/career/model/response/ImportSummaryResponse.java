@@ -20,4 +20,8 @@ public class ImportSummaryResponse {
     private Integer guessedTeamId;
     private Integer squadSynced;
     private String guessedTeamName;
+    /** Pozisyon kolonu olmadığı için atlanan kariyer-üretimi oyuncu sayısı (LE-02). */
+    private int skippedNoPosition;
+    /** Kullanıcıya gösterilecek uyarı kodları: CAREER_PLAYERS_SKIPPED_NO_POSITIONS, NOT_IN_CAREER. */
+    private java.util.List<String> warnings;
 }

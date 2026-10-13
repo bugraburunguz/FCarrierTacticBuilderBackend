@@ -42,8 +42,8 @@ public class BaseCatalogImporter {
     /** LE-01: lig türleri ADLA (dil değişir) değil EA lig id'siyle tanınır. 76 Erkekler - Diğer, 2000/2028 yer tutucu: katalogdan dışlanır. */
     private static final Set<Integer> NON_CATALOG_LEAGUE_IDS = Set.of(76, 2000, 2028);
     /** 78 Erkek Milli, 2136 Kadın Milli: milli takımlar kulüp değildir. */
-    private static final Set<Integer> NATIONAL_LEAGUE_IDS = Set.of(78, 2136);
-    private static final int FREE_AGENT_LEAGUE_ID = 382;
+    public static final Set<Integer> NATIONAL_LEAGUE_IDS = Set.of(78, 2136);
+    public static final int FREE_AGENT_LEAGUE_ID = 382;
     private static final String FREE_AGENTS = "Free Agents";
     /** Dökümde iki serbest takım da "Serbest"/gender 0; kadın havuzu (131368) erkek olanla aynı adı taşıyamaz (club tekilliği) ve gender 1 olur. */
     private static final int WOMEN_FREE_AGENT_TEAM_ID = 131368;
@@ -308,6 +308,19 @@ public class BaseCatalogImporter {
         });
         return new Context(players, playerTeam, names, existing, nationalities, clubs, excludedTeams,
                 editedNames(tables.getOrDefault("editedplayernames", List.of())), freeAgentTeams);
+    }
+
+    /** LE-02: pozisyon kolonu olmayan (örn. 3 kolonlu players.csv) kariyer-üretimi oyuncuların sayısı; bunlar katalog/kariyer oyuncusu olarak oluşturulamaz. */
+    public int careerPlayersWithoutPositions(List<Map<String, String>> players, Set<Long> knownEaIds) {
+        int skipped = 0;
+        for (Map<String, String> row : Objects.requireNonNullElse(players, List.<Map<String, String>>of())) {
+            Long eaId = toLong(row.get("playerid"));
+            Integer overall = toInt(row.get("overallrating"));
+            if (Objects.nonNull(eaId) && eaId >= CAREER_CREATED_MIN_ID && !knownEaIds.contains(eaId) && Objects.nonNull(overall) && overall >= MIN_OVERALL && positions(row).isEmpty()) {
+                skipped++;
+            }
+        }
+        return skipped;
     }
 
     /**
