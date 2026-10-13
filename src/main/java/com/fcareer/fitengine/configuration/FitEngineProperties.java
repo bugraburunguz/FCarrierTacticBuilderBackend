@@ -31,12 +31,13 @@ public class FitEngineProperties {
     private Map<String, List<String>> positionEquivalents = defaultPositionEquivalents();
     private Map<String, List<String>> playstyleRelevance = defaultPlaystyleRelevance();
 
-    /** v3 rozet eşikleri (levelFit yüzdeliği; yoksa currentFit). verified:false, UX ayarı. */
+    /** v3 rozet eşikleri (levelFit yüzdeliği; yoksa currentFit): >=green iyi, >=neutral seviyesinde (renksiz), >=yellow zayıf, altı yanlış rol. verified:false, UX ayarı. */
     @Getter
     @Setter
     public static class V3 {
-        private double greenFrom = 60;
-        private double yellowFrom = 35;
+        private double greenFrom = 65;
+        private double neutralFrom = 40;
+        private double yellowFrom = 20;
     }
 
     @Getter

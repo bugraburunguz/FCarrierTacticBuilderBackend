@@ -136,7 +136,7 @@ public class FitService {
                 .roleFit(Objects.isNull(s.getRoleFit()) ? null : RoleFitResponse.builder().playerId(s.getRoleFit().getPlayerId())
                         .playerName(s.getRoleFit().getPlayerName()).roleId(s.getRoleFit().getRoleId()).roleName(s.getRoleFit().getRoleName())
                         .score(s.getRoleFit().getScore()).projectedRating(s.getRoleFit().getProjectedRating()).badge(s.getRoleFit().getBadge())
-                        .engineVersion(s.getRoleFit().getEngineVersion()).currentFit(s.getRoleFit().getCurrentFit()).levelFit(s.getRoleFit().getLevelFit())
+                        .engineVersion(s.getRoleFit().getEngineVersion()).fitLabel(s.getRoleFit().getFitLabel()).badgeText("v3".equals(s.getRoleFit().getEngineVersion()) ? s.getRoleFit().getBadgeText() : null).currentFit(s.getRoleFit().getCurrentFit()).levelFit(s.getRoleFit().getLevelFit())
                         .levelBandLo(s.getRoleFit().getLevelBandLo()).levelBandHi(s.getRoleFit().getLevelBandHi()).levelSample(s.getRoleFit().getLevelSample())
                         .outOfPosition(s.getRoleFit().isOutOfPosition()).build())
                 .build()).toList();

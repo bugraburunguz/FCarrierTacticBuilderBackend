@@ -70,6 +70,8 @@ class FitEngineVersionIntegrationTest {
         assertThat(roleFit.at("/score").asDouble()).isEqualTo(roleFit.at("/currentFit").asDouble());
         assertThat(roleFit.at("/levelFit").asDouble()).isBetween(0.0, 100.0);
         assertThat(roleFit.at("/contributions").size()).isBetween(1, 3);
+        assertThat(roleFit.at("/fitLabel").asText()).isIn("GOOD", "AT_LEVEL", "WEAK", "WRONG_ROLE");
+        assertThat(roleFit.at("/badgeText").asText()).isNotBlank();
     }
 
     @Test

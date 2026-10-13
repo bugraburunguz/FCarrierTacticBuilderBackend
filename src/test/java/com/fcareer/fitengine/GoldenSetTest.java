@@ -90,6 +90,24 @@ class GoldenSetTest {
         assertThat(tau).isGreaterThanOrEqualTo(MIN_TAU);
     }
 
+    /** Kalibrasyon çiftleri (vektör ayarının hedef aldığı çiftler) bağımsız doğrulama sayılmaz; τ'dan ayrı raporlanır, yine de sıra korunmalı. */
+    @Test
+    void calibrationPairsAreReportedSeparatelyAndStillHold() {
+        int held = 0;
+        int total = 0;
+        for (JsonNode block : fixture.path("blocks")) {
+            for (JsonNode pair : block.path("calibration")) {
+                double high = fit(block, pair.get(0).asText());
+                double low = fit(block, pair.get(1).asText());
+                total++;
+                held += high > low ? 1 : 0;
+                System.out.println("GOLDEN calibration " + block.path("label").asText() + ": " + pair.get(0).asText() + " " + high + " vs " + pair.get(1).asText() + " " + low);
+                assertThat(high).isGreaterThan(low);
+            }
+        }
+        System.out.println("GOLDEN calibration " + held + "/" + total + " (τ dışında)");
+    }
+
     @Test
     void observationPairsAreReportedButNeverFailTheBuild() {
         for (JsonNode block : fixture.path("blocks")) {

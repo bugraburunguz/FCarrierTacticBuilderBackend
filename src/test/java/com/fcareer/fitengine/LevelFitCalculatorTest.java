@@ -67,4 +67,21 @@ class LevelFitCalculatorTest {
         double[] q = LevelFitCalculator.quantiles(flat);
         assertThat(LevelFitCalculator.percentile(q, 70.0)).isEqualTo(50.0);
     }
+
+    @Test
+    void onlyTheSingleBestOfTheBandReachesOneHundredAndTheRunnerUpStaysBelow() {
+        double[] fits = IntStream.range(0, 40).mapToDouble((i) -> 50 + i * 0.5).toArray();
+        double[] q = LevelFitCalculator.quantiles(fits);
+        double best = fits[39];
+        double runnerUp = fits[38];
+        assertThat(LevelFitCalculator.percentile(q, best)).isEqualTo(100.0);
+        assertThat(LevelFitCalculator.percentile(q, runnerUp)).isLessThan(100.0);
+        assertThat(LevelFitCalculator.percentile(q, best + 5)).isEqualTo(100.0);
+    }
+
+    @Test
+    void anInfinitesimalGapBelowTheBandBestIsNotRankedAsTheBest() {
+        double[] q = LevelFitCalculator.quantiles(IntStream.rangeClosed(0, 100).asDoubleStream().toArray());
+        assertThat(LevelFitCalculator.percentile(q, 99.9)).isLessThan(100.0);
+    }
 }

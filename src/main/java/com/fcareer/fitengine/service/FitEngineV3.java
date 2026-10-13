@@ -28,6 +28,8 @@ public class FitEngineV3 {
 
     public static final String VERSION = "v3";
     private static final double MAX_SCORE = 100.0;
+    /** Yumuşak doygunluk dizi noktası (Buğra kararı E3-5b): 0-85 aralığı aynen, üstü tanh ile 100'e yaklaşır (kırpma yok, sıra korunur). */
+    private static final double SATURATION_KNEE = 85.0;
     private static final double SOFTPLUS_SHIFT = 2.0;
     private static final double MIN_SD = 3.0;
     private static final double WEIGHT_FLOOR = 0.005;
@@ -87,12 +89,24 @@ public class FitEngineV3 {
             total += accelerate(player, preferredAccelerate, contributions);
             total += foot(player, position, baseRole, contributions);
         }
-        double clamped = Math.max(0, Math.min(MAX_SCORE, total));
+        double clamped = saturate(total);
         double factor = inPosition ? 1.0 : outOfPositionFactor(player, position);
         if (factor < 1.0) {
             contributions.add(new Contribution("position", position, clamped * (factor - 1.0)));
         }
-        return new Result(Math.round(clamped * factor * 10.0) / 10.0, clamped, factor, inPosition, contributions);
+        return new Result(clamped * factor, clamped, factor, inPosition, contributions);
+    }
+
+    /** Toplamı [0, 100) aralığına yumuşakça sıkıştırır: x <= 85 için x, üstünde 85 + 15·tanh((x-85)/15). */
+    public static double saturate(double total) {
+        if (total <= 0) {
+            return 0;
+        }
+        if (total <= SATURATION_KNEE) {
+            return total;
+        }
+        double room = MAX_SCORE - SATURATION_KNEE;
+        return SATURATION_KNEE + room * Math.tanh((total - SATURATION_KNEE) / room);
     }
 
     private double outOfPositionFactor(FitPlayer player, String position) {

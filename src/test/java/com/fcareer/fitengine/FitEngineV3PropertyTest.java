@@ -132,4 +132,32 @@ class FitEngineV3PropertyTest {
             assertThat(same).isGreaterThanOrEqualTo(cut - 0.11);
         }
     }
+
+    @Provide
+    Arbitrary<Case> strongCases() {
+        Arbitrary<Target> target = Arbitraries.of(TARGETS);
+        Arbitrary<Map<Attr, Integer>> attrs = Arbitraries.integers().between(86, 97).list().ofSize(Attr.values().length).map((values) -> {
+            Map<Attr, Integer> map = new EnumMap<>(Attr.class);
+            for (int i = 0; i < values.size(); i++) {
+                map.put(Attr.values()[i], values.get(i));
+            }
+            return map;
+        });
+        return Combinators.combine(target, attrs, Arbitraries.of(Attr.values())).as(Case::new);
+    }
+
+    @Property(tries = 400)
+    void atTheTopEndTwoDifferentInputsNeverCollapseToTheSameCurrentFit(@ForAll("strongCases") Case c) {
+        Double weight = SEEDS.vector(c.target().position(), c.target().role(), c.target().focus()).orElseThrow().get(c.bumped());
+        if (weight == null || weight < 0.02) {
+            return;
+        }
+        Map<Attr, Integer> raised = new EnumMap<>(Attr.class);
+        raised.putAll(c.attrs());
+        raised.put(c.bumped(), c.attrs().get(c.bumped()) + 1);
+        double before = fit(player(c.target(), c.attrs(), true, "Right", 70, 75, Map.of()), c.target());
+        double after = fit(player(c.target(), raised, true, "Right", 70, 75, Map.of()), c.target());
+        assertThat(after).as(c.target() + " " + c.bumped()).isGreaterThan(before);
+        assertThat(after).isLessThan(100.0);
+    }
 }

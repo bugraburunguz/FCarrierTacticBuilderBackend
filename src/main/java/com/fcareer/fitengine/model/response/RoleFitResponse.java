@@ -32,6 +32,8 @@ public class RoleFitResponse {
     private String engineVersion;
     private Double currentFit;
     private Double levelFit;
+    /** v3: GOOD | AT_LEVEL | WEAK | WRONG_ROLE (levelFit bandı; badge yalnız GOOD/WEAK/WRONG_ROLE için dolu). */
+    private String fitLabel;
     private Integer levelBandLo;
     private Integer levelBandHi;
     private Integer levelSample;
