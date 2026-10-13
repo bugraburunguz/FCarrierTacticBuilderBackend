@@ -1,3 +1,4 @@
+name: fcarriertacticbuilder
 # Tüm yığın: postgres + redis + ml (iç ağ) + backend + web (nginx, http://localhost:8081).
 # Çalıştırma (bu klasörden): docker compose up -d --build   |   env: .env (örnek: .env.example)
 services:
