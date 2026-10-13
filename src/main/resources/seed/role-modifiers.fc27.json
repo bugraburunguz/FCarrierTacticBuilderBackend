@@ -1,0 +1,76 @@
+{
+  "_source": "13 §3.2 madde 4-7",
+  "verified": false,
+  "familiarity": {
+    "none": 0,
+    "rolePlus": 2,
+    "rolePlusPlus": 4,
+    "_basis": "13 §3.2 madde 5: ölçülene kadar f1=2, f2=4"
+  },
+  "psCap": {
+    "maxTotal": 8,
+    "psPlusMultiplier": 2,
+    "_basis": "13 §3.2 madde 4"
+  },
+  "foot": {
+    "cutInside": {
+      "roles": [
+        "inside_forward",
+        "wide_playmaker",
+        "inverted_wingback",
+        "half_winger"
+      ],
+      "oppositeFootBonus": 2,
+      "_basis": "içe kat eden roller karşı ayakta (13 §3.2 madde 7)"
+    },
+    "crossing": {
+      "roles": [
+        "winger",
+        "wingback",
+        "attacking_wingback"
+      ],
+      "sameFootBonus": 1.5,
+      "_basis": "orta açan roller aynı ayakta"
+    },
+    "weakFootScale": "(5 − weak_foot) / 4",
+    "skillMoves": {
+      "roles": [
+        "inside_forward",
+        "wide_playmaker",
+        "winger",
+        "classic_10",
+        "half_winger"
+      ],
+      "perStar": 0.5,
+      "_basis": "çalım rollerinde küçük terim"
+    }
+  },
+  "physical": {
+    "aerial": {
+      "roles": [
+        "target_forward",
+        "defender",
+        "centre_half",
+        "stopper",
+        "ball_playing_defender",
+        "wide_back",
+        "goalkeeper",
+        "sweeper_keeper",
+        "ball_playing_keeper"
+      ],
+      "attrs": [
+        "Heading",
+        "Jumping",
+        "Strength"
+      ],
+      "heightCmRef": 185,
+      "maxPoints": 3,
+      "_basis": "hava = f(boy, Jumping, Heading, Strength) rol ağırlıklı"
+    },
+    "accelerate": {
+      "maxPoints": 3,
+      "derivedFactor": 0.5,
+      "_basis": "AcceleRATE ±3 puan; türetilmişse etkisi yarıya (13 §3.2 madde 6)"
+    }
+  }
+}

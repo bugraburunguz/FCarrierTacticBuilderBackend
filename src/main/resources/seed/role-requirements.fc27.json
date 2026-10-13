@@ -1,0 +1,517 @@
+{
+  "_source": "roles.json silahları, pozisyon normlarına göre z-skoruna çevrildi (düzey bağımsız); ENG-18 ve Stamina kuralları uygulanır",
+  "verified": false,
+  "_basis": "hardMin/target v1 değerleri, attr-norms p50/sd ile z: minZ=(hardMin−p50)/sd, [−1,5; 1,5]; tauZ=0,5 (softplus yumuşaklığı)",
+  "requirements": {
+    "goalkeeper": [
+      {
+        "attr": "GKReflexes",
+        "minZ": 0.38,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "GKPositioning",
+        "minZ": 0.37,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "sweeper_keeper": [
+      {
+        "attr": "GKReflexes",
+        "minZ": 0.13,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "GKPositioning",
+        "minZ": 0.61,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "GKKicking",
+        "minZ": -0.13,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "ball_playing_keeper": [
+      {
+        "attr": "GKKicking",
+        "minZ": 0.67,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Composure",
+        "minZ": 1.5,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "fullback": [
+      {
+        "attr": "DefAwareness",
+        "minZ": -0.13,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "StandingTackle",
+        "minZ": -0.3,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "wingback": [
+      {
+        "attr": "Stamina",
+        "minZ": 0.29,
+        "targetZ": 1.44,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Crossing",
+        "minZ": -0.23,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "DefAwareness",
+        "minZ": -0.4,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "attacking_wingback": [
+      {
+        "attr": "Crossing",
+        "minZ": 0.23,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Stamina",
+        "minZ": 0.67,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "SprintSpeed",
+        "minZ": 0.54,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "inverted_wingback": [
+      {
+        "attr": "ShortPassing",
+        "minZ": 0.44,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Composure",
+        "minZ": 0.41,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "falseback": [
+      {
+        "attr": "ShortPassing",
+        "minZ": 0.22,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "DefAwareness",
+        "minZ": 0.4,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "defender": [
+      {
+        "attr": "DefAwareness",
+        "minZ": -0.14,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "StandingTackle",
+        "minZ": -0.15,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Strength",
+        "minZ": -0.24,
+        "targetZ": 1.22,
+        "tauZ": 0.5
+      }
+    ],
+    "stopper": [
+      {
+        "attr": "Aggression",
+        "minZ": 0.33,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "StandingTackle",
+        "minZ": -0.15,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Acceleration",
+        "minZ": 0.57,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "ball_playing_defender": [
+      {
+        "attr": "ShortPassing",
+        "minZ": 0.32,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Composure",
+        "minZ": 0.81,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Acceleration",
+        "minZ": 0.57,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "wide_back": [
+      {
+        "attr": "Acceleration",
+        "minZ": 0.76,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "DefAwareness",
+        "minZ": -0.41,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "holding": [
+      {
+        "attr": "DefAwareness",
+        "minZ": 0.26,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Interceptions",
+        "minZ": 0.13,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "deep_lying_playmaker": [
+      {
+        "attr": "Vision",
+        "minZ": 0.87,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "LongPassing",
+        "minZ": 0.66,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Composure",
+        "minZ": 0.69,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "centre_half": [
+      {
+        "attr": "DefAwareness",
+        "minZ": 0.52,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Positioning",
+        "minZ": 0.73,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "wide_half": [
+      {
+        "attr": "Crossing",
+        "minZ": 0.48,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "box_crasher": [
+      {
+        "attr": "Positioning",
+        "minZ": 0.91,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "LongShots",
+        "minZ": 0.87,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "ShotPower",
+        "minZ": 0.97,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "box_to_box": [
+      {
+        "attr": "Stamina",
+        "minZ": 0.6,
+        "targetZ": 1.47,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Positioning",
+        "minZ": 0.49,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "playmaker": [
+      {
+        "attr": "Vision",
+        "minZ": 0.62,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "ShortPassing",
+        "minZ": 0.29,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Composure",
+        "minZ": 0.3,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "half_winger": [
+      {
+        "attr": "Dribbling",
+        "minZ": 0.89,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Crossing",
+        "minZ": 0.47,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "classic_10": [
+      {
+        "attr": "Vision",
+        "minZ": 0.49,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "BallControl",
+        "minZ": 0.13,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Composure",
+        "minZ": 0.42,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "shadow_striker": [
+      {
+        "attr": "Positioning",
+        "minZ": 0.11,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Finishing",
+        "minZ": 0.1,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Acceleration",
+        "minZ": 1.06,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "winger": [
+      {
+        "attr": "Crossing",
+        "minZ": 0.39,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Acceleration",
+        "minZ": 0.24,
+        "targetZ": 1.47,
+        "tauZ": 0.5
+      }
+    ],
+    "wide_playmaker": [
+      {
+        "attr": "Dribbling",
+        "minZ": 0.84,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Vision",
+        "minZ": 0.84,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Agility",
+        "minZ": 0.22,
+        "targetZ": 1.34,
+        "tauZ": 0.5
+      }
+    ],
+    "wide_midfielder": [
+      {
+        "attr": "DefAwareness",
+        "minZ": 1.5,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "inside_forward": [
+      {
+        "attr": "Finishing",
+        "minZ": 0.24,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Agility",
+        "minZ": 0.22,
+        "targetZ": 1.34,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Dribbling",
+        "minZ": 0.56,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "advanced_forward": [
+      {
+        "attr": "Finishing",
+        "minZ": -0.14,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Positioning",
+        "minZ": 0.25,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Composure",
+        "minZ": 0.42,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "poacher": [
+      {
+        "attr": "Finishing",
+        "minZ": 0.14,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Positioning",
+        "minZ": 0.25,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Composure",
+        "minZ": 0.42,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ],
+    "target_forward": [
+      {
+        "attr": "Heading",
+        "minZ": 0.68,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Strength",
+        "minZ": 0.44,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "Jumping",
+        "minZ": 0.1,
+        "targetZ": 1.28,
+        "tauZ": 0.5
+      }
+    ],
+    "false_9": [
+      {
+        "attr": "Vision",
+        "minZ": 1.44,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "BallControl",
+        "minZ": 0.91,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      },
+      {
+        "attr": "ShortPassing",
+        "minZ": 1.14,
+        "targetZ": 1.5,
+        "tauZ": 0.5
+      }
+    ]
+  }
+}

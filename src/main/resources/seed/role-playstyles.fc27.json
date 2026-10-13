@@ -1,0 +1,147 @@
+{
+  "_source": "roles.json priorityPlaystyles",
+  "verified": false,
+  "_basis": "öncelikli PS ağırlığı 4 (PS+ = 2× = 8 = tavan)",
+  "playstyles": {
+    "goalkeeper": [],
+    "sweeper_keeper": [],
+    "ball_playing_keeper": [],
+    "fullback": [
+      {
+        "ps": "Jockey",
+        "weight": 4
+      }
+    ],
+    "wingback": [
+      {
+        "ps": "WhippedPass",
+        "weight": 4
+      }
+    ],
+    "attacking_wingback": [
+      {
+        "ps": "WhippedPass",
+        "weight": 4
+      }
+    ],
+    "inverted_wingback": [],
+    "falseback": [],
+    "defender": [
+      {
+        "ps": "Anticipate",
+        "weight": 4
+      }
+    ],
+    "stopper": [
+      {
+        "ps": "Bruiser",
+        "weight": 4
+      }
+    ],
+    "ball_playing_defender": [
+      {
+        "ps": "LongBallPass",
+        "weight": 4
+      }
+    ],
+    "wide_back": [
+      {
+        "ps": "Jockey",
+        "weight": 4
+      }
+    ],
+    "holding": [
+      {
+        "ps": "Intercept",
+        "weight": 4
+      }
+    ],
+    "deep_lying_playmaker": [
+      {
+        "ps": "LongBallPass",
+        "weight": 4
+      }
+    ],
+    "centre_half": [
+      {
+        "ps": "Anticipate",
+        "weight": 4
+      }
+    ],
+    "wide_half": [],
+    "box_crasher": [
+      {
+        "ps": "PowerShot",
+        "weight": 4
+      }
+    ],
+    "box_to_box": [
+      {
+        "ps": "Relentless",
+        "weight": 4
+      }
+    ],
+    "playmaker": [
+      {
+        "ps": "IncisivePass",
+        "weight": 4
+      }
+    ],
+    "half_winger": [],
+    "classic_10": [
+      {
+        "ps": "IncisivePass",
+        "weight": 4
+      }
+    ],
+    "shadow_striker": [
+      {
+        "ps": "FinesseShot",
+        "weight": 4
+      }
+    ],
+    "winger": [
+      {
+        "ps": "WhippedPass",
+        "weight": 4
+      }
+    ],
+    "wide_playmaker": [
+      {
+        "ps": "Technical",
+        "weight": 4
+      }
+    ],
+    "wide_midfielder": [],
+    "inside_forward": [
+      {
+        "ps": "FinesseShot",
+        "weight": 4
+      }
+    ],
+    "advanced_forward": [
+      {
+        "ps": "FinesseShot",
+        "weight": 4
+      }
+    ],
+    "poacher": [
+      {
+        "ps": "ChipShot",
+        "weight": 4
+      }
+    ],
+    "target_forward": [
+      {
+        "ps": "PrecisionHeader",
+        "weight": 4
+      }
+    ],
+    "false_9": [
+      {
+        "ps": "IncisivePass",
+        "weight": 4
+      }
+    ]
+  }
+}
