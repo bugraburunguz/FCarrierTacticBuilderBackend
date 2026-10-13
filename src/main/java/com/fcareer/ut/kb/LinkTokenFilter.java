@@ -22,6 +22,9 @@ import static com.fcareer.common.constants.ApiConstants.API_V1;
 public class LinkTokenFilter extends OncePerRequestFilter {
 
     public static final String HEADER = "X-Link-Token";
+    /** İstek özniteliği: bağlama oturumunun modu (PERSONAL | CONTRIB); JWT ile gelen isteklerde yoktur. */
+    public static final String MODE_ATTRIBUTE = "fc.linkMode";
+    public static final String MODE_CONTRIB = "CONTRIB";
     private static final String CAPTURE = API_V1 + "/ut/capture";
     private static final String CONTRIB = API_V1 + "/ut/contrib";
 
@@ -38,7 +41,7 @@ public class LinkTokenFilter extends OncePerRequestFilter {
         store.resolve(request.getHeader(HEADER)).ifPresent(grant -> {
             SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
                     new AuthUser(grant.userId(), null), grant.mode(), AuthorityUtils.createAuthorityList(JwtAuthenticationFilter.ROLE_USER)));
-            request.setAttribute("fc.linkMode", grant.mode());
+            request.setAttribute(MODE_ATTRIBUTE, grant.mode());
         });
         chain.doFilter(request, response);
     }

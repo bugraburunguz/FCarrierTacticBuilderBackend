@@ -20,9 +20,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -139,7 +141,11 @@ public class UtKnowledgeController {
     @PostMapping("/contrib/capture")
     public ContributionResult contribute(@AuthenticationPrincipal AuthUser user, @Valid @RequestBody CaptureRequest request,
                                          @RequestParam(defaultValue = "CONSOLE") String platform, @RequestParam(required = false) String locale,
-                                         @RequestHeader(value = "X-Ext-Version", required = false) String extensionVersion) throws IOException {
+                                         @RequestHeader(value = "X-Ext-Version", required = false) String extensionVersion,
+                                         @RequestAttribute(name = LinkTokenFilter.MODE_ATTRIBUTE, required = false) String linkMode) throws IOException {
+        if (Objects.nonNull(linkMode) && !LinkTokenFilter.MODE_CONTRIB.equals(linkMode)) {
+            throw new AccessDeniedException("Link token is not a contribution session");
+        }
         requireCurrentExtension(extensionVersion);
         List<Capture> captures = Objects.requireNonNull(request.captures());
         return contributionService.contribute(user.id(), captures, platform, locale);

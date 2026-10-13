@@ -139,6 +139,17 @@ class KnowledgeBaseIntegrationTest {
     }
 
     @Test
+    void personalLinkTokensCannotContribute() throws Exception {
+        long contributor = register();
+        admin("/api/v1/admin/ut/contributors/" + contributor + "/grant");
+        String jwt = login(contributor);
+
+        String personalToken = call(post("/api/v1/ut/capture/link?mode=PERSONAL"), null, jwt, 200).at("/data/token").asText();
+        call(post("/api/v1/ut/contrib/capture").header("X-Link-Token", personalToken), Map.of("captures", captures(hub("Link"), challenge(70))), null, 403);
+        call(post("/api/v1/ut/capture").header("X-Link-Token", personalToken), Map.of("captures", new Object[]{}), null, 200);
+    }
+
+    @Test
     void publicRulesItemsAndPriceAggregation() throws Exception {
         assertThat(call(get("/api/v1/ut/rules"), null, null, 200).at("/data/squadRating/sizes/sbc").asInt()).isEqualTo(11);
 

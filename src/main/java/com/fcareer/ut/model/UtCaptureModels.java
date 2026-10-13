@@ -21,7 +21,7 @@ public final class UtCaptureModels {
     public record Capture(String url, Integer status, Long ts, @Size(max = MAX_BODY_CHARS) String body) {
     }
 
-    public record CaptureRequest(String linkToken, @NotNull @Size(max = MAX_CAPTURES) List<@Valid Capture> captures) {
+    public record CaptureRequest(@NotNull @Size(max = MAX_CAPTURES) List<@Valid Capture> captures) {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
