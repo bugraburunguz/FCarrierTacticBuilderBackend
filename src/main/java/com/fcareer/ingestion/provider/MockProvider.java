@@ -65,6 +65,6 @@ public class MockProvider implements ExternalDataProvider {
                 "Mockland", 165 + random.nextInt(30), 60 + random.nextInt(30), random.nextBoolean() ? "Right" : "Left",
                 LEAGUES.get(clubIndex % LEAGUES.size()), 5_000L + clubIndex, "Mock FC " + clubIndex,
                 overall, List.of(position), 1 + random.nextInt(5), 1 + random.nextInt(5), attrs, playstyles,
-                clubIndex >= WOMEN_CLUB_FROM ? 1 : 0);
+                clubIndex >= WOMEN_CLUB_FROM ? 1 : 0, null);
     }
 }

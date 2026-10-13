@@ -441,6 +441,16 @@
   },
   "faceStatWeights": {
     "_source": "fifauteam.com/fc-27-attributes",
+    "verified": false,
+    "_verify": "Resmî EA ratings sitesi değerleriyle 88 saha oyuncusunda ölçüldü (Ekim 2026): PAC/SHO/PAS/DEF/PHY tam, DRI en çok ±3 sapıyor. Ağırlıklar Buğra onayı olmadan değiştirilmez.",
+    "labels": [
+      "PAC",
+      "SHO",
+      "PAS",
+      "DRI",
+      "DEF",
+      "PHY"
+    ],
     "PAC": {
       "acceleration": 45,
       "sprintSpeed": 55
@@ -479,8 +489,7 @@
       "stamina": 25,
       "aggression": 20,
       "jumping": 5
-    },
-    "_verify": "EA yuvarlama kuralı; 10 bilinen kartla test et (Mbappé 96/91/80/92/29/76 ratings sitesinde)"
+    }
   },
   "holographic": {
     "regularMaxOvr": 87,
@@ -501,5 +510,36 @@
     "verified": false,
     "timezone": "Europe/London",
     "hour": 18
+  },
+  "faceStatWeightsGk": {
+    "_source": "EA ratings sitesindeki 12 kaleci kartının pac/sho/pas/dri/def/phy alanlarından türetildi (DIV/HAN/KIC/REF/SPD/POS); SPD ağırlığı veriye uydurulmuş (0,6 ivmelenme + 0,4 sprint)",
+    "verified": false,
+    "labels": [
+      "DIV",
+      "HAN",
+      "KIC",
+      "REF",
+      "SPD",
+      "POS"
+    ],
+    "DIV": {
+      "gkDiving": 100
+    },
+    "HAN": {
+      "gkHandling": 100
+    },
+    "KIC": {
+      "gkKicking": 100
+    },
+    "REF": {
+      "gkReflexes": 100
+    },
+    "SPD": {
+      "acceleration": 60,
+      "sprintSpeed": 40
+    },
+    "POS": {
+      "gkPositioning": 100
+    }
   }
 }

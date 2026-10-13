@@ -36,7 +36,7 @@ class ClubIdentityIntegrationTest {
 
     private static ExternalPlayerPage page(String league, String clubName) {
         ExternalPlayer player = new ExternalPlayer(88_000_001L, "Identity Test", LocalDate.of(2000, 1, 1), "Mockland", 180, 75, "Right",
-                league, TEAM_ID, clubName, 70, List.of("ST"), 3, 3, Map.<Attr, Integer>of(), Map.of(), 0);
+                league, TEAM_ID, clubName, 70, List.of("ST"), 3, 3, Map.<Attr, Integer>of(), Map.of(), 0, null);
         return new ExternalPlayerPage(List.of(player), 1);
     }
 

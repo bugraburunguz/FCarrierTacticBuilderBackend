@@ -55,7 +55,11 @@ public class PlayerSearchRepository {
                    CASE WHEN cpd.base_player_id IS NOT NULL THEN tc.id ELSE c.id END AS club_id, COALESCE(ct.name, c.name) AS club, COALESCE(ct.league_name, l.name) AS league, n.name AS nationality, COALESCE(cpr.accelerate, r.accelerate) AS accelerate, COALESCE(cpr.run_style1, r.run_style1) AS run_style,
                    COALESCE(cpd.potential, v.potential) AS potential, COALESCE(vi.value_eur, v.value_eur) AS value_eur, (cpd.base_player_id IS NULL AND vi.id IS NULL AND v.id IS NOT NULL) AS estimated,
                    (COALESCE(cpd.free_agent, false) OR l.name = 'Free Agents') AS free_agent,
-                   """ + GAME_DATE + " AS ref_date\n";
+                   """ + GAME_DATE + " AS ref_date,\n"
+            + """
+                   CASE WHEN cpr.id IS NOT NULL THEN cpr.face_stats ELSE r.face_stats END AS face_official,
+                   (to_jsonb(r) || COALESCE(jsonb_strip_nulls(to_jsonb(cpr)), '{}'::jsonb))::text AS attrs_json
+            """;
     private static final String AGE_YEARS = "EXTRACT(YEAR FROM age(" + GAME_DATE + ", b.dob))";
     private static final String AGE_SORT = "age";
     private static final Map<String, String> SORTS = Map.ofEntries(
@@ -72,6 +76,8 @@ public class PlayerSearchRepository {
             Map.entry("skillmoves", "COALESCE(cpr.skill_moves, r.skill_moves)"));
 
     private final NamedParameterJdbcTemplate jdbc;
+    private final com.fcareer.ut.service.FaceStatsService faceStatsService;
+    private static final com.fasterxml.jackson.databind.ObjectMapper JSON = new com.fasterxml.jackson.databind.ObjectMapper();
 
     /** Kariyerin oyun içi tarihi; kariyer yok ya da tarih girilmemişse boş (ENG-04). */
     public java.util.Optional<java.time.LocalDate> careerGameDate(Long careerId) {
@@ -227,12 +233,18 @@ public class PlayerSearchRepository {
     private PlayerSummaryResponse toSummary(ResultSet rs) throws SQLException {
         Date dob = rs.getDate("dob");
         Array positions = rs.getArray("positions");
+        List<String> positionList = Arrays.asList((String[]) positions.getArray());
+        com.fcareer.ut.service.FaceStatsService.FaceStats face = faceStats(rs, positionList);
         return PlayerSummaryResponse.builder()
                 .id(rs.getLong("id"))
                 .name(rs.getString("name"))
                 .age(Objects.isNull(dob) ? null : Period.between(dob.toLocalDate(), rs.getDate("ref_date").toLocalDate()).getYears())
                 .overall(rs.getInt("overall"))
-                .positions(Arrays.asList((String[]) positions.getArray()))
+                .positions(positionList)
+                .faceStats(Objects.isNull(face) ? null : face.values())
+                .faceLabels(Objects.isNull(face) ? null : face.labels())
+                .faceStatsSource(Objects.isNull(face) ? null : face.source())
+                .faceStatsApproximate(Objects.nonNull(face) && com.fcareer.ut.service.FaceStatsService.COMPUTED.equals(face.source()) && !faceStatsService.weightsVerified())
                 .clubId(nullableInt(rs, "club_id"))
                 .club(rs.getString("club"))
                 .league(rs.getString("league"))
@@ -249,6 +261,24 @@ public class PlayerSearchRepository {
                 .freeAgent(rs.getBoolean("free_agent"))
                 .faceAssetId(nullableLong(rs, "ea_id"))
                 .build();
+    }
+
+    /** Resmî değer varsa o, yoksa kariyer/katalog attribute'larından hesaplanan (F10). */
+    private com.fcareer.ut.service.FaceStatsService.FaceStats faceStats(ResultSet rs, List<String> positions) throws SQLException {
+        Array official = rs.getArray("face_official");
+        List<Integer> officialValues = Objects.isNull(official) ? null : Arrays.stream((Object[]) official.getArray()).map(v -> ((Number) v).intValue()).toList();
+        Map<Attr, Integer> attrs = new java.util.EnumMap<>(Attr.class);
+        try {
+            com.fasterxml.jackson.databind.JsonNode json = JSON.readTree(rs.getString("attrs_json"));
+            for (Attr attr : Attr.values()) {
+                if (json.hasNonNull(attr.getColumn())) {
+                    attrs.put(attr, json.get(attr.getColumn()).asInt());
+                }
+            }
+        } catch (java.io.IOException e) {
+            throw new SQLException("attrs_json unreadable", e);
+        }
+        return faceStatsService.resolve(officialValues, attrs, !positions.isEmpty() && "GK".equals(positions.get(0)));
     }
 
     private static Integer nullableInt(ResultSet rs, String column) throws SQLException {

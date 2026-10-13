@@ -35,6 +35,13 @@ public class PlayerSummaryResponse {
     private Long valueEur;
     private boolean valuationEstimated;
     private boolean freeAgent;
+    /** 6 yüz istatistiği (saha: PAC/SHO/PAS/DRI/DEF/PHY, kaleci: DIV/HAN/KIC/REF/SPD/POS); faceLabels sırasıyla. */
+    private java.util.List<Integer> faceStats;
+    private java.util.List<String> faceLabels;
+    /** OFFICIAL (EA ratings sitesi) | COMPUTED (ut_rules ağırlıklarıyla). */
+    private String faceStatsSource;
+    /** Hesaplanan değer ve ağırlıklar doğrulanmadıysa true: arayüz "≈" gösterir. */
+    private boolean faceStatsApproximate;
     private Long faceAssetId;
     private String faceUrl;
     private Boolean changed;

@@ -46,7 +46,7 @@ class IngestionLifecycleIntegrationTest {
 
     private static ExternalPlayer player(long id) {
         return new ExternalPlayer(id, "Lifecycle " + id, LocalDate.of(2000, 1, 1), "Mockland", 180, 75, "Right",
-                "Mock League", 9_000_001L, "Lifecycle FC", 70, List.of("ST"), 3, 3, Map.<Attr, Integer>of(), Map.of(), 0);
+                "Mock League", 9_000_001L, "Lifecycle FC", 70, List.of("ST"), 3, 3, Map.<Attr, Integer>of(), Map.of(), 0, null);
     }
 
     private static ExternalPlayerPage page(int count, int total) {

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -57,7 +58,8 @@ public class RatingItemMapper {
                 intOrNull(item.path("skillMoves")),
                 attrs,
                 playstyles(item.path("playerAbilities")),
-                item.path("gender").path("id").asInt(0)));
+                item.path("gender").path("id").asInt(0),
+                faceStats(item.path("stats"))));
     }
 
     private String fullName(JsonNode item) {
@@ -98,6 +100,19 @@ public class RatingItemMapper {
         }
         positions.removeIf(String::isBlank);
         return List.copyOf(positions);
+    }
+
+    /** Resmî yüz değerleri: sitenin stats.pac/sho/pas/dri/def/phy alanları; altısı da yoksa null. */
+    private List<Integer> faceStats(JsonNode stats) {
+        List<Integer> values = new ArrayList<>();
+        for (String key : List.of("pac", "sho", "pas", "dri", "def", "phy")) {
+            JsonNode value = stats.path(key).path("value");
+            if (!value.isNumber()) {
+                return null;
+            }
+            values.add(value.asInt());
+        }
+        return values;
     }
 
     private Map<Attr, Integer> attrs(JsonNode stats) {

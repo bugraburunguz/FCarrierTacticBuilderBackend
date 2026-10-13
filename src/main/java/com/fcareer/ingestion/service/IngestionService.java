@@ -260,6 +260,7 @@ public class IngestionService {
         rating.setPositions(player.positions());
         rating.setWeakFoot(toShort(player.weakFoot()));
         rating.setSkillMoves(toShort(player.skillMoves()));
+        rating.setFaceStats(Objects.isNull(player.faceStats()) ? null : player.faceStats().stream().map(Integer::shortValue).toList());
         rating.setPlaystyles(player.playstyles());
         rating.setAccelerate(acceleRateDeriver.derive(Objects.isNull(base.getHeightCm()) ? null : base.getHeightCm().intValue(),
                 player.gender(), player.attrs()).map(AcceleRate::name).orElse(null));

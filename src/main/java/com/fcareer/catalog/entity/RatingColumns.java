@@ -23,6 +23,11 @@ public abstract class RatingColumns {
     @Column(nullable = false, columnDefinition = "text[]")
     private List<String> positions;
 
+    /** Resmî yüz istatistikleri (PAC/SHO/PAS/DRI/DEF/PHY; kalecide DIV/HAN/KIC/REF/SPD/POS); boşsa hesaplanır. */
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(columnDefinition = "smallint[]")
+    private List<Short> faceStats;
+
     private String accelerate;
     private Short runStyle1 = 0;
     private Short runStyle2 = 0;

@@ -58,6 +58,7 @@ class EaSiteProviderTest {
         assertThat(mbappe.dob()).isEqualTo(LocalDate.of(1998, 12, 20));
         assertThat(mbappe.preferredFoot()).isEqualTo("Right");
         assertThat(mbappe.positions()).containsExactly("ST", "LW");
+        assertThat(mbappe.faceStats()).as("resmî yüz değerleri (F10)").containsExactly(96, 91, 80, 92, 29, 76);
         assertThat(mbappe.playstyles()).containsEntry("FinesseShot", 2).containsEntry("Technical", 1);
         assertThat(mbappe.attrs()).hasSize(34).containsEntry(com.fcareer.fitengine.model.Attr.FINISHING, 95);
         server.verify();
@@ -97,7 +98,8 @@ class EaSiteProviderTest {
     private static String dataJson() {
         String stats = RatingStatKeys.KEYS.values().stream()
                 .map(k -> "\"" + k + "\":{\"value\":" + ("finishing".equals(k) ? 95 : 70) + ",\"diff\":0}")
-                .collect(Collectors.joining(","));
+                .collect(Collectors.joining(","))
+                + ",\"pac\":{\"value\":96},\"sho\":{\"value\":91},\"pas\":{\"value\":80},\"dri\":{\"value\":92},\"def\":{\"value\":29},\"phy\":{\"value\":76}";
         return """
                 {"pageProps":{"ratingDetails":{"totalItems":19789,"items":[{
                   "id":231747,"overallRating":91,"firstName":"Kylian","lastName":"Mbappé","commonName":"Kylian Mbappé",
