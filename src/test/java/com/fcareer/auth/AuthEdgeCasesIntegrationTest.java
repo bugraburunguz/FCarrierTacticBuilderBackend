@@ -44,6 +44,21 @@ class AuthEdgeCasesIntegrationTest {
     }
 
     @Test
+    void logoutRevokesTheUsersLinkTokens() throws Exception {
+        String email = "link-" + UUID.randomUUID() + "@example.com";
+        JsonNode session = call(post("/api/v1/auth/register"), Map.of("email", email, "password", "Sup3rSecret!"), 200).at("/data");
+        var linkResponse = mockMvc.perform(post("/api/v1/ut/capture/link").header("Authorization", "Bearer " + session.at("/accessToken").asText())).andReturn().getResponse();
+        String linkToken = objectMapper.readTree(linkResponse.getContentAsString()).at("/data/token").asText();
+        var capture = post("/api/v1/ut/capture").header("X-Link-Token", linkToken).contentType(MediaType.APPLICATION_JSON).content("{\"captures\":[]}");
+        assertThat(mockMvc.perform(capture).andReturn().getResponse().getStatus()).isEqualTo(200);
+
+        call(post("/api/v1/auth/logout"), Map.of("refreshToken", session.at("/refreshToken").asText()), 200);
+
+        var again = post("/api/v1/ut/capture").header("X-Link-Token", linkToken).contentType(MediaType.APPLICATION_JSON).content("{\"captures\":[]}");
+        assertThat(mockMvc.perform(again).andReturn().getResponse().getStatus()).isEqualTo(401);
+    }
+
+    @Test
     void oversizedRefreshTokensAreRejectedBeforeHashing() throws Exception {
         call(post("/api/v1/auth/refresh"), Map.of("refreshToken", "x".repeat(129)), 400);
         call(post("/api/v1/auth/logout"), Map.of("refreshToken", "x".repeat(129)), 400);

@@ -32,6 +32,11 @@ public class TestSupportConfiguration {
             public Optional<LinkGrant> resolve(String token) {
                 return Optional.ofNullable(grants.get(token));
             }
+
+            @Override
+            public void revokeAll(Long userId) {
+                grants.values().removeIf(grant -> userId.equals(grant.userId()));
+            }
         };
     }
 
@@ -75,8 +80,8 @@ public class TestSupportConfiguration {
             }
 
             @Override
-            public void delete(String tokenHash) {
-                tokens.remove(tokenHash);
+            public Optional<Long> delete(String tokenHash) {
+                return Optional.ofNullable(tokens.remove(tokenHash));
             }
 
             @Override

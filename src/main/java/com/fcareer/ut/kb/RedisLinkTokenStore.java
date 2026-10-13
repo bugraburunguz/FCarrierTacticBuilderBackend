@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.util.Base64;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Component
@@ -19,6 +20,7 @@ import java.util.Optional;
 public class RedisLinkTokenStore implements LinkTokenStore {
 
     private static final String PREFIX = "fc:ut:link:";
+    private static final String USER_PREFIX = "fc:ut:link-user:";
     private static final int TOKEN_BYTES = 32;
 
     private final StringRedisTemplate redisTemplate;
@@ -31,6 +33,8 @@ public class RedisLinkTokenStore implements LinkTokenStore {
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
         try {
             redisTemplate.opsForValue().set(PREFIX + token, userId + ":" + mode, ttl);
+            redisTemplate.opsForSet().add(USER_PREFIX + userId, token);
+            redisTemplate.expire(USER_PREFIX + userId, ttl);
         } catch (DataAccessException e) {
             log.error("Link token could not be stored userId : {}", userId, e);
             throw new DownstreamServiceException("redis");
@@ -50,6 +54,20 @@ public class RedisLinkTokenStore implements LinkTokenStore {
         } catch (DataAccessException e) {
             log.warn("Link token lookup failed reason : {}", e.getMessage());
             return Optional.empty();
+        }
+    }
+
+    @Override
+    public void revokeAll(Long userId) {
+        try {
+            Set<String> tokens = redisTemplate.opsForSet().members(USER_PREFIX + userId);
+            if (Objects.nonNull(tokens)) {
+                tokens.forEach(token -> redisTemplate.delete(PREFIX + token));
+            }
+            redisTemplate.delete(USER_PREFIX + userId);
+        } catch (DataAccessException e) {
+            log.error("Link tokens could not be revoked userId : {}", userId, e);
+            throw new DownstreamServiceException("redis");
         }
     }
 }

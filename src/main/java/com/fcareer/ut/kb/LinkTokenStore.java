@@ -12,4 +12,7 @@ public interface LinkTokenStore {
     String issue(Long userId, String mode, Duration ttl);
 
     Optional<LinkGrant> resolve(String token);
+
+    /** Kullanıcının tüm bağlama oturumlarını düşürür (logout, BE-SEC-10). */
+    void revokeAll(Long userId);
 }

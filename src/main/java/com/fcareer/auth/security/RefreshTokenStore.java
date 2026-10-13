@@ -11,7 +11,7 @@ public interface RefreshTokenStore {
     Optional<Long> consume(String tokenHash);
 
     /** Token'ı "kullanıldı" işaretlemeden siler (logout): sonradan tekrar sunulması aile iptali sayılmaz (SEC-08). */
-    void delete(String tokenHash);
+    Optional<Long> delete(String tokenHash);
 
     /** Daha önce tüketilmiş bir token sunulduysa sahibini döner: çalınmış token şüphesi. */
     Optional<Long> usedBy(String tokenHash);

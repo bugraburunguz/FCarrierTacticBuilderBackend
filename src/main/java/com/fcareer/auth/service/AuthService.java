@@ -48,6 +48,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final RefreshTokenStore refreshTokenStore;
+    private final com.fcareer.ut.kb.LinkTokenStore linkTokenStore;
     private final SecurityProperties securityProperties;
     private final BillingProperties billingProperties;
     private final CreditService creditService;
@@ -128,7 +129,7 @@ public class AuthService {
     }
 
     public void logout(RefreshRequest request) {
-        refreshTokenStore.delete(hash(request.getRefreshToken()));
+        refreshTokenStore.delete(hash(request.getRefreshToken())).ifPresent(linkTokenStore::revokeAll);
     }
 
     @Transactional

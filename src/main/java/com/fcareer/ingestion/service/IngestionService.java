@@ -169,7 +169,7 @@ public class IngestionService {
         if (Objects.isNull(seen) || Objects.isNull(before) || before == 0) {
             return;
         }
-        if (seen < before * properties.getRetireMinSeenRatio()) {
+        if (seen < before * properties.getRetireMinRatio()) {
             log.warn("Ingestion retirement skipped, catalog suspiciously small runId : {} seen : {} previouslySeen : {}", runId, seen, before);
             return;
         }
