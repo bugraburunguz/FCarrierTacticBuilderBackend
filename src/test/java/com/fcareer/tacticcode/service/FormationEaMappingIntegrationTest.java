@@ -31,6 +31,11 @@ class FormationEaMappingIntegrationTest {
         for (FormationDefinition ours : formationRegistry.findAll()) {
             assertThat(ours.eaFormationId()).as(ours.id()).isNotBlank();
             EaCodecData.Formation ea = codec.formation(ours.eaFormationId()).orElseThrow(() -> new AssertionError(ours.id() + " -> " + ours.eaFormationId()));
+            assertThat(ours.eaLabel()).as(ours.id() + " eaLabel").isEqualTo(ea.label());
+            assertThat(ours.futggName()).as(ours.id() + " futggName").isNotBlank();
+            assertThat(ours.displayNameTr()).as(ours.id() + " displayNameTr").isNotBlank();
+            assertThat(ours.displayNameEn()).as(ours.id() + " displayNameEn").isNotBlank();
+            assertThat(ours.usage()).as(ours.id() + " usage").isNotNull();
             assertThat(used.add(ours.eaFormationId())).as("duplicate " + ours.eaFormationId()).isTrue();
             List<String> ourPositions = ours.slots().stream().map(FormationSlot::position).sorted().toList();
             assertThat(ea.positions().stream().sorted().toList()).as(ours.id() + " shape vs " + ea.label()).isEqualTo(ourPositions);

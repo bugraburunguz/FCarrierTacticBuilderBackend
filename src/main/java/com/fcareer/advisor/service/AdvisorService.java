@@ -352,7 +352,7 @@ public class AdvisorService {
     }
 
     String label(String formationId) {
-        return Objects.requireNonNullElse(formationRegistry.get(formationId).label(), formationId);
+        return formationRegistry.get(formationId).displayName();
     }
 
     private int[] assign(List<FitPlayer> players, List<IntentProfile> slots) {
