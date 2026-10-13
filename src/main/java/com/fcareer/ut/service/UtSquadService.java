@@ -40,6 +40,7 @@ public class UtSquadService {
     private final RoleFitService roleFitService;
     private final SetupModifier setupModifier;
     private final UtMetaService utMetaService;
+    private final UtRules rules;
 
     public SquadEvaluation evaluate(SquadEvaluateRequest request) {
         List<Long> ids = request.slots().stream().filter(s -> Objects.isNull(s.card())).map(SlotInput::playerId).filter(Objects::nonNull).distinct().toList();
@@ -51,7 +52,8 @@ public class UtSquadService {
         }
         double meta = slots.stream().mapToDouble(s -> s.card().metaRating()).average().orElse(0);
         double overall = slots.stream().mapToInt(s -> s.card().overall()).average().orElse(0);
-        return new SquadEvaluation(slots, round1(meta), round1(overall), true);
+        int rating = SquadRatingCalculator.squadRating(slots.stream().map(s -> s.card().overall()).toList(), rules.squadSize());
+        return new SquadEvaluation(slots, round1(meta), round1(overall), rating, true);
     }
 
     private FitPlayer resolvePlayer(SlotInput slot, Map<Long, FitPlayer> catalogPlayers) {

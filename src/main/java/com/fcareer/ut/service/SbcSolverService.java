@@ -65,11 +65,20 @@ public class SbcSolverService {
         return new ScoreTable(seed.version(), seed.note(), rows);
     }
 
+    /** Özel kart tablosunda olmayan rating, bir alt özel değer ile regular değerin yükseğini alır: rating artınca skor azalmaz (BE-BUG-25). */
     public int scoreOf(int rating, Rarity rarity) {
+        int regular = regularScore(rating);
+        if (rarity == Rarity.REGULAR) {
+            return regular;
+        }
         Integer special = specialMap(rarity).get(rating);
         if (Objects.nonNull(special)) {
             return special;
         }
+        return Math.max(regular, specialMap(rarity).entrySet().stream().filter(e -> e.getKey() < rating).mapToInt(Map.Entry::getValue).max().orElse(0));
+    }
+
+    private int regularScore(int rating) {
         Integer regular = seed.regular().get(rating);
         if (Objects.nonNull(regular)) {
             return regular;

@@ -239,6 +239,7 @@ class ApiFlowIntegrationTest {
                 Map.of("slotId", "S2", "position", "ST", "playerId", playerId)},
                 "setup", Map.of("buildUp", "Counter", "depth", 50)), null, 200);
         assertThat(squadEval.at("/success").asBoolean()).as(squadEval.toString()).isTrue();
+        assertThat(squadEval.at("/data/squadRating").asInt()).isEqualTo(squadEval.at("/data/slots/0/card/overall").asInt());
         assertThat(squadEval.at("/data/slots/0/roleFit").isNumber()).isTrue();
         assertThat(squadEval.at("/data/slots/0/card/chemStyles")).hasSize(3);
         assertThat(squadEval.at("/data/slots/1/roleFit").isMissingNode()).isTrue();

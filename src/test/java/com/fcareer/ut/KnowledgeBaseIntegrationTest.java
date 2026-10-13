@@ -140,7 +140,7 @@ class KnowledgeBaseIntegrationTest {
 
     @Test
     void publicRulesItemsAndPriceAggregation() throws Exception {
-        assertThat(call(get("/api/v1/ut/rules"), null, null, 200).at("/data/squadRating/size").asInt()).isEqualTo(11);
+        assertThat(call(get("/api/v1/ut/rules"), null, null, 200).at("/data/squadRating/sizes/sbc").asInt()).isEqualTo(11);
 
         call(post("/api/v1/admin/ut/items/sync-base").header(ADMIN_KEY, "test-key"), null, null, 200);
         JsonNode items = call(get("/api/v1/ut/kb/items?limit=3"), null, null, 200).at("/data");

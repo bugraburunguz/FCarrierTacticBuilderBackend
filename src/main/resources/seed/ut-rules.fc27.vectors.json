@@ -1,0 +1,1861 @@
+{
+  "squadRating": [
+    {
+      "name": "fifauteam örneği (18)",
+      "size": 18,
+      "ratings": [
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        85,
+        85,
+        85,
+        85,
+        85
+      ],
+      "expected": 82
+    },
+    {
+      "name": "11 x 84 (SBC 11)",
+      "size": 11,
+      "ratings": [
+        84,
+        84,
+        84,
+        84,
+        84,
+        84,
+        84,
+        84,
+        84,
+        84,
+        84
+      ],
+      "expected": 84
+    },
+    {
+      "name": "8 x 84 + 3 x 83 (SBC 11)",
+      "size": 11,
+      "ratings": [
+        84,
+        84,
+        84,
+        84,
+        84,
+        84,
+        84,
+        84,
+        83,
+        83,
+        83
+      ],
+      "expected": 83,
+      "_verify": "oyun içi"
+    },
+    {
+      "name": "tek yıldız 90 + 10 x 80 (SBC 11)",
+      "size": 11,
+      "ratings": [
+        90,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "expected": 81
+    },
+    {
+      "name": "size üstündeki oyuncular en iyiden alınır (18)",
+      "size": 18,
+      "ratings": [
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        80,
+        60,
+        60
+      ],
+      "expected": 80
+    },
+    {
+      "name": "boş",
+      "size": 11,
+      "ratings": [],
+      "expected": 0
+    }
+  ],
+  "chemistry": [
+    {
+      "name": "kulüp 2 → +1 (kulüp 2/4/7)",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 1,
+          "league": "L1",
+          "nationId": 1,
+          "nation": "N1",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 2,
+          "league": "L2",
+          "nationId": 2,
+          "nation": "N2",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 2,
+          "club": "B",
+          "leagueId": 3,
+          "league": "L3",
+          "nationId": 3,
+          "nation": "N3",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 3,
+          "club": "C",
+          "leagueId": 4,
+          "league": "L4",
+          "nationId": 4,
+          "nation": "N4",
+          "gender": 0
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          1,
+          1,
+          0,
+          0
+        ],
+        "total": 2
+      }
+    },
+    {
+      "name": "kulüp 4 → +2",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 5,
+          "league": "L0",
+          "nationId": 5,
+          "nation": "N0",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 1,
+          "league": "L1",
+          "nationId": 1,
+          "nation": "N1",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 2,
+          "league": "L2",
+          "nationId": 2,
+          "nation": "N2",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 3,
+          "league": "L3",
+          "nationId": 3,
+          "nation": "N3",
+          "gender": 0
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "total": 8
+      }
+    },
+    {
+      "name": "kulüp 7 → +3",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 5,
+          "league": "L0",
+          "nationId": 5,
+          "nation": "N0",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 1,
+          "league": "L1",
+          "nationId": 1,
+          "nation": "N1",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 2,
+          "league": "L2",
+          "nationId": 2,
+          "nation": "N2",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 3,
+          "league": "L3",
+          "nationId": 3,
+          "nation": "N3",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 4,
+          "league": "L4",
+          "nationId": 4,
+          "nation": "N4",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 6,
+          "league": "L5",
+          "nationId": 6,
+          "nation": "N5",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 7,
+          "league": "L6",
+          "nationId": 7,
+          "nation": "N6",
+          "gender": 0
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "total": 21
+      }
+    },
+    {
+      "name": "lig 3 → +1",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 4,
+          "club": "C0",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 5,
+          "nation": "N0",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 5,
+          "club": "C1",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 1,
+          "nation": "N1",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 6,
+          "club": "C2",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 2,
+          "nation": "N2",
+          "gender": 0
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          1,
+          1,
+          1
+        ],
+        "total": 3
+      }
+    },
+    {
+      "name": "lig 5 → +2",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 4,
+          "club": "C0",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 5,
+          "nation": "N0",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 5,
+          "club": "C1",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 1,
+          "nation": "N1",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 6,
+          "club": "C2",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 2,
+          "nation": "N2",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 7,
+          "club": "C3",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 3,
+          "nation": "N3",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 8,
+          "club": "C4",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 4,
+          "nation": "N4",
+          "gender": 0
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "total": 10
+      }
+    },
+    {
+      "name": "lig 8 → +3",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 4,
+          "club": "C0",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 5,
+          "nation": "N0",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 5,
+          "club": "C1",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 1,
+          "nation": "N1",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 6,
+          "club": "C2",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 2,
+          "nation": "N2",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 7,
+          "club": "C3",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 3,
+          "nation": "N3",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 8,
+          "club": "C4",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 4,
+          "nation": "N4",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 9,
+          "club": "C5",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 6,
+          "nation": "N5",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 10,
+          "club": "C6",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 7,
+          "nation": "N6",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 11,
+          "club": "C7",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 8,
+          "nation": "N7",
+          "gender": 0
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "total": 24
+      }
+    },
+    {
+      "name": "ülke 2 → +1",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 1,
+          "league": "L1",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 2,
+          "club": "B",
+          "leagueId": 2,
+          "league": "L2",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 3,
+          "club": "C",
+          "leagueId": 3,
+          "league": "L3",
+          "nationId": 10,
+          "nation": "M",
+          "gender": 0
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          1,
+          1,
+          0
+        ],
+        "total": 2
+      }
+    },
+    {
+      "name": "ülke 5 → +2",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 4,
+          "club": "C0",
+          "leagueId": 5,
+          "league": "L0",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 5,
+          "club": "C1",
+          "leagueId": 1,
+          "league": "L1",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 6,
+          "club": "C2",
+          "leagueId": 2,
+          "league": "L2",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 7,
+          "club": "C3",
+          "leagueId": 3,
+          "league": "L3",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 8,
+          "club": "C4",
+          "leagueId": 4,
+          "league": "L4",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "total": 10
+      }
+    },
+    {
+      "name": "ülke 8 → +3",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 4,
+          "club": "C0",
+          "leagueId": 5,
+          "league": "L0",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 5,
+          "club": "C1",
+          "leagueId": 1,
+          "league": "L1",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 6,
+          "club": "C2",
+          "leagueId": 2,
+          "league": "L2",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 7,
+          "club": "C3",
+          "leagueId": 3,
+          "league": "L3",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 8,
+          "club": "C4",
+          "leagueId": 4,
+          "league": "L4",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 9,
+          "club": "C5",
+          "leagueId": 6,
+          "league": "L5",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 10,
+          "club": "C6",
+          "leagueId": 7,
+          "league": "L6",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 11,
+          "club": "C7",
+          "leagueId": 9,
+          "league": "L7",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "total": 24
+      }
+    },
+    {
+      "name": "aynı kulüp+lig+ülkeden 11 oyuncu 33 verir",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "total": 33
+      }
+    },
+    {
+      "name": "mevki dışı oyuncu 0 alır ve sayılmaz",
+      "xi": [
+        {
+          "slot": "CB",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          0,
+          2,
+          2
+        ],
+        "total": 4
+      }
+    },
+    {
+      "name": "Icon doğru mevkide 3; ülkesine +1 ve XI'deki her lige +1 katkı verir",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 12,
+          "club": "X",
+          "leagueId": 1,
+          "league": "L1",
+          "nationId": 1,
+          "nation": "N1",
+          "gender": 0,
+          "type": "ICON"
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 13,
+          "club": "Y",
+          "leagueId": 1,
+          "league": "L1",
+          "nationId": 2,
+          "nation": "N2",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 14,
+          "club": "Z",
+          "leagueId": 2,
+          "league": "L2",
+          "nationId": 3,
+          "nation": "N3",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 15,
+          "club": "W",
+          "leagueId": 2,
+          "league": "L2",
+          "nationId": 4,
+          "nation": "N4",
+          "gender": 0
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          3,
+          0,
+          1,
+          1
+        ],
+        "total": 5
+      }
+    },
+    {
+      "name": "Icon mevki dışındaysa 0 ve katkı yok",
+      "xi": [
+        {
+          "slot": "CB",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 12,
+          "club": "X",
+          "leagueId": 1,
+          "league": "L1",
+          "nationId": 1,
+          "nation": "N1",
+          "gender": 0,
+          "type": "ICON"
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 13,
+          "club": "Y",
+          "leagueId": 2,
+          "league": "L2",
+          "nationId": 2,
+          "nation": "N2",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 14,
+          "club": "Z",
+          "leagueId": 2,
+          "league": "L2",
+          "nationId": 3,
+          "nation": "N3",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 15,
+          "club": "W",
+          "leagueId": 2,
+          "league": "L2",
+          "nationId": 4,
+          "nation": "N4",
+          "gender": 0
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          0,
+          1,
+          1,
+          1
+        ],
+        "total": 3
+      }
+    },
+    {
+      "name": "Hero: ülkeye +1 ve kendi ligine +1 katkı",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 12,
+          "club": "X",
+          "leagueId": 1,
+          "league": "L1",
+          "nationId": 1,
+          "nation": "N1",
+          "gender": 0,
+          "type": "HERO"
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 13,
+          "club": "Y",
+          "leagueId": 1,
+          "league": "L1",
+          "nationId": 2,
+          "nation": "N2",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 14,
+          "club": "Z",
+          "leagueId": 2,
+          "league": "L2",
+          "nationId": 1,
+          "nation": "N1",
+          "gender": 0
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          3,
+          1,
+          1
+        ],
+        "total": 5
+      }
+    },
+    {
+      "name": "Hall of FUT Hero ile aynı",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 12,
+          "club": "X",
+          "leagueId": 1,
+          "league": "L1",
+          "nationId": 1,
+          "nation": "N1",
+          "gender": 0,
+          "type": "HOF"
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 13,
+          "club": "Y",
+          "leagueId": 1,
+          "league": "L1",
+          "nationId": 2,
+          "nation": "N2",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 14,
+          "club": "Z",
+          "leagueId": 2,
+          "league": "L2",
+          "nationId": 1,
+          "nation": "N1",
+          "gender": 0
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          3,
+          1,
+          1
+        ],
+        "total": 5
+      }
+    },
+    {
+      "name": "menajer ülke eşleşirse +1",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 1,
+          "league": "L1",
+          "nationId": 1,
+          "nation": "N1",
+          "gender": 0
+        }
+      ],
+      "manager": {
+        "nationId": 1,
+        "leagueId": 10
+      },
+      "expect": {
+        "perSlot": [
+          1
+        ],
+        "total": 1
+      }
+    },
+    {
+      "name": "menajer lig eşleşirse +1",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 10,
+          "league": "L9",
+          "nationId": 6,
+          "nation": "N5",
+          "gender": 0
+        }
+      ],
+      "manager": {
+        "nationId": 1,
+        "leagueId": 10
+      },
+      "expect": {
+        "perSlot": [
+          1
+        ],
+        "total": 1
+      }
+    },
+    {
+      "name": "menajer ülke+lig ikisi de eşleşse yine +1",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 10,
+          "league": "L9",
+          "nationId": 1,
+          "nation": "N1",
+          "gender": 0
+        }
+      ],
+      "manager": {
+        "nationId": 1,
+        "leagueId": 10
+      },
+      "expect": {
+        "perSlot": [
+          1
+        ],
+        "total": 1
+      }
+    },
+    {
+      "name": "menajer eşleşmezse katkı yok",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 1,
+          "league": "L1",
+          "nationId": 1,
+          "nation": "N1",
+          "gender": 0
+        }
+      ],
+      "manager": {
+        "nationId": 2,
+        "leagueId": 2
+      },
+      "expect": {
+        "perSlot": [
+          0
+        ],
+        "total": 0
+      }
+    },
+    {
+      "name": "menajer bonusu en çok 3'e tamamlar",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        }
+      ],
+      "manager": {
+        "nationId": 9,
+        "leagueId": 8
+      },
+      "expect": {
+        "perSlot": [
+          3,
+          3,
+          3
+        ],
+        "total": 9
+      }
+    },
+    {
+      "name": "yedek sayılmaz (API yalnız ilk 11 alır)",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 1,
+          "league": "L1",
+          "nationId": 1,
+          "nation": "N1",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 2,
+          "league": "L2",
+          "nationId": 2,
+          "nation": "N2",
+          "gender": 0
+        }
+      ],
+      "bench": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 3,
+          "league": "L3",
+          "nationId": 3,
+          "nation": "N3",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 3,
+          "league": "L3",
+          "nationId": 3,
+          "nation": "N3",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 3,
+          "league": "L3",
+          "nationId": 3,
+          "nation": "N3",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 3,
+          "league": "L3",
+          "nationId": 3,
+          "nation": "N3",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 3,
+          "league": "L3",
+          "nationId": 3,
+          "nation": "N3",
+          "gender": 0
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          1,
+          1
+        ],
+        "total": 2
+      }
+    },
+    {
+      "name": "kadın-erkek aynı lig adı bağlanmaz",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 1,
+          "nation": "N1",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 2,
+          "club": "B",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 2,
+          "nation": "N2",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 3,
+          "club": "C",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 3,
+          "nation": "N3",
+          "gender": 1
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          0,
+          0,
+          0
+        ],
+        "total": 0
+      }
+    },
+    {
+      "name": "aynı lig, hepsi erkek: 3 oyuncu bağlanır",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 1,
+          "nation": "N1",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 2,
+          "club": "B",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 2,
+          "nation": "N2",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 3,
+          "club": "C",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 3,
+          "nation": "N3",
+          "gender": 0
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          1,
+          1,
+          1
+        ],
+        "total": 3
+      }
+    },
+    {
+      "name": "aynı ad farklı kulüp (Nacional POR/URU) bağlanmaz",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 601,
+          "club": "Nacional",
+          "leagueId": 1,
+          "league": "L1",
+          "nationId": 1,
+          "nation": "N1",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 602,
+          "club": "Nacional",
+          "leagueId": 2,
+          "league": "L2",
+          "nationId": 2,
+          "nation": "N2",
+          "gender": 0
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          0,
+          0
+        ],
+        "total": 0
+      }
+    },
+    {
+      "name": "boş slot 0",
+      "xi": [
+        {
+          "slot": "ST",
+          "positions": [
+            "ST"
+          ],
+          "clubId": 1,
+          "club": "A",
+          "leagueId": 8,
+          "league": "L",
+          "nationId": 9,
+          "nation": "N",
+          "gender": 0
+        },
+        {
+          "slot": "ST",
+          "positions": []
+        }
+      ],
+      "expect": {
+        "perSlot": [
+          0,
+          0
+        ],
+        "total": 0
+      }
+    }
+  ],
+  "sbcScore": [
+    {
+      "rarity": "REGULAR",
+      "ovr": 84,
+      "expect": 830
+    },
+    {
+      "rarity": "REGULAR",
+      "ovr": 70,
+      "expect": 35
+    },
+    {
+      "rarity": "REGULAR",
+      "ovr": 50,
+      "expect": 20
+    },
+    {
+      "rarity": "TOTW",
+      "ovr": 91,
+      "expect": 23750
+    },
+    {
+      "rarity": "TOTW",
+      "ovr": 92,
+      "expectAtLeast": 23750
+    },
+    {
+      "rarity": "ICON",
+      "ovr": 95,
+      "expect": 60000
+    },
+    {
+      "rarity": "ICON",
+      "ovr": 96,
+      "expectAtLeast": 60000
+    },
+    {
+      "rarity": "HERO",
+      "ovr": 87,
+      "expect": 6875
+    }
+  ],
+  "quality": [
+    {
+      "ovr": 64,
+      "expect": "BRONZE"
+    },
+    {
+      "ovr": 65,
+      "expect": "SILVER"
+    },
+    {
+      "ovr": 74,
+      "expect": "SILVER"
+    },
+    {
+      "ovr": 75,
+      "expect": "GOLD"
+    }
+  ],
+  "defensiveApproach": [
+    {
+      "lineHeight": 1,
+      "expect": "DEEP"
+    },
+    {
+      "lineHeight": 30,
+      "expect": "DEEP"
+    },
+    {
+      "lineHeight": 31,
+      "expect": "BALANCED"
+    },
+    {
+      "lineHeight": 60,
+      "expect": "BALANCED"
+    },
+    {
+      "lineHeight": 61,
+      "expect": "HIGH"
+    },
+    {
+      "lineHeight": 90,
+      "expect": "HIGH"
+    },
+    {
+      "lineHeight": 91,
+      "expect": "AGGRESSIVE"
+    },
+    {
+      "lineHeight": 100,
+      "expect": "AGGRESSIVE"
+    }
+  ]
+}

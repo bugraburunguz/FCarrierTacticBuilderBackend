@@ -1,28 +1,504 @@
 {
-  "version": "fc27-2026-10",
+  "id": "fc27-v2",
+  "gameVersion": 27,
+  "version": "fc27-2026-10-v2",
   "verified": false,
-  "note": "Oyun kurallari FC27 icin oyun-ici dogrulanana kadar verified:false. Degerler kodda tasinmaz; bu dosyanin web kopyasi FCarrierTacticBuilderWeb/src/lib/utRules.fc27.json ile birebir ayni tutulur.",
-  "squadRating": {
-    "formula": "floor(round(sum + sum(max(0, r - avg))) / n)",
-    "size": 11
-  },
+  "note": "Oyun kuralları FC27 için oyun içi doğrulanana kadar verified:false. Backend (seed/ut-rules.fc27.json) ve web (src/lib/utRules.fc27.json) kopyaları birebir aynı tutulur; web GET /ut/rules okur, paketli kopya yalnız fallback. Ortak test vektörleri: ut-rules.fc27.vectors.json.",
   "chemistry": {
+    "_source": "fifauteam.com/fc-27-chemistry (08 D-21)",
     "verified": true,
-    "source": "fifauteam.com/fc-27-chemistry (08 D-21)",
-    "club": [2, 4, 7],
-    "league": [3, 5, 8],
-    "nation": [2, 5, 8]
+    "thresholds": {
+      "club": [
+        2,
+        4,
+        7
+      ],
+      "league": [
+        3,
+        5,
+        8
+      ],
+      "nation": [
+        2,
+        5,
+        8
+      ]
+    },
+    "maxPerPlayer": 3,
+    "maxSquad": 33,
+    "outOfPositionChem": 0,
+    "outOfPositionCountsForThresholds": false,
+    "substitutesCount": false,
+    "icon": {
+      "alwaysMaxInPosition": true,
+      "nationIncrement": 1,
+      "everyLeagueInXiIncrement": 1
+    },
+    "hero": {
+      "alwaysMaxInPosition": true,
+      "nationIncrement": 1,
+      "leagueIncrement": 1
+    },
+    "hallOfFut": {
+      "sameAs": "hero"
+    },
+    "manager": {
+      "bonus": 1,
+      "match": "NATION_OR_LEAGUE",
+      "maxPerPlayer": 1,
+      "leagueConsumableOverrides": true
+    },
+    "gender": {
+      "linkByNation": true,
+      "linkByAffiliatedClub": true,
+      "linkByLeague": false,
+      "_verify": "kadın-erkek kulüp eşlemesi (affiliatedClubs) EA team id ile tutulmalı; kaynak tablo yok, katkı/admin ile doldur"
+    },
+    "affiliatedClubs": [],
+    "specialItemsBoostedChem": {
+      "_verify": "FC27'de kampanya kartlarına seçici uygulanıyor; kart bazında capture'dan gelir"
+    }
+  },
+  "squadRating": {
+    "_source": "fifauteam.com/fc-27-squad-rating-guide",
+    "verified": false,
+    "sizes": {
+      "squad": 18,
+      "sbc": 11
+    },
+    "formula": "FLOOR( ROUND(sum + Σ max(0, r - avg)) / n ), avg yuvarlanmaz",
+    "starRating": [
+      {
+        "min": 83,
+        "stars": 5
+      },
+      {
+        "min": 79,
+        "stars": 4.5
+      },
+      {
+        "min": 75,
+        "stars": 4
+      },
+      {
+        "min": 71,
+        "stars": 3.5
+      },
+      {
+        "min": 69,
+        "stars": 3
+      },
+      {
+        "min": 67,
+        "stars": 2.5
+      },
+      {
+        "min": 65,
+        "stars": 2
+      },
+      {
+        "min": 63,
+        "stars": 1.5
+      },
+      {
+        "min": 60,
+        "stars": 1
+      },
+      {
+        "min": 2,
+        "stars": 0.5
+      },
+      {
+        "min": 0,
+        "stars": 0
+      }
+    ]
+  },
+  "quality": {
+    "_source": "fifauteam.com/fc-27-player-items",
+    "bronze": [
+      0,
+      64
+    ],
+    "silver": [
+      65,
+      74
+    ],
+    "gold": [
+      75,
+      99
+    ],
+    "baseRareCommonSplit": false
+  },
+  "sbcScore": {
+    "_source": "fifauteam.com/fc-27-sbc-score (EA Pitch Notes FUT Deep Dive'a atıf). EA yakalanan sbsScore'u döndürüyorsa o kazanır",
+    "regular": {
+      "75": 90,
+      "76": 100,
+      "77": 120,
+      "78": 140,
+      "79": 160,
+      "80": 180,
+      "81": 280,
+      "82": 340,
+      "83": 410,
+      "84": 830,
+      "85": 2100,
+      "86": 4100,
+      "87": 5500,
+      "88": 8300,
+      "89": 11000,
+      "90": 14000,
+      "91": 19000,
+      "92": 20000,
+      "93": 25000,
+      "94": 30000,
+      "95": 40000,
+      "96": 55000,
+      "97": 85000,
+      "98": 90000,
+      "99": 100000,
+      "65-74": 35,
+      "45-64": 20
+    },
+    "totw": {
+      "80": 225,
+      "81": 338,
+      "82": 425,
+      "83": 625,
+      "84": 1038,
+      "85": 2625,
+      "86": 5125,
+      "87": 7688,
+      "88": 10375,
+      "89": 13750,
+      "90": 16500,
+      "91": 23750
+    },
+    "hero": {
+      "86": 5125,
+      "87": 6875
+    },
+    "icon": {
+      "88": 12450,
+      "89": 16500,
+      "90": 21000,
+      "91": 28500,
+      "92": 30000,
+      "93": 37500,
+      "94": 45000,
+      "95": 60000
+    },
+    "fallback": "max(table[r] varsa, regular[r], table[r-1 en yakın alt])  // monoton artış garantisi"
+  },
+  "contentCalendar": {
+    "_source": "fifauteam.com weekly objectives + squad battles sayfaları",
+    "tz": "Europe/London",
+    "dailyRefresh": {
+      "time": "18:00",
+      "verified": false
+    },
+    "weeklyObjectives": {
+      "day": "THURSDAY",
+      "time": "18:00",
+      "verified": true
+    },
+    "milestones": {
+      "note": "Perşembe sabahı ya da 18:00, düzensiz"
+    },
+    "squadBattles": {
+      "week": "SUNDAY_TO_SUNDAY",
+      "rewardsAt": {
+        "day": "SUNDAY",
+        "time": "08:05"
+      },
+      "maxMatches": 18
+    },
+    "championsFinals": {
+      "window": "FRIDAY..MONDAY",
+      "matches": 15,
+      "_verify": "FC27 tam saatler"
+    },
+    "seasons": [
+      {
+        "n": 1,
+        "start": "2026-09-16T08:00",
+        "end": "2026-10-22T08:00"
+      },
+      {
+        "n": 2,
+        "start": "2026-10-22T08:00",
+        "end": "2026-12-03T08:00"
+      },
+      {
+        "n": 3,
+        "start": "2026-12-03T08:00",
+        "end": "2027-01-14T08:00"
+      },
+      {
+        "n": 4,
+        "start": "2027-01-14T08:00",
+        "end": "2027-02-25T08:00"
+      },
+      {
+        "n": 5,
+        "start": "2027-02-25T08:00",
+        "end": "2027-04-08T08:00"
+      },
+      {
+        "n": 6,
+        "start": "2027-04-08T08:00",
+        "end": "2027-05-06T08:00"
+      },
+      {
+        "n": 7,
+        "start": "2027-05-06T08:00",
+        "end": "2027-06-17T08:00"
+      },
+      {
+        "n": 8,
+        "start": "2027-06-17T08:00",
+        "end": "2027-07-15T08:00"
+      },
+      {
+        "n": 9,
+        "start": "2027-07-15T08:00",
+        "end": "2027-09-23T08:00"
+      }
+    ],
+    "displayTz": "Europe/Istanbul"
+  },
+  "tactics": {
+    "_source": "fifauteam.com/fc-27-tactics + smart tactics",
+    "formationsCount": 29,
+    "customTacticSlots": 5,
+    "tacticCode": {
+      "length": 12,
+      "_note": "rehber 11 diyor; repodaki 64 gerçek FC27 kodunun hepsi 12 karakter"
+    },
+    "buildUp": [
+      "SHORT_PASSING",
+      "BALANCED",
+      "COUNTER"
+    ],
+    "defensiveApproach": [
+      {
+        "id": "DEEP",
+        "lineHeight": [
+          1,
+          30
+        ],
+        "default": 25,
+        "pressure": "NONE",
+        "runTracking": "DROPS_WITH_RUNS"
+      },
+      {
+        "id": "BALANCED",
+        "lineHeight": [
+          31,
+          60
+        ],
+        "default": 50,
+        "pressure": "NONE",
+        "runTracking": "FLEXIBLE"
+      },
+      {
+        "id": "HIGH",
+        "lineHeight": [
+          61,
+          90
+        ],
+        "default": 70,
+        "pressure": "MINIMAL",
+        "runTracking": "RARELY"
+      },
+      {
+        "id": "AGGRESSIVE",
+        "lineHeight": [
+          91,
+          100
+        ],
+        "default": 95,
+        "pressure": "AFTER_POSSESSION_LOSS",
+        "runTracking": "STEPS_UP",
+        "extraStaminaDrain": true
+      }
+    ],
+    "tacticalFocus": {
+      "attacking": {
+        "buildUpStep": 1,
+        "defensiveApproachStep": 1,
+        "focusShift": [
+          [
+            "DEFEND",
+            "BALANCED"
+          ],
+          [
+            "BALANCED",
+            "ATTACK"
+          ],
+          [
+            "DEFEND",
+            "BUILD_UP"
+          ],
+          [
+            "DEFEND",
+            "ROAMING"
+          ],
+          [
+            "BALANCED",
+            "ROAMING"
+          ]
+        ],
+        "special": [
+          {
+            "pos": "CM",
+            "role": "PLAYMAKER",
+            "from": "ROAMING",
+            "to": "ATTACK"
+          },
+          {
+            "pos": "RW|LW",
+            "role": "INSIDE_FORWARD",
+            "from": "ATTACK",
+            "to": "ROAMING"
+          }
+        ]
+      },
+      "defending": {
+        "buildUpStep": -1,
+        "defensiveApproachStep": -1,
+        "focusShift": [
+          [
+            "BALANCED",
+            "DEFEND"
+          ],
+          [
+            "ATTACK",
+            "BALANCED"
+          ],
+          [
+            "BUILD_UP",
+            "DEFEND"
+          ],
+          [
+            "ROAMING",
+            "DEFEND"
+          ],
+          [
+            "ROAMING",
+            "BALANCED"
+          ],
+          [
+            "WIDE",
+            "BALANCED"
+          ]
+        ],
+        "special": [
+          {
+            "pos": "CM",
+            "role": "PLAYMAKER",
+            "from": "ATTACK",
+            "to": "ROAMING"
+          }
+        ]
+      },
+      "rule": "Hedef focus o (pozisyon, rol) için yoksa focus değişmez",
+      "_verify": "rehberdeki 'Complete' focus'u hiçbir rolde yok, yok sayıldı"
+    },
+    "quickTactics": {
+      "teamPress": {
+        "durationSec": 20,
+        "rechargeSec": 100
+      }
+    }
+  },
+  "positions": {
+    "list": [
+      "GK",
+      "RB",
+      "CB",
+      "LB",
+      "CDM",
+      "CM",
+      "CAM",
+      "RM",
+      "LM",
+      "RW",
+      "LW",
+      "ST"
+    ],
+    "maxSecondary": null,
+    "workRatesInUt": false,
+    "positionModifiers": false,
+    "roleFamiliarity": [
+      "BASE",
+      "PLUS",
+      "PLUS_PLUS"
+    ],
+    "specialItemsRolePlusPlusAllRoles": true,
+    "outOfPosition": "simplified role, 0 chem"
+  },
+  "faceStatWeights": {
+    "_source": "fifauteam.com/fc-27-attributes",
+    "PAC": {
+      "acceleration": 45,
+      "sprintSpeed": 55
+    },
+    "SHO": {
+      "finishing": 45,
+      "longShots": 20,
+      "shotPower": 20,
+      "positioning": 5,
+      "volleys": 5,
+      "penalties": 5
+    },
+    "PAS": {
+      "shortPassing": 35,
+      "vision": 20,
+      "crossing": 20,
+      "longPassing": 15,
+      "curve": 5,
+      "freeKickAccuracy": 5
+    },
+    "DRI": {
+      "dribbling": 50,
+      "ballControl": 35,
+      "agility": 10,
+      "balance": 5
+    },
+    "DEF": {
+      "defensiveAwareness": 30,
+      "standingTackle": 30,
+      "interceptions": 20,
+      "headingAccuracy": 10,
+      "slidingTackle": 10
+    },
+    "PHY": {
+      "strength": 50,
+      "stamina": 25,
+      "aggression": 20,
+      "jumping": 5
+    },
+    "_verify": "EA yuvarlama kuralı; 10 bilinen kartla test et (Mbappé 96/91/80/92/29/76 ratings sitesinde)"
+  },
+  "holographic": {
+    "regularMaxOvr": 87,
+    "pristineMinOvr": 88
+  },
+  "transferTax": 0.05,
+  "rarities": {
+    "_verify": "rarity id → {cardType, designCode, chemKind} katkıcı capture'ından (rareflag) doldurulacak. Bilinen: PLAYER_RARITY_GROUP 23 = TOTW (Auto-SBC FC26)"
+  },
+  "cardDesign": {
+    "mode": "EA_RENDER",
+    "fallback": "OWN",
+    "renderTemplate": "https://ratings-images-prod.pulse.ea.com/FC27/components/items/{assetId}_{locale}.webp",
+    "locale": "tr-TR"
   },
   "dailyRefresh": {
     "verified": false,
     "timezone": "Europe/London",
     "hour": 18
-  },
-  "ratingTestVectors": [
-    { "name": "11 x 84", "ratings": [84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 84], "expected": 84 },
-    { "name": "8 x 84 + 3 x 83", "ratings": [84, 84, 84, 84, 84, 84, 84, 84, 83, 83, 83], "expected": 83 },
-    { "name": "13 x 80 + 5 x 85 (18 kisi)", "ratings": [80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 85, 85, 85, 85, 85], "expected": 82 },
-    { "name": "tek yildiz 90 + 10 x 80", "ratings": [90, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80], "expected": 81 },
-    { "name": "bos", "ratings": [], "expected": 0 }
-  ]
+  }
 }

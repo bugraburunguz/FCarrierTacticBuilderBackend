@@ -16,7 +16,7 @@ import java.util.Map;
 
 public final class UtSquadModels {
 
-    public static final int MAX_SLOTS = 14;
+    public static final int MAX_SLOTS = 18;
 
     private UtSquadModels() {
     }
@@ -35,6 +35,6 @@ public final class UtSquadModels {
                                  WeaponState badge, String badgeText, String reason, Double setupDelta) {
     }
 
-    public record SquadEvaluation(List<SlotEvaluation> slots, double averageMeta, double averageOverall, boolean assumption) {
+    public record SquadEvaluation(List<SlotEvaluation> slots, double averageMeta, double averageOverall, int squadRating, boolean assumption) {
     }
 }
