@@ -30,7 +30,7 @@ public class LevelFitService {
         Map.Entry<Integer, FitLevelNormsRepository.Row> above = rows.ceilingEntry(ovr);
         FitLevelNormsRepository.Row row = below == null ? above.getValue()
                 : above == null || ovr - below.getKey() <= above.getKey() - ovr ? below.getValue() : above.getValue();
-        double value = Math.round(LevelFitCalculator.percentile(row.quantiles(), currentFit) * 10.0) / 10.0;
+        double value = Math.round(LevelFitCalculator.smooth(row.quantiles(), currentFit) * 10.0) / 10.0;
         return Optional.of(new LevelFit(value, row.bandLo(), row.bandHi(), row.sampleCount()));
     }
 

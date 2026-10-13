@@ -28,9 +28,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FitLevelNormsBuilder {
 
-    public static final int MIN_BAND_PLAYERS = 30;
+    public static final int MIN_BAND_PLAYERS = 100;
     public static final int HALF_WIDTH = 3;
-    public static final int MAX_HALF_WIDTH = 10;
+    public static final int MAX_HALF_WIDTH = 15;
     private static final int MIN_OVR = 30;
     private static final int MAX_OVR = 99;
     private static final int BASE_PLAYER_CHUNK = 2000;

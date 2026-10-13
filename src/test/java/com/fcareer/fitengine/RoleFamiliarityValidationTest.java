@@ -46,9 +46,9 @@ class RoleFamiliarityValidationTest {
     private static final double WEAK_AUC = 0.6;
     private static final double TARGET_AUC = 0.75;
     private static final int MIN_GROUP = 15;
-    private static final int MIN_BAND = 30;
+    private static final int MIN_BAND = 100;
     private static final int HALF = 3;
-    private static final int MAX_HALF = 10;
+    private static final int MAX_HALF = 15;
 
     private record Entry(FitPlayer player, int gender, Map<String, Integer> roles) {
     }
@@ -151,7 +151,7 @@ class RoleFamiliarityValidationTest {
                 }
                 return LevelFitCalculator.quantiles(inBand.stream().mapToDouble(Double::doubleValue).toArray());
             });
-            out[i] = LevelFitCalculator.percentile(q, fits[i]);
+            out[i] = LevelFitCalculator.smooth(q, fits[i]);
         }
         return out;
     }

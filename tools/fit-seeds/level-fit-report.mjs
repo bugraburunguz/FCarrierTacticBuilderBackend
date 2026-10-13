@@ -7,21 +7,15 @@ const BACKEND = new URL('../../', import.meta.url).pathname.replace(/^\/([A-Za-z
 const psql = (sql) => execFileSync('docker', ['compose', 'exec', '-T', 'postgres', 'sh', '-c', 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -A -F"|"'], { cwd: BACKEND, input: sql, encoding: 'utf8' }).trim()
 const report = JSON.parse(readFileSync(new URL('../../target/fit-report.json', import.meta.url), 'utf8'))
 
-function percentile(q, fit) {
-  const lt = q.filter((v) => v < fit).length
-  const le = q.filter((v) => v <= fit).length
-  if (le === 0) return 0
-  if (lt === q.length) return 100
-  if (le > lt) return (lt + le - 1) / 2
-  return lt - 1 + (fit - q[lt - 1]) / (q[lt] - q[lt - 1])
-}
 
+// E3-5c: 50 + 50·tanh((fit − medyan) / max(IQR, 8)); LevelFitCalculator.smooth ile aynı.
+const smooth = (q, fit) => 50 + 50 * Math.tanh((fit - q[50]) / Math.max(q[75] - q[25], 8))
 const levelOf = (e) => {
   const row = psql(`select band_lo, band_hi, sample_count, quantiles::text from fit_level_norms where engine_version = 'v3' and gender = ${e.gender} and position = '${e.position}' and role_id = '${e.role}' and focus = '${e.focus}' order by abs(ovr - ${e.ovr}) limit 1;`)
   if (!row) return null
   const [lo, hi, n, qs] = row.split('|')
   const q = qs.replace(/[{}]/g, '').split(',').map(Number)
-  return { band: `${lo}-${hi}`, n: Number(n), level: Math.round(percentile(q, e.currentFit) * 10) / 10 }
+  return { band: `${lo}-${hi}`, n: Number(n), level: Math.round(smooth(q, e.currentFit) * 10) / 10 }
 }
 
 const fmt = (e) => e.top3.map((c) => `${c.key} ${c.points > 0 ? '+' : ''}${c.points}`).join(', ')
