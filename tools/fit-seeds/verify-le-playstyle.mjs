@@ -47,7 +47,7 @@ for (const line of lines.slice(1)) {
   else {
     const gk = Object.keys(got).sort().join() !== Object.keys(cat.ps).sort().join()
     gk ? setDiff++ : levelDiff++
-    if (mismatches.length < 12) mismatches.push({ id, name: cat.name, got, want: cat.ps })
+    mismatches.push({ id, name: cat.name, got, want: cat.ps })
   }
   byId.set(id, { name: cat.name, got, want: cat.ps })
 }
@@ -63,3 +63,5 @@ for (const id of KNOWN) {
 md.push('', 'İlk uyuşmazlıklar:', ...mismatches.map((m) => `- ${m.name} (${m.id}): LE ${fmt(m.got)} ↔ katalog ${fmt(m.want)}`))
 console.log(md.join(NL))
 if (process.argv[2]) writeFileSync(process.argv[2], md.join(NL) + NL)
+const ids = mismatches.map((m) => Number(m.id)).sort((a, b) => a - b)
+console.log('uyuşmazlık id aralığı', ids[0], ids[ids.length - 1], 'n', ids.length, '70000 altı', ids.filter((i) => i < 70000).length, 'LE fazla', mismatches.filter((m) => Object.keys(m.got).length > Object.keys(m.want).length).length, 'katalog fazla', mismatches.filter((m) => Object.keys(m.got).length < Object.keys(m.want).length).length)
