@@ -88,4 +88,14 @@ class ClubIdentityIntegrationTest {
         Map<String, Object> run = jdbc.queryForMap("SELECT next_offset, total FROM ingestion_run ORDER BY id DESC LIMIT 1");
         assertThat(((Number) run.get("next_offset")).intValue()).isLessThanOrEqualTo(((Number) run.get("total")).intValue());
     }
+
+    /** V3-04.1: "*TeamName_Abbr15_…" yer tutucu adı kulüp satırı açmaz (canlı DB'de 1067 böyle bir satır taşıyordu). */
+    @Test
+    void placeholderClubNamesNeverBecomeClubRows() {
+        jdbc.update("DELETE FROM ingestion_run");
+        doReturn(page("Placeholder League", "*TeamName_Abbr15_112264")).when(provider).fetch(anyInt(), anyInt());
+        ingestionService.run();
+
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM club WHERE name LIKE '*TeamName%'", Integer.class)).isZero();
+    }
 }

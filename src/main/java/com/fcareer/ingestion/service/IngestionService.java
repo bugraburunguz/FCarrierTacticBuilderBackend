@@ -1,6 +1,7 @@
 package com.fcareer.ingestion.service;
 
 import com.fcareer.catalog.entity.BasePlayerEntity;
+import com.fcareer.catalog.alias.ClubDataQuality;
 import com.fcareer.catalog.entity.ClubEntity;
 import com.fcareer.catalog.entity.LeagueEntity;
 import com.fcareer.catalog.entity.NationalityEntity;
@@ -271,8 +272,8 @@ public class IngestionService {
 
     /** Kulüp EA team.id ile tanınır (küme düşünce lig değişse de aynı satır güncellenir); id yoksa ad + lig. Sayfa başına önbellek N+1'i önler. */
     private Integer club(ExternalPlayer player, Map<String, LeagueEntity> leagues, Map<Long, Integer> clubIds) {
-        if (Objects.isNull(player.clubName())) {
-            return null;
+        if (Objects.isNull(player.clubName()) || ClubDataQuality.isPlaceholder(player.clubName()) || player.clubName().contains("\uFFFD")) {
+            return null; // yer tutucu ("*TeamName…") ve bozuk (U+FFFD) kulüp adları katalogda kulüp olmaz
         }
         Long teamId = player.clubExternalId();
         if (Objects.nonNull(teamId) && clubIds.containsKey(teamId)) {

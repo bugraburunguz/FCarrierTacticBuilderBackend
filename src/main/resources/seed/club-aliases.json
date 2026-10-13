@@ -73,6 +73,16 @@
       "verified": true
     },
     {
+      "aliasName": "BK Hcken",
+      "league": "Sverige Liga",
+      "gender": 1,
+      "canonical": {
+        "eaTeamId": 132816
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
       "aliasName": "Bologna",
       "league": "Serie A Enilive",
       "gender": 0,
@@ -113,6 +123,16 @@
       "verified": true
     },
     {
+      "aliasName": "Çorum Futbol Kulübü",
+      "league": "Trendyol Süper Lig",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 132868
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
       "aliasName": "Denver Summit FC",
       "league": "NWSL",
       "gender": 1,
@@ -123,11 +143,31 @@
       "verified": true
     },
     {
+      "aliasName": "Deportivo Alavés",
+      "league": "Liga F Moeve",
+      "gender": 1,
+      "canonical": {
+        "eaTeamId": 116329
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
       "aliasName": "Dijon Football Côte d’Or",
       "league": "Ligue 2 BKT",
       "gender": 0,
       "canonical": {
         "eaTeamId": 110569
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Erzurumspor Futbol Kulübü",
+      "league": "Trendyol Süper Lig",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 749
       },
       "source": "manual-review",
       "verified": true
@@ -150,6 +190,16 @@
         "eaTeamId": 113134
       },
       "source": "encoding-repair",
+      "verified": true
+    },
+    {
+      "aliasName": "FC Würzburger Kickers",
+      "league": "3. Liga",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 110197
+      },
+      "source": "manual-review",
       "verified": true
     },
     {
@@ -193,6 +243,16 @@
       "verified": true
     },
     {
+      "aliasName": "Jeju United",
+      "league": "K League 1",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 1478
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
       "aliasName": "Juventus",
       "league": "Serie A Enilive",
       "gender": 0,
@@ -223,6 +283,16 @@
       "verified": true
     },
     {
+      "aliasName": "Marítimo da Madeira",
+      "league": "Liga Portugal",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 1893
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
       "aliasName": "Monza",
       "league": "Serie A Enilive",
       "gender": 0,
@@ -238,6 +308,16 @@
       "gender": 0,
       "canonical": {
         "eaTeamId": 131798
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "Nott'm Forest",
+      "league": "Premier League",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 14
       },
       "source": "manual-review",
       "verified": true
@@ -273,6 +353,36 @@
       "verified": true
     },
     {
+      "aliasName": "R. Oviedo",
+      "league": "LALIGA HYPERMOTION",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 110827
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "R. Sporting",
+      "league": "LALIGA HYPERMOTION",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 459
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "R. Valladolid CF",
+      "league": "LALIGA HYPERMOTION",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 462
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
       "aliasName": "SC Fortuna Köln",
       "league": "3. Liga",
       "gender": 0,
@@ -288,6 +398,16 @@
       "gender": 0,
       "canonical": {
         "eaTeamId": 100638
+      },
+      "source": "manual-review",
+      "verified": true
+    },
+    {
+      "aliasName": "STVV",
+      "league": "1A Pro League",
+      "gender": 0,
+      "canonical": {
+        "eaTeamId": 680
       },
       "source": "manual-review",
       "verified": true
