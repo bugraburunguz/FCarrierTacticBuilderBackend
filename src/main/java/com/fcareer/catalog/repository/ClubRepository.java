@@ -13,6 +13,8 @@ import java.util.Optional;
 
 public interface ClubRepository extends JpaRepository<ClubEntity, Integer> {
 
+    Optional<ClubEntity> findFirstByEaTeamIdOrderByIdAsc(Integer eaTeamId);
+
     Optional<ClubEntity> findByNameAndLeagueId(String name, Integer leagueId);
 
     List<ClubEntity> findByNameContainingIgnoreCaseOrderByName(String name);

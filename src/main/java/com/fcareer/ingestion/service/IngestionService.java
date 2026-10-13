@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -144,6 +145,7 @@ public class IngestionService {
                 .stream().collect(Collectors.toMap(PlayerRatingEntity::getBasePlayerId, Function.identity()));
         Map<String, NationalityEntity> nationalities = new HashMap<>();
         Map<String, LeagueEntity> leagues = new HashMap<>();
+        Map<Long, Integer> clubIds = new HashMap<>();
         int created = 0;
         int updated = 0;
         for (ExternalPlayer player : items) {
@@ -158,7 +160,7 @@ public class IngestionService {
             PlayerRatingEntity rating = ratings.getOrDefault(base.getId(), new PlayerRatingEntity());
             rating.setBasePlayerId(base.getId());
             rating.setGameVersionId(gameVersion);
-            applyRating(rating, player, base, leagues);
+            applyRating(rating, player, base, leagues, clubIds);
             playerRatingRepository.save(rating);
             if (isNew) {
                 created++;
@@ -186,7 +188,7 @@ public class IngestionService {
     }
 
     private void applyRating(PlayerRatingEntity rating, ExternalPlayer player, BasePlayerEntity base,
-                             Map<String, LeagueEntity> leagues) {
+                             Map<String, LeagueEntity> leagues, Map<Long, Integer> clubIds) {
         rating.setOverall((short) player.overall());
         rating.setPositions(player.positions());
         rating.setWeakFoot(toShort(player.weakFoot()));
@@ -195,23 +197,33 @@ public class IngestionService {
         rating.setAccelerate(acceleRateDeriver.derive(Objects.isNull(base.getHeightCm()) ? null : base.getHeightCm().intValue(),
                 player.gender(), player.attrs()).map(AcceleRate::name).orElse(null));
         ratingAttrAccessor.write(rating, player.attrs());
-        rating.setClubId(club(player, leagues));
+        rating.setClubId(club(player, leagues, clubIds));
     }
 
-    private Integer club(ExternalPlayer player, Map<String, LeagueEntity> leagues) {
+    /** Kulüp EA team.id ile tanınır (küme düşünce lig değişse de aynı satır güncellenir); id yoksa ad + lig. Sayfa başına önbellek N+1'i önler. */
+    private Integer club(ExternalPlayer player, Map<String, LeagueEntity> leagues, Map<Long, Integer> clubIds) {
         if (Objects.isNull(player.clubName())) {
             return null;
         }
+        Long teamId = player.clubExternalId();
+        if (Objects.nonNull(teamId) && clubIds.containsKey(teamId)) {
+            return clubIds.get(teamId);
+        }
         Integer leagueId = Objects.isNull(player.leagueName()) ? null
                 : leagues.computeIfAbsent(player.leagueName(), this::league).getId();
-        ClubEntity club = clubRepository.findByNameAndLeagueId(player.clubName(), leagueId).orElseGet(() -> {
-            ClubEntity created = new ClubEntity();
-            created.setName(player.clubName());
-            created.setLeagueId(leagueId);
-            return created;
-        });
+        Optional<ClubEntity> known = Objects.isNull(teamId) ? Optional.empty() : clubRepository.findFirstByEaTeamIdOrderByIdAsc(teamId.intValue());
+        ClubEntity club = known.or(() -> clubRepository.findByNameAndLeagueId(player.clubName(), leagueId)).orElseGet(ClubEntity::new);
+        club.setName(player.clubName());
+        club.setLeagueId(leagueId);
         club.setGender((short) player.gender());
-        return clubRepository.save(club).getId();
+        if (Objects.nonNull(teamId)) {
+            club.setEaTeamId(teamId.intValue());
+        }
+        Integer id = clubRepository.save(club).getId();
+        if (Objects.nonNull(teamId)) {
+            clubIds.put(teamId, id);
+        }
+        return id;
     }
 
     private NationalityEntity nationality(String name) {

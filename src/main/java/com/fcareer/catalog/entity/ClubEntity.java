@@ -25,4 +25,7 @@ public class ClubEntity {
     private Integer leagueId;
 
     private Short gender;
+
+    /** EA takım kimliği (ratings sitesi team.id / SBC gereksinimleri); kulüp kimliği adla değil bununla tanınır. */
+    private Integer eaTeamId;
 }
