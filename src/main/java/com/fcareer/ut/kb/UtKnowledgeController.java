@@ -131,10 +131,11 @@ public class UtKnowledgeController {
 
     @PostMapping("/contrib/capture")
     public ContributionResult contribute(@AuthenticationPrincipal AuthUser user, @Valid @RequestBody CaptureRequest request,
-                                         @RequestParam(defaultValue = "CONSOLE") String platform, @RequestHeader(value = "X-Ext-Version", required = false) String extensionVersion) throws IOException {
+                                         @RequestParam(defaultValue = "CONSOLE") String platform, @RequestParam(required = false) String locale,
+                                         @RequestHeader(value = "X-Ext-Version", required = false) String extensionVersion) throws IOException {
         requireCurrentExtension(extensionVersion);
         List<Capture> captures = Objects.requireNonNull(request.captures());
-        return contributionService.contribute(user.id(), captures, platform);
+        return contributionService.contribute(user.id(), captures, platform, locale);
     }
 
     /** EXT-12: sürüm başlığı varsa ve minimumun altındaysa güncelleme istenir (426). Başlıksız (ham yükleme) istekler etkilenmez. */

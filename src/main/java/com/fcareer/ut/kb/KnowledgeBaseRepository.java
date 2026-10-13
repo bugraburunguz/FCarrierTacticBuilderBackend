@@ -286,8 +286,21 @@ public class KnowledgeBaseRepository {
                 Map.of("k", kind, "n", naturalKey, "h", hash), String.class).stream().findFirst().map(this::read);
     }
 
+    public void upsertText(String kind, String naturalKey, String locale, String name, String description) {
+        jdbc.update("""
+                INSERT INTO kb_text (kind, natural_key, locale, name, description) VALUES (:k, :n, :l, :name, :d)
+                ON CONFLICT (kind, natural_key, locale) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description
+                """, new MapSqlParameterSource().addValue("k", kind).addValue("n", naturalKey).addValue("l", locale).addValue("name", name).addValue("d", description));
+    }
+
     public void openQueue(String kind, String naturalKey, JsonNode candidates) {
-        jdbc.update("INSERT INTO contrib_queue (kind, natural_key, candidates) VALUES (:k, :n, CAST(:c AS jsonb)) ON CONFLICT (kind, natural_key) WHERE status = 'OPEN' DO UPDATE SET candidates = EXCLUDED.candidates",
+        jdbc.update("""
+                INSERT INTO contrib_queue (kind, natural_key, candidates) VALUES (:k, :n, CAST(:c AS jsonb))
+                ON CONFLICT (kind, natural_key) WHERE status = 'OPEN' DO UPDATE SET candidates = (
+                  SELECT jsonb_agg(c ORDER BY ord) FROM (
+                    SELECT DISTINCT ON (c ->> 'hash') c, ord FROM jsonb_array_elements(contrib_queue.candidates || EXCLUDED.candidates) WITH ORDINALITY AS t(c, ord)
+                    ORDER BY c ->> 'hash', ord) merged)
+                """,
                 new MapSqlParameterSource().addValue("k", kind).addValue("n", naturalKey).addValue("c", json(candidates)));
     }
 

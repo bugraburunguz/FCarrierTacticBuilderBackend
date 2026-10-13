@@ -60,6 +60,9 @@ public class ContributionService {
     private static final int CONFIRMING_CONTRIBUTORS = 2;
     private static final int CONFIRM_REWARD = 1;
     private static final int CONFLICT_PENALTY = -3;
+    private static final Set<String> TEXT_FIELDS = Set.of("name", "description", "setName", "formationLabel", "category", "label", "title");
+    private static final String UNDETERMINED_LOCALE = "und";
+    private static final int MAX_LOCALE = 16;
     private static final Duration MAX_CLOCK_SKEW = Duration.ofHours(48);
     private static final String MARKET_SOURCE = "transfermarket";
     private static final Set<String> PLATFORMS = Set.of("CONSOLE", "PC");
@@ -80,7 +83,7 @@ public class ContributionService {
     }
 
     @Transactional
-    public ContributionResult contribute(Long userId, List<Capture> captures, String platform) {
+    public ContributionResult contribute(Long userId, List<Capture> captures, String platform, String locale) {
         Contributor contributor = contributorService.require(userId);
         String normalizedPlatform = Objects.nonNull(platform) && PLATFORMS.contains(platform.toUpperCase()) ? platform.toUpperCase() : "CONSOLE";
         CaptureResult result = captureService.process(captures.stream().filter(c -> Objects.isNull(c.url()) || !captureRules.isPersonalOnly(c.url())).toList(), userId);
@@ -88,8 +91,10 @@ public class ContributionService {
         int updated = 0;
         int unchanged = 0;
         int queued = 0;
+        String textLocale = Objects.isNull(locale) || locale.isBlank() || locale.length() > MAX_LOCALE ? UNDETERMINED_LOCALE : locale;
         for (Entity entity : entities(result)) {
-            String hash = hash(entity.payload());
+            String hash = hash(structural(entity.payload()));
+            repository.upsertText(entity.kind(), entity.key(), textLocale, text(entity.payload(), "name"), text(entity.payload(), "description"));
             repository.insertEvent(contributor.id(), entity.kind(), entity.key(), hash, entity.payload());
             switch (decide(contributor, entity, hash)) {
                 case CREATED -> created++;
@@ -157,7 +162,7 @@ public class ContributionService {
             throw new InvalidTacticException("kind");
         }
         payload.put("id", id);
-        String hash = hash(payload);
+        String hash = hash(structural(payload));
         apply(new Entity(kind, id, payload, null), hash, "CONFIRMED");
         return hash;
     }
@@ -216,6 +221,7 @@ public class ContributionService {
             ObjectNode p = objectMapper.createObjectNode();
             p.put("name", set.name());
             p.put("category", set.category());
+            p.put("categoryId", set.categoryId());
             p.put("challengesCount", set.challengesCount());
             p.put("repeatable", set.repeatable());
             p.put("awardCount", set.awardCount());
@@ -324,6 +330,25 @@ public class ContributionService {
 
     private static Instant epochToInstant(Long epoch) {
         return Objects.nonNull(epoch) && epoch >= MIN_EPOCH && epoch <= MAX_EPOCH ? Instant.ofEpochSecond(epoch) : null;
+    }
+
+    /** Hash yalnız yapıyı kapsar (BE-BUG-07): lokalize ad/açıklama/etiketler her derinlikte çıkarılır, id'ler ve sayılar kalır. */
+    private JsonNode structural(JsonNode payload) {
+        if (payload.isObject()) {
+            ObjectNode copy = objectMapper.createObjectNode();
+            payload.fields().forEachRemaining(e -> {
+                if (!TEXT_FIELDS.contains(e.getKey())) {
+                    copy.set(e.getKey(), structural(e.getValue()));
+                }
+            });
+            return copy;
+        }
+        if (payload.isArray()) {
+            ArrayNode copy = objectMapper.createArrayNode();
+            payload.forEach(n -> copy.add(structural(n)));
+            return copy;
+        }
+        return payload;
     }
 
     private String hash(JsonNode payload) {

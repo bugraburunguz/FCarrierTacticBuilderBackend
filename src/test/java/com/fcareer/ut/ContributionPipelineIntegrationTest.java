@@ -37,6 +37,7 @@ class ContributionPipelineIntegrationTest {
 
     @BeforeEach
     void contributor() throws Exception {
+        jdbc.update("DELETE FROM kb_text");
         jdbc.update("DELETE FROM contrib_queue");
         jdbc.update("DELETE FROM contrib_event");
         jdbc.update("DELETE FROM sbc_challenge");
@@ -90,6 +91,45 @@ class ContributionPipelineIntegrationTest {
         contribute(second.toEpochMilli(), hub("Marquee", 3_600, ""));
 
         assertThat(endsAt().getEpochSecond()).isCloseTo(second.plusSeconds(3_600).getEpochSecond(), within(2L));
+    }
+
+    private String newToken() throws Exception {
+        JsonNode registered = call(post("/api/v1/auth/register"), Map.of("email", "pipe-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!"), null, 200);
+        String bearer = registered.at("/data/accessToken").asText();
+        long user = call(get("/api/v1/me"), null, bearer, 200).at("/data/id").asLong();
+        jdbc.update("INSERT INTO contributor (user_id, trust) VALUES (?, 100)", user);
+        return bearer;
+    }
+
+    private JsonNode contributeAs(String bearer, String locale, String hubBody, String challengeBody) throws Exception {
+        long ts = Instant.now().toEpochMilli();
+        return call(post("/api/v1/ut/contrib/capture" + (locale == null ? "" : "?locale=" + locale)), Map.of("captures", new Object[]{
+                Map.of("url", UT + "/sbs/hub/v2", "ts", ts, "body", hubBody),
+                Map.of("url", UT + "/sbs/setid/" + SET_ID + "/challenges", "ts", ts + 1, "body", challengeBody)}), bearer, 200);
+    }
+
+    @Test
+    void localizedNamesDoNotSplitConsensusAndAreKeptPerLocale() throws Exception {
+        contributeAs(token, "en-GB", hub("Marquee Matchups", 86_400, ""), CHALLENGE.replace("Brick", "Brick EN"));
+        JsonNode turkish = contributeAs(token, "tr-TR", hub("Marquee Eşleşmeleri", 86_400, ""), CHALLENGE.replace("Brick", "Tuğla TR"));
+
+        assertThat(turkish.at("/data/unchanged").asInt()).isEqualTo(2);
+        assertThat(turkish.at("/data/queued").asInt()).isZero();
+        assertThat(jdbc.queryForList("SELECT locale FROM kb_text WHERE natural_key = ? ORDER BY locale", String.class, "SBC_SET:" + SET_ID)).containsExactly("en-GB", "tr-TR");
+        assertThat(jdbc.queryForObject("SELECT name FROM kb_text WHERE natural_key = ? AND locale = 'tr-TR'", String.class, "SBC_SET:" + SET_ID)).isEqualTo("Marquee Eşleşmeleri");
+    }
+
+    @Test
+    void conflictingCandidatesAccumulateInTheQueue() throws Exception {
+        String first = newToken();
+        String second = newToken();
+        String third = newToken();
+        contributeAs(first, null, hub("Marquee", 86_400, ""), CHALLENGE);
+        contributeAs(second, null, hub("Marquee", 86_400, ""), CHALLENGE.replace("4200", "4300"));
+        JsonNode queued = contributeAs(third, null, hub("Marquee", 86_400, ""), CHALLENGE.replace("4200", "4400"));
+
+        assertThat(queued.at("/data/queued").asInt()).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT jsonb_array_length(candidates) FROM contrib_queue WHERE status = 'OPEN'", Integer.class)).isEqualTo(3);
     }
 
     private JsonNode call(MockHttpServletRequestBuilder builder, Object body, String bearer, int expectedStatus) throws Exception {
