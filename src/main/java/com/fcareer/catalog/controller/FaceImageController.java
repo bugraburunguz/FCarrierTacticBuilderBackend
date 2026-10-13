@@ -14,21 +14,21 @@ import java.time.Duration;
 
 import static com.fcareer.common.constants.ApiConstants.API_V1;
 
-/** Ham görsel döner (ApiResponse zarfı yok): tarayıcı <img> ile doğrudan okur; sonuçlar 30 gün önbelleklenir. */
+/** Ham görsel döner (ApiResponse zarfı yok): tarayıcı <img> ile doğrudan okur; tarayıcı önbelleği 24 saat (immutable değil: kaldırma talebi 48 saatte yansımalı, BE-SEC-11). */
 @RestController
 @RequestMapping(API_V1 + "/img")
 @RequiredArgsConstructor
 public class FaceImageController {
 
     private static final Duration MISSING_TTL = Duration.ofHours(1);
-    private static final Duration FOUND_TTL = Duration.ofDays(30);
+    private static final Duration FOUND_TTL = Duration.ofHours(24);
 
     private final FaceImageService faceImageService;
 
     @GetMapping("/face/{id:\\d+}")
     public ResponseEntity<byte[]> face(@PathVariable long id) {
         return faceImageService.face(id)
-                .map(bytes -> ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).cacheControl(CacheControl.maxAge(FOUND_TTL).cachePublic().immutable()).body(bytes))
+                .map(image -> ResponseEntity.ok().contentType(MediaType.parseMediaType(image.contentType())).cacheControl(CacheControl.maxAge(FOUND_TTL).cachePublic()).body(image.bytes()))
                 .orElseGet(() -> ResponseEntity.notFound().cacheControl(CacheControl.maxAge(MISSING_TTL).cachePublic()).build());
     }
 }
