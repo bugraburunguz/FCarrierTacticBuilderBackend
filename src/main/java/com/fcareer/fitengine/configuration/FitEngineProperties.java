@@ -38,6 +38,8 @@ public class FitEngineProperties {
         private double greenFrom = 65;
         private double neutralFrom = 40;
         private double yellowFrom = 20;
+        /** "Biçilmiş kaftan" rozeti yalnız levelFit bu değer ve üstündeyken (verified:false). */
+        private double tailoredFrom = 85;
     }
 
     @Getter

@@ -167,6 +167,11 @@ class CareerRecommenderIntegrationTest {
             assertThat(item.getCons()).hasSizeLessThanOrEqualTo(2);
             assertThat(item.getFutureFit()).isNotNull();
             assertThat(item.getProjectedRating()).isNotNull();
+            assertThat(item.getNarrative()).as("E3-8: anlatım yalnız katkı/kanıt sayılarından").isNotNull();
+            assertThat(item.getNarrative().getHeadline()).isNotBlank();
+            assertThat(item.getNarrative().isTailored()).as("Biçilmiş kaftan yalnız levelFit ≥ 85").isEqualTo(item.getLevelFit() >= 85.0);
+            assertThat(item.getNarrative().getStrengths()).hasSizeLessThanOrEqualTo(3);
+            assertThat(item.getNarrative().getWeaknesses()).hasSizeLessThanOrEqualTo(2);
         }
     }
 

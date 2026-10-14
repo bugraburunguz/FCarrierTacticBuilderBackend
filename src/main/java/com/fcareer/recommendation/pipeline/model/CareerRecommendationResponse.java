@@ -2,6 +2,7 @@ package com.fcareer.recommendation.pipeline.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fcareer.catalog.model.response.PlayerSummaryResponse;
+import com.fcareer.fitengine.model.response.FitNarrative;
 import com.fcareer.fitengine.service.FitEngineV3;
 import com.fcareer.recommendation.pipeline.FeasibilityBucket;
 import com.fcareer.recommendation.pipeline.FeasibilityBuckets;
@@ -69,6 +70,8 @@ public class CareerRecommendationResponse {
         private String bucketLabel;
         private int bucketPoints;
         private List<FeasibilityBuckets.Factor> bucketFactors;
+        /** Kullanıcı anlatımı (E3-8): cümleler yalnız katkı/kanıt sayılarından; pros/cons ham katkılardır (geliştirici görünümü). */
+        private FitNarrative narrative;
         private List<FitEngineV3.Contribution> pros;
         private List<FitEngineV3.Contribution> cons;
         /** FREE, YOUNG, READY */

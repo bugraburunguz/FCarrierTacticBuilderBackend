@@ -27,6 +27,7 @@ public class RoleFitV3Service {
     private final LevelFitService levelFitService;
     private final FitEngineProperties properties;
     private final MessageService messageService;
+    private final FitNarrativeService narrativeService;
 
     /** Etiket metni tooltip içindir; renk tek başına anlam taşımaz. Seviyesinde bandı renksizdir (badge null). */
     public enum FitLabel {
@@ -70,6 +71,7 @@ public class RoleFitV3Service {
                 : levelFitService.levelFit(gender, position, role.getBaseRole(), role.getFocus(), player.getOverall(), result.currentFit());
         double badgeBasis = level.map(LevelFitService.LevelFit::value).orElse(result.currentFit());
         FitLabel label = label(badgeBasis, properties.getV3());
+        Double levelValue = level.map(LevelFitService.LevelFit::value).orElse(null);
         return RoleFitResponse.builder()
                 .playerId(player.getId())
                 .playerName(player.getName())
@@ -90,6 +92,7 @@ public class RoleFitV3Service {
                 .levelSample(level.map(LevelFitService.LevelFit::sampleCount).orElse(null))
                 .contributions(result.top(TOP_CONTRIBUTIONS).stream()
                         .map((c) -> new FitEngineV3.Contribution(c.term(), c.key(), Math.round(c.points() * ROUND) / ROUND)).toList())
+                .narrative(narrativeService.narrate(role.getName(), result.currentFit(), levelValue, level.map(LevelFitService.LevelFit::sampleCount).orElse(null), label.name(), result.contributions()))
                 .build();
     }
 

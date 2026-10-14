@@ -38,4 +38,6 @@ public class RoleFitResponse {
     private Integer levelBandHi;
     private Integer levelSample;
     private List<FitEngineV3.Contribution> contributions;
+    /** v3 anlatımı (E3-8): cümleler yalnız katkı/kanıt sayılarından; "Biçilmiş kaftan" yalnız levelFit eşiğinin üstünde. */
+    private FitNarrative narrative;
 }

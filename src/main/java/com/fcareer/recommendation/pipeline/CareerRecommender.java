@@ -72,7 +72,7 @@ public class CareerRecommender {
     /** Tam puanlanmış aday (çeşitlendirme öncesi). */
     public record Scored(FitPlayer player, PlayerSummaryResponse summary, FitRole role, FitEngineV3.Result result, Double levelFit, String fitLabel,
                          FeasibilityBuckets.Result feasibility, double rankScore, CareerPlayerRepository.Extra extra, double futureFit, int projectedRating,
-                         boolean outOfPosition, Double starterFit, Double clubStrength, Double clubGap, Double ovrGap) {
+                         boolean outOfPosition, Double starterFit, Double clubStrength, Double clubGap, Double ovrGap, Integer levelSample) {
         public double currentFit() {
             return result.currentFit();
         }
@@ -107,6 +107,7 @@ public class CareerRecommender {
     private final BillingProperties billingProperties;
     private final ClubStrengthService clubStrengthService;
     private final TacticSlotLookup tacticSlotLookup;
+    private final com.fcareer.fitengine.service.FitNarrativeService narrativeService;
 
     public CreditedResponse<CareerRecommendationResponse> recommend(Long userId, Long careerId, CareerRecommendationRequest request) {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
@@ -237,7 +238,8 @@ public class CareerRecommender {
         boolean oop = !player.getPositions().contains(position);
         Starter starter = starters.get(bestRole.getId());
         return new Scored(player, summary, bestRole, best, level.map(LevelFitService.LevelFit::value).orElse(null), label, feasibility, blended - penalty - ageRisk - properties.getRankPenalty().belowSquad(ovrGap), extra, futureFit,
-                projection.projectedRating(), oop, Objects.isNull(starter) ? null : starter.fit(), targetStrength, clubGap, ovrGap);
+                projection.projectedRating(), oop, Objects.isNull(starter) ? null : starter.fit(), targetStrength, clubGap, ovrGap,
+                level.map(LevelFitService.LevelFit::sampleCount).orElse(null));
     }
 
     /** Rol kaynağı sırası: user_tactic → mevcut kadro ataması → isteğin rolü → varsayılan; forceRole ile isteğin rolü öne geçer. alternativeRoles tüm rolleri açar. */
@@ -448,6 +450,7 @@ public class CareerRecommender {
                 .deltaVsCurrent(Objects.isNull(s.starterFit()) ? null : round1(s.currentFit() - s.starterFit())).positionLabel(positionLabel)
                 .clubStrength(round1(s.clubStrength())).clubStrengthGap(round1(s.clubGap())).ovrGap(round1(s.ovrGap()))
                 .bucket(s.feasibility().bucket()).bucketLabel(s.feasibility().bucket().label()).bucketPoints(s.feasibility().points()).bucketFactors(s.feasibility().factors())
+                .narrative(narrativeService.narrate(s.role().getName(), s.currentFit(), s.levelFit(), s.levelSample(), Objects.isNull(s.fitLabel()) ? "" : s.fitLabel(), s.result().contributions()))
                 .pros(pros).cons(cons).tags(tags).rankScore(round1(s.rankScore())).build();
     }
 
