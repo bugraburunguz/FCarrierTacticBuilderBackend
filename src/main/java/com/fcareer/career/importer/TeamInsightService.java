@@ -37,7 +37,7 @@ public class TeamInsightService {
 
     private static final String SUMMARY_SQL = """
             SELECT t.team_id, t.name, t.league_name, t.gender, t.overall, t.attack, t.midfield, t.defence,
-                   (SELECT count(*) FROM career_player_data d WHERE d.career_id = t.career_id AND d.team_id = t.team_id) AS players
+                   (SELECT count(*) FROM career_player cp WHERE cp.career_id = t.career_id AND cp.team_id = t.team_id) AS players
             FROM career_team t
             WHERE t.career_id = :c AND NOT t.free_agent_pool AND (:q IS NULL OR t.name ILIKE :q)
             ORDER BY t.overall DESC NULLS LAST, t.name LIMIT :limit""";

@@ -3,6 +3,7 @@ package com.fcareer.catalog.repository;
 import com.fcareer.catalog.model.request.PlayerSearchRequest;
 import com.fcareer.catalog.model.response.PlayerSummaryResponse;
 import com.fcareer.fitengine.model.Attr;
+import com.fcareer.ingestion.base.CareerPlayerWriter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -12,7 +13,6 @@ import java.sql.Array;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,64 +20,40 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Oyuncu araması. Kaynak isteğe göre seçilir (E3-2): careerId varsa kariyerin tek doğruluk kaynağı (kariyer oyuncu tablosu), yoksa EA kataloğu.
+ * İki kaynak aynı filtre/sıralama motorunu kullanır; kaynağa özgü SQL parçaları {@link SearchProfile} uygulamalarındadır.
+ */
 @Repository
 @RequiredArgsConstructor
 public class PlayerSearchRepository {
 
-    private static final String FROM = """
-             FROM player_rating r
-             JOIN base_player b ON b.id = r.base_player_id
-             LEFT JOIN career_player_data cpd ON cpd.base_player_id = r.base_player_id AND cpd.career_id = CAST(:careerId AS BIGINT)
-             LEFT JOIN career_player_rating cpr ON cpr.base_player_id = r.base_player_id AND cpr.career_id = cpd.career_id
-                  AND cpr.game_version_id = r.game_version_id
-             LEFT JOIN career_team ct ON ct.career_id = cpd.career_id AND ct.team_id = cpd.team_id
-             LEFT JOIN career k ON k.id = cpd.career_id
-             LEFT JOIN LATERAL (SELECT id, league_id FROM club WHERE ea_team_id = cpd.team_id ORDER BY id LIMIT 1) tc ON cpd.base_player_id IS NOT NULL
-             LEFT JOIN club c ON c.id = r.club_id
-             LEFT JOIN league l ON l.id = c.league_id
-             LEFT JOIN nationality n ON n.id = b.nationality_id
-             LEFT JOIN player_valuation v ON v.base_player_id = r.base_player_id
-                  AND v.game_version_id = r.game_version_id AND v.source = 'MODELED' AND v.owner_user_id IS NULL
-             LEFT JOIN player_valuation vi ON vi.base_player_id = r.base_player_id
-                  AND vi.game_version_id = r.game_version_id AND vi.source = 'IMPORT' AND vi.owner_user_id = k.user_id
-            """;
-    /** ENG-01: kariyer modunda kulüp/lig/değer/nitelik kariyer verisinden gelir; kariyer satırı yoksa katalog. */
-    private static final String EFF_CLUB = "CASE WHEN cpd.base_player_id IS NOT NULL THEN tc.id ELSE c.id END";
-    private static final String EFF_LEAGUE = "CASE WHEN cpd.base_player_id IS NOT NULL THEN tc.league_id ELSE c.league_id END";
-    private static final String EFF_VALUE = "COALESCE(vi.value_eur, v.value_eur)";
-    private static final String EFF_PLAYSTYLES = "CASE WHEN cpr.id IS NOT NULL THEN cpr.playstyles ELSE r.playstyles END";
-    /** Kariyer sorgusunda oyun tarihi (BE-BUG-18), yoksa bugün: yaş hesabının referansı. */
-    private static final String GAME_DATE = "COALESCE((SELECT g.current_game_date FROM career g WHERE g.id = CAST(:careerId AS BIGINT)), CURRENT_DATE)";
-    private static final String SELECT = """
-            SELECT b.id AS id, b.ea_resource_id AS ea_id, b.full_name AS name, b.dob AS dob, b.gender AS gender, b.preferred_foot AS foot,
-                   COALESCE(cpd.overall, r.overall) AS overall, COALESCE(cpr.positions, r.positions) AS positions, COALESCE(cpr.weak_foot, r.weak_foot) AS weak_foot,
-                   COALESCE(cpr.skill_moves, r.skill_moves) AS skill_moves,
-                   CASE WHEN cpd.base_player_id IS NOT NULL THEN tc.id ELSE c.id END AS club_id, COALESCE(ct.name, c.name) AS club, COALESCE(ct.league_name, l.name) AS league, n.name AS nationality, COALESCE(cpr.accelerate, r.accelerate) AS accelerate, COALESCE(cpr.run_style1, r.run_style1) AS run_style,
-                   COALESCE(cpd.potential, v.potential) AS potential, COALESCE(vi.value_eur, v.value_eur) AS value_eur, (cpd.base_player_id IS NULL AND vi.id IS NULL AND v.id IS NOT NULL) AS estimated,
-                   (COALESCE(cpd.free_agent, false) OR l.name = 'Free Agents') AS free_agent,
-                   """ + GAME_DATE + " AS ref_date,\n"
-            + """
-                   CASE WHEN cpr.id IS NOT NULL THEN cpr.face_stats ELSE r.face_stats END AS face_official,
-                   (to_jsonb(r) || COALESCE(jsonb_strip_nulls(to_jsonb(cpr)), '{}'::jsonb))::text AS attrs_json
-            """;
-    private static final String AGE_YEARS = "EXTRACT(YEAR FROM age(" + GAME_DATE + ", b.dob))";
     private static final String AGE_SORT = "age";
-    private static final Map<String, String> SORTS = Map.ofEntries(
-            Map.entry("overall", "COALESCE(cpd.overall, r.overall)"),
-            Map.entry("name", "b.full_name"),
-            Map.entry("potential", "COALESCE(cpd.potential, v.potential)"),
-            Map.entry("value", EFF_VALUE),
-            Map.entry("club", "COALESCE(ct.name, c.name)"),
-            Map.entry("league", "COALESCE(ct.league_name, l.name)"),
-            Map.entry("nationality", "n.name"),
-            Map.entry("accelerate", "COALESCE(cpr.accelerate, r.accelerate)"),
-            Map.entry("position", "COALESCE(cpr.positions, r.positions)[1]"),
-            Map.entry("weakfoot", "COALESCE(cpr.weak_foot, r.weak_foot)"),
-            Map.entry("skillmoves", "COALESCE(cpr.skill_moves, r.skill_moves)"));
 
     private final NamedParameterJdbcTemplate jdbc;
     private final com.fcareer.ut.service.FaceStatsService faceStatsService;
+    private final CareerPlayerWriter careerPlayerWriter;
     private static final com.fasterxml.jackson.databind.ObjectMapper JSON = new com.fasterxml.jackson.databind.ObjectMapper();
+
+    private SearchProfile profileOf(PlayerSearchRequest request) {
+        if (Objects.isNull(request.getCareerId())) {
+            return CatalogSearchProfile.INSTANCE;
+        }
+        careerPlayerWriter.ensureSeeded(request.getCareerId());
+        return CareerSearchProfile.INSTANCE;
+    }
+
+    private static String select(SearchProfile p) {
+        return "SELECT b.id AS id, b.ea_resource_id AS ea_id, b.full_name AS name, b.dob AS dob, b.gender AS gender, b.preferred_foot AS foot,\n"
+                + p.overall() + " AS overall, " + p.positions() + " AS positions, " + p.weakFoot() + " AS weak_foot, " + p.skillMoves() + " AS skill_moves,\n"
+                + p.clubId() + " AS club_id, " + p.clubName() + " AS club, " + p.leagueName() + " AS league, n.name AS nationality, " + p.accelerate() + " AS accelerate, "
+                + p.runStyle() + " AS run_style,\n"
+                + p.potential() + " AS potential, " + p.value() + " AS value_eur, " + p.estimated() + " AS estimated,\n"
+                + p.freeAgentSelect() + " AS free_agent,\n"
+                + p.gameDate() + " AS ref_date,\n"
+                + p.faceOfficial() + " AS face_official,\n"
+                + p.attrsJson() + " AS attrs_json\n";
+    }
 
     /** Kariyerin oyun içi tarihi; kariyer yok ya da tarih girilmemişse boş (ENG-04). */
     public java.util.Optional<java.time.LocalDate> careerGameDate(Long careerId) {
@@ -88,11 +64,12 @@ public class PlayerSearchRepository {
     }
 
     public List<PlayerSummaryResponse> search(PlayerSearchRequest request) {
+        SearchProfile profile = profileOf(request);
         MapSqlParameterSource params = new MapSqlParameterSource();
-        String where = where(request, params);
+        String where = where(profile, request, params);
         params.addValue("limit", request.getSize());
         params.addValue("offset", (long) request.getPage() * request.getSize());
-        String sql = SELECT + FROM + where + " ORDER BY " + orderBy(request) + " LIMIT :limit OFFSET :offset";
+        String sql = select(profile) + profile.from() + where + " ORDER BY " + orderBy(profile, request) + " LIMIT :limit OFFSET :offset";
         return jdbc.query(sql, params, (rs, i) -> toSummary(rs));
     }
 
@@ -121,55 +98,55 @@ public class PlayerSearchRepository {
     }
 
     public long count(PlayerSearchRequest request) {
+        SearchProfile profile = profileOf(request);
         MapSqlParameterSource params = new MapSqlParameterSource();
-        String where = where(request, params);
-        Long total = jdbc.queryForObject("SELECT count(*)" + FROM + where, params, Long.class);
+        String where = where(profile, request, params);
+        Long total = jdbc.queryForObject("SELECT count(*)" + profile.from() + where, params, Long.class);
         return Objects.isNull(total) ? 0 : total;
     }
 
-    private String where(PlayerSearchRequest request, MapSqlParameterSource params) {
+    private String where(SearchProfile p, PlayerSearchRequest request, MapSqlParameterSource params) {
         List<String> clauses = new ArrayList<>();
-        clauses.add("r.game_version_id = :gv");
+        clauses.add(p.baseFilter());
         params.addValue("gv", request.getGameVersionId());
         params.addValue("careerId", request.getCareerId(), java.sql.Types.BIGINT);
-        clauses.add("(b.owner_career_id IS NULL OR b.owner_career_id = CAST(:careerId AS BIGINT))");
         if (Objects.nonNull(request.getQuery()) && !request.getQuery().isBlank()) {
             clauses.add("b.full_name ILIKE :q ESCAPE '!'");
             params.addValue("q", "%" + request.getQuery().trim().replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%");
         }
         if (!request.getPositions().isEmpty()) {
-            clauses.add("COALESCE(cpr.positions, r.positions) && string_to_array(:positions, ',')");
+            clauses.add(p.positions() + " && string_to_array(:positions, ',')");
             params.addValue("positions", String.join(",", request.getPositions()));
         }
         if (!request.getAccelerate().isEmpty()) {
-            clauses.add("COALESCE(cpr.accelerate, r.accelerate) IN (:accelerate)");
+            clauses.add(p.accelerate() + " IN (:accelerate)");
             params.addValue("accelerate", request.getAccelerate());
         }
-        addPlaystyles(request, clauses, params);
-        addAttrBounds(request.getAttrMin(), ">=", "min", clauses, params);
-        addAttrBounds(request.getAttrMax(), "<=", "max", clauses, params);
-        addBound(request.getOverallMin(), "COALESCE(cpd.overall, r.overall) >= :overallMin", "overallMin", clauses, params);
-        addBound(request.getOverallMax(), "COALESCE(cpd.overall, r.overall) <= :overallMax", "overallMax", clauses, params);
-        addBound(request.getPotentialMin(), "COALESCE(cpd.potential, v.potential) >= :potentialMin", "potentialMin", clauses, params);
-        addBound(request.getPotentialMax(), "COALESCE(cpd.potential, v.potential) <= :potentialMax", "potentialMax", clauses, params);
+        addPlaystyles(p, request, clauses, params);
+        addAttrBounds(p, request.getAttrMin(), ">=", "min", clauses, params);
+        addAttrBounds(p, request.getAttrMax(), "<=", "max", clauses, params);
+        addBound(request.getOverallMin(), p.overall() + " >= :overallMin", "overallMin", clauses, params);
+        addBound(request.getOverallMax(), p.overall() + " <= :overallMax", "overallMax", clauses, params);
+        addBound(request.getPotentialMin(), p.potential() + " >= :potentialMin", "potentialMin", clauses, params);
+        addBound(request.getPotentialMax(), p.potential() + " <= :potentialMax", "potentialMax", clauses, params);
         addBound(request.getValueMax(), request.isIncludeUnvalued()
-                ? "(" + EFF_VALUE + " IS NULL OR " + EFF_VALUE + " <= :valueMax)" : EFF_VALUE + " <= :valueMax", "valueMax", clauses, params);
-        addBound(request.getClubId(), EFF_CLUB + " = :clubId", "clubId", clauses, params);
-        addBound(request.getTeamId(), "cpd.team_id = :teamId", "teamId", clauses, params);
+                ? "(" + p.value() + " IS NULL OR " + p.value() + " <= :valueMax)" : p.value() + " <= :valueMax", "valueMax", clauses, params);
+        addBound(request.getClubId(), p.clubId() + " = :clubId", "clubId", clauses, params);
+        addBound(request.getTeamId(), p.teamId() + " = :teamId", "teamId", clauses, params);
         if (request.isFreeAgent()) {
-            clauses.add("cpd.free_agent");
+            clauses.add(p.freeAgentFilter());
         }
-        addBound(request.getLeagueId(), EFF_LEAGUE + " = :leagueId", "leagueId", clauses, params);
+        addBound(request.getLeagueId(), p.leagueId() + " = :leagueId", "leagueId", clauses, params);
         if (Objects.nonNull(request.getLeagueIds()) && !request.getLeagueIds().isEmpty()) {
-            clauses.add(EFF_LEAGUE + " IN (:leagueIds)");
+            clauses.add(p.leagueId() + " IN (:leagueIds)");
             params.addValue("leagueIds", request.getLeagueIds());
         }
         addBound(request.getNationalityId(), "b.nationality_id = :nationalityId", "nationalityId", clauses, params);
         addBound(request.getGender(), "b.gender = :gender", "gender", clauses, params);
-        addBound(request.getAgeMin(), AGE_YEARS + " >= :ageMin", "ageMin", clauses, params);
-        addBound(request.getAgeMax(), AGE_YEARS + " <= :ageMax", "ageMax", clauses, params);
-        addBound(request.getWeakFootMin(), "COALESCE(cpr.weak_foot, r.weak_foot) >= :weakFootMin", "weakFootMin", clauses, params);
-        addBound(request.getSkillMovesMin(), "COALESCE(cpr.skill_moves, r.skill_moves) >= :skillMovesMin", "skillMovesMin", clauses, params);
+        addBound(request.getAgeMin(), ageYears(p) + " >= :ageMin", "ageMin", clauses, params);
+        addBound(request.getAgeMax(), ageYears(p) + " <= :ageMax", "ageMax", clauses, params);
+        addBound(request.getWeakFootMin(), p.weakFoot() + " >= :weakFootMin", "weakFootMin", clauses, params);
+        addBound(request.getSkillMovesMin(), p.skillMoves() + " >= :skillMovesMin", "skillMovesMin", clauses, params);
         if (Objects.nonNull(request.getFoot()) && !request.getFoot().isBlank()) {
             clauses.add("b.preferred_foot = :foot");
             params.addValue("foot", request.getFoot());
@@ -183,20 +160,24 @@ public class PlayerSearchRepository {
         return " WHERE " + String.join(" AND ", clauses);
     }
 
-    private void addPlaystyles(PlayerSearchRequest request, List<String> clauses, MapSqlParameterSource params) {
+    private static String ageYears(SearchProfile p) {
+        return "EXTRACT(YEAR FROM age(" + p.gameDate() + ", b.dob))";
+    }
+
+    private void addPlaystyles(SearchProfile p, PlayerSearchRequest request, List<String> clauses, MapSqlParameterSource params) {
         for (int i = 0; i < request.getPlaystyles().size(); i++) {
-            clauses.add("jsonb_exists(" + EFF_PLAYSTYLES + ", :ps" + i + ")");
+            clauses.add("jsonb_exists(" + p.playstyles() + ", :ps" + i + ")");
             params.addValue("ps" + i, request.getPlaystyles().get(i));
         }
     }
 
-    private void addAttrBounds(Map<String, Integer> bounds, String operator, String prefix, List<String> clauses,
+    private void addAttrBounds(SearchProfile p, Map<String, Integer> bounds, String operator, String prefix, List<String> clauses,
                                MapSqlParameterSource params) {
         int i = 0;
         for (Map.Entry<String, Integer> bound : bounds.entrySet()) {
             Attr attr = Attr.fromKey(bound.getKey()).orElseThrow(() -> new IllegalArgumentException(bound.getKey()));
             String name = prefix + "Attr" + i++;
-            clauses.add("COALESCE(cpr." + attr.getColumn() + ", r." + attr.getColumn() + ") " + operator + " :" + name);
+            clauses.add(p.attr(attr) + " " + operator + " :" + name);
             params.addValue(name, bound.getValue());
         }
     }
@@ -215,17 +196,30 @@ public class PlayerSearchRepository {
         }
     }
 
-    private String orderBy(PlayerSearchRequest request) {
+    private String orderBy(SearchProfile p, PlayerSearchRequest request) {
         String key = Objects.isNull(request.getSort()) ? "overall" : request.getSort().replace("_", "").toLowerCase();
         boolean ascending = request.isAscending();
-        String column = SORTS.get(key);
+        String column = switch (key) {
+            case "overall" -> p.overall();
+            case "name" -> "b.full_name";
+            case "potential" -> p.potential();
+            case "value" -> p.value();
+            case "club" -> p.clubName();
+            case "league" -> p.leagueName();
+            case "nationality" -> "n.name";
+            case "accelerate" -> p.accelerate();
+            case "position" -> p.positions() + "[1]";
+            case "weakfoot" -> p.weakFoot();
+            case "skillmoves" -> p.skillMoves();
+            default -> null;
+        };
         if (AGE_SORT.equals(key)) {
             // Genç → yaşlı sıralaması doğum tarihinin ters yönüdür.
             column = "b.dob";
             ascending = !ascending;
         }
         if (Objects.isNull(column)) {
-            column = Attr.fromKey(key).map(a -> "COALESCE(cpr." + a.getColumn() + ", r." + a.getColumn() + ")").orElse("COALESCE(cpd.overall, r.overall)");
+            column = Attr.fromKey(key).map(p::attr).orElse(p.overall());
         }
         return column + (ascending ? " ASC" : " DESC") + " NULLS LAST, b.id ASC";
     }

@@ -44,6 +44,9 @@ public class CareerDeskService {
     private final SpoilerPolicy spoilerPolicy;
     private final PlayerService playerService;
     private final CareerDeskProperties properties;
+    private final com.fcareer.ingestion.base.CareerPlayerWriter careerPlayerWriter;
+    private static final String SNAPSHOT_ATTRS = java.util.stream.IntStream.range(0, com.fcareer.fitengine.model.Attr.values().length)
+            .mapToObj((i) -> "'" + com.fcareer.fitengine.model.Attr.values()[i].getColumn() + "', cp.attrs[" + (i + 1) + "],").collect(java.util.stream.Collectors.joining(" "));
 
     // ---- snapshot ----
 
@@ -53,19 +56,20 @@ public class CareerDeskService {
         Integer season = jdbc.queryForList("SELECT season FROM career WHERE id = :c", Map.of("c", careerId), Integer.class).stream().findFirst().orElse(null);
         Long id = jdbc.queryForObject("INSERT INTO career_snapshot (career_id, season, source, note, game_date) VALUES (:c, :s, :src, :n, (SELECT current_game_date FROM career WHERE id = :c)) RETURNING id",
                 new MapSqlParameterSource().addValue("c", careerId).addValue("s", season).addValue("src", source).addValue("n", note), Long.class);
+        careerPlayerWriter.ensureSeeded(careerId);
         int count = jdbc.update("""
                 INSERT INTO career_snapshot_player (snapshot_id, base_player_id, overall, potential, team_id, free_agent, positions, attrs, value_eur, wage_eur, age)
-                SELECT :id, d.base_player_id, d.overall, d.potential, d.team_id, d.free_agent, COALESCE(r.positions, pr.positions),
-                       COALESCE(to_jsonb(r), to_jsonb(pr)) - 'id' - 'career_id' - 'base_player_id' - 'game_version_id' - 'club_id' - 'overall' - 'positions',
+                SELECT :id, cp.player_id, cp.ovr, cp.pot, cp.team_id, cp.free_agent, cp.positions,
+                       jsonb_build_object(""" + SNAPSHOT_ATTRS + """
+                         'weak_foot', cp.weak_foot, 'skill_moves', cp.skill_moves, 'accelerate', cp.accelerate, 'playstyles', cp.playstyles,
+                         'run_style1', cp.run_style1, 'run_style2', cp.run_style2, 'body_type', cp.body_type),
                        v.value_eur, v.wage_eur,
                        CASE WHEN b.dob IS NULL THEN NULL ELSE date_part('year', age(COALESCE((SELECT game_date FROM career_snapshot WHERE id = :id), CURRENT_DATE), b.dob))::smallint END
-                FROM career_player_data d
-                JOIN career k ON k.id = d.career_id
-                JOIN base_player b ON b.id = d.base_player_id
-                LEFT JOIN career_player_rating r ON r.career_id = d.career_id AND r.base_player_id = d.base_player_id AND r.game_version_id = k.game_version_id
-                LEFT JOIN player_rating pr ON pr.base_player_id = d.base_player_id AND pr.game_version_id = k.game_version_id
-                LEFT JOIN player_valuation v ON v.base_player_id = d.base_player_id AND v.game_version_id = k.game_version_id AND v.source = 'IMPORT' AND v.owner_user_id = k.user_id
-                WHERE d.career_id = :c""", Map.of("id", id, "c", careerId));
+                FROM career_player cp
+                JOIN career k ON k.id = cp.career_id
+                JOIN base_player b ON b.id = cp.player_id
+                LEFT JOIN player_valuation v ON v.base_player_id = cp.player_id AND v.game_version_id = k.game_version_id AND v.source = 'IMPORT' AND v.owner_user_id = k.user_id
+                WHERE cp.career_id = :c AND cp.live""", Map.of("id", id, "c", careerId));
         jdbc.update("UPDATE career_snapshot SET player_count = :n WHERE id = :id", Map.of("n", count, "id", id));
         Integer keep = properties.getSnapshotRetention();
         if (Objects.nonNull(keep) && keep > 0) {
@@ -159,6 +163,8 @@ public class CareerDeskService {
             jdbc.update("UPDATE user_player_state SET dynamic_potential = :pot, updated_at = now() WHERE career_id = :c AND base_player_id = :p",
                     new MapSqlParameterSource().addValue("c", careerId).addValue("p", update.playerId()).addValue("pot", potential));
         }
+        careerPlayerWriter.ensureSeeded(careerId);
+        careerPlayerWriter.syncPlayers(careerId, batch.updates().stream().map(OvrUpdate::playerId).toList());
         long id = takeSnapshot(careerId, "MANUAL", batch.note());
         return jdbc.queryForObject("SELECT id, taken_at, season, transfer_window, source, player_count, note FROM career_snapshot WHERE id = :id", Map.of("id", id),
                 (rs, i) -> new SnapshotDto(rs.getLong("id"), rs.getTimestamp("taken_at").toInstant(), (Integer) rs.getObject("season"), rs.getString("transfer_window"),

@@ -45,6 +45,7 @@ public class CareerImportService {
     private final CareerService careerService;
     private final EntitlementService entitlementService;
     private final BaseCatalogImporter baseCatalogImporter;
+    private final com.fcareer.ingestion.base.CareerPlayerWriter careerPlayerWriter;
     private final com.fcareer.career.desk.CareerDeskService careerDeskService;
 
     @Transactional
@@ -164,6 +165,9 @@ public class CareerImportService {
         if (Objects.nonNull(context) && Objects.nonNull(context.gameDate())) {
             jdbc.update("UPDATE career SET current_game_date = :d WHERE id = :c", Map.of("d", java.sql.Date.valueOf(context.gameDate()), "c", careerId));
         }
+        // Çift yazma: eski overlay tabloları yazıldı; kariyerin tek doğruluk kaynağı career_player onlardan tazelenir (E3-2).
+        careerPlayerWriter.syncCareer(careerId);
+        careerPlayerWriter.applyLeExtras(careerId, tables.get("players"), eaToBase);
         careerDeskService.takeSnapshot(careerId, "IMPORT", Objects.nonNull(upload.exportId()) ? "export " + upload.exportId() : null);
         log.info("Career import done careerId : {} players : {} teams : {} freeAgents : {} unmatched : {}",
                 careerId, playerRows.size(), teamParams.size(), freeAgents, unmatched);
@@ -197,7 +201,8 @@ public class CareerImportService {
     public int syncSquad(Long userId, Long careerId, Integer teamId) {
         entitlementService.requirePremium(userId);
         CareerEntity career = careerService.requireOwned(userId, careerId);
-        Integer count = jdbc.queryForObject("SELECT count(*) FROM career_player_data WHERE career_id = :c AND team_id = :t",
+        careerPlayerWriter.ensureSeeded(careerId);
+        Integer count = jdbc.queryForObject("SELECT count(*) FROM career_player WHERE career_id = :c AND team_id = :t",
                 Map.of("c", careerId, "t", teamId), Integer.class);
         if (Objects.isNull(count) || count == 0) {
             throw new ImportParseException("team has no imported players");
@@ -211,10 +216,10 @@ public class CareerImportService {
         jdbc.update("DELETE FROM user_player_state WHERE career_id = :c", Map.of("c", careerId));
         jdbc.update("""
                 INSERT INTO user_player_state (career_id, base_player_id, club_id, dynamic_potential, on_loan, loaned_out, acquired_at, updated_at)
-                SELECT :c, d.base_player_id, :club, d.potential,
+                SELECT :c, d.player_id, :club, d.pot,
                        (d.loan_from_team_id IS NOT NULL AND d.team_id = :t AND d.loan_from_team_id <> :t),
                        (d.loan_from_team_id = :t AND d.team_id <> :t), now(), now()
-                FROM career_player_data d WHERE d.career_id = :c AND (d.team_id = :t OR d.loan_from_team_id = :t)""",
+                FROM career_player d WHERE d.career_id = :c AND d.live AND (d.team_id = :t OR d.loan_from_team_id = :t)""",
                 new MapSqlParameterSource().addValue("c", careerId).addValue("t", teamId).addValue("club", career.getClubId()));
         Integer count = jdbc.queryForObject("SELECT count(*) FROM user_player_state WHERE career_id = :c", Map.of("c", careerId), Integer.class);
         return Objects.isNull(count) ? 0 : count;

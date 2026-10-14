@@ -2,6 +2,8 @@ package com.fcareer.catalog.mapper;
 
 import com.fcareer.catalog.entity.BasePlayerEntity;
 import com.fcareer.catalog.entity.RatingColumns;
+import com.fcareer.catalog.entity.PlayerRatingEntity;
+import com.fcareer.catalog.repository.CareerPlayerRepository;
 import com.fcareer.catalog.entity.PlayerValuationEntity;
 import com.fcareer.catalog.model.response.PlayerDetailResponse;
 import com.fcareer.catalog.model.response.PlayerSummaryResponse;
@@ -24,6 +26,7 @@ public class PlayerMapper {
 
     private final RatingAttrAccessor ratingAttrAccessor;
     private final PositionOverallService positionOverallService;
+    private final com.fcareer.ingestion.base.LeRoleCodes leRoleCodes;
 
     public FitPlayer toFitPlayer(BasePlayerEntity base, RatingColumns rating, PlayerValuationEntity valuation, LocalDate gameDate) {
         return FitPlayer.builder()
@@ -45,6 +48,42 @@ public class PlayerMapper {
                 .skillMoves(Objects.isNull(rating.getSkillMoves()) ? null : rating.getSkillMoves().intValue())
                 .heightCm(Objects.isNull(base.getHeightCm()) ? null : base.getHeightCm().intValue())
                 .build();
+    }
+
+    /** Kariyer oyuncusu (career_player) → motor girdisi. Aşinalık LE rol kodlarından rol kimliğine çevrilir; potansiyel kariyer değeri yoksa değerleme tablosundan. */
+    public FitPlayer toFitPlayer(BasePlayerEntity base, CareerPlayerRepository.Row row, PlayerValuationEntity valuation, LocalDate gameDate) {
+        return FitPlayer.builder()
+                .id(base.getId())
+                .name(base.getFullName())
+                .age(age(base, gameDate))
+                .overall(row.ovr())
+                .positions(row.positions())
+                .attrs(row.attrs())
+                .playstyles(row.playstyles())
+                .acceleRate(Objects.isNull(row.accelerate()) ? null : AcceleRate.fromLabel(row.accelerate()).orElse(null))
+                .potential(Objects.nonNull(valuation) && Objects.nonNull(valuation.getPotential()) ? Integer.valueOf(valuation.getPotential().intValue()) : row.pot())
+                .valueEur(Objects.isNull(valuation) ? null : valuation.getValueEur())
+                .gender(Objects.isNull(base.getGender()) ? null : base.getGender().intValue())
+                .preferredFoot(base.getPreferredFoot())
+                .weakFoot(row.weakFoot())
+                .skillMoves(row.skillMoves())
+                .heightCm(Objects.isNull(base.getHeightCm()) ? null : base.getHeightCm().intValue())
+                .roleFamiliarity(leRoleCodes.toRoleIds(row.roleFamiliarity()))
+                .build();
+    }
+
+    /** Detay ekranı için kariyer satırını bellek içi derece görünümüne çevirir (kalıcı değil). */
+    public RatingColumns toRating(CareerPlayerRepository.Row row) {
+        RatingColumns rating = new PlayerRatingEntity();
+        rating.setOverall((short) row.ovr());
+        rating.setPositions(row.positions());
+        rating.setAccelerate(row.accelerate());
+        rating.setWeakFoot(Objects.isNull(row.weakFoot()) ? null : row.weakFoot().shortValue());
+        rating.setSkillMoves(Objects.isNull(row.skillMoves()) ? null : row.skillMoves().shortValue());
+        rating.setPlaystyles(row.playstyles());
+        rating.setBodyType(row.bodyType());
+        ratingAttrAccessor.write(rating, row.attrs());
+        return rating;
     }
 
     public PlayerDetailResponse toDetail(PlayerSummaryResponse summary, BasePlayerEntity base, RatingColumns rating) {

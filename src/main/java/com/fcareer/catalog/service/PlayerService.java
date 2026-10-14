@@ -4,7 +4,6 @@ import com.fcareer.catalog.configuration.CatalogProperties;
 import com.fcareer.catalog.entity.BasePlayerEntity;
 import com.fcareer.catalog.entity.PlayerRatingEntity;
 import com.fcareer.catalog.entity.RatingColumns;
-import com.fcareer.catalog.repository.CareerPlayerRatingRepository;
 import com.fcareer.catalog.entity.PlayerValuationEntity;
 import com.fcareer.catalog.mapper.PlayerMapper;
 import com.fcareer.catalog.model.enums.ValuationSource;
@@ -16,6 +15,7 @@ import com.fcareer.fitengine.model.Attr;
 import com.fcareer.catalog.repository.BasePlayerRepository;
 import com.fcareer.catalog.repository.PlayerRatingRepository;
 import com.fcareer.catalog.repository.PlayerSearchRepository;
+import com.fcareer.catalog.repository.CareerPlayerRepository;
 import com.fcareer.catalog.repository.PlayerValuationRepository;
 import com.fcareer.common.exception.NotFoundException;
 import com.fcareer.common.model.PageResponse;
@@ -48,7 +48,7 @@ public class PlayerService {
     private final PlayerSearchRepository playerSearchRepository;
     private final BasePlayerRepository basePlayerRepository;
     private final PlayerRatingRepository playerRatingRepository;
-    private final CareerPlayerRatingRepository careerPlayerRatingRepository;
+    private final com.fcareer.catalog.repository.CareerPlayerRepository careerPlayerRepository;
     private final PlayerValuationRepository playerValuationRepository;
     private final PlayerMapper playerMapper;
     private final com.fcareer.versioning.service.VersioningService versioningService;
@@ -76,11 +76,15 @@ public class PlayerService {
         if (!basePlayerRepository.findForeignOwnedIds(List.of(playerId), careerId).isEmpty()) {
             throw new NotFoundException(PLAYER, playerId);
         }
-        RatingColumns rating = playerRatingRepository.findByBasePlayerIdAndGameVersionId(playerId, gv)
-                .orElseThrow(() -> new NotFoundException(PLAYER, playerId));
+        RatingColumns rating;
         if (Objects.nonNull(careerId)) {
-            rating = careerPlayerRatingRepository.findByCareerIdAndBasePlayerIdInAndGameVersionId(careerId, List.of(playerId), gv)
-                    .stream().findFirst().map(RatingColumns.class::cast).orElse(rating);
+            CareerPlayerRepository.Row row = careerPlayerRepository.byIds(careerId, List.of(playerId)).get(playerId);
+            if (Objects.isNull(row)) {
+                throw new NotFoundException(PLAYER, playerId);
+            }
+            rating = playerMapper.toRating(row);
+        } else {
+            rating = playerRatingRepository.findByBasePlayerIdAndGameVersionId(playerId, gv).orElseThrow(() -> new NotFoundException(PLAYER, playerId));
         }
         PlayerSummaryResponse summary = enrich(List.of(summaryOf(playerId, gv, careerId)), gv).get(0);
         PlayerDetailResponse detail = playerMapper.toDetail(summary, base, rating);
@@ -103,20 +107,21 @@ public class PlayerService {
         Map<Long, BasePlayerEntity> bases = basePlayerRepository.findAllById(playerIds).stream()
                 .collect(Collectors.toMap(BasePlayerEntity::getId, Function.identity()));
         Map<Long, RatingColumns> ratings = new HashMap<>();
-        playerRatingRepository.findByBasePlayerIdInAndGameVersionId(playerIds, gv).forEach(r -> ratings.put(r.getBasePlayerId(), r));
-        if (Objects.nonNull(careerId)) {
-            careerPlayerRatingRepository.findByCareerIdAndBasePlayerIdInAndGameVersionId(careerId, playerIds, gv)
-                    .forEach(r -> ratings.put(r.getBasePlayerId(), r));
+        Map<Long, CareerPlayerRepository.Row> careerRows = Objects.nonNull(careerId) ? careerPlayerRepository.byIds(careerId, playerIds) : Map.of();
+        if (Objects.isNull(careerId)) {
+            playerRatingRepository.findByBasePlayerIdInAndGameVersionId(playerIds, gv).forEach(r -> ratings.put(r.getBasePlayerId(), r));
         }
         Map<Long, PlayerValuationEntity> valuations = playerValuationRepository
                 .findByBasePlayerIdInAndGameVersionIdAndSourceAndOwnerUserIdIsNull(playerIds, gv, ValuationSource.MODELED)
                 .stream().collect(Collectors.toMap(PlayerValuationEntity::getBasePlayerId, Function.identity()));
         java.time.LocalDate gameDate = playerSearchRepository.careerGameDate(careerId).orElse(null);
         return playerIds.stream().map(id -> {
-            if (!bases.containsKey(id) || !ratings.containsKey(id)) {
+            boolean hasRating = Objects.nonNull(careerId) ? careerRows.containsKey(id) : ratings.containsKey(id);
+            if (!bases.containsKey(id) || !hasRating) {
                 throw new NotFoundException(PLAYER, id);
             }
-            return playerMapper.toFitPlayer(bases.get(id), ratings.get(id), valuations.get(id), gameDate);
+            return Objects.nonNull(careerId) ? playerMapper.toFitPlayer(bases.get(id), careerRows.get(id), valuations.get(id), gameDate)
+                    : playerMapper.toFitPlayer(bases.get(id), ratings.get(id), valuations.get(id), gameDate);
         }).toList();
     }
 

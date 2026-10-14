@@ -73,6 +73,7 @@ public class CareerService {
     private final Clock clock;
     private final org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate jdbc;
     private final com.fcareer.career.desk.SpoilerPolicy spoilerPolicy;
+    private final com.fcareer.ingestion.base.CareerPlayerWriter careerPlayerWriter;
 
     public CareerResponse create(Long userId, CreateCareerRequest request) {
         short gameVersion = Objects.isNull(request.getGameVersionId())
@@ -141,7 +142,7 @@ public class CareerService {
         userPlayerStateRepository.deleteByCareerId(careerId);
         rosterEventRepository.flush();
         userPlayerStateRepository.flush();
-        deleteGeneratedPlayers(careerId);
+        careerPlayerWriter.deleteCareerPlayers(careerId);
         careerRepository.deleteSnapshots(careerId);
         careerRepository.delete(career);
         log.info("Career deleted careerId : {} userId : {}", careerId, userId);
@@ -189,7 +190,7 @@ public class CareerService {
         if (states.isEmpty()) {
             return overlay;
         }
-        jdbc.query("SELECT base_player_id, overall, potential FROM career_player_data WHERE career_id = :c AND base_player_id IN (:ids)",
+        jdbc.query("SELECT player_id AS base_player_id, ovr AS overall, pot AS potential FROM career_player WHERE career_id = :c AND live AND player_id IN (:ids)",
                 new org.springframework.jdbc.core.namedparam.MapSqlParameterSource()
                         .addValue("c", careerId)
                         .addValue("ids", states.stream().map(UserPlayerStateEntity::getBasePlayerId).toList()),
@@ -381,13 +382,6 @@ public class CareerService {
         userPlayerStateRepository.save(state);
     }
 
-    private void deleteGeneratedPlayers(Long careerId) {
-        java.util.Map<String, Object> params = java.util.Map.of("c", careerId);
-        jdbc.update("DELETE FROM career_player_data WHERE career_id = :c", params);
-        jdbc.update("DELETE FROM player_valuation WHERE base_player_id IN (SELECT id FROM base_player WHERE owner_career_id = :c)", params);
-        jdbc.update("DELETE FROM player_rating WHERE base_player_id IN (SELECT id FROM base_player WHERE owner_career_id = :c)", params);
-        jdbc.update("DELETE FROM base_player WHERE owner_career_id = :c", params);
-    }
 
     /** Öneri/piyasa sorguları için bütçe: boş ya da 0 "bilinmiyor"dur (null) ve bütçe filtresi uygulanmaz (ENG-02). */
     private static Long knownBudget(CareerEntity career) {
