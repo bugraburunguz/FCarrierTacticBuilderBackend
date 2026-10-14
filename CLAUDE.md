@@ -35,3 +35,15 @@ Eski Azerlottery standardı `docs/archive/backend-standard.md` altında, referan
 - Refactor'da davranış değişmez; değişen davranış commit mesajında `BEHAVIOR CHANGE:` ile açıkça yazılır.
 - API sözleşmesi değişikliği (`API CONTRACT CHANGE`) web repo ile aynı PR serisinde yapılır.
 - Gereksiz abstraction yok; refactor kod sadeleşince başarılıdır.
+
+## Çalışma kuralları
+- Dosya düzenlemeleri Edit aracıyla yapılır; `sed` veya heredoc ile kaynak dosya düzenlenmez.
+- Önce kırmızı test, sonra kod.
+- Her task sonunda: testler yeşil + push + progress güncellemesi.
+- Secret'lar commit'e, loga, rapora, dokümana girmez; `.env` okunmaz. Anahtar varlık kontrolü yalnız:
+  `grep -E '^(DB_PASSWORD|JWT_SECRET|ML_SHARED_SECRET)=' .env | cut -d= -f1`
+- Veri silme protokolü: dry-run → git dışında yedek (`../backups`) → tek transaction → kullanıcı onayı.
+  `docker compose down -v`, `DROP`, `TRUNCATE`, `DELETE` onaysız çalıştırılmaz.
+- Ortam: macOS (Apple Silicon, arm64). Proje kökü `/Users/user/Desktop/Projects/FCarrierTacticBuilder`
+  (backend `main`, web `v3`, yedekler `backups/` git dışı). Backend testleri JDK 17 ile:
+  `JAVA_HOME=$(/usr/libexec/java_home -v 17) mvn test` (Homebrew `mvn` varsayılan olarak daha yeni JDK seçer).
