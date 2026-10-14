@@ -58,7 +58,12 @@ public class AttrNorms {
 
     /** σ((a − p50)/sd); norm yoksa 0,5. */
     public double utility(int gender, String position, Attr attr, double value) {
-        return norm(gender, position, attr).map(n -> 1.0 / (1.0 + Math.exp(-(value - n.p50()) / Math.max(n.sd(), MIN_SD)))).orElse(0.5);
+        return utility(gender, position, attr, value, 0);
+    }
+
+    /** minSd: eğimin üst sınırı için ek taban (ağırlıklı katkının attribute başına en çok 1,5 puan oynaması, REP-c). */
+    public double utility(int gender, String position, Attr attr, double value, double minSd) {
+        return norm(gender, position, attr).map(n -> 1.0 / (1.0 + Math.exp(-(value - n.p50()) / Math.max(Math.max(n.sd(), MIN_SD), minSd)))).orElse(0.5);
     }
 
     /** Grubun kendi oyuncu sayısı (fallback'e düşen grup için 0). */

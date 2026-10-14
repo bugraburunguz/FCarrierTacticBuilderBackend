@@ -32,6 +32,10 @@ public class FitEngineV3 {
     private static final double SATURATION_KNEE = 85.0;
     private static final double SOFTPLUS_SHIFT = 2.0;
     private static final double MIN_SD = 3.0;
+    /** Lojistik eğrinin en dik noktasındaki türev katsayısı (1/4 / sd). */
+    private static final double LOGISTIC_PEAK_SLOPE = 0.25;
+    /** 13 §3.5: bir attribute puanının currentFit'e en çok etkisi. */
+    private static final double MAX_POINTS_PER_ATTR_POINT = 1.5;
     private static final double WEIGHT_FLOOR = 0.005;
     private static final String RIGHT = "Right";
     private static final String LEFT = "Left";
@@ -76,7 +80,8 @@ public class FitEngineV3 {
             if (e.getValue() < WEIGHT_FLOOR) {
                 continue;
             }
-            double u = norms.utility(gender, position, e.getKey(), player.attr(e.getKey()));
+            // Sigmoid eğimi sınırlı: tek attribute puanı en çok 1,5 puan oynatır (kaleci vektörleri %25 baskınlık kuralından muaf: GKPositioning ağırlığı 0,51).
+            double u = norms.utility(gender, position, e.getKey(), player.attr(e.getKey()), MAX_SCORE * e.getValue() * LOGISTIC_PEAK_SLOPE / MAX_POINTS_PER_ATTR_POINT);
             double points = MAX_SCORE * e.getValue() * (u - 0.5);
             contributions.add(new Contribution("attr", e.getKey().getKey(), points));
             total += points;

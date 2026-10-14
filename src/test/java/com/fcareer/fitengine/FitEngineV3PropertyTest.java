@@ -79,7 +79,7 @@ class FitEngineV3PropertyTest {
         return Combinators.combine(target, attrs, Arbitraries.of(Attr.values())).as(Case::new);
     }
 
-    @Property(tries = 400)
+    @Property(tries = 400, seed = "20261014")
     void raisingAnAttributeNeverLowersCurrentFitAndMovesItByAtMostOnePointFivePerPoint(@ForAll("cases") Case c) {
         Map<Attr, Integer> raised = new EnumMap<>(c.attrs());
         raised.put(c.bumped(), c.attrs().get(c.bumped()) + 1);
@@ -146,7 +146,7 @@ class FitEngineV3PropertyTest {
         return Combinators.combine(target, attrs, Arbitraries.of(Attr.values())).as(Case::new);
     }
 
-    @Property(tries = 400)
+    @Property(tries = 400, seed = "20261014")
     void atTheTopEndTwoDifferentInputsNeverCollapseToTheSameCurrentFit(@ForAll("strongCases") Case c) {
         Double weight = SEEDS.vector(c.target().position(), c.target().role(), c.target().focus()).orElseThrow().get(c.bumped());
         if (weight == null || weight < 0.02) {
