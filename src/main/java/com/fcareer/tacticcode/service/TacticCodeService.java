@@ -68,6 +68,37 @@ public class TacticCodeService {
         return ExportResponse.builder().code(code).formation(ours.id()).exact(warnings.isEmpty()).warnings(warnings).build();
     }
 
+    /**
+     * Replika kodu (REP-03): slotId → (rol adı, focus) ile doğrudan EA kodu üretir. Slot sırası EA kuralıdır (aynı mevkiler sağdan sola); (mevki, rol, focus) EA tablosunda yoksa 422.
+     * Dönen kod decode edilince aynı ayarları verir.
+     */
+    public String exportSlots(FormationDefinition ours, EaBuildUp buildUp, int lineHeight, Map<String, String[]> roleBySlot) {
+        EaCodecData.Formation ea = eaFormationFor(ours).orElseThrow(() -> new InvalidTacticException("formation not available as an EA tactic code: " + ours.id()));
+        Map<Integer, FormationSlot> mapping = formationSlotMapping(ours, ea);
+        List<EaSlot> slots = new ArrayList<>();
+        for (int i = 0; i < ea.positions().size(); i++) {
+            final int index = i;
+            FormationSlot slot = mapping.get(i);
+            String[] rf = roleBySlot.get(slot.slotId());
+            if (Objects.isNull(rf)) {
+                throw new InvalidTacticException("slot " + slot.slotId());
+            }
+            EaCodecData.Role role = codec.roles().stream().filter(r -> r.position().equals(ea.positions().get(index)) && normalize(r.name()).equals(normalize(rf[0]))).findFirst()
+                    .orElseThrow(() -> new EaRoleUnavailableException(slot.slotId() + ": " + rf[0] + " EA'da " + slot.position() + " için yok"));
+            int focus = focusIndex(role, rf[1]);
+            if (focus < 0) {
+                throw new EaRoleUnavailableException(slot.slotId() + ": " + rf[0] + " odağı " + rf[1] + " EA'da yok");
+            }
+            slots.add(new EaSlot(role.id(), focus));
+        }
+        return codec.encode(new EaTactic(ea.id(), buildUp, lineHeight, slots));
+    }
+
+    /** Formasyonun EA slot sırası (mevkiler; aynı mevkiler sağdan sola). */
+    public List<String> eaPositions(FormationDefinition ours) {
+        return eaFormationFor(ours).orElseThrow(() -> new InvalidTacticException("formation not available as an EA tactic code: " + ours.id())).positions();
+    }
+
     public ImportResponse importCode(String code) {
         EaTactic tactic;
         try {
