@@ -163,6 +163,25 @@ class CareerPlayerEquivalenceIntegrationTest {
         assertEquivalent(careerId);
     }
 
+    /** E3-4b ön kontrol: LE serbest oyuncu havuzundaki oyuncu katalog kulübüne düşmez; kulüp boş, ad kariyer takımından ("Serbest"). Canlı veride 231/224 böyle oyuncu var, hepsi havuz. */
+    @Test
+    void aLiveFreeAgentNeverFallsBackToACatalogClub() throws Exception {
+        String token = register();
+        long careerId = premiumCareer(token);
+        String club = clubRepository.findAll().get(0).getName();
+        MockHttpServletRequestBuilder upload = multipart("/api/v1/careers/" + careerId + "/import")
+                .file(file("players", "playerid,overallrating,potential\n" + (FIRST_MOCK_ID + 2) + ",77,80\n"))
+                .file(file("teams", "teamid,teamname,overallrating,gender\n1,\"" + club + "\",80,0\n111592,Serbest,60,0\n"))
+                .file(file("teamplayerlinks", "playerid,teamid\n" + (FIRST_MOCK_ID + 2) + ",111592\n"));
+        json(upload, token);
+        assertThat(jdbc.queryForObject("SELECT club_id FROM career_player WHERE career_id = ? AND live AND free_agent", Integer.class, careerId)).isNull();
+        JsonNode agents = json(get("/api/v1/players?career=" + careerId + "&free_agent=true"), token);
+        assertThat(agents.at("/data/items/0/club").asText()).isEqualTo("Serbest");
+        assertThat(agents.at("/data/items/0/clubId").isNull() || agents.at("/data/items/0/clubId").isMissingNode()).isTrue();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM career_player cp LEFT JOIN career_team ct ON ct.career_id = cp.career_id AND ct.team_id = cp.team_id "
+                + "WHERE cp.career_id = ? AND cp.live AND cp.club_id IS NULL AND ct.team_id IS NULL", Integer.class, careerId)).as("kulübü ve takım adı olmayan live oyuncu yok").isZero();
+    }
+
     private long premiumCareer(String token) throws Exception {
         var club = clubRepository.findAll().get(0);
         long careerId = json(post("/api/v1/careers").contentType(MediaType.APPLICATION_JSON)
