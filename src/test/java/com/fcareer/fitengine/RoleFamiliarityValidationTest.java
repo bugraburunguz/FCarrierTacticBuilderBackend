@@ -38,7 +38,7 @@ class RoleFamiliarityValidationTest {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final RoleSeeds SEEDS = new RoleSeeds(MAPPER);
     private static final FitEngineV3 ENGINE = new FitEngineV3(new AttrNorms(MAPPER), new PosDist(MAPPER), SEEDS);
-    static final boolean PLAYSTYLES_ON = Boolean.getBoolean("role.validation.ps");
+    static boolean PLAYSTYLES_ON = Boolean.getBoolean("role.validation.ps");
     static final com.fcareer.ingestion.base.LePlaystyleBits PS_BITS = new com.fcareer.ingestion.base.LePlaystyleBits(MAPPER);
     private static final Path DUMP = Path.of("ml-service", "data", "fc27-dump", "players.csv");
     private static final Map<Integer, String> POSITION_CODES = Map.ofEntries(Map.entry(0, "GK"), Map.entry(3, "RB"), Map.entry(5, "CB"), Map.entry(7, "LB"),

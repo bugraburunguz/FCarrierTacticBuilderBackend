@@ -100,7 +100,7 @@ class RoleVectorCandidateReportTest {
     }
 
     /** Rolün her (mevki, focus) vektörü için oyuncu başına levelFit; focus'lar arasında en yüksek değer alınır. */
-    private static void computeRole(FitEngineV3 engine, JsonNode role, Map<String, List<Entry>> pools, Map<Entry, Integer> index, int size, Map<String, double[]> out) {
+    static void computeRole(FitEngineV3 engine, JsonNode role, Map<String, List<Entry>> pools, Map<Entry, Integer> index, int size, Map<String, double[]> out) {
         String roleId = role.path("id").asText();
         for (JsonNode position : role.path("positions")) {
             double[] best = new double[size];
@@ -123,7 +123,7 @@ class RoleVectorCandidateReportTest {
     }
 
     /** Oyuncu içi AUC: global ve anahtar (mevki|rol) bazında, eğitim (0) ve test (1) yarısı ayrı. `focusRole` verilirse o rolün anahtarları da ayrıca özetlenir. */
-    private static JsonNode summarize(Map<String, double[]> levels, List<Entry> entries, List<JsonNode> roles, String focusRole) {
+    static JsonNode summarize(Map<String, double[]> levels, List<Entry> entries, List<JsonNode> roles, String focusRole) {
         Map<String, List<String>> keysByPosition = new HashMap<>();
         for (JsonNode role : roles) {
             for (JsonNode position : role.path("positions")) {
