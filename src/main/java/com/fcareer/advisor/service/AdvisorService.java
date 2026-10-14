@@ -36,7 +36,6 @@ import com.fcareer.tactics.model.response.PresetResponse;
 import com.fcareer.tactics.service.FormationRegistry;
 import com.fcareer.tactics.service.PresetService;
 import com.fcareer.tactics.service.TacticResolver;
-import com.fcareer.tactics.service.TacticRuleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -77,7 +76,6 @@ public class AdvisorService {
     private final CareerService careerService;
     private final PlayerService playerService;
     private final TacticResolver tacticResolver;
-    private final TacticRuleService tacticRuleService;
     private final RoleService roleService;
     private final BehaviorTagService behaviorTagService;
     private final FormationRegistry formationRegistry;
@@ -246,7 +244,7 @@ public class AdvisorService {
     }
 
     private Candidate withLineup(List<FitPlayer> players, Scored scored) {
-        SquadFitResponse lineup = squadFitService.solve(players, scored.profiles(), tacticRuleService.enabledRules(), roleFitRouter.careerEngineVersion());
+        SquadFitResponse lineup = squadFitService.solve(players, scored.profiles(), roleFitRouter.careerEngineVersion());
         Candidate source = scored.candidate();
         return Candidate.builder().kind(source.getKind()).presetId(source.getPresetId()).name(source.getName())
                 .formation(source.getFormation()).formationLabel(source.getFormationLabel()).score(source.getScore())

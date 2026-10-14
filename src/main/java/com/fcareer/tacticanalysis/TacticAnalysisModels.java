@@ -56,7 +56,7 @@ public final class TacticAnalysisModels {
     }
 
     /** code: kural kimliği; instance: foreach değişkenleri (örn. side=LEFT). */
-    public record Finding(String code, Severity severity, Map<String, String> instance, List<Evidence> evidence, Recommendation recommendation, String text) {
+    public record Finding(String code, String title, Severity severity, Map<String, String> instance, List<Evidence> evidence, Recommendation recommendation, String text) {
     }
 
     public record NotEvaluated(String code, String reason) {

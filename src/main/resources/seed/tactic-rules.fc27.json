@@ -24,6 +24,7 @@
   "rules": [
     {
       "id": "corridor_no_width",
+      "title": "Koridorda genişlik yok",
       "severity": "WARN",
       "foreach": [ { "side": "LEFT", "sideTr": "sol" }, { "side": "RIGHT", "sideTr": "sağ" } ],
       "requires": [],
@@ -36,6 +37,7 @@
     },
     {
       "id": "rest_defence_low",
+      "title": "Geri savunma zayıf",
       "severity": "WARN",
       "foreach": [],
       "requires": [],
@@ -48,6 +50,7 @@
     },
     {
       "id": "rest_defence_low_high_line",
+      "title": "Yüksek hatta geri savunma zayıf",
       "severity": "RISK",
       "foreach": [],
       "requires": [],
@@ -60,6 +63,7 @@
     },
     {
       "id": "counter_risk",
+      "title": "Kontra riski",
       "severity": "RISK",
       "foreach": [],
       "requires": [ "players" ],
@@ -72,6 +76,7 @@
     },
     {
       "id": "no_box_target",
+      "title": "Ceza sahasında hedef yok",
       "severity": "WARN",
       "foreach": [],
       "requires": [ "players" ],
@@ -84,6 +89,7 @@
     },
     {
       "id": "stamina_gap",
+      "title": "Dayanıklılık açığı",
       "severity": "WARN",
       "foreach": [],
       "requires": [ "players" ],
@@ -95,6 +101,7 @@
     },
     {
       "id": "buildup_mismatch",
+      "title": "Build-up uyumsuz",
       "severity": "WARN",
       "foreach": [],
       "requires": [ "players" ],
@@ -107,6 +114,7 @@
     },
     {
       "id": "midfield_outnumbered",
+      "title": "Orta sahada sayısal azlık",
       "severity": "WARN",
       "foreach": [],
       "requires": [],
@@ -118,6 +126,7 @@
     },
     {
       "id": "no_runner_for_counter",
+      "title": "Arkaya koşan yok",
       "severity": "WARN",
       "foreach": [],
       "requires": [],
@@ -130,6 +139,7 @@
     },
     {
       "id": "double_false_nine",
+      "title": "Çift False 9",
       "severity": "WARN",
       "foreach": [],
       "requires": [],
@@ -141,6 +151,7 @@
     },
     {
       "id": "striker_line_no_runner",
+      "title": "Forvet hattında koşucu yok",
       "severity": "INFO",
       "foreach": [],
       "requires": [],
@@ -152,6 +163,7 @@
     },
     {
       "id": "wing_gap_overlap",
+      "title": "Kanatta açık",
       "severity": "RISK",
       "foreach": [ { "side": "LEFT", "sideTr": "sol" }, { "side": "RIGHT", "sideTr": "sağ" } ],
       "requires": [],
@@ -165,6 +177,7 @@
     },
     {
       "id": "no_anchor",
+      "title": "Çapa yok",
       "severity": "WARN",
       "foreach": [],
       "requires": [],
@@ -176,6 +189,7 @@
     },
     {
       "id": "narrow_shape",
+      "title": "Dar kurulum",
       "severity": "INFO",
       "foreach": [],
       "requires": [],

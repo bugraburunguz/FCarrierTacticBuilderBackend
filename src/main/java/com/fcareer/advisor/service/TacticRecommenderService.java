@@ -26,7 +26,6 @@ import com.fcareer.tactics.model.FormationDefinition;
 import com.fcareer.tactics.model.response.PresetResponse;
 import com.fcareer.tactics.service.FormationRegistry;
 import com.fcareer.tactics.service.PresetService;
-import com.fcareer.tactics.service.TacticRuleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -66,7 +65,6 @@ public class TacticRecommenderService {
     private final FeasibilityService feasibilityService;
     private final SquadFitService squadFitService;
     private final com.fcareer.fitengine.service.RoleFitRouter roleFitRouter;
-    private final TacticRuleService tacticRuleService;
     private final RecommenderProperties properties;
     private final CreditGuard creditGuard;
     private final BillingProperties billingProperties;
@@ -184,7 +182,7 @@ public class TacticRecommenderService {
     }
 
     private Combo toCombo(List<FitPlayer> players, Ranked item, List<Ranked> all) {
-        SquadFitResponse lineup = squadFitService.solve(players, item.scored().profiles(), tacticRuleService.enabledRules(), roleFitRouter.careerEngineVersion());
+        SquadFitResponse lineup = squadFitService.solve(players, item.scored().profiles(), roleFitRouter.careerEngineVersion());
         List<String> reasons = new ArrayList<>();
         reasons.add(String.format(Locale.ROOT, "Kadro uyumu %%%.0f%s, yedek derinliği %%%.0f.", item.eval().squadFit(),
                 Objects.isNull(item.eval().intentFit()) ? "" : String.format(Locale.ROOT, ", niyet uyumu %%%.0f", item.eval().intentFit()),

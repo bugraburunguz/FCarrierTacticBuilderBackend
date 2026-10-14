@@ -2,9 +2,7 @@ package com.fcareer.tactics.mapper;
 
 import com.fcareer.fitengine.model.FitTag;
 import com.fcareer.fitengine.model.IntentProfile;
-import com.fcareer.fitengine.model.TacticRuleDefinition;
 import com.fcareer.tactics.entity.PresetEntity;
-import com.fcareer.tactics.entity.TacticRuleEntity;
 import com.fcareer.tactics.model.response.PresetResponse;
 import com.fcareer.tactics.model.response.ResolvedSlotResponse;
 import com.fcareer.tactics.model.response.ResolvedTacticResponse;
@@ -35,16 +33,6 @@ public class TacticMapper {
                 .build();
     }
 
-    public TacticRuleDefinition toRuleDefinition(TacticRuleEntity rule) {
-        return TacticRuleDefinition.builder()
-                .id(rule.getId())
-                .severity(rule.getSeverity())
-                .titleTr(rule.getTitleTr())
-                .messageTr(rule.getMessageTr())
-                .fixTr(rule.getFixTr())
-                .conditions(rule.getConditions())
-                .build();
-    }
 
     public ResolvedTacticResponse toResolvedResponse(TacticResolver.ResolvedTactic tactic) {
         return ResolvedTacticResponse.builder()

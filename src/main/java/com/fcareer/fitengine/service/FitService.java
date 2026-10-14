@@ -7,10 +7,10 @@ import com.fcareer.career.service.CareerService;
 import com.fcareer.catalog.service.PlayerService;
 import com.fcareer.common.exception.InvalidTacticException;
 import com.fcareer.fitengine.model.FitPlayer;
+import com.fcareer.tacticanalysis.SquadFitRuleAdapter;
 import com.fcareer.fitengine.configuration.FitEngineProperties;
 import com.fcareer.fitengine.model.FitRole;
 import com.fcareer.fitengine.model.IntentProfile;
-import com.fcareer.fitengine.model.TacticRuleDefinition;
 import com.fcareer.fitengine.model.request.CompareRequest;
 import com.fcareer.fitengine.model.request.FitRoleRequest;
 import com.fcareer.fitengine.model.request.SquadFitRequest;
@@ -22,7 +22,6 @@ import com.fcareer.fitengine.model.response.SlotAssignment;
 import com.fcareer.fitengine.model.response.SquadFitResponse;
 import com.fcareer.roles.service.RoleService;
 import com.fcareer.tactics.service.TacticResolver;
-import com.fcareer.tactics.service.TacticRuleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -44,7 +43,7 @@ public class FitService {
     private final PlayerService playerService;
     private final RoleService roleService;
     private final TacticResolver tacticResolver;
-    private final TacticRuleService tacticRuleService;
+    private final SquadFitRuleAdapter squadFitRuleAdapter;
     private final CareerService careerService;
     private final RoleFitService roleFitService;
     private final IntentFitService intentFitService;
@@ -115,10 +114,14 @@ public class FitService {
             playerIds = request.getPlayerIds();
         }
         List<FitPlayer> players = playerService.fitPlayers(playerIds, gameVersion, hasCareer ? request.getCareerId() : null);
-        List<IntentProfile> slots = tacticResolver.resolve(request.getTactic()).slots();
-        List<TacticRuleDefinition> rules = tacticRuleService.enabledRules();
-        return creditGuard.runCharged(userId, billingProperties.getSquadFitCost(), SQUAD_FIT,
-                () -> squadFitService.solveBest(players, slots, rules, hasCareer ? fitProperties.getCareerEngineVersion() : fitProperties.getEngineVersion()));
+        TacticResolver.ResolvedTactic resolved = tacticResolver.resolve(request.getTactic());
+        List<IntentProfile> slots = resolved.slots();
+        return creditGuard.runCharged(userId, billingProperties.getSquadFitCost(), SQUAD_FIT, () -> {
+            SquadFitResponse solved = squadFitService.solveBest(players, slots, hasCareer ? fitProperties.getCareerEngineVersion() : fitProperties.getEngineVersion());
+            // Kurallar etiketsiz analiz motorundan (E3-7): çözülmüş roller + hat/build-up + atanan oyuncular. Ayna çözümde slot kimlikleri aynı kalır.
+            solved.setRules(squadFitRuleAdapter.findings(resolved.formation(), request.getTactic().getSetup(), solved.isMirrored() ? TacticMirror.mirror(slots) : slots, solved.getSlots(), players));
+            return solved;
+        });
     }
 
     /** Kredi harcamayan kadro dizilişi: yalnız atama + slot başına RoleFit% ve rozet. Kurallar, NLG, zayıf halka ve atak paterni ücretli /fit/squad'dadır (SEC-02). */
@@ -126,7 +129,7 @@ public class FitService {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, request.getCareerId());
         List<FitPlayer> players = playerService.fitPlayers(squad.playerIds(), squad.gameVersionId(), request.getCareerId());
         List<IntentProfile> slots = tacticResolver.resolve(request.getTactic()).slots();
-        return withoutPaidInsights(squadFitService.solveBest(players, slots, tacticRuleService.enabledRules(), fitProperties.getCareerEngineVersion()));
+        return withoutPaidInsights(squadFitService.solveBest(players, slots, fitProperties.getCareerEngineVersion()));
     }
 
     private static SquadFitResponse withoutPaidInsights(SquadFitResponse full) {

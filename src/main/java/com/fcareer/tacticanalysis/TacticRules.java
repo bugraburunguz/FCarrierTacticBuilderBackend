@@ -26,7 +26,7 @@ public class TacticRules {
     }
 
     /** foreach: örnek değişken kümeleri (örn. side=LEFT, sideTr=sol); requires: ["players"] → oyuncu yoksa değerlendirilmez. text: {e0},{t0} kanıt değer/eşik, {sideTr}. */
-    public record RuleDef(String id, Severity severity, List<Map<String, String>> foreach, List<String> requires, List<Condition> when, String text, Recommendation recommendation) {
+    public record RuleDef(String id, String title, Severity severity, List<Map<String, String>> foreach, List<String> requires, List<Condition> when, String text, Recommendation recommendation) {
     }
 
     private final TacticParams params;
@@ -53,7 +53,7 @@ public class TacticRules {
                     c.path("params").fields().forEachRemaining((e) -> cp.put(e.getKey(), e.getValue().isNumber() ? (Object) e.getValue().asDouble() : e.getValue().asText()));
                     when.add(new Condition(c.path("metric").asText(), cp, c.path("op").asText(), c.path("value").asDouble()));
                 }
-                rules.add(new RuleDef(r.path("id").asText(), Severity.valueOf(r.path("severity").asText()), foreach, requires, when, r.path("text").asText(),
+                rules.add(new RuleDef(r.path("id").asText(), r.path("title").asText(), Severity.valueOf(r.path("severity").asText()), foreach, requires, when, r.path("text").asText(),
                         new Recommendation(r.path("recommendation").path("code").asText(), r.path("recommendation").path("text").asText())));
             }
         } catch (IOException e) {

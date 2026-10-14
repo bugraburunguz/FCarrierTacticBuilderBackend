@@ -61,7 +61,7 @@ public class RuleEngine {
             }
             evidence.add(new Evidence(c.metric(), params, round(value.getAsDouble()), c.op(), c.value()));
         }
-        return java.util.Optional.of(new Finding(rule.id(), rule.severity(), vars, evidence, rule.recommendation(), text(rule.text(), evidence, vars)));
+        return java.util.Optional.of(new Finding(rule.id(), rule.title(), rule.severity(), vars, evidence, rule.recommendation(), text(rule.text(), evidence, vars)));
     }
 
     private static Map<String, Object> substitute(Map<String, Object> params, Map<String, String> vars) {

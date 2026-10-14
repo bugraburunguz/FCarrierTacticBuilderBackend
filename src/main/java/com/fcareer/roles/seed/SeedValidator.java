@@ -1,8 +1,6 @@
 package com.fcareer.roles.seed;
 
 import com.fcareer.fitengine.model.Attr;
-import com.fcareer.fitengine.model.RuleCondition;
-import com.fcareer.fitengine.model.TacticRuleDefinition;
 import com.fcareer.roles.entity.RoleEntity;
 import com.fcareer.tactics.model.FormationDefinition;
 import com.fcareer.tactics.model.FormationSlot;
@@ -33,7 +31,6 @@ public class SeedValidator {
         validateTags(bundle.tags(), roleIds, tags, errors);
         Map<String, FormationDefinition> formations = validateFormations(bundle.formations(), roleIds, errors);
         validatePresets(bundle.presets(), formations, tags, conflicts, errors);
-        validateRules(bundle.rules(), tags, errors);
         return errors;
     }
 
@@ -146,19 +143,6 @@ public class SeedValidator {
         }
     }
 
-    private void validateRules(List<TacticRuleDefinition> rules, Map<String, BehaviorTagSeed> tags, List<String> errors) {
-        for (TacticRuleDefinition rule : rules) {
-            for (RuleCondition condition : rule.getConditions()) {
-                orEmpty(condition.getAttrs()).forEach(a -> checkAttr(a, "rule " + rule.getId(), errors));
-                orEmpty(condition.getTags()).stream()
-                        .filter(t -> !tags.containsKey(t))
-                        .forEach(t -> errors.add("rule " + rule.getId() + " unknown tag " + t));
-                orEmpty(condition.getSlotGroups()).stream()
-                        .filter(g -> !SLOT_GROUPS.contains(g))
-                        .forEach(g -> errors.add("rule " + rule.getId() + " unknown group " + g));
-            }
-        }
-    }
 
     private void checkAttr(String key, String context, List<String> errors) {
         if (Attr.fromKey(key).isEmpty()) {

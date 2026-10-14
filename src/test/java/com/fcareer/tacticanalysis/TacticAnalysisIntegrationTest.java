@@ -82,7 +82,7 @@ class TacticAnalysisIntegrationTest {
     void assignedCareerPlayersMergeWithTheirAttributesAndPlayerRulesAreEvaluated() throws Exception {
         String token = support.register();
         long careerId = support.premiumCareer(token, null);
-        List<Long> squad = jdbc.queryForList("SELECT base_player_id FROM user_player_state WHERE career_id = ? ORDER BY id LIMIT 11", Long.class, careerId);
+        List<Long> squad = jdbc.queryForList("SELECT r.base_player_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id WHERE b.owner_career_id IS NULL AND b.retired_at IS NULL AND b.gender = 0 ORDER BY r.base_player_id LIMIT 11", Long.class);
         Map<String, Object> assigned = new java.util.LinkedHashMap<>();
         List<String> slotIds = List.of("GK", "LB", "LCB", "RCB", "RB", "LDM", "RDM", "LM", "CAM", "RM", "ST");
         for (int i = 0; i < slotIds.size() && i < squad.size(); i++) {

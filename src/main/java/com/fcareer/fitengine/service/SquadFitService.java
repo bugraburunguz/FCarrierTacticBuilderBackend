@@ -5,7 +5,6 @@ import com.fcareer.fitengine.model.AssignedSlot;
 import com.fcareer.fitengine.model.FitPlayer;
 import com.fcareer.fitengine.model.FitTag;
 import com.fcareer.fitengine.model.IntentProfile;
-import com.fcareer.fitengine.model.TacticRuleDefinition;
 import com.fcareer.fitengine.model.Weapon;
 import com.fcareer.fitengine.model.WeaponState;
 import com.fcareer.fitengine.model.response.DepthEntry;
@@ -42,17 +41,16 @@ public class SquadFitService {
     private final RoleFitService roleFitService;
     private final IntentFitService intentFitService;
     private final HungarianSolver hungarianSolver;
-    private final RulesEngine rulesEngine;
     private final NlgService nlgService;
     private final FitEngineProperties properties;
     private final SetupModifier setupModifier;
     private final RoleFitV3Service roleFitV3Service;
 
-    public SquadFitResponse solve(List<FitPlayer> squad, List<IntentProfile> slots, List<TacticRuleDefinition> rules) {
-        return solve(squad, slots, rules, "v1");
+    public SquadFitResponse solve(List<FitPlayer> squad, List<IntentProfile> slots) {
+        return solve(squad, slots, "v1");
     }
 
-    public SquadFitResponse solve(List<FitPlayer> squad, List<IntentProfile> slots, List<TacticRuleDefinition> rules, String engineVersion) {
+    public SquadFitResponse solve(List<FitPlayer> squad, List<IntentProfile> slots, String engineVersion) {
         int playerCount = squad.size();
         int slotCount = slots.size();
         RoleFitResponse[][] roleFits = new RoleFitResponse[playerCount][slotCount];
@@ -138,23 +136,22 @@ public class SquadFitService {
                 .summary(nlgService.squadSummary(squadFit, intentFit))
                 .slots(assignments)
                 .weakLinks(weakLinks(assignments, slots))
-                .rules(rulesEngine.evaluate(assignedSlots, rules))
                 .attackPattern(nlgService.attackPattern(attackPatterns(slots)))
                 .bench(bench)
                 .build();
     }
 
     /** Taktiği olduğu gibi ve sağ-sol aynalanmış haliyle çözer; kadroya daha uygun olanı döner. */
-    public SquadFitResponse solveBest(List<FitPlayer> squad, List<IntentProfile> slots, List<TacticRuleDefinition> rules) {
-        return solveBest(squad, slots, rules, "v1");
+    public SquadFitResponse solveBest(List<FitPlayer> squad, List<IntentProfile> slots) {
+        return solveBest(squad, slots, "v1");
     }
 
-    public SquadFitResponse solveBest(List<FitPlayer> squad, List<IntentProfile> slots, List<TacticRuleDefinition> rules, String engineVersion) {
-        SquadFitResponse original = solve(squad, slots, rules, engineVersion);
+    public SquadFitResponse solveBest(List<FitPlayer> squad, List<IntentProfile> slots, String engineVersion) {
+        SquadFitResponse original = solve(squad, slots, engineVersion);
         if (!TacticMirror.isMirrorable(slots)) {
             return original;
         }
-        SquadFitResponse flipped = solve(squad, TacticMirror.mirror(slots), rules, engineVersion);
+        SquadFitResponse flipped = solve(squad, TacticMirror.mirror(slots), engineVersion);
         if (overall(flipped) > overall(original) + MIRROR_MARGIN) {
             flipped.setMirrored(true);
             log.info("Tactic mirrored original : {} mirrored : {}", overall(original), overall(flipped));

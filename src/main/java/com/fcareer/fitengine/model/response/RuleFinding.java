@@ -18,4 +18,6 @@ public class RuleFinding {
     private String title;
     private String message;
     private String fix;
+    /** Sayısal kanıt (analiz motoru): metrik, değer, işlem, eşik. */
+    private java.util.List<java.util.Map<String, Object>> evidence;
 }

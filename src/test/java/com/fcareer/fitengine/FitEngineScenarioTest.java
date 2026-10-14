@@ -7,11 +7,9 @@ import com.fcareer.fitengine.model.Attr;
 import com.fcareer.fitengine.model.FitPlayer;
 import com.fcareer.fitengine.model.FitTag;
 import com.fcareer.fitengine.model.IntentProfile;
-import com.fcareer.fitengine.model.TacticRuleDefinition;
 import com.fcareer.fitengine.model.WeaponState;
 import com.fcareer.fitengine.model.response.IntentFitResponse;
 import com.fcareer.fitengine.model.response.RoleFitResponse;
-import com.fcareer.fitengine.model.response.RuleFinding;
 import com.fcareer.fitengine.model.response.SlotAssignment;
 import com.fcareer.fitengine.model.response.SquadFitResponse;
 import org.junit.jupiter.api.DisplayName;
@@ -124,7 +122,7 @@ class FitEngineScenarioTest {
         FitPlayer weakStriker = player(12, "Zayıf 9", "ST").all(58).accelerate(AcceleRate.EXPLOSIVE).build();
         List<IntentProfile> slots = List.of(slot("ST", "ST", "ST", striker()), slot("RW", "RW", "W", insideForward()));
 
-        SquadFitResponse response = SQUAD_FIT.solve(List.of(star, winger, weakStriker), slots, List.of());
+        SquadFitResponse response = SQUAD_FIT.solve(List.of(star, winger, weakStriker), slots);
 
         Map<String, Long> bySlot = response.getSlots().stream()
                 .collect(Collectors.toMap(SlotAssignment::getSlotId, SlotAssignment::getPlayerId));
@@ -133,34 +131,7 @@ class FitEngineScenarioTest {
         assertThat(response.getSlots().get(0).getDepth()).extracting("playerId").containsExactly(12L);
     }
 
-    @Test
-    @DisplayName("T4 — Kontra riski: iki AWB-Attack + CB pace 58/61 + tek pivot → RISK kartı + fix")
-    void t4CounterAttackRiskRule() throws IOException {
-        List<TacticRuleDefinition> rules = loadSeedRules();
-        List<IntentProfile> slots = counterRiskSlots(1);
-        List<FitPlayer> squad = counterRiskSquad();
-
-        SquadFitResponse response = SQUAD_FIT.solve(squad, slots, rules);
-
-        RuleFinding finding = response.getRules().stream()
-                .filter(r -> r.getRuleId().equals("kontra_riski_yuksek"))
-                .findFirst()
-                .orElseThrow();
-        assertThat(finding.getTitle()).isEqualTo("Kontra riski YÜKSEK");
-        assertThat(finding.getFix()).isNotBlank();
-    }
-
-    @Test
-    @DisplayName("T4b — Kontra riski: ikinci pivot eklenince kural tetiklenmez")
-    void t4CounterAttackRiskNotTriggeredWithTwoPivots() throws IOException {
-        List<TacticRuleDefinition> rules = loadSeedRules();
-        List<FitPlayer> squad = new ArrayList<>(counterRiskSquad());
-        squad.add(player(26, "Pivot 2", "CDM").all(72).attr(Attr.INTERCEPTIONS, 80).build());
-
-        SquadFitResponse response = SQUAD_FIT.solve(squad, counterRiskSlots(2), rules);
-
-        assertThat(response.getRules()).extracting("ruleId").doesNotContain("kontra_riski_yuksek");
-    }
+    // T4/T4b (kontra riski kuralı) E3-7'de analiz motoruna taşındı: TacticRulesTest.counterRisk_* (hat yüksek + yavaş stoper; hızlı stoper ya da derin hat tetiklemez).
 
     @Test
     @DisplayName("T5 — AcceleRATE: aynı statlı Explosive vs Controlled → +4 vs -6 (10 puan)")
@@ -213,7 +184,7 @@ class FitEngineScenarioTest {
     @DisplayName("Davranış seçilmemiş slotta IntentFit nötr (100) ve combined = RoleFit")
     void noTagsMeansNeutralIntent() {
         FitPlayer p = player(60, "Forvet", "ST").all(80).accelerate(AcceleRate.EXPLOSIVE).build();
-        SquadFitResponse response = SQUAD_FIT.solve(List.of(p), List.of(slot("ST", "ST", "ST", striker())), List.of());
+        SquadFitResponse response = SQUAD_FIT.solve(List.of(p), List.of(slot("ST", "ST", "ST", striker())));
 
         SlotAssignment st = response.getSlots().get(0);
         assertThat(st.getIntentFit()).isNull();
@@ -227,7 +198,7 @@ class FitEngineScenarioTest {
         FitPlayer p = player(80, "Forvet", "ST").all(80).accelerate(AcceleRate.EXPLOSIVE).build();
         IntentProfile slot = slot("ST", "ST", "ST", striker(), tag("a", "ST", Attr.FINISHING, 60), tag("b", "ST", Attr.POSITIONING, 60));
 
-        SquadFitResponse response = SQUAD_FIT.solve(List.of(p), List.of(slot), List.of());
+        SquadFitResponse response = SQUAD_FIT.solve(List.of(p), List.of(slot));
 
         assertThat(response.getAttackPattern()).startsWith("Atak paterni: ST test cümlesi a, test cümlesi b");
         assertThat(response.getAttackPattern().split("ST ", -1)).hasSize(2);
@@ -239,46 +210,10 @@ class FitEngineScenarioTest {
         FitPlayer p = player(70, "Tek", "ST").all(80).accelerate(AcceleRate.EXPLOSIVE).build();
         List<IntentProfile> slots = List.of(slot("ST", "ST", "ST", striker()), slot("RW", "RW", "W", insideForward()));
 
-        SquadFitResponse response = SQUAD_FIT.solve(List.of(p), slots, List.of());
+        SquadFitResponse response = SQUAD_FIT.solve(List.of(p), slots);
 
         assertThat(response.getWeakLinks()).extracting("slotId").contains("RW");
         assertThat(response.getWeakLinks().get(0).getScoutQuery().getMinAttrs()).containsKey("Finishing");
-    }
-
-    private List<IntentProfile> counterRiskSlots(int pivotCount) {
-        FitTag overlap = tag("fb_overlap", "FB", Attr.STAMINA, 78);
-        List<IntentProfile> slots = new ArrayList<>(List.of(
-                slot("LB", "LB", "FB", fullback(), overlap),
-                slot("RB", "RB", "FB", fullback(), overlap),
-                slot("LCB", "CB", "CB", defender()),
-                slot("RCB", "CB", "CB", defender()),
-                slot("CDM", "CDM", "CDM", holding())));
-        if (pivotCount > 1) {
-            slots.add(slot("CDM2", "CDM", "CDM", holding()));
-        }
-        return slots;
-    }
-
-    private List<FitPlayer> counterRiskSquad() {
-        return List.of(
-                player(20, "Sol bek", "LB").all(70).attr(Attr.CROSSING, 82).attr(Attr.STAMINA, 88)
-                        .accelerate(AcceleRate.EXPLOSIVE).build(),
-                player(21, "Sağ bek", "RB").all(70).attr(Attr.CROSSING, 80).attr(Attr.STAMINA, 86)
-                        .accelerate(AcceleRate.EXPLOSIVE).build(),
-                player(22, "Yavaş stoper 1", "CB").all(60).attr(Attr.DEF_AWARENESS, 80).attr(Attr.STANDING_TACKLE, 80)
-                        .attr(Attr.STRENGTH, 84).attr(Attr.ACCELERATION, 58).attr(Attr.SPRINT_SPEED, 58)
-                        .accelerate(AcceleRate.LENGTHY).build(),
-                player(23, "Yavaş stoper 2", "CB").all(60).attr(Attr.DEF_AWARENESS, 78).attr(Attr.STANDING_TACKLE, 79)
-                        .attr(Attr.STRENGTH, 82).attr(Attr.ACCELERATION, 61).attr(Attr.SPRINT_SPEED, 61)
-                        .accelerate(AcceleRate.LENGTHY).build(),
-                player(24, "Çapa", "CDM").all(72).attr(Attr.INTERCEPTIONS, 82).attr(Attr.DEF_AWARENESS, 80).build());
-    }
-
-    private List<TacticRuleDefinition> loadSeedRules() throws IOException {
-        try (InputStream in = getClass().getResourceAsStream("/seed/tactic-rules.json")) {
-            return new ObjectMapper().readValue(in, new TypeReference<>() {
-            });
-        }
     }
 
     private static double total(double[][] scores, int[] assignment) {

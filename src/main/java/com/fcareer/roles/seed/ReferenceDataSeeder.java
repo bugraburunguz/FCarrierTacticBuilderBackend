@@ -2,15 +2,12 @@ package com.fcareer.roles.seed;
 
 import com.fcareer.fitengine.configuration.FitEngineProperties;
 import com.fcareer.common.redis.RedisJsonCache;
-import com.fcareer.fitengine.model.TacticRuleDefinition;
 import com.fcareer.roles.entity.BehaviorTagEntity;
 import com.fcareer.roles.entity.RoleEntity;
 import com.fcareer.roles.repository.BehaviorTagRepository;
 import com.fcareer.roles.repository.RoleRepository;
 import com.fcareer.tactics.entity.PresetEntity;
-import com.fcareer.tactics.entity.TacticRuleEntity;
 import com.fcareer.tactics.repository.PresetRepository;
-import com.fcareer.tactics.repository.TacticRuleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -42,7 +39,6 @@ public class ReferenceDataSeeder implements ApplicationRunner {
     private final RoleRepository roleRepository;
     private final BehaviorTagRepository behaviorTagRepository;
     private final PresetRepository presetRepository;
-    private final TacticRuleRepository tacticRuleRepository;
     private final RedisJsonCache redisJsonCache;
     private final FitEngineProperties fitEngineProperties;
 
@@ -63,11 +59,10 @@ public class ReferenceDataSeeder implements ApplicationRunner {
         roleRepository.saveAll(roles);
         behaviorTagRepository.saveAll(toTags(bundle.tags(), conflicts));
         presetRepository.saveAll(bundle.presets().stream().map(this::toPreset).toList());
-        tacticRuleRepository.saveAll(bundle.rules().stream().map(this::toRule).toList());
         redisJsonCache.evict(CACHE_ROLES, CACHE_BEHAVIOR_TAGS, CACHE_PRESETS);
 
-        log.info("Reference data seeded roles : {} tags : {} presets : {} rules : {}",
-                roles.size(), bundle.tags().size(), bundle.presets().size(), bundle.rules().size());
+        log.info("Reference data seeded roles : {} tags : {} presets : {}",
+                roles.size(), bundle.tags().size(), bundle.presets().size());
     }
 
     private List<BehaviorTagEntity> toTags(List<BehaviorTagSeed> seeds, Map<String, List<String>> conflicts) {
@@ -106,17 +101,5 @@ public class ReferenceDataSeeder implements ApplicationRunner {
         preset.setSlotTags(seed.slotTags());
         preset.setSourceNote(seed.sourceNote());
         return preset;
-    }
-
-    private TacticRuleEntity toRule(TacticRuleDefinition definition) {
-        TacticRuleEntity rule = new TacticRuleEntity();
-        rule.setId(definition.getId());
-        rule.setSeverity(definition.getSeverity());
-        rule.setTitleTr(definition.getTitleTr());
-        rule.setMessageTr(definition.getMessageTr());
-        rule.setFixTr(definition.getFixTr());
-        rule.setConditions(definition.getConditions());
-        rule.setEnabled(true);
-        return rule;
     }
 }

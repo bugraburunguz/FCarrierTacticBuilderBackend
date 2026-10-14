@@ -2,7 +2,6 @@ package com.fcareer.roles.seed;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fcareer.fitengine.model.TacticRuleDefinition;
 import com.fcareer.tactics.model.FormationDefinition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.ClassPathResource;
@@ -23,7 +22,6 @@ public class SeedReader {
     public static final String BEHAVIOR_TAGS = "seed/behavior-tags.json";
     public static final String FORMATIONS = "seed/formations.json";
     public static final String PRESETS = "seed/presets.json";
-    public static final String TACTIC_RULES = "seed/tactic-rules.json";
 
     private final ObjectMapper objectMapper;
 
@@ -37,8 +35,6 @@ public class SeedReader {
                 }),
                 readFormations(),
                 read(PRESETS, new TypeReference<List<PresetSeed>>() {
-                }),
-                read(TACTIC_RULES, new TypeReference<List<TacticRuleDefinition>>() {
                 }));
     }
 

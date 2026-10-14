@@ -1,6 +1,5 @@
 package com.fcareer.roles.seed;
 
-import com.fcareer.fitengine.model.TacticRuleDefinition;
 import com.fcareer.tactics.model.FormationDefinition;
 
 import java.util.List;
@@ -10,6 +9,5 @@ public record ReferenceSeedBundle(
         List<RoleSeed> roles,
         List<BehaviorTagSeed> tags,
         List<FormationDefinition> formations,
-        List<PresetSeed> presets,
-        List<TacticRuleDefinition> rules) {
+        List<PresetSeed> presets) {
 }

@@ -13,7 +13,6 @@ import com.fcareer.fitengine.service.HungarianSolver;
 import com.fcareer.fitengine.service.IntentFitService;
 import com.fcareer.fitengine.service.NlgService;
 import com.fcareer.fitengine.service.RoleFitService;
-import com.fcareer.fitengine.service.RulesEngine;
 import com.fcareer.fitengine.service.SquadFitService;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
@@ -31,8 +30,7 @@ final class FitFixtures {
     static final RoleFitService ROLE_FIT = new RoleFitService(PROPERTIES, NLG);
     static final IntentFitService INTENT_FIT = new IntentFitService(PROPERTIES, NLG);
     static final HungarianSolver HUNGARIAN = new HungarianSolver();
-    static final RulesEngine RULES = new RulesEngine();
-    static final SquadFitService SQUAD_FIT = new SquadFitService(ROLE_FIT, INTENT_FIT, HUNGARIAN, RULES, NLG, PROPERTIES, new com.fcareer.fitengine.service.SetupModifier(), null);
+    static final SquadFitService SQUAD_FIT = new SquadFitService(ROLE_FIT, INTENT_FIT, HUNGARIAN, NLG, PROPERTIES, new com.fcareer.fitengine.service.SetupModifier(), null);
 
     private FitFixtures() {
     }
