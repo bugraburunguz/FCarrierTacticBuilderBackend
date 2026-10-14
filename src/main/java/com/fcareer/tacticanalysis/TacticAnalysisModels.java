@@ -15,7 +15,14 @@ public final class TacticAnalysisModels {
     public record Slot(String slotId, String position, int x, int y, String roleId) {
     }
 
-    public record Input(String formationId, BuildUpType buildUp, int depth, List<Slot> slots, Map<String, FitPlayer> players) {
+    /**
+     * levelRefs: seviye referansları (CB_PACE_REF, BUILDUP_SAFETY_REF, AERIAL_REF); kariyerde kullanıcının liginin aynı mevki medyanı, kariyer dışında ilk 11 OVR bandının katalog medyanı.
+     * Boşsa göreli kurallar mutlak eşiğe düşer. levelLabel: referansın kaynağı (örn. "EFL League Two").
+     */
+    public record Input(String formationId, BuildUpType buildUp, int depth, List<Slot> slots, Map<String, FitPlayer> players, Map<String, Double> levelRefs, String levelLabel) {
+        public Input(String formationId, BuildUpType buildUp, int depth, List<Slot> slots, Map<String, FitPlayer> players) {
+            this(formationId, buildUp, depth, slots, players, Map.of(), null);
+        }
     }
 
     public record AttackDefence(double attackLoad, double defenceLoad, double attackPct) {
@@ -49,7 +56,8 @@ public final class TacticAnalysisModels {
 
     public enum Severity { INFO, WARN, RISK }
 
-    public record Evidence(String metric, Map<String, Object> params, double value, String op, double threshold) {
+    /** reference/margin: göreli kurallarda eşik = referans − marj (aksi halde null); threshold her durumda karşılaştırılan sayıdır. */
+    public record Evidence(String metric, Map<String, Object> params, double value, String op, double threshold, Double reference, Double margin) {
     }
 
     public record Recommendation(String code, String text) {
@@ -62,6 +70,6 @@ public final class TacticAnalysisModels {
     public record NotEvaluated(String code, String reason) {
     }
 
-    public record Analysis(Metrics metrics, List<Finding> findings, List<NotEvaluated> notEvaluated) {
+    public record Analysis(Metrics metrics, List<Finding> findings, List<NotEvaluated> notEvaluated, String levelLabel) {
     }
 }

@@ -22,7 +22,8 @@ public class TacticRules {
     private static final String SEED = "seed/tactic-rules.fc27.json";
 
     /** metric: RuleMetrics adı; params: örn. {"side":"${side}"}; op: LT LTE GT GTE EQ. */
-    public record Condition(String metric, Map<String, Object> params, String op, double value) {
+    /** ref: göreli eşik için referans metriği (örn. CB_PACE_REF); marginKey: params.margins içindeki marj; referans yoksa mutlak `value` kullanılır. */
+    public record Condition(String metric, Map<String, Object> params, String op, double value, String ref, String marginKey) {
     }
 
     /** whenAny: en az biri sağlanmalı (when ile birlikte VE); suppressedBy: listelenen kurallardan biri bulgu ürettiyse bu kural atlanır. foreach: örnek değişken kümeleri (örn. side=LEFT, sideTr=sol); requires: ["players"] → oyuncu yoksa değerlendirilmez. text: {e0},{t0} kanıt değer/eşik, {sideTr}. */
@@ -30,6 +31,7 @@ public class TacticRules {
     }
 
     private final TacticParams params;
+    private final Map<String, Double> margins = new HashMap<>();
     private final List<RuleDef> rules = new ArrayList<>();
     private final boolean verified;
 
@@ -38,6 +40,7 @@ public class TacticRules {
             JsonNode root = mapper.readTree(in);
             verified = root.path("verified").asBoolean(true);
             params = TacticParams.from(root.path("params"));
+            root.path("params").path("margins").fields().forEachRemaining((e) -> margins.put(e.getKey(), e.getValue().asDouble()));
             for (JsonNode r : root.path("rules")) {
                 List<Map<String, String>> foreach = new ArrayList<>();
                 r.path("foreach").forEach((n) -> {
@@ -68,7 +71,11 @@ public class TacticRules {
     private static Condition condition(JsonNode c) {
         Map<String, Object> cp = new HashMap<>();
         c.path("params").fields().forEachRemaining((e) -> cp.put(e.getKey(), e.getValue().isNumber() ? (Object) e.getValue().asDouble() : e.getValue().asText()));
-        return new Condition(c.path("metric").asText(), cp, c.path("op").asText(), c.path("value").asDouble());
+        return new Condition(c.path("metric").asText(), cp, c.path("op").asText(), c.path("value").asDouble(), c.path("ref").asText(null), c.path("marginKey").asText(null));
+    }
+
+    public double margin(String key) {
+        return margins.getOrDefault(key, 0.0);
     }
 
     public TacticParams params() {

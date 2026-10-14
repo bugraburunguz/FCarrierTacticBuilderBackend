@@ -23,6 +23,6 @@ public class TacticAnalyzer {
     public Analysis analyze(Input input) {
         TacticContext ctx = TacticContext.of(input, movements, rules.params());
         RuleEngine.Result result = engine.evaluate(ctx);
-        return new Analysis(calculator.calculate(ctx), result.findings(), result.notEvaluated());
+        return new Analysis(calculator.calculate(ctx), result.findings(), result.notEvaluated(), input.levelLabel());
     }
 }

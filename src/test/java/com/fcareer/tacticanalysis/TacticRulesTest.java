@@ -335,6 +335,21 @@ class TacticRulesTest {
         }
     }
 
+    /** E3-8 hazırlığı: kullanıcı metninde iç kodlar (metrik adları, bant sırası, alan kısaltmaları) görünmez; kanıt tablosu ayrı alandadır. */
+    @Test
+    void theUserTextNeverShowsInternalCodes() {
+        Analysis a = run(BuildUpType.COUNTER, 95, "LM=inside_forward_attack", "LB=fullback_defend", "ST=false_9_build_up", "RB=attacking_wingback_attack", "LDM=box_crasher_balanced", "RDM=box_crasher_balanced");
+        assertThat(a.findings()).isNotEmpty();
+        for (Finding f : a.findings()) {
+            assertThat(f.text()).as(f.code()).doesNotContainPattern("[A-Z]{2,}_[A-Z_]+").doesNotContain("dyFwd", "cutIn", "runBehind", "bant sırası", "BAND_", "{", "}");
+        }
+        Map<String, FitPlayer> players = everyone(base4231(), attrs(55), 175);
+        Analysis withPlayers = run(base4231(), BuildUpType.SHORT, 80, players);
+        for (Finding f : withPlayers.findings()) {
+            assertThat(f.text()).as(f.code()).doesNotContainPattern("[A-Z]{2,}_[A-Z_]+").doesNotContain("{", "}");
+        }
+    }
+
     @Test
     void theRuleSetIsUnverifiedAndHasAtLeastTenRulesAndNoTagBasedCondition() {
         assertThat(rules.verified()).isFalse();

@@ -4,10 +4,11 @@ import com.fcareer.fitengine.model.FitPlayer;
 import com.fcareer.tacticanalysis.RoleMovements.Movement;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Map;
 
 /** Yerleştirilmiş taktik: her slot için hareket profili, topla/topsuz konum, taraf ve (varsa) oyuncu. Metrik ve kural hesapları bunun üstündedir. */
-public record TacticContext(AnalysisBand band, BuildUpType buildUp, int depth, List<Placed> placed, TacticParams params, double pressMult) {
+public record TacticContext(AnalysisBand band, BuildUpType buildUp, int depth, List<Placed> placed, TacticParams params, double pressMult, Map<String, Double> refs, String levelLabel) {
 
     public enum Side { LEFT, RIGHT, CENTER }
 
@@ -46,7 +47,7 @@ public record TacticContext(AnalysisBand band, BuildUpType buildUp, int depth, L
             double yNoBall = clamp(s.y() - ("ST".equals(s.position()) || "CF".equals(s.position()) ? 0 : shift));
             return new Placed(s.slotId(), s.position(), s.x(), s.y(), m, players.get(s.slotId()), xBall, yBall, yNoBall, sideOf(s.x()), gk);
         }).toList();
-        return new TacticContext(band, input.buildUp(), input.depth(), placed, params, movements.pressMult(band));
+        return new TacticContext(band, input.buildUp(), input.depth(), placed, params, movements.pressMult(band), Objects.isNull(input.levelRefs()) ? Map.of() : input.levelRefs(), input.levelLabel());
     }
 
     private static double clamp(double v) {

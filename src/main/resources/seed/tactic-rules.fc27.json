@@ -22,7 +22,13 @@
     "wingRightMin": 75,
     "crossTargetRMin": 0.5,
     "crossCrosserMin": 0.3,
-    "midfieldCutInDxMin": 8
+    "midfieldCutInDxMin": 8,
+    "margins": {
+      "_basis": "göreli eşik marjı: eşik = referans − marj; verified:false",
+      "counterCbPace": 3,
+      "buildUp": 3,
+      "aerial": 3
+    }
   },
   "rules": [
     {
@@ -58,7 +64,7 @@
           "value": 5
         }
       ],
-      "text": "{sideTr} koridorda genişlik yok: kanat oyuncusu içe kesiyor (içe kat {e0} ≥ {t0}) ve bek bindirmiyor (ileri kayma {e1} ≤ {t1}).",
+      "text": "{sideTr} koridorda genişlik yok: kanat oyuncusu içe kesiyor (içe kesme eğilimi {e0}) ve bek ileri çıkmıyor (ileri çıkış {e1} birim).",
       "recommendation": {
         "code": "FULLBACK_TO_WINGBACK_OR_WINGER_TO_WINGER",
         "text": "Beki Wingback/Attacking Wingback yap ya da kanadı Winger yap."
@@ -84,7 +90,7 @@
           "value": 1
         }
       ],
-      "text": "Geri savunma zayıf: topun gerisinde kalan oyuncu {e0} (eşik {t0}); hat Deep/Balanced bandında (bant sırası {e1}).",
+      "text": "Geri savunma zayıf: top kaybında geride kalan oyuncu {e0}; en az {t0} olmalı (hat {bandName}).",
       "recommendation": {
         "code": "KEEP_MORE_PLAYERS_BEHIND_BALL",
         "text": "Bir beki ya da bir orta sahayı savunma görevli role çevir; en az 3 oyuncu topun gerisinde kalsın."
@@ -110,7 +116,7 @@
           "value": 2
         }
       ],
-      "text": "Yüksek hatta geri savunma zayıf: topun gerisinde kalan oyuncu {e0} (eşik {t0}); hat High/Aggressive bandında (bant sırası {e1} ≥ {t1}). Kontra riski artar.",
+      "text": "Yüksek hatta ({bandName}) geri savunma zayıf: top kaybında geride kalan oyuncu {e0}; en az {t0} olmalı. Kontra riski artar.",
       "recommendation": {
         "code": "LOWER_LINE_OR_ADD_COVER",
         "text": "Hattı düşür ya da en az 3 oyuncuyu topun gerisinde tutan roller seç."
@@ -135,10 +141,12 @@
           "metric": "CB_PACE_AVG",
           "params": {},
           "op": "LT",
-          "value": 66
+          "value": 66,
+          "ref": "CB_PACE_REF",
+          "marginKey": "counterCbPace"
         }
       ],
-      "text": "Kontra riski: hat yüksek (bant sırası {e0} ≥ {t0}) ve stoperlerin ortalama hızı {e1} < {t1}.",
+      "text": "Kontra riski: hat yüksek ({bandName}) ve stoperlerin ortalama hızı {e1}{rel1:stoper medyanı}.",
       "recommendation": {
         "code": "LOWER_LINE_OR_FASTER_CBS",
         "text": "Hattı düşür ya da daha hızlı stoper(ler) kullan."
@@ -163,10 +171,12 @@
           "metric": "AERIAL_TARGET_QUALITY",
           "params": {},
           "op": "LT",
-          "value": 68
+          "value": 68,
+          "ref": "AERIAL_REF",
+          "marginKey": "aerial"
         }
       ],
-      "text": "Ceza sahasında hedef yok: orta kanalı yüksek (orta hacmi {e0} ≥ {t0}) ama hava hedeflerinin (kafa, sıçrama, boy) kalitesi {e1} < {t1}.",
+      "text": "Ceza sahasında hedef yok: orta kanalı yüksek (orta eğilimi toplamı {e0}) ama hava hedeflerinin (kafa, sıçrama, boy) ortalaması {e1}{rel1:hava hedefi medyanı}.",
       "recommendation": {
         "code": "TARGET_FORWARD_OR_FEWER_CROSSES",
         "text": "Boylu/havada güçlü bir forvet (Target Forward) ekle ya da kanatları içe keset."
@@ -188,7 +198,7 @@
           "value": 0.08
         }
       ],
-      "text": "Dayanıklılık açığı: rollerin ve hattın istediği efor, oyuncuların Stamina'sını {e0} (eşik {t0}) aşıyor.",
+      "text": "Dayanıklılık açığı: rollerin ve hattın istediği efor, oyuncuların dayanıklılığından {e0} fazla (eşik {t0}).",
       "recommendation": {
         "code": "LOWER_PRESS_OR_ROTATE",
         "text": "Hattı/baskıyı düşür, en yorucu rolleri (Box-to-Box, Attacking Wingback) hafiflet ya da rotasyon yap."
@@ -215,10 +225,12 @@
           "metric": "BUILDUP_SAFETY",
           "params": {},
           "op": "LT",
-          "value": 72
+          "value": 72,
+          "ref": "BUILDUP_SAFETY_REF",
+          "marginKey": "buildUp"
         }
       ],
-      "text": "Build-up uyumsuz: Short Passing seçili ama kaleci/stoper/CDM pas güvenliği {e1} < {t1}.",
+      "text": "Build-up uyumsuz: {buildUpName} seçili ama kaleci/stoper/CDM pas güvenliği {e1}{rel1:pas güvenliği medyanı}.",
       "recommendation": {
         "code": "SWITCH_BUILDUP_OR_BETTER_PASSERS",
         "text": "Build-up'ı Balanced yap ya da pas güvenliği yüksek stoper/CDM kullan."
@@ -238,7 +250,7 @@
           "value": 2
         }
       ],
-      "text": "Orta sahada sayısal azlık: merkezi orta saha oyuncusu {e0} < {t0} (CDM/CM/CAM ve içe kesen kanatlar, x 30-70).",
+      "text": "Orta sahada sayısal azlık: merkezi orta saha oyuncusu {e0}; en az {t0} olmalı.",
       "recommendation": {
         "code": "ADD_CENTRAL_MIDFIELDER",
         "text": "Bir orta sahayı merkezde tutan role çevir ya da 3'lü orta saha formasyonuna geç."
@@ -258,7 +270,7 @@
           "value": 2
         }
       ],
-      "text": "Orta saha ince: merkezi orta saha oyuncusu {e0} (3 ve üstü rahat sayılır).",
+      "text": "Orta saha ince: merkezi orta saha oyuncusu {e0}; 3 ve üstü rahat sayılır.",
       "recommendation": {
         "code": "CONSIDER_THIRD_MIDFIELDER",
         "text": "Rakip orta sahayı sıkıştırıyorsa kanatlardan birini içe kesen role çevir."
@@ -288,7 +300,7 @@
           "value": 0
         }
       ],
-      "text": "Arkaya koşan yok: Counter seçili ama arkaya koşu eğilimi ≥ 0,6 olan oyuncu sayısı {e1}.",
+      "text": "Arkaya koşan yok: {buildUpName} seçili ama arkaya koşu eğilimi yüksek (0,6 ve üstü) oyuncu sayısı {e1}.",
       "recommendation": {
         "code": "ADD_RUNNER_BEHIND",
         "text": "Forveti Advanced Forward yap ya da bir kanadı arkaya koşan role çevir."
@@ -308,7 +320,7 @@
           "value": 2
         }
       ],
-      "text": "Çift False 9: {e0} oyuncu derine inip bağlıyor (eşik {t0}); ceza sahasında bitirici kalmıyor.",
+      "text": "Çift False 9: {e0} oyuncu derine inip bağlıyor; ceza sahasında bitirici kalmıyor.",
       "recommendation": {
         "code": "ONE_FALSE_NINE_ONE_FINISHER",
         "text": "İkisinden birini Advanced Forward ya da Poacher yap."
@@ -328,7 +340,7 @@
           "value": 0.4
         }
       ],
-      "text": "Forvet hattında arkaya koşan yok: forvetlerin en yüksek arkaya koşu eğilimi {e0} < {t0}.",
+      "text": "Forvet hattında arkaya koşan yok: forvetlerin en yüksek arkaya koşu eğilimi {e0} (en az {t0} beklenir).",
       "recommendation": {
         "code": "ADD_RUNNER_BEHIND",
         "text": "Bir forveti Advanced Forward yap ya da Shadow Striker ekle."
@@ -375,7 +387,7 @@
           "value": 0.35
         }
       ],
-      "text": "{sideTr} kanatta açık: bek bindiriyor (ileri kayma {e0} ≥ {t0}), kanat oyuncusu çizgide (genişlik {e1} ≥ {t1}) ve o tarafta savunma görevi en fazla {e2} < {t2}.",
+      "text": "{sideTr} kanatta açık: bek ileri çıkıyor ({e0} birim), kanat oyuncusu çizgide (genişlik {e1}) ve o tarafta savunma görevi düşük ({e2}).",
       "recommendation": {
         "code": "COVER_THE_FLANK",
         "text": "Bek ya da kanattan birini savunma görevli role çevir (Fullback/Wingback Balanced ya da Wide Midfielder Defend)."
@@ -395,7 +407,7 @@
           "value": 0
         }
       ],
-      "text": "Çapa yok ve savunma korumasız: perde yapan orta saha {e0}; geri savunma / iki bekin ileri çıkışı / hat bu riski büyütüyor ({e1} ile {t1} eşiği).",
+      "text": "Çapa yok ve savunma korumasız: perde yapan orta saha yok; geri savunma, bekin ileri çıkışı ya da hat yüksekliği riski büyütüyor.",
       "recommendation": {
         "code": "ADD_HOLDING_MIDFIELDER",
         "text": "Bir CDM'yi Holding ya da Centre Half yap."
@@ -438,7 +450,7 @@
           "value": 0
         }
       ],
-      "text": "Perde yapan orta saha yok ({e0}); savunma başka oyuncularla korunuyor.",
+      "text": "Perde yapan orta saha yok; savunma başka oyuncularla korunuyor.",
       "recommendation": {
         "code": "ADD_HOLDING_MIDFIELDER",
         "text": "Gerekirse bir CDM'yi Holding ya da Centre Half yap."
@@ -458,7 +470,7 @@
           "value": 30
         }
       ],
-      "text": "Dar kurulum: topla genişlik endeksi {e0} < {t0}; kanat koridorları boş kalabilir.",
+      "text": "Dar kurulum: topla genişlik endeksi {e0} (en az {t0} beklenir); kanat koridorları boş kalabilir.",
       "recommendation": {
         "code": "ADD_WIDTH",
         "text": "Bir kanadı Winger ya da beki Wingback yap."
