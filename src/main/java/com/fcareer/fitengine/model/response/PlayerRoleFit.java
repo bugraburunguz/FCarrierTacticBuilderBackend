@@ -29,4 +29,9 @@ public class PlayerRoleFit {
     private Double levelFit;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String engineVersion;
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private String fitLabel;
+    /** v3: aynı anlatım (E3-8); öneriler ve RoleFit ile aynı cümle kalıpları ve aynı "Biçilmiş kaftan" eşiği. */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private FitNarrative narrative;
 }

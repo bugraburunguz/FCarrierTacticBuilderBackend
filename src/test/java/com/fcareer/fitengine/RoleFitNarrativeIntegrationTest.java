@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 /** E3-8: v3 RoleFit yanıtı anlatım (narrative) ve tailored taşır; "Biçilmiş kaftan" yalnız levelFit >= 85; v1 yanıtı kaftan iddiasında bulunmaz. */
@@ -84,6 +85,25 @@ class RoleFitNarrativeIntegrationTest {
         List<Long> ids = jdbc.queryForList("SELECT base_player_id FROM player_rating ORDER BY base_player_id LIMIT 40", Long.class);
         for (Long id : ids) {
             assertThat(fit(token, id, "advanced_forward_attack", "v1").toString()).as("v1 player " + id).doesNotContainIgnoringCase("kaftan");
+        }
+    }
+
+    /** Oyuncu sayfası (rol listesi) da öneriler ve RoleFit ile AYNI anlatımı taşır: aynı levelFit eşiği, aynı cümle kalıbı. */
+    @Test
+    void thePlayerPageRolesCarryTheSameNarrativeAndTheSameTailoredRule() throws Exception {
+        String token = support.register();
+        long careerId = support.premiumCareer(token, null);
+        Long playerId = jdbc.queryForObject("SELECT base_player_id FROM player_rating ORDER BY overall DESC, base_player_id LIMIT 1", Long.class);
+        JsonNode roles = support.json(get("/api/v1/players/" + playerId + "/roles?career=" + careerId), token).at("/data");
+        assertThat(roles.isArray() && roles.size() > 0).isTrue();
+        for (JsonNode r : roles) {
+            assertThat(r.path("narrative").isObject()).as(r.path("roleId").asText()).isTrue();
+            boolean tailored = r.path("narrative").path("tailored").asBoolean();
+            assertThat(tailored).isEqualTo(r.hasNonNull("levelFit") && r.path("levelFit").asDouble() >= 85.0);
+            assertThat(r.path("fitLabel").asText()).isNotBlank();
+            if (!tailored) {
+                assertThat(r.path("narrative").toString()).doesNotContain("kaftan");
+            }
         }
     }
 }

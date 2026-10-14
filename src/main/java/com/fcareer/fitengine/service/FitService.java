@@ -71,7 +71,7 @@ public class FitService {
                 fits.add(PlayerRoleFit.builder().position(position).roleId(role.getId()).roleName(role.getName()).focus(role.getFocus())
                         .score(Math.round(fit.getScore() * 10.0) / 10.0).projectedRating(fit.getProjectedRating())
                         .badge(fit.getBadge()).badgeText(fit.getBadgeText())
-                        .engineVersion(fit.getEngineVersion()).currentFit(fit.getCurrentFit()).levelFit(fit.getLevelFit())
+                        .engineVersion(fit.getEngineVersion()).currentFit(fit.getCurrentFit()).levelFit(fit.getLevelFit()).fitLabel(fit.getFitLabel()).narrative(fit.getNarrative())
                         .reasons(Objects.isNull(fit.getReasons()) ? List.of() : fit.getReasons().stream().limit(ROLE_REASONS).toList())
                         .gaps(gaps(fit)).build());
             }
