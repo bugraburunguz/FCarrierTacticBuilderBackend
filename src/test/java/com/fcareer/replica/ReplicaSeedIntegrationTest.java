@@ -121,6 +121,20 @@ class ReplicaSeedIntegrationTest {
         }
     }
 
+    /** Liste kartındaki "dikkat noktası" sayısı = detaydaki uyarı + risk bulguları (bilgi sayılmaz). */
+    @Test
+    void theListCarriesTheAttentionCountThatMatchesTheAnalysis() throws Exception {
+        int withAttention = 0;
+        for (ReplicaService.Replica r : replicas.all()) {
+            long expected = replicas.analyze(r).findings().stream().filter((f) -> f.severity() != com.fcareer.tacticanalysis.TacticAnalysisModels.Severity.INFO).count();
+            assertThat((long) r.attentionCount()).as(r.id()).isEqualTo(expected);
+            withAttention += r.attentionCount() > 0 ? 1 : 0;
+        }
+        assertThat(withAttention).as("E3-9 raporu: uyarı/risk üreten replika sayısı").isBetween(1, 40);
+        String list = mockMvc.perform(get("/api/v1/replicas")).andReturn().getResponse().getContentAsString();
+        assertThat(MAPPER.readTree(list).at("/data/0/attentionCount").isNumber()).isTrue();
+    }
+
     @Test
     void theReplicaEndpointsServeTheCodeAndTheAnalysisWithoutLogin() throws Exception {
         String list = mockMvc.perform(get("/api/v1/replicas")).andReturn().getResponse().getContentAsString();

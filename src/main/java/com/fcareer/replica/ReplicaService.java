@@ -6,6 +6,7 @@ import com.fcareer.tacticanalysis.BuildUpType;
 import com.fcareer.tacticanalysis.RoleMovements;
 import com.fcareer.tacticanalysis.TacticAnalysisModels.Analysis;
 import com.fcareer.tacticanalysis.TacticAnalysisModels.Input;
+import com.fcareer.tacticanalysis.TacticAnalysisModels.Severity;
 import com.fcareer.tacticanalysis.TacticAnalysisModels.Slot;
 import com.fcareer.tacticanalysis.TacticAnalyzer;
 import com.fcareer.tacticcode.model.EaBuildUp;
@@ -49,7 +50,7 @@ public class ReplicaService {
 
     /** eaOrderedSlots: EA kod sırası (aynı mevkiler sağdan sola); slots: formasyonun slot sırası. */
     public record Replica(String id, String category, String club, String coach, String season, String formationId, String eaFormation, String buildUp, String defensiveApproach, int lineHeight,
-                          Integer fidelity, String tacticCode, List<RoleSlot> slots, List<RoleSlot> eaOrderedSlots) {
+                          Integer fidelity, String tacticCode, List<RoleSlot> slots, List<RoleSlot> eaOrderedSlots, int attentionCount) {
     }
 
     private final ObjectMapper mapper;
@@ -73,6 +74,12 @@ public class ReplicaService {
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        }
+        // Liste kartı için dikkat noktası sayısı (uyarı + risk; bilgi sayılmaz): analiz saf ve ucuz, yüklemede bir kez.
+        for (Replica replica : List.copyOf(byId.values())) {
+            int attention = (int) analyze(replica).findings().stream().filter((f) -> f.severity() != Severity.INFO).count();
+            byId.put(replica.id(), new Replica(replica.id(), replica.category(), replica.club(), replica.coach(), replica.season(), replica.formationId(), replica.eaFormation(), replica.buildUp(),
+                    replica.defensiveApproach(), replica.lineHeight(), replica.fidelity(), replica.tacticCode(), replica.slots(), replica.eaOrderedSlots(), attention));
         }
         log.info("Replicas loaded records : {} withTactic : {}", raw.size(), byId.size());
     }
@@ -148,7 +155,7 @@ public class ReplicaService {
         }
         Integer fidelity = r.path("replicaFidelity").path("score").isNumber() ? r.path("replicaFidelity").path("score").asInt() : null;
         return new Replica(r.path("id").asText(), r.path("category").asText(), r.path("club").asText(), r.path("coach").asText(), r.path("season").asText(), formation.id(), eaLabel, buildUp.name(),
-                fc.path("defensiveApproach").asText(), lineHeight, fidelity, code, slots, ordered);
+                fc.path("defensiveApproach").asText(), lineHeight, fidelity, code, slots, ordered, 0);
     }
 
     static String slug(String s) {
