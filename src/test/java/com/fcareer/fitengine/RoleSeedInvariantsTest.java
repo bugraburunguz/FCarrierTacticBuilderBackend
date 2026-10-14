@@ -22,6 +22,9 @@ class RoleSeedInvariantsTest {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final double FOCUS_COSINE_MAX = 0.95;
     private static final double ROLE_COSINE_MAX = 0.90;
+    private static final double MAX_SINGLE_ATTRIBUTE_SHARE = 0.25;
+    /** Kaleci ailesi muaf (4-5 kaleci attribute'undan ibaret; %25 sınırı vektörleri eşitler ve kosinüs değişmezini bozar). Gerekçe: E3-6b raporu. */
+    private static final Set<String> CAP_EXEMPT_ROLES = Set.of("goalkeeper", "sweeper_keeper", "ball_playing_keeper");
     private static final Set<Attr> ATTACKING = Set.of(Attr.FINISHING, Attr.POSITIONING, Attr.SHOT_POWER, Attr.LONG_SHOTS, Attr.VOLLEYS, Attr.PENALTIES);
     private static final Set<String> HIGH_WORKLOAD = Set.of("box_to_box", "wingback", "attacking_wingback", "half_winger");
 
@@ -142,5 +145,24 @@ class RoleSeedInvariantsTest {
             }
         }
         assertThat(over).isEmpty();
+    }
+
+    /** E3-6b (Buğra kararı): hiçbir rol/focus vektöründe tek bir attribute'un ağırlığı vektör kütlesinin %25'ini geçemez (tek özellik baskınlığı yok). */
+    @Test
+    void noSingleAttributeExceedsAQuarterOfAnyRoleVector() {
+        List<String> violations = new ArrayList<>();
+        for (String key : seeds.vectorKeys()) {
+            String[] parts = key.split("[|]");
+            if (CAP_EXEMPT_ROLES.contains(parts[1])) {
+                continue;
+            }
+            Map<Attr, Double> v = seeds.vector(parts[0], parts[1], parts[2]).orElseThrow();
+            v.forEach((attr, weight) -> {
+                if (weight > MAX_SINGLE_ATTRIBUTE_SHARE + 1e-6) {
+                    violations.add(key + " " + attr.getKey() + "=" + String.format("%.3f", weight));
+                }
+            });
+        }
+        assertThat(violations).as("tek attribute %25'i geçemez").isEmpty();
     }
 }

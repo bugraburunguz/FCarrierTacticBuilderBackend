@@ -34,7 +34,7 @@ const ADDED = {
   goalkeeper: [{}, 'EA rol açıklaması: temel kaleci, ek vurgu yok'],
   ball_playing_keeper: [{ GKKicking: 0.08, ShortPassing: 0.06, LongPassing: 0.04, Composure: 0.03, Vision: 0.03 }, 'EA rol açıklaması (gözlem): pasla oyun kuran kaleci'],
   inverted_wingback: [{ ShortPassing: 0.06, Composure: 0.04, Vision: 0.04, BallControl: 0.04 }, 'EA rol açıklaması (gözlem): içeri girip oyun kuran bek'],
-  falseback: [{ ShortPassing: 0.05, DefAwareness: 0.04, Composure: 0.03, Interceptions: 0.03, Vision: 0.02 }, 'EA rol açıklaması (gözlem): stoper hattına çöken bek'],
+  falseback: [{ ShortPassing: 0.07, DefAwareness: 0.04, Composure: 0.03, Interceptions: 0.05, Vision: 0.02 }, 'EA rol açıklaması (gözlem): stoper hattına çöken bek'],
   wide_back: [{ Acceleration: 0.06, SprintSpeed: 0.05, DefAwareness: 0.03, Stamina: 0.03, Crossing: 0.02 }, 'EA rol açıklaması (gözlem): kanatta oynayan stoper'],
   wide_half: [{ Stamina: 0.06, Crossing: 0.06, SprintSpeed: 0.03 }, 'EA rol açıklaması (gözlem): kanat koşucusu 6'],
   half_winger: [{ Dribbling: 0.06, Crossing: 0.05, Stamina: 0.04, ShortPassing: 0.04 }, 'EA rol açıklaması (gözlem): yarım kanat'],
@@ -43,6 +43,8 @@ const ADDED = {
 // Aynı pozisyondaki yakın rolleri ayıran ek vurgular (CI: roller arası kosinüs ≤ 0,90); EA rol açıklaması, gözlem
 const ADJUST = {
   centre_half: [{ Strength: 0.03, Heading: 0.03, StandingTackle: 0.02, Aggression: 0.03 }, 'centre_half: savunma 6 numarası, hava ve güç'],
+  deep_lying_playmaker: [{ LongPassing: 0.03, DefAwareness: 0.03, Interceptions: 0.02 }, 'deep_lying_playmaker: derinden uzun pasla oyun kurma (baskınlık sınırı sonrası playmaker ile ayrışma, E3-6b)'],
+  box_to_box: [{ StandingTackle: 0.01, Interceptions: 0.01, Strength: 0.01, Aggression: 0.01 }, 'box_to_box: koşu + savunma katkısı (EA: stamina, top kazanma); Stamina %25 sınırına çekildiği için fazla, rol tanımındaki diğer attribute lara dağıtılır (E3-6b)'],
   holding: [{ Jumping: 0.05, Stamina: 0.02, BallControl: 0.01, ShortPassing: 0.01 }, 'holding: orta sahayı önde koruyan 6; hava düellosu (zıplama), koşu, ikincil pas. Altın set Khedira>Xhaka kesin çiftine göre ayarlandı (rapora yazıldı), rol kosinüsü ≤0,90'],
   wingback: [{ DefAwareness: 0.04, StandingTackle: 0.03, Interceptions: 0.02 }, 'wingback: bekin savunma yükü'],
   attacking_wingback: [{ Dribbling: 0.04, BallControl: 0.02, Finishing: 0.03, Positioning: 0.03, Crossing: 0.06 }, 'attacking_wingback: hücumda dripling ve bitiricilik'],
@@ -105,6 +107,29 @@ const ovrOf = (position) => {
   return norm1(pos)
 }
 
+// Tek özellik baskınlığı yok (Buğra kararı, E3-6b): hiçbir attribute vektör kütlesinin %25'ini geçemez. Fazla, vektördeki MEVCUT diğer attribute'lara orantılı dağıtılır
+// (yeni attribute eklenmez); dağıtım sırasında yeni aşanlar da %25'e kırpılır (su doldurma).
+export const MAX_SHARE = 0.25
+// Kaleci ailesi muaf: kaleci vektörü 4-5 kaleci attribute'undan oluşur; %25 sınırı dördünü eşitler ve focus/rol ayrımını yok eder (kosinüs değişmezi ihlali). Eski vektör korunur, raporda belirtilir.
+export const CAP_EXEMPT_GROUPS = ['GK']
+export function capShare(vec, preferred = null) {
+  const out = { ...vec }
+  const capped = new Set()
+  for (let i = 0; i < 100; i += 1) {
+    const over = Object.keys(out).filter((k) => !capped.has(k) && out[k] > MAX_SHARE + 1e-12)
+    if (!over.length) return out
+    let excess = 0
+    for (const k of over) { excess += out[k] - MAX_SHARE; out[k] = MAX_SHARE; capped.add(k) }
+    // Fazla önce rolün TANIMINDAKİ (vurgu/focus) attribute'lara dağıtılır; bunlar yetmezse vektördeki diğerlerine.
+    let rest = Object.keys(out).filter((k) => !capped.has(k) && (!preferred || preferred.has(k)))
+    if (!rest.length) rest = Object.keys(out).filter((k) => !capped.has(k))
+    const base = rest.reduce((s, k) => s + out[k], 0)
+    if (!rest.length || base <= 0) throw new Error('baskınlık sınırı sağlanamadı (attribute sayısı < 4): ' + JSON.stringify(vec))
+    for (const k of rest) out[k] += (excess * out[k]) / base
+  }
+  return out
+}
+
 /** (mevki, rol, focus) vektörü: taban + rol vurgusu + focus + EA OVR regresyonu. E3-4b öğrenici vurguyu `emphasis` ile değiştirerek aynı kuralı kullanır. */
 export function assemble(position, role, focus, emphasis = EMPHASIS[role.id] ?? {}) {
   const raw = {}
@@ -115,7 +140,8 @@ export function assemble(position, role, focus, emphasis = EMPHASIS[role.id] ?? 
   const rest = Object.values(raw).reduce((a, b) => a + b, 0)
   const ovrShare = Math.min(OVR_SHARE, rest * 0.9)
   add(raw, ovrOf(position), ovrShare)
-  return { w: norm1(raw), rest, ovrShare, rawSum: rest + ovrShare, constant: constantPart(position, role, focus) }
+  const uncapped = norm1(raw)
+  return { w: role.weightGroup === 'GK' ? uncapped : capShare(uncapped, new Set([...Object.keys(emphasis), ...Object.keys(FOCUS_BY_GROUP[role.weightGroup]?.[focus] ?? FOCUS[focus] ?? {})])), uncapped, rest, ovrShare, rawSum: rest + ovrShare, constant: constantPart(position, role, focus) }
 }
 
 /** Vurgudan bağımsız (ham) kütle: taban + focus + OVR payı (OVR payı vurgu kütlesine bağlıdır; bu yüzden öğrenici assemble'ı çağırır). */
