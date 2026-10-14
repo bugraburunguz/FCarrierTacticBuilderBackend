@@ -1,0 +1,143 @@
+[
+ {
+  "from": "pep_barcelona_2011",
+  "to": "guardiola_barcelona_2011"
+ },
+ {
+  "from": "flick_barcelona_2025",
+  "to": "flick_barcelona_2025"
+ },
+ {
+  "from": "zidane_real_2017",
+  "to": "zidane_real_2017"
+ },
+ {
+  "from": "mourinho_inter_2010",
+  "to": "mourinho_inter_2010"
+ },
+ {
+  "from": "ancelotti_milan_2007",
+  "to": "ancelotti_milan_2007"
+ },
+ {
+  "from": "klopp_liverpool_2020",
+  "to": "klopp_liverpool_2020"
+ },
+ {
+  "from": "simeone_atletico_2014",
+  "to": "simeone_atletico_2014"
+ },
+ {
+  "from": "terim_galatasaray_2000",
+  "to": "terim_galatasaray_2000"
+ },
+ {
+  "from": "lucescu_besiktas_2003",
+  "to": "lucescu_besiktas_2003"
+ },
+ {
+  "from": "gunes_besiktas_2017",
+  "to": "gunes_besiktas_2017"
+ },
+ {
+  "from": "zico_fenerbahce_2008",
+  "to": "zico_fenerbahce_2008"
+ },
+ {
+  "from": "avci_trabzonspor_2022",
+  "to": "avci_trabzonspor_2022"
+ },
+ {
+  "from": "sacchi_milan_1989",
+  "to": "sacchi_milan_1989"
+ },
+ {
+  "from": "capello_milan_1994",
+  "to": "capello_milan_1994"
+ },
+ {
+  "from": "mourinho_chelsea_2005",
+  "to": "mourinho_chelsea_2005"
+ },
+ {
+  "from": "galacticos_real_2003",
+  "to": null,
+  "reason": "Los Galácticos 2002-03 yeni sette yok (Real Madrid yalnız del Bosque 1999-00 / 2001-02)"
+ },
+ {
+  "from": "cruyff_ajax_1972",
+  "to": "kovacs_ajax_1972"
+ },
+ {
+  "from": "ferguson_united_2008",
+  "to": "ferguson_united_2008"
+ },
+ {
+  "from": "pulis_stoke_2011",
+  "to": null,
+  "reason": "Stoke City yeni sette yok"
+ },
+ {
+  "from": "gunes_trabzonspor_2011",
+  "to": "gunes_trabzonspor_2011"
+ },
+ {
+  "from": "terim_galatasaray_2013",
+  "to": "terim_galatasaray_2013"
+ },
+ {
+  "from": "vangaal_ajax_1995",
+  "to": "vangaal_ajax_1995"
+ },
+ {
+  "from": "herrera_inter_1964",
+  "to": "herrera_inter_1965"
+ },
+ {
+  "from": "buruk_galatasaray_2024",
+  "to": "buruk_galatasaray_2024"
+ },
+ {
+  "from": "daum_fenerbahce_2005",
+  "to": null,
+  "reason": "Daum Fenerbahçe 2004-05 yeni sette yok"
+ },
+ {
+  "from": "kartal_fenerbahce_2024",
+  "to": "kartal_fenerbahce_2024"
+ },
+ {
+  "from": "sergen_besiktas_2021",
+  "to": "sergen_besiktas_2021"
+ },
+ {
+  "from": "denizli_besiktas_2009",
+  "to": null,
+  "reason": "Denizli Beşiktaş 2008-09 yeni sette yok"
+ },
+ {
+  "from": "luisenrique_barcelona_2015",
+  "to": "luisenrique_barcelona_2015"
+ },
+ {
+  "from": "mourinho_real_2012",
+  "to": "mourinho_realmadrid_2012"
+ },
+ {
+  "from": "benitez_liverpool_2009",
+  "to": "benitez_liverpool_2009"
+ },
+ {
+  "from": "mancini_city_2012",
+  "to": null,
+  "reason": "Mancini City 2011-12 yeni sette yok"
+ },
+ {
+  "from": "sarri_napoli_2018",
+  "to": "sarri_napoli_2018"
+ },
+ {
+  "from": "italiano_bologna_2025",
+  "to": "italiano_bologna_2025"
+ }
+]

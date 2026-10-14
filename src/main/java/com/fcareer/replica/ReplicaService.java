@@ -42,6 +42,7 @@ import java.util.Optional;
 public class ReplicaService {
 
     private static final String SEED = "seed/replicas.fc27.json";
+    private static final String LEGACY_SEED = "seed/replica-legacy-ids.json";
 
     public record RoleSlot(String slotId, String position, String role, String focus, String roleId) {
     }
@@ -78,6 +79,19 @@ public class ReplicaService {
 
     public Optional<FormationDefinition> formationOf(String eaLabel) {
         return formations.findAll().stream().filter((f) -> eaLabel.equals(f.eaLabel())).findFirst();
+    }
+
+    /** Eski 34 REPLICA preset id'si -> yeni replika id'si (eşleşmeyen: null). Web'in kayıtlı taktik durumunu taşımak için. */
+    public Map<String, String> legacyIds() {
+        Map<String, String> out = new LinkedHashMap<>();
+        try (InputStream in = new ClassPathResource(LEGACY_SEED).getInputStream()) {
+            for (JsonNode row : mapper.readTree(in)) {
+                out.put(row.path("from").asText(), row.path("to").isNull() ? null : row.path("to").asText());
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return out;
     }
 
     public List<Replica> all() {

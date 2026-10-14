@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.fcareer.common.constants.ApiConstants.API_V1;
 
@@ -26,6 +27,11 @@ public class ReplicaController {
     @GetMapping
     public List<ReplicaService.Replica> list() {
         return replicas.all();
+    }
+
+    @GetMapping("/legacy-ids")
+    public Map<String, String> legacyIds() {
+        return replicas.legacyIds();
     }
 
     @GetMapping("/{id}")

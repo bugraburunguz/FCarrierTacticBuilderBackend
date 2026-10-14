@@ -54,7 +54,7 @@ class CatalogIngestionIntegrationTest {
     void referenceSeedIsPersistedOnStartup() {
         assertThat(roleRepository.count()).isGreaterThanOrEqualTo(37);
         assertThat(behaviorTagRepository.count()).isGreaterThan(40);
-        assertThat(presetRepository.count()).isGreaterThanOrEqualTo(30);
+        assertThat(presetRepository.count()).as("REP-04: 34 eski REPLICA çıktı; STYLE 9 + PERSONAL 1").isEqualTo(10);
     }
 
     @Test
