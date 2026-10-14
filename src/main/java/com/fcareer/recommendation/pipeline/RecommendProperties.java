@@ -25,6 +25,11 @@ public class RecommendProperties {
     private int youngAgeMax = 21;
     /** "Hemen hazır": levelFit ≥ readyLevelFit ve currentFit ≥ mevkideki mevcut oyuncunun currentFit'i. */
     private double readyLevelFit = 65;
+    /** Sıralamada gelecek uyumun (+1 sezon, yaşlanma dahil) ağırlığı: rank = (1−w)·currentFit + w·futureFit − kova cezası. */
+    private double futureWeight = 0.35;
+    /** Yaş riski: yaş ageRiskFrom üstündeki her yıl için sıralama puanından ageRiskPerYear düşer (emeklilik/kısa süreli değer); 0 yapılırsa kapanır. */
+    private int ageRiskFrom = 33;
+    private double ageRiskPerYear = 1.5;
     private int mmrPool = 60;
     private double mmrLambda = 0.7;
     private Feasibility feasibility = new Feasibility();

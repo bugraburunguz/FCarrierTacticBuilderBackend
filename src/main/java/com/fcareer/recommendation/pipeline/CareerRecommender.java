@@ -66,7 +66,7 @@ public class CareerRecommender {
 
     /** Tam puanlanmış aday (çeşitlendirme öncesi). */
     public record Scored(FitPlayer player, PlayerSummaryResponse summary, FitRole role, FitEngineV3.Result result, Double levelFit, String fitLabel,
-                         FeasibilityBuckets.Result feasibility, double rankScore, CareerPlayerRepository.Extra extra) {
+                         FeasibilityBuckets.Result feasibility, double rankScore, CareerPlayerRepository.Extra extra, double futureFit, int projectedRating) {
         public double currentFit() {
             return result.currentFit();
         }
@@ -107,7 +107,7 @@ public class CareerRecommender {
         List<Diversifier.Candidate> candidates = ranked.stream().map((s) -> toCandidate(s, current)).toList();
         boolean hideGrowth = spoilerPolicy.ranged(squad.careerId());
         List<CareerRecommendationResponse.Item> items = diversifier.select(candidates, limit).stream()
-                .map((c) -> toItem(byId.get(c.id()), request.getPosition(), current, hideGrowth)).toList();
+                .map((c) -> toItem(byId.get(c.id()), current, hideGrowth)).toList();
         log.info("Career recommendation careerId : {} position : {} scored : {} returned : {}", squad.careerId(), request.getPosition(), ranked.size(), items.size());
         return CareerRecommendationResponse.builder().position(request.getPosition()).poolSize(properties.getCandidatePool()).scored(ranked.size())
                 .current(Objects.isNull(current) ? null : CareerRecommendationResponse.Current.builder().playerId(current.playerId()).playerName(current.name())
@@ -119,8 +119,7 @@ public class CareerRecommender {
     public List<Scored> rank(CareerService.CareerSquad squad, CareerRecommendationRequest request, int poolSize) {
         List<FitRole> roles = rolesAt(request);
         String position = request.getPosition();
-        PlayerSearchRequest search = candidateSearch(squad, request, roles, poolSize);
-        List<PlayerSummaryResponse> pool = playerSearchRepository.search(search);
+        List<PlayerSummaryResponse> pool = candidatePool(squad, request, roles, poolSize);
         if (pool.isEmpty()) {
             return List.of();
         }
@@ -161,12 +160,33 @@ public class CareerRecommender {
         Integer months = Objects.nonNull(extra) && Objects.nonNull(extra.contractUntil()) && Objects.nonNull(gameDate)
                 ? (int) Math.max(0, ChronoUnit.DAYS.between(gameDate, extra.contractUntil()) / DAYS_PER_MONTH) : null;
         FeasibilityBuckets.Result feasibility = feasibilityBuckets.classify(new FeasibilityBuckets.Input(ratio, tierGap, Objects.isNull(extra) ? null : extra.clubRank(), months, summary.isFreeAgent()));
+        GrowthProjector.Projection projection = growthProjector.project(player);
+        double futureFit = engine.currentFit(projection.grown(), position, bestRole).currentFit();
+        double blended = (1 - properties.getFutureWeight()) * best.currentFit() + properties.getFutureWeight() * futureFit;
         double penalty = switch (feasibility.bucket()) {
             case ALINABILIR -> 0;
             case ZOR -> properties.getRankPenalty().getHard();
             case HAYAL -> properties.getRankPenalty().getFantasy();
         };
-        return new Scored(player, summary, bestRole, best, level.map(LevelFitService.LevelFit::value).orElse(null), label, feasibility, best.currentFit() - penalty, extra);
+        return new Scored(player, summary, bestRole, best, level.map(LevelFitService.LevelFit::value).orElse(null), label, feasibility, blended - penalty - ageRisk(summary.getAge()), extra, futureFit, projection.projectedRating());
+    }
+
+    /**
+     * Aday havuzu: her taban rol için ayrı önskor sorgusu (o rolün vektörü) birleştirilir; böylece havuz yalnız "ortalama rol"e uyanları değil her arketipin en iyilerini taşır.
+     * Her sorgu `LIMIT poolSize` (13 §3.3); birleşim büyüklüğü rol örtüşmesine göre poolSize ile rol sayısı x poolSize arasındadır.
+     */
+    private List<PlayerSummaryResponse> candidatePool(CareerService.CareerSquad squad, CareerRecommendationRequest request, List<FitRole> roles, int poolSize) {
+        Map<String, List<FitRole>> byBase = roles.stream().collect(Collectors.groupingBy(FitRole::getBaseRole, java.util.LinkedHashMap::new, Collectors.toList()));
+        int perRole = poolSize;
+        Map<Long, PlayerSummaryResponse> union = new java.util.LinkedHashMap<>();
+        for (List<FitRole> group : byBase.values()) {
+            playerSearchRepository.search(candidateSearch(squad, request, group, perRole)).forEach((s) -> union.putIfAbsent(s.getId(), s));
+        }
+        return new ArrayList<>(union.values());
+    }
+
+    private double ageRisk(Integer age) {
+        return Objects.isNull(age) ? 0 : Math.max(0, age - properties.getAgeRiskFrom()) * properties.getAgeRiskPerYear();
     }
 
     /** SQL sert kısıtlar + önskor. OVR'ye göre sıralama/kesme yoktur. */
@@ -290,14 +310,9 @@ public class CareerRecommender {
         return age <= 21 ? "U21" : age <= 25 ? "22-25" : age <= 29 ? "26-29" : "30+";
     }
 
-    private CareerRecommendationResponse.Item toItem(Scored s, String position, Current current, boolean hideGrowth) {
-        Double futureFit = null;
-        Integer projected = null;
-        if (!hideGrowth) {
-            GrowthProjector.Projection projection = growthProjector.project(s.player());
-            projected = projection.projectedRating();
-            futureFit = round1(engine.currentFit(projection.grown(), position, s.role()).currentFit());
-        }
+    private CareerRecommendationResponse.Item toItem(Scored s, Current current, boolean hideGrowth) {
+        Double futureFit = hideGrowth ? null : round1(s.futureFit());
+        Integer projected = hideGrowth ? null : s.projectedRating();
         List<FitEngineV3.Contribution> pros = s.result().contributions().stream().filter((c) -> c.points() > 0)
                 .sorted(Comparator.comparingDouble(FitEngineV3.Contribution::points).reversed()).limit(PROS).map(CareerRecommender::rounded).toList();
         List<FitEngineV3.Contribution> cons = s.result().contributions().stream().filter((c) -> c.points() < 0)

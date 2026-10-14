@@ -17,12 +17,15 @@ import java.util.Set;
  * Tek sezonluk büyüme (futureFit +1 sezon, E3-6). Tanım:
  *   sezon kazancı = round((POT − OVR) × yaşÇarpanı(yaş));  projectedRating = min(POT, OVR + kazanç);
  *   attribute artışı = round(kazanç × trainability), hız/çeviklik grubu 0,3×, diğerleri 1,0×, 99'da kırpılır.
- * POT ya da yaş bilinmiyorsa büyüme yok (tahmin uydurulmaz). Katsayılar `verified:false` ilk kalibrasyondur.
+ * Düşüş: yaş ≥ declineFromAge ise fiziksel attribute'lar (hız, çeviklik, dayanıklılık, güç, sıçrama, denge) sezonda declineBase + declineStep×(yaş − declineFromAge) puan düşer;
+ *   OVR düşüşü ≈ ovrPerPhysical × fiziksel düşüş (teknik attribute'lar değişmez).
+ * POT ya da yaş bilinmiyorsa büyüme/düşüş yok (tahmin uydurulmaz). Katsayılar `verified:false` ilk kalibrasyondur.
  */
 @Component
 public class GrowthProjector {
 
     private static final int MAX_ATTR = 99;
+    private static final Set<Attr> PHYSICAL = Set.of(Attr.ACCELERATION, Attr.SPRINT_SPEED, Attr.AGILITY, Attr.BALANCE, Attr.JUMPING, Attr.STAMINA, Attr.STRENGTH);
     private static final Set<Attr> HARD_TO_TRAIN = Set.of(Attr.ACCELERATION, Attr.SPRINT_SPEED, Attr.AGILITY, Attr.BALANCE, Attr.JUMPING);
 
     @Getter
@@ -43,6 +46,10 @@ public class GrowthProjector {
         private int age6 = 29;
         private double factor6 = 0.05;
         private double hardToTrain = 0.3;
+        private int declineFromAge = 32;
+        private double declineBase = 1.0;
+        private double declineStep = 0.4;
+        private double ovrPerPhysical = 0.6;
     }
 
     public record Projection(int projectedRating, FitPlayer grown) {
@@ -56,6 +63,10 @@ public class GrowthProjector {
     }
 
     public Projection project(FitPlayer player) {
+        int decline = physicalDecline(player);
+        if (decline > 0) {
+            return decline(player, decline);
+        }
         int gain = seasonGain(player);
         if (gain <= 0) {
             return new Projection(player.getOverall(), player);
@@ -68,6 +79,27 @@ public class GrowthProjector {
                 .valueEur(player.getValueEur()).gender(player.getGender()).preferredFoot(player.getPreferredFoot()).weakFoot(player.getWeakFoot())
                 .skillMoves(player.getSkillMoves()).heightCm(player.getHeightCm()).roleFamiliarity(player.getRoleFamiliarity()).build();
         return new Projection(projected, grown);
+    }
+
+    private int physicalDecline(FitPlayer player) {
+        if (Objects.isNull(player.getAge()) || player.getAge() < config.getDeclineFromAge()) {
+            return 0;
+        }
+        return (int) Math.round(config.getDeclineBase() + config.getDeclineStep() * (player.getAge() - config.getDeclineFromAge()));
+    }
+
+    private Projection decline(FitPlayer player, int physical) {
+        Map<Attr, Integer> attrs = new EnumMap<>(Attr.class);
+        player.getAttrs().forEach((attr, value) -> attrs.put(attr, PHYSICAL.contains(attr) ? Math.max(1, value - physical) : value));
+        int projected = Math.max(1, player.getOverall() - (int) Math.round(physical * config.getOvrPerPhysical()));
+        return new Projection(projected, copy(player, attrs, projected));
+    }
+
+    private static FitPlayer copy(FitPlayer player, Map<Attr, Integer> attrs, int overall) {
+        return FitPlayer.builder().id(player.getId()).name(player.getName()).age(player.getAge() + 1).overall(overall)
+                .positions(player.getPositions()).attrs(attrs).playstyles(player.getPlaystyles()).acceleRate(player.getAcceleRate()).potential(player.getPotential())
+                .valueEur(player.getValueEur()).gender(player.getGender()).preferredFoot(player.getPreferredFoot()).weakFoot(player.getWeakFoot())
+                .skillMoves(player.getSkillMoves()).heightCm(player.getHeightCm()).roleFamiliarity(player.getRoleFamiliarity()).build();
     }
 
     private int seasonGain(FitPlayer player) {

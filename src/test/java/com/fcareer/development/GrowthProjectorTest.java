@@ -53,4 +53,20 @@ class GrowthProjectorTest {
         FitPlayer noPotential = FitPlayer.builder().id(2L).age(20).overall(70).positions(List.of("ST")).attrs(player(20, 70, 80).getAttrs()).playstyles(Map.of()).build();
         assertThat(projector.project(noPotential).projectedRating()).isEqualTo(70);
     }
+
+    @Test
+    void anOldPlayerLosesPhysicalAttributesAndRatingButNotTechnicalOnes() {
+        GrowthProjector.Projection p = projector.project(player(36, 80, 80));
+        assertThat(p.grown().getAttrs().get(Attr.SPRINT_SPEED)).isLessThan(60);
+        assertThat(p.grown().getAttrs().get(Attr.STAMINA)).isLessThan(60);
+        assertThat(p.grown().getAttrs().get(Attr.FINISHING)).isEqualTo(60);
+        assertThat(p.projectedRating()).isLessThan(80);
+    }
+
+    @Test
+    void declineGrowsWithAge() {
+        int at33 = projector.project(player(33, 80, 80)).grown().getAttrs().get(Attr.SPRINT_SPEED);
+        int at38 = projector.project(player(38, 80, 80)).grown().getAttrs().get(Attr.SPRINT_SPEED);
+        assertThat(at38).isLessThan(at33);
+    }
 }

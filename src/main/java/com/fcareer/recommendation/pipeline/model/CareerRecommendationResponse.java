@@ -57,7 +57,7 @@ public class CareerRecommendationResponse {
         private List<FitEngineV3.Contribution> cons;
         /** FREE, YOUNG, READY */
         private List<String> tags;
-        /** Sıralama puanı: currentFit − kova cezası. */
+        /** Sıralama puanı: (1−w)·currentFit + w·futureFit − kova cezası. */
         private double rankScore;
     }
 }
