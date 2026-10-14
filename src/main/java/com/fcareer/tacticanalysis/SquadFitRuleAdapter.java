@@ -39,8 +39,11 @@ public class SquadFitRuleAdapter {
     private final FormationRegistry formations;
     private final RoleMovements movements;
     private final TacticAnalyzer analyzer;
+    private final LevelReferenceService levelReferences;
+    private final com.fcareer.catalog.service.PlayerService playerService;
 
-    public List<RuleFinding> findings(String formationId, TeamSetup setup, List<IntentProfile> intents, List<SlotAssignment> assigned, List<FitPlayer> squad) {
+    /** careerId/ownedIds: kariyer sorgusunda seviye referansı için (kullanıcının ligi); kariyer dışında OVR bandı katalog medyanı. */
+    public List<RuleFinding> findings(String formationId, TeamSetup setup, List<IntentProfile> intents, List<SlotAssignment> assigned, List<FitPlayer> squad, Long careerId, java.util.Collection<Long> ownedIds) {
         FormationDefinition formation = formations.get(formationId);
         List<Slot> slots = new ArrayList<>();
         for (IntentProfile intent : intents) {
@@ -60,7 +63,9 @@ public class SquadFitRuleAdapter {
             }
         }
         int depth = Objects.isNull(setup) || Objects.isNull(setup.getDepth()) ? DEFAULT_DEPTH : setup.getDepth();
-        Analysis analysis = analyzer.analyze(new Input(formation.id(), BuildUpType.parse(Objects.isNull(setup) ? null : setup.getBuildUp()), depth, slots, players));
+        LevelReferenceService.LevelRefs level = players.isEmpty() ? LevelReferenceService.LevelRefs.NONE : Objects.nonNull(careerId) ? levelReferences.forCareer(careerId, ownedIds)
+                : levelReferences.forCatalog(playerService.resolveGameVersion(null), players.values().stream().filter((p) -> Objects.nonNull(p.getOverall())).mapToInt(FitPlayer::getOverall).average().orElse(60));
+        Analysis analysis = analyzer.analyze(new Input(formation.id(), BuildUpType.parse(Objects.isNull(setup) ? null : setup.getBuildUp()), depth, slots, players, level.refs(), level.label()));
         return analysis.findings().stream().map(SquadFitRuleAdapter::toRule).toList();
     }
 

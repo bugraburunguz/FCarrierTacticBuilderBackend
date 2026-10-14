@@ -36,6 +36,7 @@ public class TacticAnalysisService {
     private final TacticAnalyzer analyzer;
     private final CareerService careerService;
     private final PlayerService playerService;
+    private final LevelReferenceService levelReferences;
 
     public Analysis analyze(Long userId, TacticAnalysisRequest request) {
         FormationDefinition formation = formations.get(request.getFormation());
@@ -50,27 +51,40 @@ public class TacticAnalysisService {
             }
             slots.add(new Slot(s.slotId(), s.position(), s.x(), s.y(), roleId));
         }
-        Map<String, FitPlayer> players = players(userId, request, formation);
-        Input input = new Input(formation.id(), BuildUpType.parse(request.getBuildUp()), Objects.isNull(request.getDepth()) ? DEFAULT_DEPTH : request.getDepth(), slots, players);
+        Map<String, FitPlayer> players = new HashMap<>();
+        LevelReferenceService.LevelRefs level = levelRefs(userId, request, formation, players);
+        Input input = new Input(formation.id(), BuildUpType.parse(request.getBuildUp()), Objects.isNull(request.getDepth()) ? DEFAULT_DEPTH : request.getDepth(), slots, players, level.refs(), level.label());
         Analysis analysis = analyzer.analyze(input);
         log.info("Tactic analysed formation : {} findings : {} players : {}", formation.id(), analysis.findings().size(), players.size());
         return analysis;
     }
 
-    private Map<String, FitPlayer> players(Long userId, TacticAnalysisRequest request, FormationDefinition formation) {
-        if (Objects.isNull(request.getCareerId()) || Objects.isNull(request.getAssigned()) || request.getAssigned().isEmpty()) {
-            return Map.of();
+    /**
+     * Atanan oyuncuları çözer (players dolar) ve seviye referansını döner: kariyerde kullanıcının liginin aynı mevki medyanı (kariyer sahipliği doğrulanır), kariyer dışında (UT/katalog)
+     * atanan oyuncuların ortalama OVR bandının katalog medyanı. Oyuncu atanmadıysa referans gerekmez.
+     */
+    private LevelReferenceService.LevelRefs levelRefs(Long userId, TacticAnalysisRequest request, FormationDefinition formation, Map<String, FitPlayer> players) {
+        if (Objects.isNull(request.getAssigned()) || request.getAssigned().isEmpty()) {
+            return LevelReferenceService.LevelRefs.NONE;
         }
-        CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, request.getCareerId());
         request.getAssigned().keySet().forEach((id) -> formation.slot(id).orElseThrow(() -> new InvalidTacticException("slot " + id)));
-        Map<Long, FitPlayer> byId = playerService.fitPlayers(List.copyOf(request.getAssigned().values()), squad.gameVersionId(), squad.careerId()).stream()
+        boolean career = Objects.nonNull(request.getCareerId());
+        CareerService.CareerSquad squad = career ? careerService.squadPlayerIds(userId, request.getCareerId()) : null;
+        Short gameVersion = career ? squad.gameVersionId() : null;
+        Map<Long, FitPlayer> byId = playerService.fitPlayers(List.copyOf(request.getAssigned().values()), gameVersion, career ? squad.careerId() : null).stream()
                 .collect(Collectors.toMap(FitPlayer::getId, Function.identity(), (a, b) -> a));
-        Map<String, FitPlayer> out = new HashMap<>();
         request.getAssigned().forEach((slot, id) -> {
             if (byId.containsKey(id)) {
-                out.put(slot, byId.get(id));
+                players.put(slot, byId.get(id));
             }
         });
-        return out;
+        if (players.isEmpty()) {
+            return LevelReferenceService.LevelRefs.NONE;
+        }
+        if (career) {
+            return levelReferences.forCareer(squad.careerId(), squad.ownedIds());
+        }
+        double avgOvr = players.values().stream().filter((p) -> Objects.nonNull(p.getOverall())).mapToInt(FitPlayer::getOverall).average().orElse(0);
+        return avgOvr > 0 ? levelReferences.forCatalog(playerService.resolveGameVersion(null), avgOvr) : LevelReferenceService.LevelRefs.NONE;
     }
 }

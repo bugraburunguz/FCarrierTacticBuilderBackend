@@ -212,7 +212,7 @@ public class PlayerService {
         return Objects.isNull(upstream) || upstream.isBlank() ? null : catalogProperties.getFaceProxyPath();
     }
 
-    private short resolveGameVersion(Short requested) {
+    public short resolveGameVersion(Short requested) {
         return Objects.isNull(requested) ? catalogProperties.getDefaultGameVersion() : requested;
     }
 }

@@ -113,13 +113,15 @@ public class FitService {
         } else {
             playerIds = request.getPlayerIds();
         }
+        List<Long> ownedIds = hasCareer ? careerService.squadPlayerIds(userId, request.getCareerId()).ownedIds() : List.of();
         List<FitPlayer> players = playerService.fitPlayers(playerIds, gameVersion, hasCareer ? request.getCareerId() : null);
         TacticResolver.ResolvedTactic resolved = tacticResolver.resolve(request.getTactic());
         List<IntentProfile> slots = resolved.slots();
         return creditGuard.runCharged(userId, billingProperties.getSquadFitCost(), SQUAD_FIT, () -> {
             SquadFitResponse solved = squadFitService.solveBest(players, slots, hasCareer ? fitProperties.getCareerEngineVersion() : fitProperties.getEngineVersion());
             // Kurallar etiketsiz analiz motorundan (E3-7): çözülmüş roller + hat/build-up + atanan oyuncular. Ayna çözümde slot kimlikleri aynı kalır.
-            solved.setRules(squadFitRuleAdapter.findings(resolved.formation(), request.getTactic().getSetup(), solved.isMirrored() ? TacticMirror.mirror(slots) : slots, solved.getSlots(), players));
+            solved.setRules(squadFitRuleAdapter.findings(resolved.formation(), request.getTactic().getSetup(), solved.isMirrored() ? TacticMirror.mirror(slots) : slots, solved.getSlots(), players,
+                    hasCareer ? request.getCareerId() : null, hasCareer ? ownedIds : List.of()));
             return solved;
         });
     }
