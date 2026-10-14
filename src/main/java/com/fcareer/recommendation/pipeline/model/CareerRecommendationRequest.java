@@ -45,6 +45,11 @@ public class CareerRecommendationRequest {
     /** Yalnız simülasyon/rapor: kullanıcı takımı yerine bu LE takımının kadrosu ve gücü esas alınır (kayıttaki veri değişmez). */
     private Integer userTeamId;
 
+    /** İstek bütçesi (€): kariyer bütçesinin yerine geçer; budgetUnknown=true ise bütçe hiç bilinmiyor sayılır. */
+    private Long budgetEur;
+
+    private boolean budgetUnknown;
+
     /** true: HAYAL kovasından en çok 3 oyuncu ayrı `longShots` dizisinde döner (ana listede HAYAL asla yoktur). */
     private boolean includeLongShots;
 }

@@ -142,7 +142,8 @@ public class CareerRecommender {
         return rankInternal(squad, request, poolSize).scored();
     }
 
-    public Ranked rankInternal(CareerService.CareerSquad squad, CareerRecommendationRequest request, int poolSize) {
+    public Ranked rankInternal(CareerService.CareerSquad base, CareerRecommendationRequest request, int poolSize) {
+        CareerService.CareerSquad squad = withBudget(base, request);
         String position = request.getPosition();
         String profileName = Objects.isNull(request.getProfile()) || request.getProfile().isBlank() ? properties.getDefaultProfile() : request.getProfile().toUpperCase();
         RecommendProperties.Profile profile = Optional.ofNullable(properties.getProfiles().get(profileName)).orElseThrow(() -> new NotFoundException("profile", profileName));
@@ -192,6 +193,14 @@ public class CareerRecommender {
         }
         scored.sort(Comparator.comparingDouble(Scored::rankScore).reversed().thenComparingLong((s) -> s.summary().getId()));
         return new Ranked(scored, targetRoles, source[0], starters, bestStarter, userStrength, firstEleven, profile, profileName);
+    }
+
+    private static CareerService.CareerSquad withBudget(CareerService.CareerSquad squad, CareerRecommendationRequest request) {
+        if (!request.isBudgetUnknown() && Objects.isNull(request.getBudgetEur())) {
+            return squad;
+        }
+        Long budget = request.isBudgetUnknown() ? null : request.getBudgetEur();
+        return new CareerService.CareerSquad(squad.playerIds(), squad.gameVersionId(), budget, squad.gender(), squad.clubId(), squad.careerId(), squad.ownedIds());
     }
 
     private Scored score(FitPlayer player, PlayerSummaryResponse summary, List<FitRole> roles, String position, CareerPlayerRepository.Extra extra, CareerService.CareerSquad squad,

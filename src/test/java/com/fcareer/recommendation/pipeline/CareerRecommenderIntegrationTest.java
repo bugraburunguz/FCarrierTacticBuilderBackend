@@ -254,6 +254,19 @@ class CareerRecommenderIntegrationTest {
         }
     }
 
+    @Test
+    void theRequestCanOverrideTheBudgetOrDeclareItUnknown() throws Exception {
+        long tiny = support.premiumCareer(support.register(), 1L);
+        long open = support.premiumCareer(support.register(), null);
+        CareerRecommendationRequest unknown = request("ST");
+        unknown.setBudgetUnknown(true);
+        assertThat(ids(recommender.compute(squad(tiny), unknown))).as("bütçe bilinmiyor = kariyerde bütçe girilmemiş gibi").isEqualTo(ids(recommender.compute(squad(open), request("ST"))));
+        CareerRecommendationRequest override = request("ST");
+        override.setBudgetEur(1L);
+        recommender.compute(squad(open), override).getItems().forEach((item) -> assertThat(item.getPlayer().isFreeAgent() || item.getPlayer().getValueEur() == null || item.getPlayer().getValueEur() <= 2)
+                .as("istekteki 1 € bütçe kariyer bütçesinin yerine geçer: " + item.getPlayer().getName()).isTrue());
+    }
+
     private static List<Long> ids(CareerRecommendationResponse response) {
         return response.getItems().stream().map((i) -> i.getPlayer().getId()).toList();
     }
