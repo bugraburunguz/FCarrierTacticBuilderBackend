@@ -1,8 +1,9 @@
 package com.fcareer.tacticanalysis;
 
 import com.fcareer.catalog.repository.CareerPlayerRepository;
-import com.fcareer.tacticanalysis.LevelReferenceRepository.Median;
-import com.fcareer.tacticanalysis.LevelReferenceRepository.Medians;
+import com.fcareer.catalog.repository.CatalogLevelRepository;
+import com.fcareer.tacticanalysis.LevelSql.Median;
+import com.fcareer.tacticanalysis.LevelSql.Medians;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -38,34 +39,33 @@ public class LevelReferenceService {
     }
 
     private final LevelReferenceRepository repository;
+    private final CatalogLevelRepository catalogRepository;
     private final CareerPlayerRepository careerPlayerRepository;
     private final TacticRules rules;
     private final TacticAnalysisProperties properties;
     private final JdbcTemplate jdbc;
-    private final Map<Long, Cached> careerCache = new ConcurrentHashMap<>();
+    private final Map<String, Cached> careerCache = new ConcurrentHashMap<>();
     private final Map<String, LevelRefs> catalogCache = new ConcurrentHashMap<>();
 
+    /** Önbellek (kariyer, lig) başına ve `career.data_version` değişince yenilenir; lig, ownedIds'in oynadığı takımdan çözülür. */
     public LevelRefs forCareer(long careerId, Collection<Long> ownedIds) {
-        Long version = jdbc.queryForObject("SELECT data_version FROM career WHERE id = ?", Long.class, careerId);
-        long current = Objects.isNull(version) ? 0 : version;
-        Cached cached = careerCache.get(careerId);
-        if (Objects.nonNull(cached) && cached.dataVersion() == current) {
-            return cached.refs();
-        }
-        LevelRefs fresh = computeCareer(careerId, ownedIds);
-        careerCache.put(careerId, new Cached(current, fresh));
-        return fresh;
-    }
-
-    private LevelRefs computeCareer(long careerId, Collection<Long> ownedIds) {
         Optional<Integer> team = careerPlayerRepository.dominantTeamKey(careerId, ownedIds).filter((k) -> k.startsWith(TEAM_KEY_PREFIX))
                 .map((k) -> Integer.parseInt(k.substring(TEAM_KEY_PREFIX.length())));
         Optional<String> league = team.flatMap((t) -> repository.leagueOfTeam(careerId, t));
         if (league.isEmpty()) {
             return LevelRefs.NONE;
         }
+        Long version = jdbc.queryForObject("SELECT data_version FROM career WHERE id = ?", Long.class, careerId);
+        long current = Objects.isNull(version) ? 0 : version;
+        String key = careerId + ":" + league.get();
+        Cached cached = careerCache.get(key);
+        if (Objects.nonNull(cached) && cached.dataVersion() == current) {
+            return cached.refs();
+        }
         TacticParams p = rules.params();
-        return pack(repository.leagueMedians(careerId, league.get(), p.heightMin(), p.heightMax()), league.get());
+        LevelRefs fresh = pack(repository.leagueMedians(careerId, league.get(), p.heightMin(), p.heightMax()), league.get());
+        careerCache.put(key, new Cached(current, fresh));
+        return fresh;
     }
 
     /** Kariyer dışı: avgOvr = atanan oyuncuların ortalama OVR'si. */
@@ -74,8 +74,12 @@ public class LevelReferenceService {
         int hi = (int) Math.round(avgOvr) + properties.getCatalogOvrBand();
         return catalogCache.computeIfAbsent(gameVersionId + ":" + lo, (k) -> {
             TacticParams p = rules.params();
-            return pack(repository.catalogMedians(gameVersionId, lo, hi, p.heightMin(), p.heightMax()), "OVR " + lo + "-" + hi + " katalog bandı");
+            return pack(fromCatalog(catalogRepository.medians(gameVersionId, lo, hi, p.heightMin(), p.heightMax())), "OVR " + lo + "-" + hi + " katalog bandı");
         });
+    }
+
+    private static Medians fromCatalog(CatalogLevelRepository.Medians m) {
+        return new Medians(new Median(m.cbPace().value(), m.cbPace().n()), new Median(m.passerSafety().value(), m.passerSafety().n()), new Median(m.aerial().value(), m.aerial().n()));
     }
 
     private LevelRefs pack(Medians m, String label) {

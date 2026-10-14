@@ -8,7 +8,6 @@ import com.fcareer.catalog.repository.BasePlayerRepository;
 import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.fitengine.model.Attr;
 import com.fcareer.ingestion.service.IngestionService;
-import com.fcareer.tacticanalysis.LevelReferenceRepository.Medians;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,7 +71,7 @@ class LevelReferenceIntegrationTest {
         paces.sort(Double::compare);
         double expected = paces.size() % 2 == 1 ? paces.get(paces.size() / 2) : (paces.get(paces.size() / 2 - 1) + paces.get(paces.size() / 2)) / 2.0;
 
-        Medians m = repository.leagueMedians(careerId, "Test League", 165, 195);
+        var m = repository.leagueMedians(careerId, "Test League", 165, 195);
         assertThat(m.cbPace().n()).isEqualTo(ids.size());
         assertThat(m.cbPace().value()).isEqualTo(expected, org.assertj.core.data.Offset.offset(1e-6));
     }
