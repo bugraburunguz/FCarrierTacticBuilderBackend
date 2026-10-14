@@ -127,5 +127,15 @@ public class RecommendProperties {
         /** Sıralama puanı = (1−w)·currentFit + w·futureFit − kova cezası − yaş riski. */
         private double hard = 6;
         private double fantasy = 20;
+        /** Oyuncu OVR'si ilk 11 ortalamasının belowSquadFloor puandan fazla altındaysa her ek puan için belowSquadPerPoint ceza (kullanıcı için yedek kalitesi). */
+        private double belowSquadFloor = 8;
+        private double belowSquadPerPoint = 1.5;
+
+        public double belowSquad(Double ovrGap) {
+            if (ovrGap == null || ovrGap >= -belowSquadFloor) {
+                return 0;
+            }
+            return (-ovrGap - belowSquadFloor) * belowSquadPerPoint;
+        }
     }
 }

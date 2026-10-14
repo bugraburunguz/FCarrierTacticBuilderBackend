@@ -225,7 +225,7 @@ public class CareerRecommender {
         double ageRisk = Objects.isNull(summary.getAge()) ? 0 : Math.max(0, summary.getAge() - profile.getAgeRiskFrom()) * profile.getAgeRiskPerYear();
         boolean oop = !player.getPositions().contains(position);
         Starter starter = starters.get(bestRole.getId());
-        return new Scored(player, summary, bestRole, best, level.map(LevelFitService.LevelFit::value).orElse(null), label, feasibility, blended - penalty - ageRisk, extra, futureFit,
+        return new Scored(player, summary, bestRole, best, level.map(LevelFitService.LevelFit::value).orElse(null), label, feasibility, blended - penalty - ageRisk - properties.getRankPenalty().belowSquad(ovrGap), extra, futureFit,
                 projection.projectedRating(), oop, Objects.isNull(starter) ? null : starter.fit(), targetStrength, clubGap, ovrGap);
     }
 
@@ -243,7 +243,7 @@ public class CareerRecommender {
                 return fromRequest;
             }
         }
-        Optional<TacticSlotLookup.SlotRole> tactic = tacticSlotLookup.find(careerId, request.getSlotId(), position);
+        Optional<TacticSlotLookup.SlotRole> tactic = Objects.nonNull(request.getUserTeamId()) ? Optional.empty() : tacticSlotLookup.find(careerId, request.getSlotId(), position);
         if (tactic.isPresent()) {
             List<FitRole> fromTactic = matchRoles(allRoles, tactic.get().roleId(), tactic.get().focus());
             if (!fromTactic.isEmpty()) {
@@ -399,7 +399,7 @@ public class CareerRecommender {
         PlayerSummaryResponse p = s.summary();
         boolean young = Objects.nonNull(p.getAge()) && p.getAge() <= properties.getYoungAgeMax();
         boolean prime = Objects.nonNull(p.getAge()) && p.getAge() <= profile.getPrimeAge();
-        return new Diversifier.Candidate(p.getId(), s.rankScore(), p.getClub(), p.getLeague(), ageBand(p.getAge()), s.role().getBaseRole(), p.isFreeAgent(), young, isReady(s), s.outOfPosition(), prime);
+        return new Diversifier.Candidate(p.getId(), s.rankScore(), p.getClub(), p.getLeague(), ageBand(p.getAge()), s.role().getBaseRole(), p.isFreeAgent() && properties.getRankPenalty().belowSquad(s.ovrGap()) == 0, young, isReady(s), s.outOfPosition(), prime);
     }
 
     private boolean isReady(Scored s) {
