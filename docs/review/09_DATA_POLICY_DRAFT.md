@@ -5,7 +5,7 @@ Not: Bu hukuki danışmanlık değildir. Ticari lansmandan önce KVKK/GDPR ve fi
 ---
 
 ## 1. Kapsam
-FCareer web uygulamasının (Kariyer ve Ultimate Team companion, ileride PITCHMIND sim oyunu) topladığı, işlediği, sakladığı ve yayımladığı tüm veriler.
+FC Assist web uygulamasının (Kariyer ve Ultimate Team companion, ileride PITCHMIND sim oyunu) topladığı, işlediği, sakladığı ve yayımladığı tüm veriler.
 Ürün EA SPORTS'un ya da herhangi bir kulüp, lig veya oyuncunun resmi ürünü değildir ve onlarla bağlantılı değildir.
 
 ## 2. Veri kaynakları (izinli liste — yeni kaynak eklemek Buğra onayı ister)
@@ -44,7 +44,7 @@ Kullanıcı hakları (KVKK md. 11 / GDPR md. 15–21): verisine erişim, düzelt
 
 ## 6. Görseller ve markalar
 - Oyuncu portreleri, kulüp ve lig rozetleri ilgili hak sahiplerine aittir. Kendi proxy'mizden önbellekli servis edilir (en fazla 30 gün), toplu arşivlenmez.
-- Kart görünümü (08 D-23): varsayılan olarak EA kart arka planları ve portreleri proxy-cache üzerinden gösterilir; kaldırma talebinde kendi çerçeve tasarımımıza (`OWN`) geçilir. İkonlar ve PlayStyle ikonları FCareer'ın kendi tasarımıdır. EA kart fontu kullanılmaz.
+- Kart görünümü (08 D-23): varsayılan olarak EA kart arka planları ve portreleri proxy-cache üzerinden gösterilir; kaldırma talebinde kendi çerçeve tasarımımıza (`OWN`) geçilir. İkonlar ve PlayStyle ikonları FC Assist'ın kendi tasarımıdır. EA kart fontu kullanılmaz.
 - Ülke bayrakları açık lisanslı bir setten alınır (lisans `docs/licenses.md`'de).
 - "EA SPORTS FC", "Ultimate Team" ve kulüp/lig adları yalnız tanımlayıcı olarak kullanılır; logolarla ya da onay izlenimi verecek şekilde kullanılmaz.
 

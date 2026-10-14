@@ -25,7 +25,7 @@ public class SmtpVerificationMailer implements VerificationMailer {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(from);
         message.setTo(to);
-        message.setSubject("FCareer — e-postanı doğrula");
+        message.setSubject("FC Assist — e-postanı doğrula");
         message.setText("Hesabını etkinleştirmek için bağlantıya tıkla:\n\n" + link + "\n\nBu e-postayı sen istemediysen yok sayabilirsin.");
         try {
             mailSender.send(message);

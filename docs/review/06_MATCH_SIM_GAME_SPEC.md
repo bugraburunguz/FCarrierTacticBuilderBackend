@@ -4,7 +4,7 @@ Kod adı: **PITCHMIND** (geçici). Bu doküman kod ajanının bir **spike → MV
 ---
 
 ## 0. VİZYON (tek paragraf)
-OSM'nin **sosyal/online döngüsü** (lig, maç günü, rakip insanlar, transfer) + FM'nin **2D maç izleme ve canlı müdahalesi**, ama FM'nin karmaşıklığı olmadan. Oyuncular küçük yuvarlaklar; değer **taktikte**: kendi taktiğinin ve rakibin karşı hamlelerinin sahadaki etkisini canlı görürsün, anlık müdahale edersin; güçlü yönünü kullanan kazanır, "hurra atak" yapan kontraya yakalanır. Mevcut FCareer motorunun (roller, davranış tag'leri, RoleFit, rules engine, NLG) doğal devamı: **tag'ler artık sahada hareket olarak oynanır**.
+OSM'nin **sosyal/online döngüsü** (lig, maç günü, rakip insanlar, transfer) + FM'nin **2D maç izleme ve canlı müdahalesi**, ama FM'nin karmaşıklığı olmadan. Oyuncular küçük yuvarlaklar; değer **taktikte**: kendi taktiğinin ve rakibin karşı hamlelerinin sahadaki etkisini canlı görürsün, anlık müdahale edersin; güçlü yönünü kullanan kazanır, "hurra atak" yapan kontraya yakalanır. Mevcut FC Assist motorunun (roller, davranış tag'leri, RoleFit, rules engine, NLG) doğal devamı: **tag'ler artık sahada hareket olarak oynanır**.
 
 Benzersiz değer önerisi:
 1. **Açıklanabilir sim**: "Gol yedin çünkü sağ bekin bindirdi, tek pivot vardı, stoper yavaş" — rules engine'in canlı versiyonu.
@@ -163,7 +163,7 @@ Korner/serbest vuruş/penaltı/taç/aut: sabit dizilim şablonları (`set-pieces
 
 ---
 
-## 4. TAKTİK MODELİ (mevcut FCareer verisinin yeniden kullanımı)
+## 4. TAKTİK MODELİ (mevcut FC Assist verisinin yeniden kullanımı)
 ```json
 TeamTactic {
   "formationId": "4-2-3-1",                         // seed/formations.json (29 formasyon)
@@ -272,7 +272,7 @@ Araç: `sim-bench` CLI — `--home tacticA.json --away tacticB.json --n 2000 --p
 | **SIM-3 Canlı tek oyunculu** (2 hf) | `match-service` WebSocket, AI'ya karşı canlı maç, komutlar (§5), analist paneli (çıkarımlar), AI menajer | Komut → sahada etki ≤ 20 sn; yeniden bağlanma çalışır |
 | **SIM-4 Online lig** (3-4 hf) | `sim_club/player/league/fixture`, kayıt/kulüp alma, zamanlanmış maç günleri, async hızlı sim + replay, iki insan canlı H2H, koşullu talimatlar | 8 takımlı lig bir sezonu insan müdahalesiz tamamlar |
 | **SIM-5 Menajerlik katmanı** | transfer (insanlar arası + AI), antrenman/gelişim (mevcut development motoru!), finans, moral, sakatlık, yükselme/düşme, sezon ödülleri | — |
-| **SIM-6 FCareer köprüsü** | CAR-01 "ya şunu alsaydım" Monte Carlo; kariyer import'uyla özel maç (L2) | — |
+| **SIM-6 FC Assist köprüsü** | CAR-01 "ya şunu alsaydım" Monte Carlo; kariyer import'uyla özel maç (L2) | — |
 Gate: SIM-1 akıl testleri geçmeden SIM-3'e geçme — "gerçekçi olmalı" şartı burada ölçülür.
 
 ---

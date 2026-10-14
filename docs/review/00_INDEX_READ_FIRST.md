@@ -22,7 +22,7 @@ Görev ID önekleri: `SEC` güvenlik · `BUG` hata · `DS` tasarım sistemi · `
 | 04 | `04_UT_FEATURES_SPEC.md` | Squad builder v2, SBC çözücü v2, Evolutions, Objectives, oyuncu sayfası, fiyat araçları | Ajan |
 | 05 | `05_FEATURE_BACKLOG.md` | Kariyer + UT + platform için eklenebilecek özellikler (öncelikli) | Buğra (seçer) → Ajan |
 | 06 | `06_MATCH_SIM_GAME_SPEC.md` | OSM × FM arası online 2D taktik-sim oyunu: motor, taktik, canlı müdahale, online mimari, MVP fazları | Ajan + Buğra |
-| 07 | `07_CLAUDE_MD_FCAREER.md` | Backend repo'daki **yanlış** (Azerlottery) CLAUDE.md yerine konacak FCareer versiyonu | Ajan (repo köküne kopyala) |
+| 07 | `07_CLAUDE_MD_FCAREER.md` | Backend repo'daki **yanlış** (Azerlottery) CLAUDE.md yerine konacak FC Assist versiyonu | Ajan (repo köküne kopyala) |
 | 08 | `08_DECISIONS_LOG.md` | **Onaylı kararlar (D-01..D-19)** — diğer dosyalardaki `DECISION` maddelerinin kesin hâli; çelişkide bu geçerli | Ajan — 01'den önce oku |
 | 10 | `10_TACTIC_CODE_DIAGNOSIS.md` | Taktik kodunda rol/focus'un oyuna geçmemesi: teşhis, test protokolü, TAC görevleri | Ajan + Buğra (test verisi) |
 | 13 | `13_CAREER_MODE_EXPERIENCE.md` | **Kariyer modu "Menajer Masası"**: ekranlar, konsol/PC senkron yolları, snapshot modeli, öneri motoru, CAR-20..33 | Ajan + Buğra |

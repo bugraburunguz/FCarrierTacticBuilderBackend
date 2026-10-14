@@ -1,4 +1,4 @@
-# FC Kariyer — Backend
+# FC Assist — Backend
 
 Java 17 / Spring Boot 3 / PostgreSQL / Redis + Python ML servisi (`ml-service/`). Mimari ve kurallar: `docs/fcareer-standard.md`, spesifikasyon: `docs/spec/`.
 

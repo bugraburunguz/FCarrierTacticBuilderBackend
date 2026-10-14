@@ -109,7 +109,7 @@ Adım göstergesi (1 Script indir → 2 LE'de çalıştır → 3 Log'u sürükle
 ## 12. ANA SAYFA + MARKA (mod başına)
 - `/` kariyer: "Kariyerine devam et" kartı (son kariyer, son import tarihi, 3 öneri) + hızlı eylemler.
 - `/ut` UT: bugünün SBC'leri (4 kart) + sonraki yenileme sayacı + kadrom özeti + izlenen oyuncular fiyat değişimi.
-- Marka: "FCareer" ortak, alt başlık moda göre "Kariyer" / "Ultimate Team" (DS-10).
+- Marka: "FC Assist" ortak, alt başlık moda göre "Kariyer" / "Ultimate Team" (DS-10).
 
 ## 13. GÖREV LİSTESİ
 | ID | Pri | Ekran | Kabul |

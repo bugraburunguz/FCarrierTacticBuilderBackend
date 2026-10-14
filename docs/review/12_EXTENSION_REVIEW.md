@@ -1,6 +1,6 @@
-# 12 · EXTENSION İNCELEMESİ — "FCareer Club Sync" v0.2
+# 12 · EXTENSION İNCELEMESİ — "FC Assist Club Sync" v0.2
 Dosyalar: `manifest.json` (MV3), `inject.js` (sayfa içi fetch/XHR gözlemcisi), `content.js` (köprü), `background.js` (tampon + indir/gönder), `popup.*`.
-Genel karar: Yaklaşım doğru ve EasySBC ile aynı model (EasySBC de kulüp içe aktarmayı Chrome eklentisiyle yapıyor; 11 §5.6). Salt-okuma, kimlik bilgisi yok, EA'ya kendi isteği yok — korunmalı. Ama **"FCareer'a gönder" butonu bugün çalışmıyor**; birkaç veri kaybı/çökme riski ve katkı modu için eksikler var.
+Genel karar: Yaklaşım doğru ve EasySBC ile aynı model (EasySBC de kulüp içe aktarmayı Chrome eklentisiyle yapıyor; 11 §5.6). Salt-okuma, kimlik bilgisi yok, EA'ya kendi isteği yok — korunmalı. Ama **"FC Assist'a gönder" butonu bugün çalışmıyor**; birkaç veri kaybı/çökme riski ve katkı modu için eksikler var.
 
 ## 1. DOĞRULANMIŞ SORUNLAR
 | ID | Pri | Sorun | Yer | Düzeltme |

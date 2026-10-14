@@ -1,4 +1,4 @@
-# CLAUDE.md — FCareer Backend (FCarrierTacticBuilderBackend)
+# CLAUDE.md — FC Assist Backend (FCarrierTacticBuilderBackend)
 
 EA SPORTS FC 27 için offline Kariyer + Ultimate Team companion uygulamasının backend'i.
 Ürün özeti ve mimari: `docs/spec/BUILD_SPEC.md`. Motor: `docs/spec/fit_engine_spec.md`.

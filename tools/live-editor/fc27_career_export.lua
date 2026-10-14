@@ -1,8 +1,8 @@
---- FCareer: fc27_career_export v2 — SALT OKUR, oyun verisini değiştirmez.
+--- FC Assist: fc27_career_export v2 — SALT OKUR, oyun verisini değiştirmez.
 --- LE v27.1.0 Lua API v2. Kariyerin İÇİNDE (kariyer ana ekranında) çalıştır.
 --- Çıktı: Live Editor klasörü > Logs > live_editor_<tarih>.log içine "FCX2" satırları olarak düşer
---- (Live Editor Lua'dan dosya yazmaya izin vermez). İşlem bitince "FCareer dışa aktarım bitti" penceresi çıkar;
---- sonra FCareer sitesinde İçe aktar sayfasına bu .log dosyasını yükle.
+--- (Live Editor Lua'dan dosya yazmaya izin vermez). İşlem bitince "FC Assist dışa aktarım bitti" penceresi çıkar;
+--- sonra FC Assist sitesinde İçe aktar sayfasına bu .log dosyasını yükle.
 --- Şema: docs/review/v2/07_LIVE_EDITOR.md §4. Kaynak: backend tools/live-editor/ (web public/ kopyası `npm run sync:le-script` ile gelir).
 require 'imports/career_mode/helpers'
 require 'imports/other/helpers'
@@ -102,4 +102,4 @@ if in_cm and type(GetPlayersStats) == "function" then local s = safe(GetPlayersS
     if #buf > 0 then emit("CHUNK", "player_season_stats", "last", "[" .. table.concat(buf, ",") .. "]") end
     emit("END", "player_season_stats", tostring(#s), "-", "-") end end
 emit("DONE", "[" .. table.concat((function() local w = {} for i, x in ipairs(warnings) do w[i] = jstr(x) end return w end)(), ",") .. "]")
-MessageBox("FCareer dışa aktarım bitti", (in_cm and "Kariyer algılandı" or "DİKKAT: kariyer değil (ana menü)") .. "\n" .. table.concat(summary, "\n"))
+MessageBox("FC Assist dışa aktarım bitti", (in_cm and "Kariyer algılandı" or "DİKKAT: kariyer değil (ana menü)") .. "\n" .. table.concat(summary, "\n"))

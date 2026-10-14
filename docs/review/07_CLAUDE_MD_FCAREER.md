@@ -10,7 +10,7 @@
 
 ## Backend `CLAUDE.md` (kopyala)
 ```markdown
-# CLAUDE.md — FCareer Backend (FCarrierTacticBuilderBackend)
+# CLAUDE.md — FC Assist Backend (FCarrierTacticBuilderBackend)
 
 EA SPORTS FC 27 için offline Kariyer + Ultimate Team companion uygulamasının backend'i.
 Ürün özeti ve mimari: `docs/spec/BUILD_SPEC.md`. Motor: `docs/spec/fit_engine_spec.md`.
@@ -56,7 +56,7 @@ Uygulanabilirlik notu: o dosya başka bir projeden (Azerlottery) geliyor. **Uygu
 
 ## Web repo `CLAUDE.md` (kopyala)
 ```markdown
-# CLAUDE.md — FCareer Web (FCarrierTacticBuilderWeb)
+# CLAUDE.md — FC Assist Web (FCarrierTacticBuilderWeb)
 
 React 19 + TypeScript + Vite + Tailwind v4 + TanStack Query. Backend: `/api/v1` (FCarrierTacticBuilderBackend).
 Tasarım sistemi kuralları: `docs/review/02_DESIGN_SYSTEM_REDESIGN.md` (varsa önce oku).

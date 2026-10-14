@@ -199,7 +199,7 @@ if in_cm and type(GetPlayersStats) == "function" then local s = safe(GetPlayersS
     if #buf > 0 then emit("CHUNK", "player_season_stats", "last", "[" .. table.concat(buf, ",") .. "]") end
     emit("END", "player_season_stats", tostring(#s), "-", "-") end end
 emit("DONE", "[" .. table.concat((function() local w = {} for i, x in ipairs(warnings) do w[i] = jstr(x) end return w end)(), ",") .. "]")
-MessageBox("FCareer dışa aktarım bitti", (in_cm and "Kariyer algılandı" or "DİKKAT: kariyer değil (ana menü)") .. "\n" .. table.concat(summary, "\n"))
+MessageBox("FC Assist dışa aktarım bitti", (in_cm and "Kariyer algılandı" or "DİKKAT: kariyer değil (ana menü)") .. "\n" .. table.concat(summary, "\n"))
 ```
 İlk gerçek çalıştırmada doğrula: `SendHTTPRequest` ve `GetPlayersStats` 27.1.0'da var mı (script `type()` ile kontrol ediyor), log satırı uzunluk sınırı (`MAX_CHUNK`), `nations` ve `career_*` tablo adları (PROBE listeler). `GetPlayersStats` x.avg float olabilir → `%d` yerine `jval` kullan (`VERIFY`).
 

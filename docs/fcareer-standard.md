@@ -1,4 +1,4 @@
-# FCareer — Backend standardı
+# FC Assist — Backend standardı
 
 Java 17, Spring Boot 3, Jakarta, PostgreSQL + Flyway, Redis, Maven. Base package `com.fcareer`, tek kanal `/api/v1`.
 Karar kaydı `docs/review/08_DECISIONS_LOG.md`; çelişkide o geçerlidir.

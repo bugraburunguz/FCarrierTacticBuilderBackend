@@ -43,7 +43,7 @@ class LeExportScriptTest {
         String lua = script();
 
         assertThat(lua).doesNotContain("GetSaveUID(").doesNotContain("SetRecordFieldValue").doesNotContain("Bana");
-        assertThat(lua).contains("FCareer dışa aktarım bitti");
+        assertThat(lua).contains("FC Assist dışa aktarım bitti");
     }
 
     @Test

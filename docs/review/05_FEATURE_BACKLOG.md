@@ -46,7 +46,7 @@ Puanlama: **Değer** (oyuncu için, 1-5) · **Efor** (S/M/L/XL) · **Moat** (rak
 | PLT-10 | Reklam yerleşimi (`showAds` flag var, gerçek sağlayıcı yok) — tasarımı bozmayan tek slot | 2 | S | — |
 
 ## D. YANLIŞ / FARKLI OLMASI GEREKENLER (mevcut özelliklerden çıkarım)
-1. **İki modlu tek uygulama** (Kariyer + UT) bilgi mimarisini bulandırıyor: logo/başlık hep "FC Kariyer", ana sayfa hep kariyer, mod `/ut/*`'ye girince UT'ye geçiyor ama geri dönmüyor. → Mod, URL'nin ilk segmenti olsun (`/career/*`, `/ut/*`), header mod-bilinçli; ortak sayfalar (oyuncu DB) mod parametresiyle.
+1. **İki modlu tek uygulama** (Kariyer + UT) bilgi mimarisini bulandırıyor: logo/başlık hep "FC Assist", ana sayfa hep kariyer, mod `/ut/*`'ye girince UT'ye geçiyor ama geri dönmüyor. → Mod, URL'nin ilk segmenti olsun (`/career/*`, `/ut/*`), header mod-bilinçli; ortak sayfalar (oyuncu DB) mod parametresiyle.
 2. **"Kart veritabanı" UT'de base-kart DB'si** — kullanıcıyı yanıltıyor. 03 gelene kadar "Base kartlar" diye adlandır.
 3. **Kredi modeli** sert sınırlar koyuyor ama iki uç bedava kopya (SEC-02). Kredi neye harcanıyor kullanıcıya şeffaf değil → her ücretli butonda "1 kredi" etiketi + kalan kredi.
 4. **Potential/değer "tahmin"** etiketi sadece `*` — daha görünür güven aralığı (ör. "78–83") göster; ML MAE'yi kullanıcıya açıkla.

@@ -129,7 +129,7 @@ interface PlayerCardProps {
 | DS-07 (P2) | Hareket sistemi: `motion` (framer-motion) ile kart sürükleme fiziği, sayı count-up, sekme kayması; `fade-up` animasyonunu kaldır | — | `prefers-reduced-motion` testi |
 | DS-08 (P1) | Metin diyeti: her sayfadaki açıklama paragraflarını `HelpPopover`'a taşı; boş durumlar eylem içersin ("Kulübünü içe aktar" butonu) | §1 #6 satırları | Sayfa başına en fazla 1 satır yardımcı metin |
 | DS-09 (P2) | Tasarım sandbox'ı: `ladle` veya Storybook; her primitive + PlayerCard + Pitch hikâyesi | — | CI'da build |
-| DS-10 (P1) | Marka: "FC Kariyer — Taktik Zekâ" adı UT modunda da görünüyor; mod bazlı başlık + logo (forma numarası/taktik tahtası motifli monogram) | `Layout.tsx`, `index.html` | — |
+| DS-10 (P1) | Marka: "FC Assist — Taktik Zekâ" adı UT modunda da görünüyor; mod bazlı başlık + logo (forma numarası/taktik tahtası motifli monogram) | `Layout.tsx`, `index.html` | — |
 
 ---
 
