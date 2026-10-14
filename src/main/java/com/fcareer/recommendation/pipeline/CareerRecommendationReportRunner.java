@@ -184,7 +184,7 @@ public class CareerRecommendationReportRunner implements ApplicationRunner {
         } else {
             sb.append("Mevcut: kadroda bu mevkiyi oynayabilen oyuncu yok\n\n");
         }
-        sb.append("| # | Oyuncu | Yaş | Kulüp (lig) | Kulüp gücü (fark) | OVR (fark) | Değer | Kova (puan) | currentFit | levelFit | Δ mevcut | futureFit | Mevki | Etiket | Kova gerekçesi |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n");
+        sb.append("| # | Oyuncu | Yaş | Kulüp (lig) | Kulüp gücü (fark) | OVR (fark) | Değer | Kova (puan) | currentFit | levelFit | Δ mevcut | futureFit | Mevki | Etiket | 3 artı | 2 eksi | Kova gerekçesi |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n");
         int n = 1;
         for (CareerRecommendationResponse.Item item : response.getItems()) {
             sb.append(String.format(Locale.ROOT, "| %d | %s | %s | %s (%s) | %s (%s) | %d (%s) | %s | %s (%d) | %.1f | %s | %s | %s | %s | %s | %s | %s | %s |%n", n++, item.getPlayer().getName(),
