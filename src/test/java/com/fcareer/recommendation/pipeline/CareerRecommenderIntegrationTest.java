@@ -238,6 +238,22 @@ class CareerRecommenderIntegrationTest {
         assertThat(r.getItems().stream().filter((i) -> i.getPlayer().getAge() <= 27).count()).isGreaterThanOrEqualTo(4);
     }
 
+    @Test
+    void fantasyTransfersNeverEnterTheMainListAndComeBackAsAtMostThreeLongShotsOnRequest() throws Exception {
+        long careerId = support.premiumCareer(support.register(), null);
+        for (String position : POSITIONS) {
+            CareerRecommendationResponse plain = recommender.compute(squad(careerId), request(position));
+            assertThat(plain.getLongShots()).isNull();
+            plain.getItems().forEach((i) -> assertThat(i.getBucket()).isNotEqualTo(FeasibilityBucket.HAYAL));
+            CareerRecommendationRequest withLongShots = request(position);
+            withLongShots.setIncludeLongShots(true);
+            CareerRecommendationResponse r = recommender.compute(squad(careerId), withLongShots);
+            r.getItems().forEach((i) -> assertThat(i.getBucket()).isNotEqualTo(FeasibilityBucket.HAYAL));
+            assertThat(r.getLongShots()).hasSizeLessThanOrEqualTo(3);
+            r.getLongShots().forEach((i) -> assertThat(i.getBucket()).isEqualTo(FeasibilityBucket.HAYAL));
+        }
+    }
+
     private static List<Long> ids(CareerRecommendationResponse response) {
         return response.getItems().stream().map((i) -> i.getPlayer().getId()).toList();
     }

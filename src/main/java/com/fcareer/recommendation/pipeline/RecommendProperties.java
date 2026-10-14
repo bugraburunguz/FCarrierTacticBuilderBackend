@@ -42,6 +42,8 @@ public class RecommendProperties {
     private Map<String, String> defaultRoles = defaultRoles();
     private Map<String, Profile> profiles = profiles();
     private Feasibility feasibility = new Feasibility();
+    /** includeLongShots açıkken döndürülen en çok HAYAL sayısı. */
+    private int longShots = 3;
     private RankPenalty rankPenalty = new RankPenalty();
 
     private static Map<String, String> defaultRoles() {
@@ -119,6 +121,12 @@ public class RecommendProperties {
         /** Toplam puan: ≤ takeableMax ALINABİLİR, ≤ hardMax ZOR, üstü HAYAL. */
         private int takeableMax = 1;
         private int hardMax = 4;
+        /** OVR farkı sert kuralları (serbest dahil): ≥ ovrFantasyAt → HAYAL, ≥ ovrHardAt → en az ZOR. verified:false */
+        private double ovrFantasyAt = 8.0;
+        private double ovrHardAt = 5.0;
+        /** Rakip kulübün ilk 11 oyuncusu: kulüp farkı ≥ rivalClubGap ve kulüp içi sıra ≤ rivalStarterRank → en az ZOR. verified:false */
+        private double rivalClubGap = -2.0;
+        private int rivalStarterRank = 11;
     }
 
     @Getter

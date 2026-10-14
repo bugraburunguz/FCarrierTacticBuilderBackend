@@ -117,7 +117,9 @@ public class CareerRecommender {
         Ranked ranked = rankInternal(squad, request, properties.getCandidatePool());
         int limit = Math.min(Objects.isNull(request.getLimit()) ? properties.getDefaultLimit() : request.getLimit(), properties.getMaxLimit());
         Map<Long, Scored> byId = ranked.scored().stream().collect(Collectors.toMap((s) -> s.summary().getId(), (s) -> s, (a, b) -> a));
-        List<Diversifier.Candidate> candidates = ranked.scored().stream().map((s) -> toCandidate(s, ranked.profile())).toList();
+        List<Diversifier.Candidate> candidates = ranked.scored().stream().filter((s) -> s.feasibility().bucket() != FeasibilityBucket.HAYAL).map((s) -> toCandidate(s, ranked.profile())).toList();
+        List<CareerRecommendationResponse.Item> longShots = request.isIncludeLongShots()
+                ? ranked.scored().stream().filter((s) -> s.feasibility().bucket() == FeasibilityBucket.HAYAL).limit(properties.getLongShots()).map((s) -> toItem(s, request.getPosition(), spoilerPolicy.ranged(squad.careerId()))).toList() : null;
         boolean hideGrowth = spoilerPolicy.ranged(squad.careerId());
         List<Diversifier.Candidate> picked = new ArrayList<>(diversifier.select(candidates, limit, properties.getMaxOutOfPosition(), ranked.profile().getMinPrime()));
         // Doğal mevkisi hedef olan oyuncular önce gelir; mevki dışı adaylar (en çok maxOutOfPosition) etiketli olarak sona eklenir.
@@ -132,7 +134,7 @@ public class CareerRecommender {
                 .userClubStrength(round1(ranked.userClubStrength())).userFirstElevenAverage(round1(ranked.userFirstEleven()))
                 .current(Objects.isNull(ranked.bestStarter()) ? null : CareerRecommendationResponse.Current.builder().playerId(ranked.bestStarter().playerId())
                         .playerName(ranked.bestStarter().name()).roleId(ranked.bestStarter().roleId()).currentFit(round1(ranked.bestStarter().fit())).build())
-                .items(items).build();
+                .items(items).longShots(longShots).build();
     }
 
     /** Testler ve raporlar için: sıralı, çeşitlendirilmemiş aday listesi (poolSize recall ölçümünde değiştirilir). */

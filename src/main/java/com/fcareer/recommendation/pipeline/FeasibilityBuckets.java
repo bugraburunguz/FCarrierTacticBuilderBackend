@@ -49,7 +49,27 @@ public class FeasibilityBuckets {
         }
         total = Math.max(0, total);
         FeasibilityBucket bucket = total <= config.getTakeableMax() ? FeasibilityBucket.ALINABILIR : total <= config.getHardMax() ? FeasibilityBucket.ZOR : FeasibilityBucket.HAYAL;
+        bucket = floor(bucket, in, factors);
         return new Result(bucket, total, factors);
+    }
+
+    /** Sert kurallar kovayı yükseltir (puan değişmez): OVR farkı ≥ ovrFantasyAt → HAYAL, ≥ ovrHardAt → en az ZOR; rakip kulübün ilk 11 oyuncusu → en az ZOR. */
+    private FeasibilityBucket floor(FeasibilityBucket bucket, Input in, List<Factor> factors) {
+        FeasibilityBucket result = bucket;
+        if (Objects.nonNull(in.ovrGap()) && in.ovrGap() >= config.getOvrFantasyAt()) {
+            factors.add(new Factor("OVR sınırı", String.format(Locale.ROOT, "%+.1f", in.ovrGap()), 0, String.format(Locale.ROOT, "ilk 11 ortalamasının %.0f+ OVR üstünde: hayal", config.getOvrFantasyAt())));
+            return FeasibilityBucket.HAYAL;
+        }
+        if (Objects.nonNull(in.ovrGap()) && in.ovrGap() >= config.getOvrHardAt() && result == FeasibilityBucket.ALINABILIR) {
+            factors.add(new Factor("OVR sınırı", String.format(Locale.ROOT, "%+.1f", in.ovrGap()), 0, String.format(Locale.ROOT, "ilk 11 ortalamasının %.0f+ OVR üstünde: en az zor", config.getOvrHardAt())));
+            result = FeasibilityBucket.ZOR;
+        }
+        if (!in.freeAgent() && Objects.nonNull(in.clubGap()) && Objects.nonNull(in.clubRank()) && in.clubGap() >= config.getRivalClubGap() && in.clubRank() <= config.getRivalStarterRank()
+                && result == FeasibilityBucket.ALINABILIR) {
+            factors.add(new Factor("rakip kulübün ilk 11 oyuncusu", String.valueOf(in.clubRank()), 0, "benzer ya da güçlü kulübün ilk 11 oyuncusu: en az zor"));
+            result = FeasibilityBucket.ZOR;
+        }
+        return result;
     }
 
     private static int add(List<Factor> factors, Factor factor) {

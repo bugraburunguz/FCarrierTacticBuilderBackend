@@ -100,6 +100,8 @@ public class CareerRecommendationReportRunner implements ApplicationRunner {
             if (!noBudget.isEmpty()) {
                 summary.append(summaryRow(new Team(team.id(), team.label() + " (bütçe bilinmiyor)", team.name(), team.league()), 0, teamStrength, noBudget, new ArrayList<>()));
             }
+            all.stream().filter((i) -> i.getBucket() == FeasibilityBucket.HAYAL).forEach((i) -> flags.add(team.label() + ": ana listede HAYAL: " + i.getPlayer().getName()));
+            noBudget.stream().filter((i) -> i.getBucket() == FeasibilityBucket.HAYAL).forEach((i) -> flags.add(team.label() + " (bütçe bilinmiyor): ana listede HAYAL: " + i.getPlayer().getName()));
             Double avgGap = all.stream().map(CareerRecommendationResponse.Item::getClubStrengthGap).filter(Objects::nonNull).mapToDouble(Double::doubleValue).average().orElse(Double.NaN);
             if (teamStrength != null && team.label().startsWith("Dev") && avgGap < GIANT_WEAK_GAP) {
                 flags.add(team.label() + ": önerilenler ortalama " + fmt(avgGap) + " kulüp gücü farkıyla zayıf kulüp yedekleri");
@@ -185,17 +187,21 @@ public class CareerRecommendationReportRunner implements ApplicationRunner {
         sb.append("| # | Oyuncu | Yaş | Kulüp (lig) | Kulüp gücü (fark) | OVR (fark) | Değer | Kova (puan) | currentFit | levelFit | Δ mevcut | futureFit | Mevki | Etiket | Kova gerekçesi |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n");
         int n = 1;
         for (CareerRecommendationResponse.Item item : response.getItems()) {
-            sb.append(String.format(Locale.ROOT, "| %d | %s | %s | %s (%s) | %s (%s) | %d (%s) | %s | %s (%d) | %.1f | %s | %s | %s | %s | %s | %s |%n", n++, item.getPlayer().getName(),
+            sb.append(String.format(Locale.ROOT, "| %d | %s | %s | %s (%s) | %s (%s) | %d (%s) | %s | %s (%d) | %.1f | %s | %s | %s | %s | %s | %s | %s | %s |%n", n++, item.getPlayer().getName(),
                     item.getPlayer().getAge() == null ? "?" : item.getPlayer().getAge(), nz(item.getPlayer().getClub()), nz(item.getPlayer().getLeague()),
                     fmt(item.getClubStrength()), item.getClubStrengthGap() == null ? "—" : String.format(Locale.ROOT, "%+.1f", item.getClubStrengthGap()),
                     item.getPlayer().getOverall(), item.getOvrGap() == null ? "—" : String.format(Locale.ROOT, "%+.1f", item.getOvrGap()),
                     item.getPlayer().getValueEur() == null ? "—" : String.format(Locale.ROOT, "%.1f M€", item.getPlayer().getValueEur() / 1_000_000.0),
                     item.getBucketLabel(), item.getBucketPoints(), item.getCurrentFit(), item.getLevelFit() == null ? "—" : String.format(Locale.ROOT, "%.1f", item.getLevelFit()),
                     item.getDeltaVsCurrent() == null ? "—" : String.format(Locale.ROOT, "%+.1f", item.getDeltaVsCurrent()),
-                    item.getFutureFit() == null ? "—" : String.format(Locale.ROOT, "%.1f", item.getFutureFit()), nz(item.getPositionLabel()), String.join(",", item.getTags()),
+                    item.getFutureFit() == null ? "—" : String.format(Locale.ROOT, "%.1f", item.getFutureFit()), nz(item.getPositionLabel()), String.join(",", item.getTags()), contributions(item.getPros()), contributions(item.getCons()),
                     item.getBucketFactors().stream().map((f) -> f.name() + " " + f.value() + " (" + f.points() + ")").collect(Collectors.joining("; "))));
         }
         return sb.append('\n').toString();
+    }
+
+    private static String contributions(List<com.fcareer.fitengine.service.FitEngineV3.Contribution> list) {
+        return list.stream().map((c) -> c.key() + " " + String.format(Locale.ROOT, "%+.1f", c.points())).collect(Collectors.joining(", "));
     }
 
     private static String fmt(Double value) {

@@ -79,4 +79,22 @@ class FeasibilityBucketsTest {
         assertThat(r.factors()).extracting(FeasibilityBuckets.Factor::name).contains("değer/bütçe", "kulüp gücü farkı", "OVR farkı", "kulüpteki rol", "sözleşme");
         r.factors().forEach((f) -> assertThat(f.note()).isNotBlank());
     }
+
+    @Test
+    void aRivalClubsFirstElevenPlayerIsNeverTakeable() {
+        FeasibilityBuckets.Result r = buckets.classify(input(0.3, -0.2, 1.0, 5, null, false));
+        assertThat(r.bucket()).as("hedef kulüp gücü ≥ kullanıcı−2 ve oyuncu kulübünün ilk 11'inde").isNotEqualTo(FeasibilityBucket.ALINABILIR);
+        assertThat(r.factors()).anyMatch((f) -> f.name().equals("rakip kulübün ilk 11 oyuncusu"));
+        assertThat(buckets.classify(input(0.3, -4.0, 1.0, 5, null, false)).bucket()).as("belirgin zayıf kulüp: kural yok").isEqualTo(FeasibilityBucket.ALINABILIR);
+        assertThat(buckets.classify(input(0.3, 0.0, 1.0, 14, null, false)).bucket()).as("yedek/rotasyon: kural yok").isEqualTo(FeasibilityBucket.ALINABILIR);
+    }
+
+    @Test
+    void anOvrGapOfEightOrMoreIsAFantasyAndFiveToEightIsAtLeastHardEvenForFreeAgents() {
+        assertThat(buckets.classify(input(null, null, 9.4, null, null, true)).bucket()).isEqualTo(FeasibilityBucket.HAYAL);
+        assertThat(buckets.classify(input(0.2, -3.0, 8.0, 20, null, false)).bucket()).isEqualTo(FeasibilityBucket.HAYAL);
+        assertThat(buckets.classify(input(null, null, 6.0, null, null, true)).bucket()).isEqualTo(FeasibilityBucket.ZOR);
+        assertThat(buckets.classify(input(0.2, -3.0, 5.5, 20, null, false)).bucket()).isEqualTo(FeasibilityBucket.ZOR);
+        assertThat(buckets.classify(input(null, null, 4.9, null, null, true)).bucket()).isNotEqualTo(FeasibilityBucket.HAYAL);
+    }
 }

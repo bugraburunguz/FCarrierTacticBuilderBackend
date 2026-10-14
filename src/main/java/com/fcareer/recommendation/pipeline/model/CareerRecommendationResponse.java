@@ -31,6 +31,8 @@ public class CareerRecommendationResponse {
     /** Kullanıcının bu mevkideki mevcut oyuncusu ve hedef roldeki currentFit'i; mevkide oyuncu yoksa boş. */
     private Current current;
     private List<Item> items;
+    /** Yalnız includeLongShots=true iken: HAYAL kovasından en çok 3 oyuncu. */
+    private List<Item> longShots;
 
     @Data
     @Builder
