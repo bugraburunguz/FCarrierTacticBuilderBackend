@@ -31,6 +31,9 @@ public class CareerRecommendationController {
                                                                     @Valid @RequestBody CareerRecommendationRequest request) {
         CreditedResponse<CareerRecommendationResponse> response = recommender.recommend(user.id(), careerId, request);
         response.getResult().getItems().forEach((item) -> spoilerPolicy.mask(careerId, item.getPlayer()));
+        if (response.getResult().getLongShots() != null) {
+            response.getResult().getLongShots().forEach((item) -> spoilerPolicy.mask(careerId, item.getPlayer()));
+        }
         return response;
     }
 }
