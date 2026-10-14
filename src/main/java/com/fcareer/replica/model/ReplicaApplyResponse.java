@@ -8,8 +8,8 @@ import java.util.List;
 /** "Kadromla uygula" çıktısı: 11 slot (oyuncu + seviye rozeti) ve oyunculu analiz. source: CAREER | UT | SAMPLE. */
 public record ReplicaApplyResponse(String replicaId, String source, double squadFit, List<Slot> slots, Analysis analysis) {
 
-    /** state: GOOD | AT_LEVEL | WEAK | WRONG_ROLE | EMPTY; suggest: boş ya da zayıf slot için "öner" bağlantısı. */
+    /** state: GOOD | AT_LEVEL | WEAK | WRONG_ROLE | EMPTY; suggest: boş ya da zayıf slot için "öner" bağlantısı; outOfPosition: oyuncu bu mevkide doğal değil (playerPosition: oyuncunun asıl mevkisi, "ST→LW" etiketi için). */
     public record Slot(String slotId, String position, String roleId, String roleName, String focus, PlayerSummaryResponse player, Double currentFit, Double levelFit, String state, String badgeText,
-                       boolean suggest) {
+                       boolean suggest, boolean outOfPosition, String playerPosition) {
     }
 }

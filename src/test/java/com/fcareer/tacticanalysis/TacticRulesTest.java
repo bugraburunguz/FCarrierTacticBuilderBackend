@@ -269,6 +269,15 @@ class TacticRulesTest {
         assertThat(finding(run(BuildUpType.BALANCED, 55), "striker_line_no_runner")).isEmpty();
     }
 
+    /** REP-b: forvet hattı = ST + LW/RW (+ LF/RF/CF). Barcelona 2010-11: Villa (Inside Forward Attack, arkaya koşu 0,45) koşucu sayılır. */
+    @Test
+    void strikerLine_includesWingersAndForwards_soAnInsideForwardRunnerCounts() {
+        Analysis barca = run(base433(), BuildUpType.BALANCED, 55, Map.of(), "ST=false_9_build_up", "LW=inside_forward_attack");
+        assertThat(finding(barca, "striker_line_no_runner")).as("Villa soldan arkaya koşuyor").isEmpty();
+        Analysis noRunner = run(base433(), BuildUpType.BALANCED, 55, Map.of(), "ST=false_9_build_up", "LW=winger_balanced", "RW=winger_balanced");
+        assertThat(finding(noRunner, "striker_line_no_runner")).as("hatta koşucu yoksa hâlâ tetikler").isPresent();
+    }
+
     // ---- aynı tarafta iki bindiren: kanat açığı ---------------------------------------------------------------------------------
 
     @Test

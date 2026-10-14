@@ -34,6 +34,8 @@ class ReplicaSeedIntegrationTest {
     private EaTacticCodec codec;
     @Autowired
     private MockMvc mockMvc;
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     private static String norm(String s) {
         return s.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
@@ -133,6 +135,20 @@ class ReplicaSeedIntegrationTest {
         assertThat(withAttention).as("E3-9 raporu: uyarı/risk üreten replika sayısı").isBetween(1, 40);
         String list = mockMvc.perform(get("/api/v1/replicas")).andReturn().getResponse().getContentAsString();
         assertThat(MAPPER.readTree(list).at("/data/0/attentionCount").isNumber()).isTrue();
+    }
+
+    /** REP-b: iç notlar ("model bilgisi — VERIFY", doğrulanması gerekenler) yalnız yönetici görünümünde; herkese yalnız verified bayrağı. */
+    @Test
+    void internalVerificationNotesAreAdminOnly() throws Exception {
+        JsonNode pub = MAPPER.readTree(mockMvc.perform(get("/api/v1/replicas/guardiola_barcelona_2011")).andReturn().getResponse().getContentAsString()).at("/data");
+        assertThat(pub.has("verify")).isFalse();
+        assertThat(pub.has("sources")).isFalse();
+        assertThat(pub.path("verified").asBoolean(true)).as("doğrulanmamış kayıt").isFalse();
+        assertThat(pub.toString()).doesNotContain("VERIFY");
+        String token = com.fcareer.AdminTestSupport.adminToken(mockMvc, jdbc, MAPPER);
+        JsonNode admin = MAPPER.readTree(mockMvc.perform(get("/api/v1/replicas/guardiola_barcelona_2011").header("Authorization", "Bearer " + token)).andReturn().getResponse().getContentAsString()).at("/data");
+        assertThat(admin.path("verify").isArray()).isTrue();
+        assertThat(admin.path("sources").isArray()).isTrue();
     }
 
     @Test

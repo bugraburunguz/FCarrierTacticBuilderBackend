@@ -93,7 +93,7 @@ public class ReplicaApplyService {
         for (FormationSlot slot : formation.slots()) {
             intents.add(tacticResolver.slotIntent(slot.slotId(), slot.position(), null, roleBySlot.get(slot.slotId()).roleId(), List.of()));
         }
-        SquadFitResponse solved = squadFitService.solve(players, intents, FitEngineV3.VERSION);
+        SquadFitResponse solved = squadFitService.solve(players, intents, FitEngineV3.VERSION, true);
 
         Map<Long, PlayerSummaryResponse> summaries = playerService.summaries(solved.getSlots().stream().map(SlotAssignment::getPlayerId).filter(Objects::nonNull).toList(), gameVersion, request.getCareerId());
         List<ReplicaApplyResponse.Slot> slots = new ArrayList<>();
@@ -103,12 +103,13 @@ public class ReplicaApplyService {
             RoleFitResponse fit = a.getRoleFit();
             boolean filled = Objects.nonNull(a.getPlayerId());
             String state = !filled || Objects.isNull(fit) || Objects.isNull(fit.getFitLabel()) ? EMPTY : fit.getFitLabel();
+            boolean outOfPosition = filled && Objects.nonNull(fit) && fit.isOutOfPosition();
             if (filled) {
                 assigned.put(a.getSlotId(), a.getPlayerId());
             }
             slots.add(new ReplicaApplyResponse.Slot(a.getSlotId(), a.getPosition(), role.roleId(), role.role(), role.focus(), filled ? summaries.get(a.getPlayerId()) : null,
                     filled && Objects.nonNull(fit) ? fit.getCurrentFit() : null, filled && Objects.nonNull(fit) ? fit.getLevelFit() : null, state, filled && Objects.nonNull(fit) ? fit.getBadgeText() : null,
-                    SUGGEST_STATES.contains(state)));
+                    SUGGEST_STATES.contains(state), outOfPosition, outOfPosition ? summaries.get(a.getPlayerId()).getPositions().get(0) : null));
         }
         Analysis analysis = analysisService.analyze(userId, analysisRequest(replica, formation, roleBySlot, career ? request.getCareerId() : null, assigned));
         log.info("Replica applied id : {} source : {} players : {} filled : {}", replicaId, source, players.size(), assigned.size());

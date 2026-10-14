@@ -44,6 +44,8 @@ class ReplicaApplyIntegrationTest {
     private BasePlayerRepository basePlayerRepository;
     @Autowired
     private IngestionService ingestionService;
+    @Autowired
+    private com.fcareer.catalog.service.PlayerService playerService;
 
     @BeforeEach
     void seed() {
@@ -57,7 +59,7 @@ class ReplicaApplyIntegrationTest {
     }
 
     private List<Long> catalogPool(int n) {
-        return jdbc.queryForList("SELECT id FROM base_player WHERE full_name ~ '^Mock Player [0-9]+$' ORDER BY substring(full_name from 13)::int LIMIT " + n, Long.class);
+        return jdbc.queryForList("SELECT id FROM base_player WHERE full_name ~ '^Mock Player [0-9]+$' AND substring(full_name from 13)::int >= 1 ORDER BY substring(full_name from 13)::int LIMIT " + n, Long.class);
     }
 
     /** Kadrosu en kalabalık kulüp: diğer testler katalogu değiştirebilir. */
@@ -143,6 +145,63 @@ class ReplicaApplyIntegrationTest {
             });
             assertThat(actual).isEqualTo(expected);
         }
+    }
+
+    /** REP-b: doğal mevkiler önce doldurulur; mevki dışı yalnız gerekiyorsa. Doğal atama sayısı, slotlar ile oyuncuların doğal mevki eşleşmesinin en büyük eşleşmesine eşit olmalı (doğal LW varken ST sol kanada atanmaz). */
+    @Test
+    void naturalPositionsAreFilledFirst_outOfPositionOnlyWhenNeeded() throws Exception {
+        String token = register();
+        for (String id : List.of("guardiola_barcelona_2011", "sacchi_milan_1989", "mourinho_inter_2010", "zidane_real_2017", "klopp_liverpool_2020", "flick_bayern_2020", "ferguson_united_2008", "vangaal_ajax_1995")) {
+            JsonNode data = call(post("/api/v1/replicas/" + id + "/apply"), Map.of("playerIds", catalogPool(60)), token, 200).path("data");
+            List<String> slotPositions = new ArrayList<>();
+            List<Set<String>> natural = new ArrayList<>();
+            int naturalAssigned = 0;
+            for (JsonNode s : data.path("slots")) {
+                slotPositions.add(s.path("position").asText());
+                Set<String> positions = new HashSet<>();
+                s.at("/player/positions").forEach((p) -> positions.add(p.asText()));
+                natural.add(positions);
+                boolean inPosition = positions.contains(s.path("position").asText());
+                assertThat(s.path("outOfPosition").asBoolean()).as(id + " " + s.path("slotId").asText()).isEqualTo(!inPosition);
+                if (!inPosition) {
+                    assertThat(s.path("playerPosition").asText()).as("etiket için oyuncunun mevkisi").isNotBlank();
+                }
+                naturalAssigned += inPosition ? 1 : 0;
+            }
+            assertThat(naturalAssigned).as(id + ": doğal atama sayısı en büyük eşleşme").isEqualTo(maxNaturalMatching(slotPositions, catalogPositions(60)));
+        }
+    }
+
+    private List<Set<String>> catalogPositions(int n) {
+        List<Set<String>> out = new ArrayList<>();
+        playerService.fitPlayers(catalogPool(n), null, null).forEach((p) -> out.add(new HashSet<>(p.getPositions())));
+        return out;
+    }
+
+    /** Slot mevkileri ile oyuncu doğal mevkileri arasında en büyük eşleşme (artan yol). */
+    private static int maxNaturalMatching(List<String> slotPositions, List<Set<String>> players) {
+        int[] owner = new int[players.size()];
+        java.util.Arrays.fill(owner, -1);
+        int size = 0;
+        for (int s = 0; s < slotPositions.size(); s++) {
+            if (augment(s, slotPositions, players, owner, new boolean[players.size()])) {
+                size++;
+            }
+        }
+        return size;
+    }
+
+    private static boolean augment(int slot, List<String> slotPositions, List<Set<String>> players, int[] owner, boolean[] seen) {
+        for (int p = 0; p < players.size(); p++) {
+            if (!seen[p] && players.get(p).contains(slotPositions.get(slot))) {
+                seen[p] = true;
+                if (owner[p] < 0 || augment(owner[p], slotPositions, players, owner, seen)) {
+                    owner[p] = slot;
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private JsonNode call(MockHttpServletRequestBuilder builder, Object body, String token, int expectedStatus) throws Exception {

@@ -36,6 +36,8 @@ import java.util.stream.IntStream;
 public class SquadFitService {
 
     private static final int NOT_ASSIGNED = -1;
+    /** Skorlar 0–100 aralığındadır; bu sabit herhangi bir uyum farkından büyüktür (doğal atama sayısı önce gelir). */
+    private static final double NATURAL_BONUS = 1000;
     private static final double MIRROR_MARGIN = 0.5;
 
     private final RoleFitService roleFitService;
@@ -51,6 +53,14 @@ public class SquadFitService {
     }
 
     public SquadFitResponse solve(List<FitPlayer> squad, List<IntentProfile> slots, String engineVersion) {
+        return solve(squad, slots, engineVersion, false);
+    }
+
+    /**
+     * naturalFirst: önce doğal mevkiler doldurulur, mevki dışı yalnız gerekiyorsa (REP-b). Doğal (mevkide) her atamaya büyük bir sabit eklenir; bu yalnız çözücü matrisindedir,
+     * raporlanan `combined` ve uyum değerleri değişmez.
+     */
+    public SquadFitResponse solve(List<FitPlayer> squad, List<IntentProfile> slots, String engineVersion, boolean naturalFirst) {
         int playerCount = squad.size();
         int slotCount = slots.size();
         RoleFitResponse[][] roleFits = new RoleFitResponse[playerCount][slotCount];
@@ -70,7 +80,16 @@ public class SquadFitService {
             }
         }
 
-        int[] playerToSlot = hungarianSolver.maximize(combined);
+        double[][] assignable = combined;
+        if (naturalFirst) {
+            assignable = new double[playerCount][slotCount];
+            for (int p = 0; p < playerCount; p++) {
+                for (int s = 0; s < slotCount; s++) {
+                    assignable[p][s] = combined[p][s] + (roleFits[p][s].isOutOfPosition() ? 0 : NATURAL_BONUS);
+                }
+            }
+        }
+        int[] playerToSlot = hungarianSolver.maximize(assignable);
         int[] slotToPlayer = invert(playerToSlot, slotCount);
         Set<Integer> starters = new HashSet<>();
         for (int s = 0; s < slotCount; s++) {

@@ -21,7 +21,8 @@ public class RuleMetrics {
 
     private static final Set<String> FULLBACKS = Set.of("RB", "LB", "RWB", "LWB");
     private static final Set<String> WINGERS = Set.of("LM", "RM", "LW", "RW");
-    private static final Set<String> STRIKERS = Set.of("ST", "CF");
+    /** Forvet hattı: santrforlar + kanat forvetleri (LW/RW, 4-3-1-2 gibi dizilişlerde LF/RF). */
+    private static final Set<String> STRIKERS = Set.of("ST", "CF", "LW", "RW", "LF", "RF");
     private static final Set<String> ANCHOR_POSITIONS = Set.of("CDM", "CM");
     private static final double ANCHOR_D_MIN = 0.8;
     /** DLP (her focus) Build-Up'ta stoperlerin arasına düşer: perde sayılır. */
