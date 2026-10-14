@@ -121,6 +121,7 @@ const seed = {
     dxIn: 'topla yatay kayma (−15…30 birim; + ortaya, − kanada açılır; ayna otomatik)', dyFwd: 'topla dikey kayma (−12…35 birim; + ileri, − geriye düşer; y azalır = ileri)', w: 'genişlik eğilimi 0-1', r: 'ileri koşu oranı 0-1', d: 'savunma görevi 0-1', p: 'pres yoğunluğu 0-1', s: 'stamina maliyeti 0-1',
     cross: 'orta eğilimi 0-1', cutIn: 'içe kat edip şut/pas 0-1', runBehind: 'savunma arkasına (son hatta) koşu 0-1; r\'den ayrı', longShot: 'uzaktan şut eğilimi 0-1',
   },
+  pressMultByBand: { _basis: 'bant pres çarpanı (dayanıklılık talebi); oyun içi gözlem YOK', verified: false, DEEP: 0.85, BALANCED: 1.0, HIGH: 1.15, AGGRESSIVE: 1.3 },
   lineShiftByBand: { _basis: 'topsuz hat kayması (birim ileri), bant: DEEP ≤30 / BALANCED ≤60 / HIGH ≤90 / AGGRESSIVE', verified: false, DEEP: -6, BALANCED: 0, HIGH: 8, AGGRESSIVE: 14 },
   roles: out,
 }

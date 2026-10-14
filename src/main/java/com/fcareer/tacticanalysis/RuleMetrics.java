@@ -1,0 +1,86 @@
+package com.fcareer.tacticanalysis;
+
+import com.fcareer.fitengine.model.Attr;
+import com.fcareer.tacticanalysis.TacticContext.Placed;
+import com.fcareer.tacticanalysis.TacticContext.Side;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
+import java.util.OptionalDouble;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.function.ToDoubleFunction;
+
+/**
+ * Kural koşullarının adlandırılmış metrikleri. Boş dönüş = bu taktikte uygulanamaz (örn. o tarafta kanat yok): koşul sağlanmaz, kural "değerlendirilmedi" sayılmaz.
+ * Oyuncu gerektiren metrikler oyuncu yoksa da boştur (kural `requires:["players"]` ile ayrıca raporlanır).
+ */
+@Component
+public class RuleMetrics {
+
+    private static final Set<String> FULLBACKS = Set.of("RB", "LB", "RWB", "LWB");
+    private static final Set<String> WINGERS = Set.of("LM", "RM", "LW", "RW");
+    private static final Set<String> STRIKERS = Set.of("ST", "CF");
+    private static final Set<String> ANCHOR_POSITIONS = Set.of("CDM", "CM");
+    private static final double ANCHOR_D_MIN = 0.8;
+    private static final String PARAM_SIDE = "side";
+    private static final String PARAM_MIN = "min";
+
+    private final MetricsCalculator calculator;
+
+    public RuleMetrics(MetricsCalculator calculator) {
+        this.calculator = calculator;
+    }
+
+    public OptionalDouble value(String metric, Map<String, Object> params, TacticContext ctx) {
+        return switch (metric) {
+            case "BAND_ORDINAL" -> OptionalDouble.of(ctx.band().ordinal());
+            case "BUILDUP_IS" -> OptionalDouble.of(ctx.buildUp().name().equals(params.get("name")) ? 1 : 0);
+            case "REST_DEFENCE_COUNT" -> OptionalDouble.of(calculator.restDefence(ctx).count());
+            case "MIDFIELD_COUNT" -> OptionalDouble.of(calculator.midfieldCount(ctx));
+            case "WIDTH_INDEX" -> OptionalDouble.of(calculator.calculate(ctx).width().index());
+            case "CROSS_VOLUME" -> OptionalDouble.of(ctx.outfield().stream().mapToDouble((p) -> p.m().cross()).sum());
+            case "AERIAL_TARGET_QUALITY" -> calculator.aerialQuality(ctx);
+            case "CB_PACE_AVG" -> average(ctx, (p) -> "CB".equals(p.position()) && p.player() != null, (p) -> (p.player().attr(Attr.ACCELERATION) + p.player().attr(Attr.SPRINT_SPEED)) / 2.0);
+            case "STAMINA_GAP" -> {
+                Double gap = calculator.calculate(ctx).stamina().gap();
+                yield gap == null ? OptionalDouble.empty() : OptionalDouble.of(gap);
+            }
+            case "BUILDUP_SAFETY" -> calculator.buildUpSafety(ctx);
+            case "RUNBEHIND_COUNT" -> OptionalDouble.of(ctx.outfield().stream().filter((p) -> p.m().runBehind() >= number(params, PARAM_MIN)).count());
+            case "FALSE9_COUNT" -> OptionalDouble.of(ctx.outfield().stream().filter((p) -> "false_9".equals(p.m().role())).count());
+            case "STRIKER_RUNBEHIND_MAX" -> max(ctx, (p) -> STRIKERS.contains(p.position()), (p) -> p.m().runBehind());
+            case "ANCHOR_COUNT" -> OptionalDouble.of(ctx.outfield().stream().filter((p) -> ANCHOR_POSITIONS.contains(p.position()) && p.m().d() >= ANCHOR_D_MIN).count());
+            case "SIDE_WINGER_CUTIN_MAX" -> max(ctx, side(params, WINGERS), (p) -> p.m().cutIn());
+            case "SIDE_WINGER_W_MAX" -> max(ctx, side(params, WINGERS), (p) -> p.m().w());
+            case "SIDE_FULLBACK_DYFWD_MAX" -> max(ctx, side(params, FULLBACKS), (p) -> p.m().dyFwd());
+            case "SIDE_DEF_DUTY_MAX" -> max(ctx, side(params, union(FULLBACKS, WINGERS)), (p) -> p.m().d());
+            default -> throw new IllegalArgumentException("bilinmeyen metrik: " + metric);
+        };
+    }
+
+    private static Set<String> union(Set<String> a, Set<String> b) {
+        java.util.HashSet<String> all = new java.util.HashSet<>(a);
+        all.addAll(b);
+        return all;
+    }
+
+    private static double number(Map<String, Object> params, String key) {
+        return ((Number) params.get(key)).doubleValue();
+    }
+
+    private static Predicate<Placed> side(Map<String, Object> params, Set<String> positions) {
+        Side side = Side.valueOf(String.valueOf(params.get(PARAM_SIDE)));
+        return (p) -> p.side() == side && positions.contains(p.position());
+    }
+
+    private static OptionalDouble max(TacticContext ctx, Predicate<Placed> filter, ToDoubleFunction<Placed> value) {
+        return ctx.outfield().stream().filter(filter).mapToDouble(value).max();
+    }
+
+    private static OptionalDouble average(TacticContext ctx, Predicate<Placed> filter, ToDoubleFunction<Placed> value) {
+        List<Placed> picked = ctx.placed().stream().filter(filter).toList();
+        return picked.stream().mapToDouble(value).average();
+    }
+}
