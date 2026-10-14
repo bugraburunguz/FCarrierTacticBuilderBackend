@@ -118,11 +118,12 @@ public class PlayerController {
     public List<PlayerRoleFit> roles(@AuthenticationPrincipal AuthUser user,
                                      @PathVariable Long id,
                                      @RequestParam(name = "gv", required = false) Short gameVersionId,
-                                     @RequestParam(name = "career", required = false) Long careerId) {
+                                     @RequestParam(name = "career", required = false) Long careerId,
+                                     @RequestParam(name = "engine", required = false) String engineVersion) {
         if (careerId != null) {
             careerService.requireOwned(user == null ? null : user.id(), careerId);
         }
-        return fitService.rolesFor(id, gameVersionId, careerId);
+        return fitService.rolesFor(id, gameVersionId, careerId, engineVersion);
     }
 
     /** Aralık modunda potansiyele göre sıralama sıra bilgisiyle tam değeri sızdırır; OVR sıralamasına düşer. */
@@ -155,6 +156,14 @@ public class PlayerController {
         }
         PlayerDetailResponse detail = playerService.detail(id, gameVersionId, careerId);
         spoilerPolicy.mask(careerId, detail.getSummary());
+        return detail;
+    }
+
+    /** UT oyuncu sayfası (/ut/players/:assetId): EA oyuncu kimliğiyle katalog detayı (kariyersiz; potansiyel maskesi kapalı katalog görünümü). */
+    @GetMapping("/asset/{assetId}")
+    public PlayerDetailResponse detailByAsset(@PathVariable Long assetId, @RequestParam(name = "gv", required = false) Short gameVersionId) {
+        PlayerDetailResponse detail = playerService.detailByAsset(assetId, gameVersionId);
+        spoilerPolicy.mask(null, detail.getSummary());
         return detail;
     }
 

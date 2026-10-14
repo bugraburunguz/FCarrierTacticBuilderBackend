@@ -65,6 +65,12 @@ public class PlayerService {
                 .build();
     }
 
+    /** EA oyuncu kimliğiyle (assetId = ea_resource_id) katalog detayı; kariyere özel üretilmiş oyuncular dışlanır. */
+    public PlayerDetailResponse detailByAsset(Long assetId, Short gameVersionId) {
+        BasePlayerEntity base = basePlayerRepository.findByEaResourceId(assetId).orElseThrow(() -> new NotFoundException(PLAYER, assetId));
+        return detail(base.getId(), gameVersionId);
+    }
+
     public PlayerDetailResponse detail(Long playerId, Short gameVersionId) {
         return detail(playerId, gameVersionId, null);
     }

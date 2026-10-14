@@ -59,6 +59,15 @@ public class FitService {
     }
 
     public List<PlayerRoleFit> rolesFor(Long playerId, Short gameVersionId, Long careerId) {
+        return rolesFor(playerId, gameVersionId, careerId, null);
+    }
+
+    /** engineVersion: açıkça istenen motor (UT oyuncu sayfası v3 ister); boşsa kariyerde kariyer motoru, değilse genel motor. */
+    public List<PlayerRoleFit> rolesFor(Long playerId, Short gameVersionId, Long careerId, String engineVersion) {
+        if (Objects.nonNull(engineVersion) && !FitEngineV3.VERSION.equals(engineVersion) && !"v1".equals(engineVersion)) {
+            throw new InvalidTacticException("engine " + engineVersion);
+        }
+        String engine = Objects.nonNull(engineVersion) ? engineVersion : Objects.nonNull(careerId) ? fitProperties.getCareerEngineVersion() : fitProperties.getEngineVersion();
         FitPlayer player = playerService.fitPlayers(List.of(playerId), gameVersionId, careerId).get(0);
         List<FitRole> roles = roleService.fitRolesById().values().stream().sorted(Comparator.comparing(FitRole::getName)).toList();
         List<PlayerRoleFit> fits = new ArrayList<>();
@@ -67,7 +76,7 @@ public class FitService {
                 if (!role.getPositions().contains(position)) {
                     continue;
                 }
-                RoleFitResponse fit = roleFit(player, role, null, position, Objects.nonNull(careerId) ? fitProperties.getCareerEngineVersion() : fitProperties.getEngineVersion());
+                RoleFitResponse fit = roleFit(player, role, null, position, engine);
                 fits.add(PlayerRoleFit.builder().position(position).roleId(role.getId()).roleName(role.getName()).focus(role.getFocus())
                         .score(Math.round(fit.getScore() * 10.0) / 10.0).projectedRating(fit.getProjectedRating())
                         .badge(fit.getBadge()).badgeText(fit.getBadgeText())

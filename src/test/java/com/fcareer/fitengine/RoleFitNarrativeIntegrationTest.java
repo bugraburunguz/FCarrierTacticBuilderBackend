@@ -106,4 +106,23 @@ class RoleFitNarrativeIntegrationTest {
             }
         }
     }
+
+    /** V3-05b: UT oyuncu sayfası rolleri `engine=v3` ile v3 (currentFit + levelFit + fitLabel + narrative) döner; parametresiz uç eski davranışı korur. */
+    @Test
+    void thePlayerRolesEndpointServesV3WhenAskedAndKeepsTheDefaultOtherwise() throws Exception {
+        long id = jdbc.queryForList("SELECT base_player_id FROM player_rating ORDER BY base_player_id LIMIT 1", Long.class).get(0);
+        JsonNode v3 = objectMapper.readTree(mockMvc.perform(get("/api/v1/players/" + id + "/roles").param("engine", "v3")).andReturn().getResponse().getContentAsString()).path("data");
+        assertThat(v3).isNotEmpty();
+        v3.forEach((r) -> {
+            assertThat(r.path("engineVersion").asText()).isEqualTo("v3");
+            assertThat(r.path("currentFit").isNumber()).isTrue();
+            assertThat(r.path("narrative").isObject()).isTrue();
+            if (r.hasNonNull("levelFit")) {
+                assertThat(r.path("fitLabel").asText()).isIn("GOOD", "AT_LEVEL", "WEAK", "WRONG_ROLE");
+            }
+        });
+        JsonNode plain = objectMapper.readTree(mockMvc.perform(get("/api/v1/players/" + id + "/roles")).andReturn().getResponse().getContentAsString()).path("data");
+        assertThat(plain.get(0).path("engineVersion").asText()).isNotEqualTo("");
+        mockMvc.perform(get("/api/v1/players/" + id + "/roles").param("engine", "v9")).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.status().isBadRequest());
+    }
 }
