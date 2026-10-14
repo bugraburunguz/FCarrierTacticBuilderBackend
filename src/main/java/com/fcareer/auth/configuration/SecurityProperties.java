@@ -34,5 +34,7 @@ public class SecurityProperties {
         private int authPerMinute = 10;
         private int apiPerMinute = 120;
         private int solverPerMinute = 10;
+        /** Ücretsiz taktik analizi (/tactics/analysis): dakikada istek sayısı. */
+        private int analysisPerMinute = 30;
     }
 }

@@ -39,6 +39,7 @@ class RateLimitFilterTest {
         SecurityProperties properties = new SecurityProperties();
         properties.getRateLimit().setAuthPerMinute(3);
         properties.getRateLimit().setSolverPerMinute(2);
+        properties.getRateLimit().setAnalysisPerMinute(5);
         filter = new RateLimitFilter(properties, counter, new MessageService(messages), new ObjectMapper(),
                 Clock.fixed(Instant.parse("2026-10-05T12:00:00Z"), ZoneOffset.UTC));
     }
@@ -76,6 +77,20 @@ class RateLimitFilterTest {
         when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenThrow(new RedisConnectionFailureException("down"));
 
         assertThat(run("/api/v1/players", "10.0.0.1").getStatus()).isEqualTo(200);
+    }
+
+    /** E3-7b: /tactics/analysis ücretsiz ama sınırlıdır: kendi kovası (analysis:) ve dakikada analysisPerMinute; Redis yoksa açık geçer (pahalı değil, kimlik değil). */
+    @Test
+    void theFreeTacticAnalysisHasItsOwnBucketAndIsLimited() throws Exception {
+        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(5L);
+        assertThat(run("/api/v1/tactics/analysis", "10.0.0.1").getStatus()).isEqualTo(200);
+        verify(counter).increment(org.mockito.ArgumentMatchers.contains("analysis:"), eq(Duration.ofMinutes(1)));
+
+        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(6L);
+        assertThat(run("/api/v1/tactics/analysis", "10.0.0.1").getStatus()).isEqualTo(429);
+
+        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenThrow(new RedisConnectionFailureException("down"));
+        assertThat(run("/api/v1/tactics/analysis", "10.0.0.1").getStatus()).isEqualTo(200);
     }
 
     @Test

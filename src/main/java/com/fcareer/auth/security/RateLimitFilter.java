@@ -33,6 +33,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private static final String AUTH_PATH = API_V1 + "/auth";
     private static final String SOLVER_PATH = API_V1 + "/ut/sbc/streamlined";
+    private static final String ANALYSIS_PATH = API_V1 + "/tactics/analysis";
     private static final Duration WINDOW = Duration.ofMinutes(1);
 
     private final SecurityProperties properties;
@@ -51,8 +52,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         boolean authPath = request.getRequestURI().startsWith(AUTH_PATH);
         boolean solverPath = request.getRequestURI().startsWith(SOLVER_PATH);
-        String bucket = authPath ? "auth:" : solverPath ? "solver:" : "api:";
-        int limit = authPath ? properties.getRateLimit().getAuthPerMinute() : solverPath ? properties.getRateLimit().getSolverPerMinute() : properties.getRateLimit().getApiPerMinute();
+        boolean analysisPath = request.getRequestURI().startsWith(ANALYSIS_PATH);
+        String bucket = authPath ? "auth:" : solverPath ? "solver:" : analysisPath ? "analysis:" : "api:";
+        int limit = authPath ? properties.getRateLimit().getAuthPerMinute() : solverPath ? properties.getRateLimit().getSolverPerMinute()
+                : analysisPath ? properties.getRateLimit().getAnalysisPerMinute() : properties.getRateLimit().getApiPerMinute();
         String key = RATE_LIMIT_PREFIX + bucket + subject(request) + ":" + minuteBucket();
         if (isOverLimit(key, limit, authPath || solverPath)) {
             log.warn("Rate limit exceeded path : {}", request.getRequestURI());
