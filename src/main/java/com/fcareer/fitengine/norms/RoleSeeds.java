@@ -53,6 +53,17 @@ public class RoleSeeds {
         }
     }
 
+    /** Yalnız ölçüm/test: seed'in rol vektörleri yerine aday dosya kullanılır (üretimde çağrılmaz; E3-4b öğrenici raporu). */
+    public static RoleSeeds withVectors(ObjectMapper objectMapper, java.nio.file.Path candidate) {
+        RoleSeeds seeds = new RoleSeeds(objectMapper);
+        try {
+            seeds.documents.put("role-vectors", objectMapper.readTree(java.nio.file.Files.readString(candidate)));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return seeds;
+    }
+
     /** (pozisyon, rol, focus) ağırlık vektörü, toplam 1; yoksa boş. */
     public Optional<Map<Attr, Double>> vector(String position, String roleId, String focus) {
         JsonNode node = documents.get("role-vectors").path("vectors").path(position + "|" + roleId + "|" + focus);

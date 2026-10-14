@@ -38,8 +38,8 @@ class RoleFamiliarityValidationTest {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final RoleSeeds SEEDS = new RoleSeeds(MAPPER);
     private static final FitEngineV3 ENGINE = new FitEngineV3(new AttrNorms(MAPPER), new PosDist(MAPPER), SEEDS);
-    private static final boolean PLAYSTYLES_ON = Boolean.getBoolean("role.validation.ps");
-    private static final com.fcareer.ingestion.base.LePlaystyleBits PS_BITS = new com.fcareer.ingestion.base.LePlaystyleBits(MAPPER);
+    static final boolean PLAYSTYLES_ON = Boolean.getBoolean("role.validation.ps");
+    static final com.fcareer.ingestion.base.LePlaystyleBits PS_BITS = new com.fcareer.ingestion.base.LePlaystyleBits(MAPPER);
     private static final Path DUMP = Path.of("ml-service", "data", "fc27-dump", "players.csv");
     private static final Map<Integer, String> POSITION_CODES = Map.ofEntries(Map.entry(0, "GK"), Map.entry(3, "RB"), Map.entry(5, "CB"), Map.entry(7, "LB"),
             Map.entry(10, "CDM"), Map.entry(12, "RM"), Map.entry(14, "CM"), Map.entry(16, "LM"), Map.entry(18, "CAM"), Map.entry(23, "RW"), Map.entry(25, "ST"), Map.entry(27, "LW"));
@@ -52,7 +52,7 @@ class RoleFamiliarityValidationTest {
     private static final int HALF = 3;
     private static final int MAX_HALF = 15;
 
-    private record Entry(FitPlayer player, int gender, Map<String, Integer> roles) {
+    record Entry(FitPlayer player, int gender, Map<String, Integer> roles) {
     }
 
     private record Group(String position, String role, List<Double> plusPlus, List<Double> plus, List<Double> none) {
@@ -71,7 +71,7 @@ class RoleFamiliarityValidationTest {
         return m;
     }
 
-    private static String normalize(String s) {
+    static String normalize(String s) {
         return s.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]", "");
     }
 
@@ -102,7 +102,7 @@ class RoleFamiliarityValidationTest {
                 if (pool.isEmpty()) {
                     continue;
                 }
-                double[] levels = levelFits(pool, position, role, parts[2]);
+                double[] levels = levelFits(ENGINE, pool, position, role, parts[2]);
                 for (int i = 0; i < pool.size(); i++) {
                     levelByRole.computeIfAbsent(pool.get(i), (e) -> new HashMap<>()).merge(position + "|" + role, levels[i], Math::max);
                 }
@@ -176,11 +176,11 @@ class RoleFamiliarityValidationTest {
         Files.writeString(Path.of("target", PLAYSTYLES_ON ? "role-validation-within-ps.md" : "role-validation-within.md"), md.toString(), StandardCharsets.UTF_8);
     }
 
-    private double[] levelFits(List<Entry> pool, String position, String role, String focus) {
+    static double[] levelFits(FitEngineV3 engine, List<Entry> pool, String position, String role, String focus) {
         double[] fits = new double[pool.size()];
         int[] ovrs = new int[pool.size()];
         for (int i = 0; i < fits.length; i++) {
-            fits[i] = ENGINE.currentFit(pool.get(i).player(), position, role, focus, Set.of()).currentFit();
+            fits[i] = engine.currentFit(pool.get(i).player(), position, role, focus, Set.of()).currentFit();
             ovrs[i] = pool.get(i).player().getOverall();
         }
         int[] sortedOvrs = Arrays.stream(ovrs).sorted().toArray();
@@ -202,7 +202,7 @@ class RoleFamiliarityValidationTest {
         return out;
     }
 
-    private List<Entry> load(JsonNode codes, Map<String, String> roleIdByName) throws Exception {
+    static List<Entry> load(JsonNode codes, Map<String, String> roleIdByName) throws Exception {
         List<String> lines = Files.readAllLines(DUMP, StandardCharsets.UTF_8);
         String[] header = lines.get(0).split(",");
         Map<String, Integer> idx = new HashMap<>();

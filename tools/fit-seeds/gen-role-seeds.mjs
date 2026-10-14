@@ -105,22 +105,37 @@ const ovrOf = (position) => {
   return norm1(pos)
 }
 
+/** (mevki, rol, focus) vektörü: taban + rol vurgusu + focus + EA OVR regresyonu. E3-4b öğrenici vurguyu `emphasis` ile değiştirerek aynı kuralı kullanır. */
+export function assemble(position, role, focus, emphasis = EMPHASIS[role.id] ?? {}) {
+  const raw = {}
+  add(raw, norm1(calib.positionBaseline[role.weightGroup] ?? {}), BASE_SHARE)
+  add(raw, emphasis, K_EMPHASIS)
+  add(raw, FOCUS_BY_GROUP[role.weightGroup]?.[focus] ?? FOCUS[focus] ?? {}, K_FOCUS)
+  // EA OVR regresyonu kütlenin en fazla %50'si: rol/focus kütlesi azsa OVR payı da küçülür (CI: ovrMass ≤ 0,5)
+  const rest = Object.values(raw).reduce((a, b) => a + b, 0)
+  const ovrShare = Math.min(OVR_SHARE, rest * 0.9)
+  add(raw, ovrOf(position), ovrShare)
+  return { w: norm1(raw), rest, ovrShare, rawSum: rest + ovrShare, constant: constantPart(position, role, focus) }
+}
+
+/** Vurgudan bağımsız (ham) kütle: taban + focus + OVR payı (OVR payı vurgu kütlesine bağlıdır; bu yüzden öğrenici assemble'ı çağırır). */
+function constantPart(position, role, focus) {
+  const raw = {}
+  add(raw, norm1(calib.positionBaseline[role.weightGroup] ?? {}), BASE_SHARE)
+  add(raw, FOCUS_BY_GROUP[role.weightGroup]?.[focus] ?? FOCUS[focus] ?? {}, K_FOCUS)
+  return raw
+}
+
+export { EMPHASIS, EMPHASIS_BASIS, FOCUS, FOCUS_BY_GROUP, K_EMPHASIS, K_FOCUS, OVR_SHARE, BASE_SHARE, roles, norms, calib, ovrOf, norm1, cosine, COLUMN_TO_KEY, NORM_KEY, ADJUST }
+const IS_MAIN = process.argv[1]?.endsWith('gen-role-seeds.mjs')
+
 const vectors = {}
 const ovrMass = {}
 const byPosition = {}
 for (const role of roles) {
   for (const position of role.positions) {
     for (const focus of role.focuses) {
-      const raw = {}
-      add(raw, norm1(calib.positionBaseline[role.weightGroup] ?? {}), BASE_SHARE)
-      add(raw, EMPHASIS[role.id] ?? {}, K_EMPHASIS)
-      add(raw, FOCUS_BY_GROUP[role.weightGroup]?.[focus] ?? FOCUS[focus] ?? {}, K_FOCUS)
-      // EA OVR regresyonu kütlenin en fazla %50'si: rol/focus kütlesi azsa OVR payı da küçülür (CI: ovrMass ≤ 0,5)
-      const rest = Object.values(raw).reduce((a, b) => a + b, 0)
-      const ovrShare = Math.min(OVR_SHARE, rest * 0.9)
-      add(raw, ovrOf(position), ovrShare)
-      const rawSum = rest + ovrShare
-      const w = norm1(raw)
+      const { w, ovrShare, rawSum } = assemble(position, role, focus)
       ovrMass[`${position}|${role.id}|${focus}`] = Math.round((ovrShare / rawSum) * 1000) / 1000
       const key = `${position}|${role.id}|${focus}`
       vectors[key] = Object.fromEntries(Object.entries(w).sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => [k, round6(v)]))
@@ -143,7 +158,7 @@ for (const list of Object.values(byPosition)) {
   }
 }
 if (process.env.WORST) console.log(worst.sort((a, b) => b[0] - a[0]).filter((w) => w[0] > (w[3] ? 0.95 : 0.9)).slice(0, 30).map((w) => `${w[0].toFixed(3)} ${w[3] ? 'FOCUS' : 'ROL'} ${w[1]} ~ ${w[2]}`).join(String.fromCharCode(10)))
-console.log(`vektör: ${Object.keys(vectors).length}; en yüksek focus kosinüsü ${maxFocus.toFixed(3)} (≤0,95), roller arası ${maxRole.toFixed(3)} (≤0,90)`)
+if (IS_MAIN) console.log(`vektör: ${Object.keys(vectors).length}; en yüksek focus kosinüsü ${maxFocus.toFixed(3)} (≤0,95), roller arası ${maxRole.toFixed(3)} (≤0,90)`)
 
 // ---- Temel attribute'lar: roles.json silahları → pozisyona göre z (düzey bağımsız), ENG-18/Stamina kuralları uygulanır
 const ATTACKING = new Set(['Finishing', 'Positioning', 'ShotPower', 'LongShots', 'Volleys', 'Penalties'])
@@ -212,9 +227,9 @@ const files = {
   'role-playstyles.fc27.json': { _source: 'roles.json priorityPlaystyles', verified: false, _basis: 'öncelikli PS ağırlığı 4 (PS+ = 2× = 8 = tavan)', playstyles },
   'role-modifiers.fc27.json': { _source: '13 §3.2 madde 4-7', verified: false, ...modifiers },
 }
-for (const [name, doc] of Object.entries(files)) {
+for (const [name, doc] of IS_MAIN ? Object.entries(files) : []) {
   const text = JSON.stringify(doc, null, 2) + '\n'
   writeFileSync(new URL(name, dir), text)
   writeFileSync(new URL(name.replace('.json', '.hash'), dir), createHash('sha256').update(text).digest('hex') + '\n')
 }
-console.log('yazıldı:', Object.keys(files).join(', '))
+if (IS_MAIN) console.log('yazıldı:', Object.keys(files).join(', '))
