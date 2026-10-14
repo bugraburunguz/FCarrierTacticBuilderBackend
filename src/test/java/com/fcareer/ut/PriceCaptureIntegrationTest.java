@@ -3,6 +3,7 @@ package com.fcareer.ut;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.IntegrationTest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,13 +39,19 @@ class PriceCaptureIntegrationTest {
 
     @BeforeEach
     void items() {
+        cleanUp();
+        short gv = jdbc.queryForObject("SELECT id FROM game_version ORDER BY id DESC LIMIT 1", Short.class);
+        baseItem = insertItem(gv, ASSET, 90);
+        totwItem = insertItem(gv, TOTW_RESOURCE, 91);
+    }
+
+    /** Paylaşılan context: ADMIN kaynaklı test kartı ve fiyat satırları sonraki sınıflara kalmasın. */
+    @AfterEach
+    void cleanUp() {
         jdbc.update("DELETE FROM price_obs");
         jdbc.update("DELETE FROM price_agg");
         jdbc.update("DELETE FROM price_capture_stat");
         jdbc.update("DELETE FROM ut_item WHERE ea_asset_id = ?", ASSET);
-        short gv = jdbc.queryForObject("SELECT id FROM game_version ORDER BY id DESC LIMIT 1", Short.class);
-        baseItem = insertItem(gv, ASSET, 90);
-        totwItem = insertItem(gv, TOTW_RESOURCE, 91);
     }
 
     private long insertItem(short gv, long resourceId, int rating) {

@@ -6,6 +6,7 @@ import com.fcareer.billing.service.CreditGuard;
 import com.fcareer.billing.service.CreditService;
 import com.fcareer.catalog.repository.BasePlayerRepository;
 import com.fcareer.catalog.repository.ClubRepository;
+import com.fcareer.catalog.repository.PlayerRatingRepository;
 import com.fcareer.ingestion.service.IngestionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 class ApiFlowIntegrationTest {
 
     private static final String PASSWORD = "S3cure-pass!";
+    /** IntegrationTest'teki fcareer.ingestion.game-version-id ile aynı. */
+    private static final short GAME_VERSION = 27;
 
     @Autowired
     private MockMvc mockMvc;
@@ -39,6 +42,8 @@ class ApiFlowIntegrationTest {
     private BasePlayerRepository basePlayerRepository;
     @Autowired
     private ClubRepository clubRepository;
+    @Autowired
+    private PlayerRatingRepository playerRatingRepository;
     @Autowired
     private CreditService creditService;
     @Autowired
@@ -380,10 +385,28 @@ class ApiFlowIntegrationTest {
     }
 
     private JsonNode createCareer(String token, long budget) throws Exception {
-        long clubId = clubRepository.findAll().get(0).getId();
+        long clubId = clubWithLargestCatalogSquad();
         JsonNode career = call(post("/api/v1/careers"), Map.of("clubId", clubId, "budgetEur", budget), token, 200);
         assertThat(career.at("/success").asBoolean()).isTrue();
         return career;
+    }
+
+    /**
+     * Paylaşılan context'te başka testler oyuncusuz kulüp ekleyebilir; sırasız findAll().get(0) boş kadro
+     * verebiliyordu. Kariyerin kuracağı kadroyla aynı sorguyla en kalabalık kulüp, eşitlikte küçük id.
+     */
+    private long clubWithLargestCatalogSquad() {
+        long bestId = -1;
+        int bestSize = 0;
+        for (Integer clubId : clubRepository.findAll().stream().map(club -> club.getId()).sorted().toList()) {
+            int size = playerRatingRepository.findCatalogSquad(clubId, GAME_VERSION).size();
+            if (size > bestSize) {
+                bestId = clubId;
+                bestSize = size;
+            }
+        }
+        assertThat(bestSize).as("katalogda oyunculu kulüp").isPositive();
+        return bestId;
     }
 
     private long firstPlayerNotInSquad(JsonNode squad) {

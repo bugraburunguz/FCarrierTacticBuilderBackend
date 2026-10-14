@@ -5,11 +5,16 @@ import com.fcareer.catalog.alias.ClubDataQuality;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** V3-04.1: diakritik düşmesi ve yer tutucu adların tekrarını yakalayan veri kalitesi kuralları. */
+/**
+ * V3-04.1: diakritik düşmesi ve yer tutucu adların tekrarını yakalayan veri kalitesi kuralları.
+ * Eklenen oyuncusuz kulüp/lig satırları test sonunda geri alınır; paylaşılan context'teki diğer testlere sızmaz.
+ */
 @IntegrationTest
+@Transactional
 class ClubDataQualityTest {
 
     @Autowired
