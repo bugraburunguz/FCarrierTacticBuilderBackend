@@ -22,7 +22,10 @@ class RoleMovementInvariantsTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final List<String> FIELDS = List.of("dxIn", "dyFwd", "w", "r", "d", "p", "s", "cross", "cutIn", "runBehind", "longShot");
+    /** İşaretli hareket: dxIn < 0 = kanada açılır, dyFwd < 0 = geriye düşer. */
+    private static final double DX_MIN = -15;
     private static final double DX_MAX = 30;
+    private static final double DY_MIN = -12;
     private static final double DY_MAX = 35;
 
     private static JsonNode read(String path) throws Exception {
@@ -53,8 +56,9 @@ class RoleMovementInvariantsTest {
             for (String field : FIELDS) {
                 assertThat(row.has(field)).as(id + "." + field).isTrue();
                 double value = row.path(field).asDouble();
+                double min = field.equals("dxIn") ? DX_MIN : field.equals("dyFwd") ? DY_MIN : 0.0;
                 double max = field.equals("dxIn") ? DX_MAX : field.equals("dyFwd") ? DY_MAX : 1.0;
-                assertThat(value).as(id + "." + field).isBetween(0.0, max);
+                assertThat(value).as(id + "." + field).isBetween(min, max);
             }
             assertThat(row.path("verified").asBoolean(true)).as(id + " verified").isFalse();
             assertThat(row.path("_basis").asText()).as(id + " _basis").isNotBlank();
@@ -157,5 +161,40 @@ class RoleMovementInvariantsTest {
         assertThat(v(m, "shadow_striker_attack", "runBehind")).isGreaterThan(v(m, "holding_defend", "runBehind"));
         assertThat(v(m, "box_crasher_balanced", "longShot")).isGreaterThan(v(m, "centre_half_defend", "longShot"));
         assertThat(v(m, "attacking_wingback_attack", "cross")).isGreaterThan(v(m, "fullback_defend", "cross"));
+    }
+
+    @Test
+    void signedMovement_falseNineDropsBackWhileAdvancedForwardPushesOn_dlpDropsBetweenCentreBacks() throws Exception {
+        Map<String, JsonNode> m = movement();
+        assertThat(v(m, "false_9_build_up", "dyFwd")).isLessThan(v(m, "false_9_attack", "dyFwd"));
+        assertThat(v(m, "false_9_attack", "dyFwd")).isNegative();
+        assertThat(v(m, "advanced_forward_attack", "dyFwd")).isPositive();
+        assertThat(v(m, "deep_lying_playmaker_build_up", "dyFwd")).isLessThan(v(m, "holding_defend", "dyFwd"));
+    }
+
+    @Test
+    void signedMovement_widePlayersOpenOutToTheTouchline() throws Exception {
+        Map<String, JsonNode> m = movement();
+        assertThat(v(m, "target_forward_wide", "dxIn")).isNegative();
+        assertThat(v(m, "wide_back_support", "dxIn")).isNegative();
+        assertThat(v(m, "wide_half_build_up", "dxIn")).isNegative();
+    }
+
+    @Test
+    void signedMovementCorrectionsArePinnedAndMarkedWithTheirBasis() throws Exception {
+        Map<String, JsonNode> m = movement();
+        assertThat(v(m, "false_9_build_up", "dyFwd")).isEqualTo(-8);
+        assertThat(v(m, "false_9_attack", "dyFwd")).isEqualTo(-5);
+        assertThat(v(m, "deep_lying_playmaker_build_up", "dyFwd")).isEqualTo(-4);
+        assertThat(v(m, "target_forward_wide", "dxIn")).isEqualTo(-12);
+        assertThat(v(m, "wide_back_defend", "dxIn")).isEqualTo(-2);
+        assertThat(v(m, "wide_back_support", "dxIn")).isEqualTo(-6);
+        assertThat(v(m, "wide_back_aggressive", "dxIn")).isEqualTo(-5);
+        assertThat(v(m, "wide_half_defend", "dxIn")).isEqualTo(-6);
+        assertThat(v(m, "wide_half_build_up", "dxIn")).isEqualTo(-8);
+        for (String id : List.of("false_9_build_up", "false_9_attack", "deep_lying_playmaker_build_up", "target_forward_wide", "wide_back_defend", "wide_back_support", "wide_back_aggressive", "wide_half_defend", "wide_half_build_up")) {
+            assertThat(m.get(id).path("_basis").asText()).as(id).contains("işaretli hareket düzeltmesi, Buğra/Claude incelemesi");
+            assertThat(m.get(id).path("verified").asBoolean(true)).as(id).isFalse();
+        }
     }
 }

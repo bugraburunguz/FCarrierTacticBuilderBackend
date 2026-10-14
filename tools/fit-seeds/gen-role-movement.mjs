@@ -8,7 +8,7 @@ const root = fileURLToPath(new URL('../../', import.meta.url))
 const roles = JSON.parse(readFileSync(`${root}src/main/resources/seed/roles.json`, 'utf8'))
 
 // [rol, focus, dxIn, dyFwd, w, r, d, p, s, cross, cutIn, runBehind, longShot]
-// dxIn: topla ortaya kayma (0-30) · dyFwd: topla ileri kayma (0-35) · w genişlik · r ileri koşu · d savunma görevi · p pres · s stamina maliyeti · cross · cutIn · runBehind · longShot (0-1)
+// dxIn: topla ortaya kayma (−15…30; <0 = kanada açılır) · dyFwd: topla ileri kayma (−12…35; <0 = geriye düşer) · w genişlik · r ileri koşu · d savunma görevi · p pres · s stamina maliyeti · cross · cutIn · runBehind · longShot (0-1)
 const ROWS = [
   ['goalkeeper', 'Defend', 0, 0, 0, 0, 1.0, 0.05, 0.10, 0, 0, 0, 0],
   ['goalkeeper', 'Balanced', 0, 1, 0, 0, 0.98, 0.08, 0.12, 0, 0, 0, 0],
@@ -35,19 +35,19 @@ const ROWS = [
   ['ball_playing_defender', 'Defend', 0, 1, 0.10, 0.05, 0.93, 0.35, 0.35, 0, 0, 0, 0],
   ['ball_playing_defender', 'Build-Up', 0, 4, 0.10, 0.08, 0.88, 0.40, 0.40, 0.02, 0, 0, 0.02],
   ['ball_playing_defender', 'Aggressive', 0, 5, 0.10, 0.10, 0.82, 0.65, 0.50, 0, 0, 0, 0.02],
-  ['wide_back', 'Defend', 0, 1, 0.45, 0.08, 0.92, 0.40, 0.45, 0.05, 0, 0, 0],
-  ['wide_back', 'Support', 0, 5, 0.55, 0.20, 0.80, 0.45, 0.55, 0.20, 0, 0.05, 0],
-  ['wide_back', 'Aggressive', 0, 7, 0.50, 0.25, 0.75, 0.65, 0.60, 0.10, 0, 0.05, 0],
+  ['wide_back', 'Defend', -2, 1, 0.45, 0.08, 0.92, 0.40, 0.45, 0.05, 0, 0, 0],
+  ['wide_back', 'Support', -6, 5, 0.55, 0.20, 0.80, 0.45, 0.55, 0.20, 0, 0.05, 0],
+  ['wide_back', 'Aggressive', -5, 7, 0.50, 0.25, 0.75, 0.65, 0.60, 0.10, 0, 0.05, 0],
 
   ['holding', 'Defend', 0, 0, 0.10, 0.05, 0.95, 0.35, 0.40, 0, 0, 0, 0.02],
   ['holding', 'Roaming', 0, 4, 0.15, 0.15, 0.85, 0.45, 0.55, 0, 0, 0.05, 0.05],
   ['holding', 'Ball-Winning', 0, 2, 0.15, 0.10, 0.90, 0.70, 0.55, 0, 0, 0, 0.02],
   ['deep_lying_playmaker', 'Defend', 0, 1, 0.10, 0.10, 0.80, 0.30, 0.40, 0, 0, 0.02, 0.08],
   ['deep_lying_playmaker', 'Roaming', 0, 5, 0.15, 0.20, 0.70, 0.40, 0.55, 0.05, 0, 0.05, 0.12],
-  ['deep_lying_playmaker', 'Build-Up', 0, 3, 0.10, 0.12, 0.75, 0.30, 0.45, 0.02, 0, 0.03, 0.10],
+  ['deep_lying_playmaker', 'Build-Up', 0, -4, 0.10, 0.12, 0.75, 0.30, 0.45, 0.02, 0, 0.03, 0.10],
   ['centre_half', 'Defend', 0, 0, 0.05, 0.02, 0.98, 0.25, 0.35, 0, 0, 0, 0],
-  ['wide_half', 'Defend', 0, 1, 0.45, 0.10, 0.85, 0.40, 0.50, 0.15, 0, 0.03, 0],
-  ['wide_half', 'Build-Up', 0, 3, 0.50, 0.15, 0.75, 0.35, 0.50, 0.20, 0, 0.05, 0.03],
+  ['wide_half', 'Defend', -6, 1, 0.45, 0.10, 0.85, 0.40, 0.50, 0.15, 0, 0.03, 0],
+  ['wide_half', 'Build-Up', -8, 3, 0.50, 0.15, 0.75, 0.35, 0.50, 0.20, 0, 0.05, 0.03],
   ['box_crasher', 'Balanced', 0, 12, 0.20, 0.70, 0.30, 0.50, 0.75, 0.05, 0, 0.40, 0.35],
 
   ['box_to_box', 'Balanced', 0, 8, 0.20, 0.60, 0.55, 0.65, 0.95, 0.05, 0, 0.25, 0.20],
@@ -86,12 +86,14 @@ const ROWS = [
   ['poacher', 'Versatile', 0, 3, 0.18, 0.70, 0.08, 0.28, 0.45, 0, 0, 0.45, 0.10],
   ['target_forward', 'Attack', 0, 2, 0.25, 0.60, 0.10, 0.40, 0.55, 0, 0, 0.20, 0.08],
   ['target_forward', 'Balanced', 0, 1, 0.25, 0.50, 0.12, 0.40, 0.55, 0, 0, 0.10, 0.06],
-  ['target_forward', 'Wide', 0, 2, 0.60, 0.45, 0.12, 0.40, 0.60, 0, 0, 0.10, 0.04],
-  ['false_9', 'Build-Up', 0, 0, 0.20, 0.35, 0.25, 0.35, 0.50, 0, 0.10, 0.15, 0.15],
-  ['false_9', 'Attack', 0, 2, 0.20, 0.45, 0.20, 0.35, 0.55, 0, 0.10, 0.30, 0.18],
+  ['target_forward', 'Wide', -12, 2, 0.60, 0.45, 0.12, 0.40, 0.60, 0, 0, 0.10, 0.04],
+  ['false_9', 'Build-Up', 0, -8, 0.20, 0.35, 0.25, 0.35, 0.50, 0, 0.10, 0.15, 0.15],
+  ['false_9', 'Attack', 0, -5, 0.20, 0.45, 0.20, 0.35, 0.55, 0, 0.10, 0.30, 0.18],
 ]
 
 const FIELDS = ['dxIn', 'dyFwd', 'w', 'r', 'd', 'p', 's', 'cross', 'cutIn', 'runBehind', 'longShot']
+// İşaretli hareket düzeltmesi (Buğra/Claude incelemesi) yapılan satırlar
+const SIGNED_FIX = new Set(['false_9_build_up', 'false_9_attack', 'deep_lying_playmaker_build_up', 'target_forward_wide', 'wide_back_defend', 'wide_back_support', 'wide_back_aggressive', 'wide_half_defend', 'wide_half_build_up'])
 const slug = (focus) => focus.toLowerCase().replace(/-/g, '_')
 const byRole = new Map(roles.map((r) => [r.id, r]))
 const out = ROWS.map((row) => {
@@ -104,7 +106,7 @@ const out = ROWS.map((row) => {
     id: `${roleId}_${slug(focus)}`, role: roleId, focus, positions: role.positions,
     ...Object.fromEntries(FIELDS.map((f, i) => [f, values[i]])),
     verified: false,
-    _basis: `EA rol açıklaması (${role.movementTags.join(', ')}) ve genel futbol okuması; oyun içi gözlem YOK`,
+    _basis: `EA rol açıklaması (${role.movementTags.join(', ')}) ve genel futbol okuması; oyun içi gözlem YOK${SIGNED_FIX.has(`${roleId}_${slug(focus)}`) ? '; işaretli hareket düzeltmesi, Buğra/Claude incelemesi' : ''}`,
   }
 })
 const expected = roles.reduce((n, r) => n + r.focuses.length, 0)
@@ -114,9 +116,9 @@ if (out.length !== expected) {
 const seed = {
   _basis: 'EA rol tanımı (roles.json movementTags) ve genel futbol okuması; oyun içi gözlem YOK, değerler taslaktır. Güvence değerlerde değil rollerin birbirine göre sırasındadır (RoleMovementInvariantsTest).',
   verified: false,
-  version: 'fc27-draft-2',
+  version: 'fc27-draft-3',
   fields: {
-    dxIn: 'topla ortaya kayma (0-30 birim; ayna otomatik)', dyFwd: 'topla ileri kayma (0-35 birim; y azalır)', w: 'genişlik eğilimi 0-1', r: 'ileri koşu oranı 0-1', d: 'savunma görevi 0-1', p: 'pres yoğunluğu 0-1', s: 'stamina maliyeti 0-1',
+    dxIn: 'topla yatay kayma (−15…30 birim; + ortaya, − kanada açılır; ayna otomatik)', dyFwd: 'topla dikey kayma (−12…35 birim; + ileri, − geriye düşer; y azalır = ileri)', w: 'genişlik eğilimi 0-1', r: 'ileri koşu oranı 0-1', d: 'savunma görevi 0-1', p: 'pres yoğunluğu 0-1', s: 'stamina maliyeti 0-1',
     cross: 'orta eğilimi 0-1', cutIn: 'içe kat edip şut/pas 0-1', runBehind: 'savunma arkasına (son hatta) koşu 0-1; r\'den ayrı', longShot: 'uzaktan şut eğilimi 0-1',
   },
   lineShiftByBand: { _basis: 'topsuz hat kayması (birim ileri), bant: DEEP ≤30 / BALANCED ≤60 / HIGH ≤90 / AGGRESSIVE', verified: false, DEEP: -6, BALANCED: 0, HIGH: 8, AGGRESSIVE: 14 },

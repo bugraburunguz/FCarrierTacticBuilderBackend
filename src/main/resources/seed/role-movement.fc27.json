@@ -1,10 +1,10 @@
 {
   "_basis": "EA rol tanımı (roles.json movementTags) ve genel futbol okuması; oyun içi gözlem YOK, değerler taslaktır. Güvence değerlerde değil rollerin birbirine göre sırasındadır (RoleMovementInvariantsTest).",
   "verified": false,
-  "version": "fc27-draft-2",
+  "version": "fc27-draft-3",
   "fields": {
-    "dxIn": "topla ortaya kayma (0-30 birim; ayna otomatik)",
-    "dyFwd": "topla ileri kayma (0-35 birim; y azalır)",
+    "dxIn": "topla yatay kayma (−15…30 birim; + ortaya, − kanada açılır; ayna otomatik)",
+    "dyFwd": "topla dikey kayma (−12…35 birim; + ileri, − geriye düşer; y azalır = ileri)",
     "w": "genişlik eğilimi 0-1",
     "r": "ileri koşu oranı 0-1",
     "d": "savunma görevi 0-1",
@@ -525,7 +525,7 @@
       "positions": [
         "CB"
       ],
-      "dxIn": 0,
+      "dxIn": -2,
       "dyFwd": 1,
       "w": 0.45,
       "r": 0.08,
@@ -537,7 +537,7 @@
       "runBehind": 0,
       "longShot": 0,
       "verified": false,
-      "_basis": "EA rol açıklaması (cover_wide) ve genel futbol okuması; oyun içi gözlem YOK"
+      "_basis": "EA rol açıklaması (cover_wide) ve genel futbol okuması; oyun içi gözlem YOK; işaretli hareket düzeltmesi, Buğra/Claude incelemesi"
     },
     {
       "id": "wide_back_support",
@@ -546,7 +546,7 @@
       "positions": [
         "CB"
       ],
-      "dxIn": 0,
+      "dxIn": -6,
       "dyFwd": 5,
       "w": 0.55,
       "r": 0.2,
@@ -558,7 +558,7 @@
       "runBehind": 0.05,
       "longShot": 0,
       "verified": false,
-      "_basis": "EA rol açıklaması (cover_wide) ve genel futbol okuması; oyun içi gözlem YOK"
+      "_basis": "EA rol açıklaması (cover_wide) ve genel futbol okuması; oyun içi gözlem YOK; işaretli hareket düzeltmesi, Buğra/Claude incelemesi"
     },
     {
       "id": "wide_back_aggressive",
@@ -567,7 +567,7 @@
       "positions": [
         "CB"
       ],
-      "dxIn": 0,
+      "dxIn": -5,
       "dyFwd": 7,
       "w": 0.5,
       "r": 0.25,
@@ -579,7 +579,7 @@
       "runBehind": 0.05,
       "longShot": 0,
       "verified": false,
-      "_basis": "EA rol açıklaması (cover_wide) ve genel futbol okuması; oyun içi gözlem YOK"
+      "_basis": "EA rol açıklaması (cover_wide) ve genel futbol okuması; oyun içi gözlem YOK; işaretli hareket düzeltmesi, Buğra/Claude incelemesi"
     },
     {
       "id": "holding_defend",
@@ -700,7 +700,7 @@
         "CM"
       ],
       "dxIn": 0,
-      "dyFwd": 3,
+      "dyFwd": -4,
       "w": 0.1,
       "r": 0.12,
       "d": 0.75,
@@ -711,7 +711,7 @@
       "runBehind": 0.03,
       "longShot": 0.1,
       "verified": false,
-      "_basis": "EA rol açıklaması (dictate_tempo) ve genel futbol okuması; oyun içi gözlem YOK"
+      "_basis": "EA rol açıklaması (dictate_tempo) ve genel futbol okuması; oyun içi gözlem YOK; işaretli hareket düzeltmesi, Buğra/Claude incelemesi"
     },
     {
       "id": "centre_half_defend",
@@ -741,7 +741,7 @@
       "positions": [
         "CDM"
       ],
-      "dxIn": 0,
+      "dxIn": -6,
       "dyFwd": 1,
       "w": 0.45,
       "r": 0.1,
@@ -753,7 +753,7 @@
       "runBehind": 0.03,
       "longShot": 0,
       "verified": false,
-      "_basis": "EA rol açıklaması (shift_wide) ve genel futbol okuması; oyun içi gözlem YOK"
+      "_basis": "EA rol açıklaması (shift_wide) ve genel futbol okuması; oyun içi gözlem YOK; işaretli hareket düzeltmesi, Buğra/Claude incelemesi"
     },
     {
       "id": "wide_half_build_up",
@@ -762,7 +762,7 @@
       "positions": [
         "CDM"
       ],
-      "dxIn": 0,
+      "dxIn": -8,
       "dyFwd": 3,
       "w": 0.5,
       "r": 0.15,
@@ -774,7 +774,7 @@
       "runBehind": 0.05,
       "longShot": 0.03,
       "verified": false,
-      "_basis": "EA rol açıklaması (shift_wide) ve genel futbol okuması; oyun içi gözlem YOK"
+      "_basis": "EA rol açıklaması (shift_wide) ve genel futbol okuması; oyun içi gözlem YOK; işaretli hareket düzeltmesi, Buğra/Claude incelemesi"
     },
     {
       "id": "box_crasher_balanced",
@@ -1532,7 +1532,7 @@
       "positions": [
         "ST"
       ],
-      "dxIn": 0,
+      "dxIn": -12,
       "dyFwd": 2,
       "w": 0.6,
       "r": 0.45,
@@ -1544,7 +1544,7 @@
       "runBehind": 0.1,
       "longShot": 0.04,
       "verified": false,
-      "_basis": "EA rol açıklaması (hold_up, aerial_target) ve genel futbol okuması; oyun içi gözlem YOK"
+      "_basis": "EA rol açıklaması (hold_up, aerial_target) ve genel futbol okuması; oyun içi gözlem YOK; işaretli hareket düzeltmesi, Buğra/Claude incelemesi"
     },
     {
       "id": "false_9_build_up",
@@ -1554,7 +1554,7 @@
         "ST"
       ],
       "dxIn": 0,
-      "dyFwd": 0,
+      "dyFwd": -8,
       "w": 0.2,
       "r": 0.35,
       "d": 0.25,
@@ -1565,7 +1565,7 @@
       "runBehind": 0.15,
       "longShot": 0.15,
       "verified": false,
-      "_basis": "EA rol açıklaması (drop_deep_link) ve genel futbol okuması; oyun içi gözlem YOK"
+      "_basis": "EA rol açıklaması (drop_deep_link) ve genel futbol okuması; oyun içi gözlem YOK; işaretli hareket düzeltmesi, Buğra/Claude incelemesi"
     },
     {
       "id": "false_9_attack",
@@ -1575,7 +1575,7 @@
         "ST"
       ],
       "dxIn": 0,
-      "dyFwd": 2,
+      "dyFwd": -5,
       "w": 0.2,
       "r": 0.45,
       "d": 0.2,
@@ -1586,7 +1586,7 @@
       "runBehind": 0.3,
       "longShot": 0.18,
       "verified": false,
-      "_basis": "EA rol açıklaması (drop_deep_link) ve genel futbol okuması; oyun içi gözlem YOK"
+      "_basis": "EA rol açıklaması (drop_deep_link) ve genel futbol okuması; oyun içi gözlem YOK; işaretli hareket düzeltmesi, Buğra/Claude incelemesi"
     }
   ]
 }
