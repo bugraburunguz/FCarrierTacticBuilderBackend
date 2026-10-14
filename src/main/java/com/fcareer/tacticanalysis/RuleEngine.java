@@ -39,13 +39,20 @@ public class RuleEngine {
     public Result evaluate(TacticContext ctx) {
         List<Finding> findings = new ArrayList<>();
         List<NotEvaluated> skipped = new ArrayList<>();
+        java.util.Set<String> produced = new java.util.HashSet<>();
         for (RuleDef rule : rules.rules()) {
+            if (rule.suppressedBy().stream().anyMatch(produced::contains)) {
+                continue;
+            }
             if (rule.requires().contains(REQUIRES_PLAYERS) && !ctx.hasPlayers()) {
                 skipped.add(new NotEvaluated(rule.id(), "oyuncu atanmamış: kural oyuncu attribute'ları gerektirir"));
                 continue;
             }
             for (Map<String, String> vars : rule.foreach().isEmpty() ? SINGLE : rule.foreach()) {
-                evaluate(rule, vars, ctx).ifPresent(findings::add);
+                evaluate(rule, vars, ctx).ifPresent((f) -> {
+                    findings.add(f);
+                    produced.add(rule.id());
+                });
             }
         }
         return new Result(findings, skipped);
@@ -60,6 +67,20 @@ public class RuleEngine {
                 return java.util.Optional.empty();
             }
             evidence.add(new Evidence(c.metric(), params, round(value.getAsDouble()), c.op(), c.value()));
+        }
+        if (!rule.whenAny().isEmpty()) {
+            boolean any = false;
+            for (Condition c : rule.whenAny()) {
+                Map<String, Object> params = substitute(c.params(), vars);
+                OptionalDouble value = metrics.value(c.metric(), params, ctx);
+                if (value.isPresent() && holds(c.op(), value.getAsDouble(), c.value())) {
+                    evidence.add(new Evidence(c.metric(), params, round(value.getAsDouble()), c.op(), c.value()));
+                    any = true;
+                }
+            }
+            if (!any) {
+                return java.util.Optional.empty();
+            }
         }
         return java.util.Optional.of(new Finding(rule.id(), rule.title(), rule.severity(), vars, evidence, rule.recommendation(), text(rule.text(), evidence, vars)));
     }

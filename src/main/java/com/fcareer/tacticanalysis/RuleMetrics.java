@@ -24,6 +24,7 @@ public class RuleMetrics {
     private static final Set<String> STRIKERS = Set.of("ST", "CF");
     private static final Set<String> ANCHOR_POSITIONS = Set.of("CDM", "CM");
     private static final double ANCHOR_D_MIN = 0.8;
+    private static final long BACK_LINE_COVER = 3;
     private static final String PARAM_SIDE = "side";
     private static final String PARAM_MIN = "min";
 
@@ -38,7 +39,8 @@ public class RuleMetrics {
             case "BAND_ORDINAL" -> OptionalDouble.of(ctx.band().ordinal());
             case "BUILDUP_IS" -> OptionalDouble.of(ctx.buildUp().name().equals(params.get("name")) ? 1 : 0);
             case "REST_DEFENCE_COUNT" -> OptionalDouble.of(calculator.restDefence(ctx).count());
-            case "MIDFIELD_COUNT" -> OptionalDouble.of(calculator.midfieldCount(ctx));
+            case "CENTRAL_MIDFIELD_COUNT" -> OptionalDouble.of(calculator.centralMidfieldCount(ctx));
+            case "FULLBACKS_DYFWD_MIN" -> fullbacksMin(ctx);
             case "WIDTH_INDEX" -> OptionalDouble.of(calculator.calculate(ctx).width().index());
             case "CROSS_VOLUME" -> OptionalDouble.of(ctx.outfield().stream().mapToDouble((p) -> p.m().cross()).sum());
             case "AERIAL_TARGET_QUALITY" -> calculator.aerialQuality(ctx);
@@ -58,6 +60,16 @@ public class RuleMetrics {
             case "SIDE_DEF_DUTY_MAX" -> max(ctx, side(params, union(FULLBACKS, WINGERS)), (p) -> p.m().d());
             default -> throw new IllegalArgumentException("bilinmeyen metrik: " + metric);
         };
+    }
+
+    /** 3 ve üstü stoperli hatta bekler (wingback) zaten ileri çıkar; kural yalnız 2 stoperli dörtlü savunmada anlamlıdır. İki taraftaki beklerin (her tarafta en ileri çıkanın) ileri kayma değerlerinin küçüğü; iki tarafta da bek yoksa boş. */
+    private static OptionalDouble fullbacksMin(TacticContext ctx) {
+        if (ctx.outfield().stream().filter((p) -> "CB".equals(p.position())).count() >= BACK_LINE_COVER) {
+            return OptionalDouble.empty();
+        }
+        OptionalDouble left = max(ctx, (p) -> p.side() == Side.LEFT && FULLBACKS.contains(p.position()), (p) -> p.m().dyFwd());
+        OptionalDouble right = max(ctx, (p) -> p.side() == Side.RIGHT && FULLBACKS.contains(p.position()), (p) -> p.m().dyFwd());
+        return left.isPresent() && right.isPresent() ? OptionalDouble.of(Math.min(left.getAsDouble(), right.getAsDouble())) : OptionalDouble.empty();
     }
 
     private static Set<String> union(Set<String> a, Set<String> b) {

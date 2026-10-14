@@ -7,33 +7,62 @@
     "restDefenceDMin": 0.5,
     "restDefenceDyMax": 10,
     "offFootFactor": 0.9,
-    "buildUpRequired": { "SHORT": 72, "BALANCED": 68, "COUNTER": 62 },
+    "buildUpRequired": {
+      "SHORT": 72,
+      "BALANCED": 68,
+      "COUNTER": 62
+    },
     "staminaSupplyFrom": 40,
     "staminaSupplySpan": 50,
     "heightMin": 165,
     "heightMax": 195,
     "midfieldXMin": 30,
     "midfieldXMax": 70,
-    "midfieldYMin": 35,
-    "midfieldYMax": 65,
     "wingLeftMax": 25,
     "wingRightMin": 75,
     "crossTargetRMin": 0.5,
-    "crossCrosserMin": 0.3
+    "crossCrosserMin": 0.3,
+    "midfieldCutInDxMin": 8
   },
   "rules": [
     {
       "id": "corridor_no_width",
       "title": "Koridorda genişlik yok",
       "severity": "WARN",
-      "foreach": [ { "side": "LEFT", "sideTr": "sol" }, { "side": "RIGHT", "sideTr": "sağ" } ],
+      "foreach": [
+        {
+          "side": "LEFT",
+          "sideTr": "sol"
+        },
+        {
+          "side": "RIGHT",
+          "sideTr": "sağ"
+        }
+      ],
       "requires": [],
       "when": [
-        { "metric": "SIDE_WINGER_CUTIN_MAX", "params": { "side": "${side}" }, "op": "GTE", "value": 0.6 },
-        { "metric": "SIDE_FULLBACK_DYFWD_MAX", "params": { "side": "${side}" }, "op": "LTE", "value": 5 }
+        {
+          "metric": "SIDE_WINGER_CUTIN_MAX",
+          "params": {
+            "side": "${side}"
+          },
+          "op": "GTE",
+          "value": 0.6
+        },
+        {
+          "metric": "SIDE_FULLBACK_DYFWD_MAX",
+          "params": {
+            "side": "${side}"
+          },
+          "op": "LTE",
+          "value": 5
+        }
       ],
       "text": "{sideTr} koridorda genişlik yok: kanat oyuncusu içe kesiyor (içe kat {e0} ≥ {t0}) ve bek bindirmiyor (ileri kayma {e1} ≤ {t1}).",
-      "recommendation": { "code": "FULLBACK_TO_WINGBACK_OR_WINGER_TO_WINGER", "text": "Beki Wingback/Attacking Wingback yap ya da kanadı Winger yap." }
+      "recommendation": {
+        "code": "FULLBACK_TO_WINGBACK_OR_WINGER_TO_WINGER",
+        "text": "Beki Wingback/Attacking Wingback yap ya da kanadı Winger yap."
+      }
     },
     {
       "id": "rest_defence_low",
@@ -42,11 +71,24 @@
       "foreach": [],
       "requires": [],
       "when": [
-        { "metric": "REST_DEFENCE_COUNT", "params": {}, "op": "LT", "value": 3 },
-        { "metric": "BAND_ORDINAL", "params": {}, "op": "LTE", "value": 1 }
+        {
+          "metric": "REST_DEFENCE_COUNT",
+          "params": {},
+          "op": "LT",
+          "value": 3
+        },
+        {
+          "metric": "BAND_ORDINAL",
+          "params": {},
+          "op": "LTE",
+          "value": 1
+        }
       ],
       "text": "Geri savunma zayıf: topun gerisinde kalan oyuncu {e0} (eşik {t0}); hat Deep/Balanced bandında (bant sırası {e1}).",
-      "recommendation": { "code": "KEEP_MORE_PLAYERS_BEHIND_BALL", "text": "Bir beki ya da bir orta sahayı savunma görevli role çevir; en az 3 oyuncu topun gerisinde kalsın." }
+      "recommendation": {
+        "code": "KEEP_MORE_PLAYERS_BEHIND_BALL",
+        "text": "Bir beki ya da bir orta sahayı savunma görevli role çevir; en az 3 oyuncu topun gerisinde kalsın."
+      }
     },
     {
       "id": "rest_defence_low_high_line",
@@ -55,62 +97,132 @@
       "foreach": [],
       "requires": [],
       "when": [
-        { "metric": "REST_DEFENCE_COUNT", "params": {}, "op": "LT", "value": 3 },
-        { "metric": "BAND_ORDINAL", "params": {}, "op": "GTE", "value": 2 }
+        {
+          "metric": "REST_DEFENCE_COUNT",
+          "params": {},
+          "op": "LT",
+          "value": 3
+        },
+        {
+          "metric": "BAND_ORDINAL",
+          "params": {},
+          "op": "GTE",
+          "value": 2
+        }
       ],
       "text": "Yüksek hatta geri savunma zayıf: topun gerisinde kalan oyuncu {e0} (eşik {t0}); hat High/Aggressive bandında (bant sırası {e1} ≥ {t1}). Kontra riski artar.",
-      "recommendation": { "code": "LOWER_LINE_OR_ADD_COVER", "text": "Hattı düşür ya da en az 3 oyuncuyu topun gerisinde tutan roller seç." }
+      "recommendation": {
+        "code": "LOWER_LINE_OR_ADD_COVER",
+        "text": "Hattı düşür ya da en az 3 oyuncuyu topun gerisinde tutan roller seç."
+      }
     },
     {
       "id": "counter_risk",
       "title": "Kontra riski",
       "severity": "RISK",
       "foreach": [],
-      "requires": [ "players" ],
+      "requires": [
+        "players"
+      ],
       "when": [
-        { "metric": "BAND_ORDINAL", "params": {}, "op": "GTE", "value": 2 },
-        { "metric": "CB_PACE_AVG", "params": {}, "op": "LT", "value": 66 }
+        {
+          "metric": "BAND_ORDINAL",
+          "params": {},
+          "op": "GTE",
+          "value": 2
+        },
+        {
+          "metric": "CB_PACE_AVG",
+          "params": {},
+          "op": "LT",
+          "value": 66
+        }
       ],
       "text": "Kontra riski: hat yüksek (bant sırası {e0} ≥ {t0}) ve stoperlerin ortalama hızı {e1} < {t1}.",
-      "recommendation": { "code": "LOWER_LINE_OR_FASTER_CBS", "text": "Hattı düşür ya da daha hızlı stoper(ler) kullan." }
+      "recommendation": {
+        "code": "LOWER_LINE_OR_FASTER_CBS",
+        "text": "Hattı düşür ya da daha hızlı stoper(ler) kullan."
+      }
     },
     {
       "id": "no_box_target",
       "title": "Ceza sahasında hedef yok",
       "severity": "WARN",
       "foreach": [],
-      "requires": [ "players" ],
+      "requires": [
+        "players"
+      ],
       "when": [
-        { "metric": "CROSS_VOLUME", "params": {}, "op": "GTE", "value": 1.8 },
-        { "metric": "AERIAL_TARGET_QUALITY", "params": {}, "op": "LT", "value": 68 }
+        {
+          "metric": "CROSS_VOLUME",
+          "params": {},
+          "op": "GTE",
+          "value": 1.8
+        },
+        {
+          "metric": "AERIAL_TARGET_QUALITY",
+          "params": {},
+          "op": "LT",
+          "value": 68
+        }
       ],
       "text": "Ceza sahasında hedef yok: orta kanalı yüksek (orta hacmi {e0} ≥ {t0}) ama hava hedeflerinin (kafa, sıçrama, boy) kalitesi {e1} < {t1}.",
-      "recommendation": { "code": "TARGET_FORWARD_OR_FEWER_CROSSES", "text": "Boylu/havada güçlü bir forvet (Target Forward) ekle ya da kanatları içe keset." }
+      "recommendation": {
+        "code": "TARGET_FORWARD_OR_FEWER_CROSSES",
+        "text": "Boylu/havada güçlü bir forvet (Target Forward) ekle ya da kanatları içe keset."
+      }
     },
     {
       "id": "stamina_gap",
       "title": "Dayanıklılık açığı",
       "severity": "WARN",
       "foreach": [],
-      "requires": [ "players" ],
+      "requires": [
+        "players"
+      ],
       "when": [
-        { "metric": "STAMINA_GAP", "params": {}, "op": "GT", "value": 0.08 }
+        {
+          "metric": "STAMINA_GAP",
+          "params": {},
+          "op": "GT",
+          "value": 0.08
+        }
       ],
       "text": "Dayanıklılık açığı: rollerin ve hattın istediği efor, oyuncuların Stamina'sını {e0} (eşik {t0}) aşıyor.",
-      "recommendation": { "code": "LOWER_PRESS_OR_ROTATE", "text": "Hattı/baskıyı düşür, en yorucu rolleri (Box-to-Box, Attacking Wingback) hafiflet ya da rotasyon yap." }
+      "recommendation": {
+        "code": "LOWER_PRESS_OR_ROTATE",
+        "text": "Hattı/baskıyı düşür, en yorucu rolleri (Box-to-Box, Attacking Wingback) hafiflet ya da rotasyon yap."
+      }
     },
     {
       "id": "buildup_mismatch",
       "title": "Build-up uyumsuz",
       "severity": "WARN",
       "foreach": [],
-      "requires": [ "players" ],
+      "requires": [
+        "players"
+      ],
       "when": [
-        { "metric": "BUILDUP_IS", "params": { "name": "SHORT" }, "op": "EQ", "value": 1 },
-        { "metric": "BUILDUP_SAFETY", "params": {}, "op": "LT", "value": 72 }
+        {
+          "metric": "BUILDUP_IS",
+          "params": {
+            "name": "SHORT"
+          },
+          "op": "EQ",
+          "value": 1
+        },
+        {
+          "metric": "BUILDUP_SAFETY",
+          "params": {},
+          "op": "LT",
+          "value": 72
+        }
       ],
       "text": "Build-up uyumsuz: Short Passing seçili ama kaleci/stoper/CDM pas güvenliği {e1} < {t1}.",
-      "recommendation": { "code": "SWITCH_BUILDUP_OR_BETTER_PASSERS", "text": "Build-up'ı Balanced yap ya da pas güvenliği yüksek stoper/CDM kullan." }
+      "recommendation": {
+        "code": "SWITCH_BUILDUP_OR_BETTER_PASSERS",
+        "text": "Build-up'ı Balanced yap ya da pas güvenliği yüksek stoper/CDM kullan."
+      }
     },
     {
       "id": "midfield_outnumbered",
@@ -119,10 +231,38 @@
       "foreach": [],
       "requires": [],
       "when": [
-        { "metric": "MIDFIELD_COUNT", "params": {}, "op": "LT", "value": 3 }
+        {
+          "metric": "CENTRAL_MIDFIELD_COUNT",
+          "params": {},
+          "op": "LT",
+          "value": 2
+        }
       ],
-      "text": "Orta sahada sayısal azlık: topla merkezde (x 30-70, y 35-65) oyuncu {e0} < {t0}.",
-      "recommendation": { "code": "ADD_CENTRAL_MIDFIELDER", "text": "Bir orta sahayı merkezde tutan role çevir (Box-to-Box, Playmaker) ya da 3'lü orta saha formasyonuna geç." }
+      "text": "Orta sahada sayısal azlık: merkezi orta saha oyuncusu {e0} < {t0} (CDM/CM/CAM ve içe kesen kanatlar, x 30-70).",
+      "recommendation": {
+        "code": "ADD_CENTRAL_MIDFIELDER",
+        "text": "Bir orta sahayı merkezde tutan role çevir ya da 3'lü orta saha formasyonuna geç."
+      }
+    },
+    {
+      "id": "midfield_thin",
+      "title": "Orta saha ince",
+      "severity": "INFO",
+      "foreach": [],
+      "requires": [],
+      "when": [
+        {
+          "metric": "CENTRAL_MIDFIELD_COUNT",
+          "params": {},
+          "op": "EQ",
+          "value": 2
+        }
+      ],
+      "text": "Orta saha ince: merkezi orta saha oyuncusu {e0} (3 ve üstü rahat sayılır).",
+      "recommendation": {
+        "code": "CONSIDER_THIRD_MIDFIELDER",
+        "text": "Rakip orta sahayı sıkıştırıyorsa kanatlardan birini içe kesen role çevir."
+      }
     },
     {
       "id": "no_runner_for_counter",
@@ -131,11 +271,28 @@
       "foreach": [],
       "requires": [],
       "when": [
-        { "metric": "BUILDUP_IS", "params": { "name": "COUNTER" }, "op": "EQ", "value": 1 },
-        { "metric": "RUNBEHIND_COUNT", "params": { "min": 0.6 }, "op": "EQ", "value": 0 }
+        {
+          "metric": "BUILDUP_IS",
+          "params": {
+            "name": "COUNTER"
+          },
+          "op": "EQ",
+          "value": 1
+        },
+        {
+          "metric": "RUNBEHIND_COUNT",
+          "params": {
+            "min": 0.6
+          },
+          "op": "EQ",
+          "value": 0
+        }
       ],
       "text": "Arkaya koşan yok: Counter seçili ama arkaya koşu eğilimi ≥ 0,6 olan oyuncu sayısı {e1}.",
-      "recommendation": { "code": "ADD_RUNNER_BEHIND", "text": "Forveti Advanced Forward yap ya da bir kanadı arkaya koşan role çevir." }
+      "recommendation": {
+        "code": "ADD_RUNNER_BEHIND",
+        "text": "Forveti Advanced Forward yap ya da bir kanadı arkaya koşan role çevir."
+      }
     },
     {
       "id": "double_false_nine",
@@ -144,10 +301,18 @@
       "foreach": [],
       "requires": [],
       "when": [
-        { "metric": "FALSE9_COUNT", "params": {}, "op": "GTE", "value": 2 }
+        {
+          "metric": "FALSE9_COUNT",
+          "params": {},
+          "op": "GTE",
+          "value": 2
+        }
       ],
       "text": "Çift False 9: {e0} oyuncu derine inip bağlıyor (eşik {t0}); ceza sahasında bitirici kalmıyor.",
-      "recommendation": { "code": "ONE_FALSE_NINE_ONE_FINISHER", "text": "İkisinden birini Advanced Forward ya da Poacher yap." }
+      "recommendation": {
+        "code": "ONE_FALSE_NINE_ONE_FINISHER",
+        "text": "İkisinden birini Advanced Forward ya da Poacher yap."
+      }
     },
     {
       "id": "striker_line_no_runner",
@@ -156,24 +321,65 @@
       "foreach": [],
       "requires": [],
       "when": [
-        { "metric": "STRIKER_RUNBEHIND_MAX", "params": {}, "op": "LT", "value": 0.4 }
+        {
+          "metric": "STRIKER_RUNBEHIND_MAX",
+          "params": {},
+          "op": "LT",
+          "value": 0.4
+        }
       ],
       "text": "Forvet hattında arkaya koşan yok: forvetlerin en yüksek arkaya koşu eğilimi {e0} < {t0}.",
-      "recommendation": { "code": "ADD_RUNNER_BEHIND", "text": "Bir forveti Advanced Forward yap ya da Shadow Striker ekle." }
+      "recommendation": {
+        "code": "ADD_RUNNER_BEHIND",
+        "text": "Bir forveti Advanced Forward yap ya da Shadow Striker ekle."
+      }
     },
     {
       "id": "wing_gap_overlap",
       "title": "Kanatta açık",
       "severity": "RISK",
-      "foreach": [ { "side": "LEFT", "sideTr": "sol" }, { "side": "RIGHT", "sideTr": "sağ" } ],
+      "foreach": [
+        {
+          "side": "LEFT",
+          "sideTr": "sol"
+        },
+        {
+          "side": "RIGHT",
+          "sideTr": "sağ"
+        }
+      ],
       "requires": [],
       "when": [
-        { "metric": "SIDE_FULLBACK_DYFWD_MAX", "params": { "side": "${side}" }, "op": "GTE", "value": 20 },
-        { "metric": "SIDE_WINGER_W_MAX", "params": { "side": "${side}" }, "op": "GTE", "value": 0.8 },
-        { "metric": "SIDE_DEF_DUTY_MAX", "params": { "side": "${side}" }, "op": "LT", "value": 0.35 }
+        {
+          "metric": "SIDE_FULLBACK_DYFWD_MAX",
+          "params": {
+            "side": "${side}"
+          },
+          "op": "GTE",
+          "value": 20
+        },
+        {
+          "metric": "SIDE_WINGER_W_MAX",
+          "params": {
+            "side": "${side}"
+          },
+          "op": "GTE",
+          "value": 0.8
+        },
+        {
+          "metric": "SIDE_DEF_DUTY_MAX",
+          "params": {
+            "side": "${side}"
+          },
+          "op": "LT",
+          "value": 0.35
+        }
       ],
       "text": "{sideTr} kanatta açık: bek bindiriyor (ileri kayma {e0} ≥ {t0}), kanat oyuncusu çizgide (genişlik {e1} ≥ {t1}) ve o tarafta savunma görevi en fazla {e2} < {t2}.",
-      "recommendation": { "code": "COVER_THE_FLANK", "text": "Bek ya da kanattan birini savunma görevli role çevir (Fullback/Wingback Balanced ya da Wide Midfielder Defend)." }
+      "recommendation": {
+        "code": "COVER_THE_FLANK",
+        "text": "Bek ya da kanattan birini savunma görevli role çevir (Fullback/Wingback Balanced ya da Wide Midfielder Defend)."
+      }
     },
     {
       "id": "no_anchor",
@@ -182,10 +388,61 @@
       "foreach": [],
       "requires": [],
       "when": [
-        { "metric": "ANCHOR_COUNT", "params": {}, "op": "EQ", "value": 0 }
+        {
+          "metric": "ANCHOR_COUNT",
+          "params": {},
+          "op": "EQ",
+          "value": 0
+        }
       ],
-      "text": "Çapa yok: savunma önünde perde yapan (savunma görevi ≥ 0,8) orta saha sayısı {e0}.",
-      "recommendation": { "code": "ADD_HOLDING_MIDFIELDER", "text": "Bir CDM'yi Holding ya da Centre Half yap." }
+      "text": "Çapa yok ve savunma korumasız: perde yapan orta saha {e0}; geri savunma / iki bekin ileri çıkışı / hat bu riski büyütüyor ({e1} ile {t1} eşiği).",
+      "recommendation": {
+        "code": "ADD_HOLDING_MIDFIELDER",
+        "text": "Bir CDM'yi Holding ya da Centre Half yap."
+      },
+      "whenAny": [
+        {
+          "metric": "REST_DEFENCE_COUNT",
+          "params": {},
+          "op": "LT",
+          "value": 4
+        },
+        {
+          "metric": "FULLBACKS_DYFWD_MIN",
+          "params": {},
+          "op": "GTE",
+          "value": 14
+        },
+        {
+          "metric": "BAND_ORDINAL",
+          "params": {},
+          "op": "GTE",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "id": "no_anchor_info",
+      "title": "Çapa yok",
+      "severity": "INFO",
+      "suppressedBy": [
+        "no_anchor"
+      ],
+      "foreach": [],
+      "requires": [],
+      "when": [
+        {
+          "metric": "ANCHOR_COUNT",
+          "params": {},
+          "op": "EQ",
+          "value": 0
+        }
+      ],
+      "text": "Perde yapan orta saha yok ({e0}); savunma başka oyuncularla korunuyor.",
+      "recommendation": {
+        "code": "ADD_HOLDING_MIDFIELDER",
+        "text": "Gerekirse bir CDM'yi Holding ya da Centre Half yap."
+      }
     },
     {
       "id": "narrow_shape",
@@ -194,10 +451,18 @@
       "foreach": [],
       "requires": [],
       "when": [
-        { "metric": "WIDTH_INDEX", "params": {}, "op": "LT", "value": 30 }
+        {
+          "metric": "WIDTH_INDEX",
+          "params": {},
+          "op": "LT",
+          "value": 30
+        }
       ],
       "text": "Dar kurulum: topla genişlik endeksi {e0} < {t0}; kanat koridorları boş kalabilir.",
-      "recommendation": { "code": "ADD_WIDTH", "text": "Bir kanadı Winger ya da beki Wingback yap." }
+      "recommendation": {
+        "code": "ADD_WIDTH",
+        "text": "Bir kanadı Winger ya da beki Wingback yap."
+      }
     }
   ]
 }

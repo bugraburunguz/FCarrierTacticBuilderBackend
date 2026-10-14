@@ -28,6 +28,8 @@ import java.util.function.ToDoubleFunction;
 public class MetricsCalculator {
 
     private static final Set<String> BUILD_UP_GROUP = Set.of("GK", "CB", "CDM");
+    private static final Set<String> CENTRAL_POSITIONS = Set.of("CDM", "CM", "CAM");
+    private static final Set<String> WIDE_POSITIONS = Set.of("LM", "RM", "LW", "RW");
     private static final Set<String> CREATIVE_POSITIONS = Set.of("CM", "CDM", "CAM", "LM", "RM");
     private static final double PERCENT = 100.0;
     private static final double HALF_FIELD = 50.0;
@@ -77,9 +79,16 @@ public class MetricsCalculator {
         return new RestDefence(slots.size(), slots);
     }
 
-    public long midfieldCount(TacticContext ctx) {
+    /**
+     * Merkezi orta saha sayısı (topsuz konumla): CDM/CM/CAM slotları (x 30-70) + içe kesen kanatlar (dxIn >= eşik; topla x 30-70). Roller sayıyı değiştirmez, formasyon ve içe kesme değiştirir.
+     */
+    public long centralMidfieldCount(TacticContext ctx) {
         TacticParams p = ctx.params();
-        return ctx.outfield().stream().filter((s) -> s.xBall() >= p.midfieldXMin() && s.xBall() <= p.midfieldXMax() && s.yBall() >= p.midfieldYMin() && s.yBall() <= p.midfieldYMax()).count();
+        return ctx.outfield().stream().filter((s) -> {
+            boolean central = CENTRAL_POSITIONS.contains(s.position()) && s.x() >= p.midfieldXMin() && s.x() <= p.midfieldXMax();
+            boolean cutsIn = WIDE_POSITIONS.contains(s.position()) && s.m().dxIn() >= p.midfieldCutInDxMin() && s.xBall() >= p.midfieldXMin() && s.xBall() <= p.midfieldXMax();
+            return central || cutsIn;
+        }).count();
     }
 
     private Opportunity opportunity(TacticContext ctx) {

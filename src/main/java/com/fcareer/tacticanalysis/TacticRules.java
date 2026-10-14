@@ -25,8 +25,8 @@ public class TacticRules {
     public record Condition(String metric, Map<String, Object> params, String op, double value) {
     }
 
-    /** foreach: örnek değişken kümeleri (örn. side=LEFT, sideTr=sol); requires: ["players"] → oyuncu yoksa değerlendirilmez. text: {e0},{t0} kanıt değer/eşik, {sideTr}. */
-    public record RuleDef(String id, String title, Severity severity, List<Map<String, String>> foreach, List<String> requires, List<Condition> when, String text, Recommendation recommendation) {
+    /** whenAny: en az biri sağlanmalı (when ile birlikte VE); suppressedBy: listelenen kurallardan biri bulgu ürettiyse bu kural atlanır. foreach: örnek değişken kümeleri (örn. side=LEFT, sideTr=sol); requires: ["players"] → oyuncu yoksa değerlendirilmez. text: {e0},{t0} kanıt değer/eşik, {sideTr}. */
+    public record RuleDef(String id, String title, Severity severity, List<Map<String, String>> foreach, List<String> requires, List<Condition> when, List<Condition> whenAny, List<String> suppressedBy, String text, Recommendation recommendation) {
     }
 
     private final TacticParams params;
@@ -49,16 +49,26 @@ public class TacticRules {
                 r.path("requires").forEach((n) -> requires.add(n.asText()));
                 List<Condition> when = new ArrayList<>();
                 for (JsonNode c : r.path("when")) {
-                    Map<String, Object> cp = new HashMap<>();
-                    c.path("params").fields().forEachRemaining((e) -> cp.put(e.getKey(), e.getValue().isNumber() ? (Object) e.getValue().asDouble() : e.getValue().asText()));
-                    when.add(new Condition(c.path("metric").asText(), cp, c.path("op").asText(), c.path("value").asDouble()));
+                    when.add(condition(c));
                 }
-                rules.add(new RuleDef(r.path("id").asText(), r.path("title").asText(), Severity.valueOf(r.path("severity").asText()), foreach, requires, when, r.path("text").asText(),
+                List<Condition> whenAny = new ArrayList<>();
+                for (JsonNode c : r.path("whenAny")) {
+                    whenAny.add(condition(c));
+                }
+                List<String> suppressed = new ArrayList<>();
+                r.path("suppressedBy").forEach((n) -> suppressed.add(n.asText()));
+                rules.add(new RuleDef(r.path("id").asText(), r.path("title").asText(), Severity.valueOf(r.path("severity").asText()), foreach, requires, when, whenAny, suppressed, r.path("text").asText(),
                         new Recommendation(r.path("recommendation").path("code").asText(), r.path("recommendation").path("text").asText())));
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    private static Condition condition(JsonNode c) {
+        Map<String, Object> cp = new HashMap<>();
+        c.path("params").fields().forEachRemaining((e) -> cp.put(e.getKey(), e.getValue().isNumber() ? (Object) e.getValue().asDouble() : e.getValue().asText()));
+        return new Condition(c.path("metric").asText(), cp, c.path("op").asText(), c.path("value").asDouble());
     }
 
     public TacticParams params() {

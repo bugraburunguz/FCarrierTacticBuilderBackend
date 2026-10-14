@@ -199,18 +199,40 @@ class TacticRulesTest {
         assertThat(finding(run(base4231(), BuildUpType.BALANCED, 55, everyone(base4231(), attrs(60), 180)), "buildup_mismatch")).isEmpty();
     }
 
-    // ---- orta sahada sayısal azlık ----------------------------------------------------------------------------------------------
+    // ---- orta sahada sayısal azlık (merkezi orta saha sayımı, topsuz) -------------------------------------------------------------
 
-    @Test
-    void midfieldOutnumbered_triggersWhenFewerThanThreeAreCentralWithTheBall() {
-        Finding f = finding(run(BuildUpType.BALANCED, 55), "midfield_outnumbered").orElseThrow();
-        assertThat(f.evidence().get(0).value()).isLessThan(3);
+    /** 4-2-4: tek merkezi orta saha (CM), kanatlar dışarıda: sayı 1. */
+    private static List<String[]> thinMidfield() {
+        return List.of(new String[]{"GK", "GK", "50", "95", "goalkeeper_defend"}, new String[]{"LB", "LB", "12", "75", "fullback_balanced"}, new String[]{"LCB", "CB", "37", "80", "defender_defend"},
+                new String[]{"RCB", "CB", "63", "80", "defender_defend"}, new String[]{"RB", "RB", "88", "75", "fullback_balanced"}, new String[]{"CM", "CM", "50", "50", "box_to_box_balanced"},
+                new String[]{"LW", "LW", "15", "25", "winger_balanced"}, new String[]{"RW", "RW", "85", "25", "winger_balanced"}, new String[]{"LST", "ST", "40", "14", "advanced_forward_attack"},
+                new String[]{"RST", "ST", "60", "14", "poacher_attack"}, new String[]{"CAM", "CAM", "50", "34", "playmaker_balanced"});
     }
 
     @Test
-    void midfieldOutnumbered_doesNotTriggerWithAThreeManMidfield() {
-        Analysis a = run(base433(), BuildUpType.BALANCED, 55, Map.of());
+    void midfieldOutnumbered_triggersWithFewerThanTwoCentralMidfielders_withoutRelyingOnTheBall() {
+        List<String[]> oneCentral = new ArrayList<>(thinMidfield());
+        oneCentral.removeIf((s) -> s[0].equals("CAM"));
+        oneCentral.add(new String[]{"CAM", "LM", "10", "34", "wide_midfielder_support"});
+        Finding f = finding(run(oneCentral, BuildUpType.BALANCED, 55, Map.of()), "midfield_outnumbered").orElseThrow();
+        assertThat(f.evidence().get(0).value()).isLessThan(2);
+    }
+
+    @Test
+    void midfieldOutnumbered_doesNotTriggerForTheMetaShapes_andACutInWingerCountsAsCentral() {
+        assertThat(finding(run(BuildUpType.BALANCED, 55), "midfield_outnumbered")).as("4-2-3-1: 2 CDM + CAM").isEmpty();
+        assertThat(finding(run(base433(), BuildUpType.BALANCED, 55, Map.of()), "midfield_outnumbered")).isEmpty();
+        List<String[]> one = new ArrayList<>(thinMidfield());
+        one.removeIf((s) -> s[0].equals("CAM"));
+        Analysis cutIns = run(one, BuildUpType.BALANCED, 55, Map.of(), "LW=inside_forward_attack", "RW=inside_forward_attack");
+        assertThat(finding(cutIns, "midfield_outnumbered")).as("içe kesen iki kanat merkezi sayılır").isEmpty();
+    }
+
+    @Test
+    void midfieldThin_isOnlyInformationForAFlatFourFourTwo() {
+        Analysis a = run(base442(), BuildUpType.BALANCED, 50, Map.of());
         assertThat(finding(a, "midfield_outnumbered")).isEmpty();
+        assertThat(finding(a, "midfield_thin").orElseThrow().severity()).isEqualTo(Severity.INFO);
     }
 
     // ---- arkaya koşan yok -------------------------------------------------------------------------------------------------------
@@ -264,12 +286,30 @@ class TacticRulesTest {
         assertThat(finding(run(BuildUpType.BALANCED, 55, "RB=fullback_defend"), "wing_gap_overlap", "RIGHT")).isEmpty();
     }
 
-    // ---- çapa yok ---------------------------------------------------------------------------------------------------------------
+    // ---- çapa yok (yalnız savunma korumasızsa uyarı) ----------------------------------------------------------------------------
 
     @Test
-    void noAnchor_triggersWhenNobodyScreensTheDefence_andNotWithAHolder() {
-        assertThat(finding(run(BuildUpType.BALANCED, 55, "LDM=box_crasher_balanced", "RDM=box_crasher_balanced"), "no_anchor")).isPresent();
+    void noAnchor_warnsOnlyWhenTheDefenceIsAlsoExposed() {
+        String[] noAnchor = {"LDM=box_crasher_balanced", "RDM=box_crasher_balanced"};
+        Analysis alone = run(BuildUpType.BALANCED, 55, noAnchor);
+        assertThat(finding(alone, "no_anchor")).as("tek başına uyarı değil").isEmpty();
+        assertThat(finding(alone, "no_anchor_info").orElseThrow().severity()).isEqualTo(Severity.INFO);
+
+        Analysis exposed = run(BuildUpType.BALANCED, 55, "LDM=box_crasher_balanced", "RDM=box_crasher_balanced", "LB=attacking_wingback_attack", "RB=attacking_wingback_attack");
+        Finding f = finding(exposed, "no_anchor").orElseThrow();
+        assertThat(f.severity()).isEqualTo(Severity.WARN);
+        assertThat(f.evidence().get(0).metric()).isEqualTo("ANCHOR_COUNT");
+        assertThat(f.evidence().size()).as("çapa yok + en az bir koruma açığı kanıtı").isGreaterThanOrEqualTo(2);
+        assertThat(finding(exposed, "no_anchor_info")).as("uyarı varken bilgi bastırılır").isEmpty();
+
+        Analysis highLine = run(BuildUpType.BALANCED, 80, noAnchor);
+        assertThat(finding(highLine, "no_anchor")).as("yüksek hat").isPresent();
+    }
+
+    @Test
+    void noAnchor_isSilentWithAHolder_andAWingbackBackFiveIsNotPunishedForPushingUp() {
         assertThat(finding(run(BuildUpType.BALANCED, 55), "no_anchor")).isEmpty();
+        assertThat(finding(run(BuildUpType.BALANCED, 55), "no_anchor_info")).isEmpty();
     }
 
     // ---- dar kurulum ------------------------------------------------------------------------------------------------------------
