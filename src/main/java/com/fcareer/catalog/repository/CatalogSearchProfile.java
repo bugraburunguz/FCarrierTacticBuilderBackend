@@ -124,6 +124,21 @@ final class CatalogSearchProfile implements SearchProfile {
     }
 
     @Override
+    public String contractUntil() {
+        return "CAST(NULL AS DATE)";
+    }
+
+    @Override
+    public String availableFilter() {
+        return "TRUE";
+    }
+
+    @Override
+    public String livePoolFilter() {
+        return "TRUE";
+    }
+
+    @Override
     public String attrsJson() {
         return "to_jsonb(r)::text";
     }

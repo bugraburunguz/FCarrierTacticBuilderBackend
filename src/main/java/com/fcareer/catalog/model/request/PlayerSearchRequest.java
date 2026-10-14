@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import com.fcareer.fitengine.model.Attr;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -54,6 +55,15 @@ public class PlayerSearchRequest {
     private List<Long> ids;
     private List<Long> excludeIds;
     private boolean includeUnvalued;
+    /** E3-6 aday havuzu: sort="prescore" iken Σ w_i·attr_i (bağlı parametre) sıralaması; OVR sıralaması yoktur. */
+    private Map<Attr, Double> prescoreWeights;
+    /** Kayıt dosyasında (live) oyuncusu olan kariyerde yalnız kayıttakiler; hiç live satırı yoksa tüm havuz. */
+    private boolean livePoolOnly;
+    /** Kiralıktaki (başka kulübe bağlı) oyuncular hariç. */
+    private boolean availableOnly;
+    /** Edinilebilir: değer ≤ tavan VEYA serbest VEYA sözleşmesi contractMonthsMax içinde biten. Tavan null ise koşul yok (bütçe bilinmiyor ≠ 0). */
+    private Long acquirableValueCap;
+    private Integer contractMonthsMax;
     private String sort;
     private boolean ascending;
     private int page;

@@ -66,6 +66,30 @@ public class CareerPlayerRepository {
         return out;
     }
 
+    /** Öneri fizibilitesi için kariyer satırı ekleri: takım, sözleşme bitişi, kulüp içi OVR sırası ve kulübün lig seviyesi (league.tier, 1 = en iyi). */
+    public record Extra(long playerId, Integer teamId, java.time.LocalDate contractUntil, Integer clubRank, Integer leagueTier) {
+    }
+
+    public Map<Long, Extra> extras(long careerId, Collection<Long> playerIds) {
+        Map<Long, Extra> out = new HashMap<>();
+        if (playerIds.isEmpty()) {
+            return out;
+        }
+        jdbc.query("""
+                SELECT cp.player_id, cp.team_id, cp.contract_until, ranked.rk, l.tier
+                  FROM career_player cp
+                  LEFT JOIN club c ON c.id = cp.club_id
+                  LEFT JOIN league l ON l.id = c.league_id
+                  LEFT JOIN (SELECT player_id, rank() OVER (PARTITION BY team_id ORDER BY ovr DESC) AS rk
+                               FROM career_player WHERE career_id = :c AND live AND team_id IS NOT NULL) ranked ON ranked.player_id = cp.player_id
+                 WHERE cp.career_id = :c AND cp.player_id IN (:ids)""", new MapSqlParameterSource("c", careerId).addValue("ids", playerIds), (rs) -> {
+            java.sql.Date contract = rs.getDate("contract_until");
+            out.put(rs.getLong("player_id"), new Extra(rs.getLong("player_id"), (Integer) rs.getObject("team_id"), Objects.isNull(contract) ? null : contract.toLocalDate(),
+                    Objects.isNull(rs.getObject("rk")) ? null : ((Number) rs.getObject("rk")).intValue(), Objects.isNull(rs.getObject("tier")) ? null : ((Number) rs.getObject("tier")).intValue()));
+        });
+        return out;
+    }
+
     private Map<String, Integer> readMap(String json) {
         try {
             return Objects.isNull(json) ? Map.of() : objectMapper.readValue(json, new TypeReference<Map<String, Integer>>() { });

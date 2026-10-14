@@ -135,6 +135,21 @@ final class CareerSearchProfile implements SearchProfile {
     }
 
     @Override
+    public String contractUntil() {
+        return "cp.contract_until";
+    }
+
+    @Override
+    public String availableFilter() {
+        return "cp.available";
+    }
+
+    @Override
+    public String livePoolFilter() {
+        return "(cp.live OR NOT EXISTS (SELECT 1 FROM career_player lv WHERE lv.career_id = cp.career_id AND lv.live))";
+    }
+
+    @Override
     public String attrsJson() {
         return ATTRS_JSON;
     }

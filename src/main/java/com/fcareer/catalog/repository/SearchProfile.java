@@ -56,6 +56,15 @@ interface SearchProfile {
 
     String attrsJson();
 
+    /** Sözleşme bitiş tarihi (bilinmiyorsa NULL). */
+    String contractUntil();
+
+    /** Kiralıkta olmayan oyuncu koşulu. */
+    String availableFilter();
+
+    /** Kayıt dosyası havuzu koşulu (kaynakta kayıt kavramı yoksa TRUE). */
+    String livePoolFilter();
+
     /** Yaş hesabının referans tarihi (kariyerde oyun tarihi, yoksa bugün). */
     String gameDate();
 

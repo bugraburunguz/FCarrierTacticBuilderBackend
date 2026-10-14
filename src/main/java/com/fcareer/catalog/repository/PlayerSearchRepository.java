@@ -29,6 +29,7 @@ import java.util.Objects;
 public class PlayerSearchRepository {
 
     private static final String AGE_SORT = "age";
+    private static final String PRESCORE_SORT = "prescore";
 
     private final NamedParameterJdbcTemplate jdbc;
     private final com.fcareer.ut.service.FaceStatsService faceStatsService;
@@ -69,7 +70,7 @@ public class PlayerSearchRepository {
         String where = where(profile, request, params);
         params.addValue("limit", request.getSize());
         params.addValue("offset", (long) request.getPage() * request.getSize());
-        String sql = select(profile) + profile.from() + where + " ORDER BY " + orderBy(profile, request) + " LIMIT :limit OFFSET :offset";
+        String sql = select(profile) + profile.from() + where + " ORDER BY " + orderBy(profile, request, params) + " LIMIT :limit OFFSET :offset";
         return jdbc.query(sql, params, (rs, i) -> toSummary(rs));
     }
 
@@ -108,6 +109,18 @@ public class PlayerSearchRepository {
     private String where(SearchProfile p, PlayerSearchRequest request, MapSqlParameterSource params) {
         List<String> clauses = new ArrayList<>();
         clauses.add(p.baseFilter());
+        if (request.isLivePoolOnly()) {
+            clauses.add(p.livePoolFilter());
+        }
+        if (request.isAvailableOnly()) {
+            clauses.add(p.availableFilter());
+        }
+        if (Objects.nonNull(request.getAcquirableValueCap())) {
+            String value = request.isIncludeUnvalued() ? "(" + p.value() + " IS NULL OR " + p.value() + " <= :acquirableCap)" : p.value() + " <= :acquirableCap";
+            clauses.add("(" + value + " OR COALESCE(" + p.freeAgentSelect() + ", FALSE) OR " + p.contractUntil() + " <= (" + p.gameDate() + " + (CAST(:contractMonths AS INTEGER) * INTERVAL '1 month')))");
+            params.addValue("acquirableCap", request.getAcquirableValueCap());
+            params.addValue("contractMonths", Objects.isNull(request.getContractMonthsMax()) ? 0 : request.getContractMonthsMax());
+        }
         params.addValue("gv", request.getGameVersionId());
         params.addValue("careerId", request.getCareerId(), java.sql.Types.BIGINT);
         if (Objects.nonNull(request.getQuery()) && !request.getQuery().isBlank()) {
@@ -138,7 +151,7 @@ public class PlayerSearchRepository {
         }
         addBound(request.getLeagueId(), p.leagueId() + " = :leagueId", "leagueId", clauses, params);
         if (Objects.nonNull(request.getLeagueIds()) && !request.getLeagueIds().isEmpty()) {
-            clauses.add(p.leagueId() + " IN (:leagueIds)");
+            clauses.add("(" + p.leagueId() + " IN (:leagueIds) OR COALESCE(" + p.freeAgentSelect() + ", FALSE))");
             params.addValue("leagueIds", request.getLeagueIds());
         }
         addBound(request.getNationalityId(), "b.nationality_id = :nationalityId", "nationalityId", clauses, params);
@@ -196,7 +209,10 @@ public class PlayerSearchRepository {
         }
     }
 
-    private String orderBy(SearchProfile p, PlayerSearchRequest request) {
+    private String orderBy(SearchProfile p, PlayerSearchRequest request, MapSqlParameterSource params) {
+        if (PRESCORE_SORT.equals(request.getSort()) && Objects.nonNull(request.getPrescoreWeights()) && !request.getPrescoreWeights().isEmpty()) {
+            return prescore(p, request.getPrescoreWeights(), params) + " DESC NULLS LAST, b.id ASC";
+        }
         String key = Objects.isNull(request.getSort()) ? "overall" : request.getSort().replace("_", "").toLowerCase();
         boolean ascending = request.isAscending();
         String column = switch (key) {
@@ -222,6 +238,18 @@ public class PlayerSearchRepository {
             column = Attr.fromKey(key).map(p::attr).orElse(p.overall());
         }
         return column + (ascending ? " ASC" : " DESC") + " NULLS LAST, b.id ASC";
+    }
+
+    /** Σ w_i·attr_i: ağırlıklar bağlı parametre (SQL enjeksiyonu yok); öneri hattının aday havuzunu rolün özelliklerine göre sıralar. */
+    private static String prescore(SearchProfile p, Map<Attr, Double> weights, MapSqlParameterSource params) {
+        List<String> terms = new ArrayList<>();
+        int i = 0;
+        for (Map.Entry<Attr, Double> e : weights.entrySet()) {
+            String name = "psw" + i++;
+            terms.add("COALESCE(" + p.attr(e.getKey()) + ", 0) * :" + name);
+            params.addValue(name, e.getValue());
+        }
+        return "(" + String.join(" + ", terms) + ")";
     }
 
     private PlayerSummaryResponse toSummary(ResultSet rs) throws SQLException {
