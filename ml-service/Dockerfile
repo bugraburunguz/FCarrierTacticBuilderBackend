@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /srv
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --default-timeout=120 --retries 5 -r requirements.txt
 COPY app ./app
 RUN useradd --system --no-create-home app
 ENV ML_MODEL_DIR=/srv/models
