@@ -56,11 +56,17 @@ public class CareerRecommendationReportRunner implements ApplicationRunner {
     private long careerId;
     @org.springframework.beans.factory.annotation.Value("${fcareer.report.recommendations.output:/tmp/e3-6b-oneriler.md}")
     private String output;
+    @org.springframework.beans.factory.annotation.Value("${fcareer.report.recommendations.timing:false}")
+    private boolean timingOnly;
 
     @Override
     public void run(ApplicationArguments args) throws IOException {
         Long userId = jdbc.queryForObject("SELECT user_id FROM career WHERE id = ?", Long.class, careerId);
         CareerService.CareerSquad own = careerService.squadPlayerIds(userId, careerId);
+        if (timingOnly) {
+            timing(own);
+            return;
+        }
         ClubStrength strength = clubStrengthService.of(careerId);
         StringBuilder md = new StringBuilder("# E3-6b — Öneriler, 4 kullanıcı takımı seviyesi (gerçek kariyer verisi)\n\n");
         md.append("Kullanıcı takımı **rapor parametresidir**; kayıt verisi değişmedi. Her takım için 4 slot (LB, CB, ST, CM), takımın mevcut kadrosundaki en uygun rol (yoksa mevki varsayılanı), "
@@ -120,6 +126,43 @@ public class CareerRecommendationReportRunner implements ApplicationRunner {
         md.append(detail);
         Files.writeString(Path.of(output), md.toString(), StandardCharsets.UTF_8);
         log.info("Career recommendation report written path : {}", output);
+    }
+
+    /** Hat içi süre (HTTP hariç): kariyerin kendi kadrosu ve varsayılan istek; ilk çağrı soğuk (kulüp gücü hesabı dahil), sonrası ısınma 2 + 20 ölçüm. */
+    private void timing(CareerService.CareerSquad squad) throws IOException {
+        StringBuilder md = new StringBuilder(String.format(Locale.ROOT, "# Öneri süresi — kariyer %d\n\n| Mevki | Soğuk (ms) | p50 | p95 | en yavaş |\n|---|---|---|---|---|\n", careerId));
+        List<Long> all = new ArrayList<>();
+        for (String position : POSITIONS) {
+            CareerRecommendationRequest request = requestFor(position);
+            long cold = timed(squad, request);
+            List<Long> runs = new ArrayList<>();
+            for (int i = 0; i < 22; i++) {
+                long ms = timed(squad, request);
+                if (i >= 2) {
+                    runs.add(ms);
+                }
+            }
+            all.addAll(runs);
+            long[] sorted = runs.stream().mapToLong(Long::longValue).sorted().toArray();
+            md.append(String.format(Locale.ROOT, "| %s | %d | %d | %d | %d |%n", position, cold, sorted[sorted.length / 2], sorted[(int) Math.floor(sorted.length * 0.95)], sorted[sorted.length - 1]));
+        }
+        long[] sorted = all.stream().mapToLong(Long::longValue).sorted().toArray();
+        md.append(String.format(Locale.ROOT, "%nTüm mevkiler: p50 %d ms · p95 %d ms · en yavaş %d ms (n=%d)%n", sorted[sorted.length / 2], sorted[(int) Math.floor(sorted.length * 0.95)], sorted[sorted.length - 1], sorted.length));
+        Files.writeString(Path.of(output), md.toString(), StandardCharsets.UTF_8);
+        log.info("Career recommendation timing written path : {}", output);
+    }
+
+    private static CareerRecommendationRequest requestFor(String position) {
+        CareerRecommendationRequest request = new CareerRecommendationRequest();
+        request.setPosition(position);
+        request.setLimit(LIMIT);
+        return request;
+    }
+
+    private long timed(CareerService.CareerSquad squad, CareerRecommendationRequest request) {
+        long start = System.nanoTime();
+        recommender.compute(squad, request);
+        return (System.nanoTime() - start) / 1_000_000;
     }
 
     private static CareerRecommendationRequest request(String position, int teamId) {
