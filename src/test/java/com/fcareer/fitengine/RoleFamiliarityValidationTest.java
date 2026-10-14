@@ -30,7 +30,7 @@ import java.util.TreeMap;
 /**
  * E3-5b bağımsız doğrulama (golden set'ten bağımsız tek test): EA'nın oyuncuya verdiği Role+ / Role++ bilgisi (LE players.csv role1..9)
  * ile bizim levelFit'imiz uyuşuyor mu? Aşinalık (FAM) terimi KAPALI (roleFamiliarity boş), PlayStyle terimi de kapalı (trait bitmask çözülmedi).
- * Ağırlıklar bu sonuca göre AYARLANMAZ; yalnız rapor üretilir (target/role-validation.md). Opt-in: -Drole.validation=true
+ * Ağırlıklar bu sonuca göre AYARLANMAZ; yalnız rapor üretilir (target/role-validation.md). Opt-in: -Drole.validation=true; PlayStyle terimi açık: -Drole.validation.ps=true (FAM her zaman kapalı)
  */
 @EnabledIfSystemProperty(named = "role.validation", matches = "true")
 class RoleFamiliarityValidationTest {
@@ -38,6 +38,8 @@ class RoleFamiliarityValidationTest {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final RoleSeeds SEEDS = new RoleSeeds(MAPPER);
     private static final FitEngineV3 ENGINE = new FitEngineV3(new AttrNorms(MAPPER), new PosDist(MAPPER), SEEDS);
+    private static final boolean PLAYSTYLES_ON = Boolean.getBoolean("role.validation.ps");
+    private static final com.fcareer.ingestion.base.LePlaystyleBits PS_BITS = new com.fcareer.ingestion.base.LePlaystyleBits(MAPPER);
     private static final Path DUMP = Path.of("ml-service", "data", "fc27-dump", "players.csv");
     private static final Map<Integer, String> POSITION_CODES = Map.ofEntries(Map.entry(0, "GK"), Map.entry(3, "RB"), Map.entry(5, "CB"), Map.entry(7, "LB"),
             Map.entry(10, "CDM"), Map.entry(12, "RM"), Map.entry(14, "CM"), Map.entry(16, "LM"), Map.entry(18, "CAM"), Map.entry(23, "RW"), Map.entry(25, "ST"), Map.entry(27, "LW"));
@@ -171,7 +173,7 @@ class RoleFamiliarityValidationTest {
             }
         }
         md.append(String.format("%nOyuncu içi AUC: çift-ağırlıklı %.3f · oyuncu ortalaması %.3f · oyuncu sayısı %d · çift %.0f (hedef ≥ 0,70)%n", wins / pairs, playerAucSum / players, players, pairs));
-        Files.writeString(Path.of("target", "role-validation-within.md"), md.toString(), StandardCharsets.UTF_8);
+        Files.writeString(Path.of("target", PLAYSTYLES_ON ? "role-validation-within-ps.md" : "role-validation-within.md"), md.toString(), StandardCharsets.UTF_8);
     }
 
     private double[] levelFits(List<Entry> pool, String position, String role, String focus) {
@@ -239,7 +241,7 @@ class RoleFamiliarityValidationTest {
                 }
             }
             FitPlayer player = FitPlayer.builder().id(Long.parseLong(f[idx.get("playerid")])).overall(Integer.parseInt(f[idx.get("overallrating")])).positions(positions)
-                    .attrs(attrs).playstyles(Map.of()).gender(gender).preferredFoot("1".equals(f[idx.get("preferredfoot")]) ? "Right" : "Left")
+                    .attrs(attrs).playstyles(PLAYSTYLES_ON ? PS_BITS.decode(Long.parseLong(f[idx.get("trait1")]), Long.parseLong(f[idx.get("trait2")]), Long.parseLong(f[idx.get("icontrait1")]), Long.parseLong(f[idx.get("icontrait2")])).playstyles() : Map.of()).gender(gender).preferredFoot("1".equals(f[idx.get("preferredfoot")]) ? "Right" : "Left")
                     .weakFoot(Integer.parseInt(f[idx.get("weakfootabilitytypecode")])).skillMoves(Integer.parseInt(f[idx.get("skillmoves")]))
                     .heightCm(Integer.parseInt(f[idx.get("height")])).roleFamiliarity(Map.of()).build();
             entries.add(new Entry(player, gender, roles));
@@ -330,7 +332,7 @@ class RoleFamiliarityValidationTest {
         }
         md.append(String.format("%nOyuncu: %d · ağırlıklı ortalama AUC (+/++): %.3f · yalnız ++ ağırlıklı AUC: %.3f · hedef ≥ %.2f · AUC < %.1f olanlar: %s%n", playerCount, weight == 0 ? Double.NaN : weighted / weight, weightPlusPlus == 0 ? Double.NaN : weightedPlusPlus / weightPlusPlus,
                 TARGET_AUC, WEAK_AUC, weak.isEmpty() ? "yok" : String.join("; ", weak)));
-        Path out = Path.of("target", "role-validation.md");
+        Path out = Path.of("target", PLAYSTYLES_ON ? "role-validation-ps.md" : "role-validation.md");
         Files.createDirectories(out.getParent());
         Files.writeString(out, md.toString(), StandardCharsets.UTF_8);
     }
