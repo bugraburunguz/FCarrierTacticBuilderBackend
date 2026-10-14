@@ -14,9 +14,11 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +36,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CareerPlayerWriter {
 
+    private static final LocalDate LE_EPOCH = LocalDate.of(1582, 10, 14);
+    private static final int MIN_YEAR = 1990;
+    private static final int MAX_YEAR = 2100;
+    private static final int SEASON_END_MONTH = 6;
+    private static final int SEASON_END_DAY = 30;
     private static final String ATTRS_FROM_OVERLAY = Arrays.stream(Attr.values())
             .map((a) -> "COALESCE(cpr." + a.getColumn() + ", r." + a.getColumn() + ")").collect(Collectors.joining(", "));
 
@@ -144,6 +151,44 @@ public class CareerPlayerWriter {
         }
         jdbc.batchUpdate("UPDATE career_player SET role_familiarity = CAST(:rf AS jsonb), hidden_traits = string_to_array(NULLIF(:ht, ''), ',') WHERE career_id = :c AND player_id = :p",
                 updates.toArray(new SqlParameterSource[0]));
+        return updates.size();
+    }
+
+    /**
+     * Sözleşme verisi (E3-6b): players.contractvaliduntil (yıl → o yılın 30 Haziran'ı, sezon sonu varsayımı), players.wage (ham LE değeri, birim doğrulanmadı) ve
+     * playerloans.loandateend (1582-10-14'ten gün sayısı). Alan yoksa sütun NULL kalır = "sözleşme bilinmiyor".
+     */
+    public int applyContracts(long careerId, List<Map<String, String>> players, List<Map<String, String>> loans, Map<Long, Long> eaToBase) {
+        Map<Long, LocalDate> loanEnd = new HashMap<>();
+        if (Objects.nonNull(loans)) {
+            for (Map<String, String> row : loans) {
+                Long days = toLong(row.get("loandateend"));
+                Long playerId = toLong(row.get("playerid"));
+                if (Objects.nonNull(days) && Objects.nonNull(playerId)) {
+                    loanEnd.put(playerId, LE_EPOCH.plusDays(days));
+                }
+            }
+        }
+        List<SqlParameterSource> updates = new ArrayList<>();
+        if (Objects.nonNull(players)) {
+            for (Map<String, String> row : players) {
+                Long eaId = toLong(row.get("playerid"));
+                Long baseId = eaToBase.get(eaId);
+                Long year = toLong(row.get("contractvaliduntil"));
+                Long wage = toLong(row.get("wage"));
+                if (Objects.isNull(baseId) || (Objects.isNull(year) && Objects.isNull(wage) && !loanEnd.containsKey(eaId))) {
+                    continue;
+                }
+                updates.add(new MapSqlParameterSource().addValue("c", careerId).addValue("p", baseId)
+                        .addValue("until", Objects.isNull(year) || year < MIN_YEAR || year > MAX_YEAR ? null : java.sql.Date.valueOf(LocalDate.of(year.intValue(), SEASON_END_MONTH, SEASON_END_DAY)), java.sql.Types.DATE)
+                        .addValue("wage", wage, java.sql.Types.BIGINT)
+                        .addValue("loan", loanEnd.containsKey(eaId) ? java.sql.Date.valueOf(loanEnd.get(eaId)) : null, java.sql.Types.DATE));
+            }
+        }
+        if (updates.isEmpty()) {
+            return 0;
+        }
+        jdbc.batchUpdate("UPDATE career_player SET contract_until = :until, wage_eur = :wage, loan_until = :loan WHERE career_id = :c AND player_id = :p", updates.toArray(new SqlParameterSource[0]));
         return updates.size();
     }
 

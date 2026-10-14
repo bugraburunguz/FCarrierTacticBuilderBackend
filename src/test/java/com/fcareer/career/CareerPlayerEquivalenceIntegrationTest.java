@@ -135,6 +135,38 @@ class CareerPlayerEquivalenceIntegrationTest {
     }
 
     @Test
+    void contractYearWageAndLoanEndFromTheLiveEditorExportLandOnCareerPlayer() throws Exception {
+        String token = register();
+        long careerId = premiumCareer(token);
+        String club = clubRepository.findAll().get(0).getName();
+        String tab = "\t";
+        String prefix = "10:00:00.1" + tab + "INFO" + tab + "[LUA API] FCDUMP" + tab;
+        String log = String.join("\n",
+                prefix + "BEGIN" + tab + "players" + tab + "fields=5",
+                prefix + "HEADER" + tab + "players" + tab + "playerid,overallrating,potential,contractvaliduntil,wage",
+                prefix + "ROW" + tab + "players" + tab + FIRST_MOCK_ID + ",88,92,2028,120000",
+                prefix + "ROW" + tab + "players" + tab + (FIRST_MOCK_ID + 1) + ",80,85,2027,",
+                prefix + "END" + tab + "players" + tab + "2",
+                prefix + "BEGIN" + tab + "teams" + tab + "fields=3",
+                prefix + "HEADER" + tab + "teams" + tab + "teamid,teamname,overallrating",
+                prefix + "ROW" + tab + "teams" + tab + "1,\"" + club + "\",80",
+                prefix + "BEGIN" + tab + "teamplayerlinks" + tab + "fields=2",
+                prefix + "HEADER" + tab + "teamplayerlinks" + tab + "playerid,teamid",
+                prefix + "ROW" + tab + "teamplayerlinks" + tab + FIRST_MOCK_ID + ",1",
+                prefix + "ROW" + tab + "teamplayerlinks" + tab + (FIRST_MOCK_ID + 1) + ",1",
+                prefix + "BEGIN" + tab + "playerloans" + tab + "fields=3",
+                prefix + "HEADER" + tab + "playerloans" + tab + "playerid,teamidloanedfrom,loandateend",
+                prefix + "ROW" + tab + "playerloans" + tab + (FIRST_MOCK_ID + 1) + ",2,161330");
+        assertThat(json(multipart("/api/v1/careers/" + careerId + "/import").file(file("log", log)), token).at("/success").asBoolean()).isTrue();
+        String sql = "SELECT %s::text FROM career_player WHERE career_id = ? AND player_id = (SELECT id FROM base_player WHERE ea_resource_id = ?)";
+        assertThat(jdbc.queryForObject(String.format(sql, "contract_until"), String.class, careerId, FIRST_MOCK_ID)).as("sezon sonu (30 Haziran) varsayımı").isEqualTo("2028-06-30");
+        assertThat(jdbc.queryForObject(String.format(sql, "wage_eur"), String.class, careerId, FIRST_MOCK_ID)).isEqualTo("120000");
+        assertThat(jdbc.queryForObject(String.format(sql, "wage_eur"), String.class, careerId, FIRST_MOCK_ID + 1)).as("maaş boşsa bilinmiyor").isNull();
+        assertThat(jdbc.queryForObject(String.format(sql, "loan_until"), String.class, careerId, FIRST_MOCK_ID + 1)).as("1582-10-14 + 161330 gün").isEqualTo("2024-06-28");
+        assertThat(jdbc.queryForObject(String.format(sql, "loan_until"), String.class, careerId, FIRST_MOCK_ID)).isNull();
+    }
+
+    @Test
     void aCareerWithoutAnImportIsSeededFromTheCatalogOnFirstRead() throws Exception {
         String token = register();
         long careerId = premiumCareer(token);

@@ -66,8 +66,17 @@ public class CareerPlayerRepository {
         return out;
     }
 
-    /** Öneri fizibilitesi için kariyer satırı ekleri: takım, sözleşme bitişi, kulüp içi OVR sırası ve kulübün lig seviyesi (league.tier, 1 = en iyi). */
-    public record Extra(long playerId, Integer teamId, java.time.LocalDate contractUntil, Integer clubRank, Integer leagueTier) {
+    /**
+     * Öneri fizibilitesi için kariyer satırı ekleri: takım (LE), katalog kulübü, sözleşme bitişi, kulüp içi OVR sırası, kulübün lig seviyesi (league.tier, bilinen ligler) ve lig adı.
+     * Takım anahtarı: kayıtta (live) oyuncu için "T:" + team_id, değilse "C:" + club_id.
+     */
+    public record Extra(long playerId, Integer teamId, Integer clubId, java.time.LocalDate contractUntil, Integer clubRank, Integer leagueTier, String leagueName) {
+        public String teamKey() {
+            if (Objects.nonNull(teamId)) {
+                return "T:" + teamId;
+            }
+            return Objects.nonNull(clubId) ? "C:" + clubId : null;
+        }
     }
 
     public Map<Long, Extra> extras(long careerId, Collection<Long> playerIds) {
@@ -76,18 +85,56 @@ public class CareerPlayerRepository {
             return out;
         }
         jdbc.query("""
-                SELECT cp.player_id, cp.team_id, cp.contract_until, ranked.rk, l.tier
+                SELECT cp.player_id, cp.team_id, cp.club_id, cp.contract_until, ranked.rk, l.tier,
+                       CASE WHEN cp.team_id IS NOT NULL THEN COALESCE(ct.league_name, l.name) ELSE l.name END AS league_name
                   FROM career_player cp
+                  LEFT JOIN career_team ct ON ct.career_id = cp.career_id AND ct.team_id = cp.team_id
                   LEFT JOIN club c ON c.id = cp.club_id
                   LEFT JOIN league l ON l.id = c.league_id
                   LEFT JOIN (SELECT player_id, rank() OVER (PARTITION BY team_id ORDER BY ovr DESC) AS rk
                                FROM career_player WHERE career_id = :c AND live AND team_id IS NOT NULL) ranked ON ranked.player_id = cp.player_id
                  WHERE cp.career_id = :c AND cp.player_id IN (:ids)""", new MapSqlParameterSource("c", careerId).addValue("ids", playerIds), (rs) -> {
             java.sql.Date contract = rs.getDate("contract_until");
-            out.put(rs.getLong("player_id"), new Extra(rs.getLong("player_id"), (Integer) rs.getObject("team_id"), Objects.isNull(contract) ? null : contract.toLocalDate(),
-                    Objects.isNull(rs.getObject("rk")) ? null : ((Number) rs.getObject("rk")).intValue(), Objects.isNull(rs.getObject("tier")) ? null : ((Number) rs.getObject("tier")).intValue()));
+            out.put(rs.getLong("player_id"), new Extra(rs.getLong("player_id"), (Integer) rs.getObject("team_id"), (Integer) rs.getObject("club_id"),
+                    Objects.isNull(contract) ? null : contract.toLocalDate(), Objects.isNull(rs.getObject("rk")) ? null : ((Number) rs.getObject("rk")).intValue(),
+                    Objects.isNull(rs.getObject("tier")) ? null : ((Number) rs.getObject("tier")).intValue(), rs.getString("league_name")));
         });
         return out;
+    }
+
+    /** Kulüp gücü hesabı için ham satırlar: takım anahtarı, lig adı, en iyi N oyuncunun OVR ortalaması ve oyuncu sayısı (serbest havuz ve kayıtta olmayan oyuncular hariç). */
+    public record TeamStrengthRow(String key, String league, double strength, int players) {
+    }
+
+    public List<TeamStrengthRow> teamStrengths(long careerId, int top) {
+        return jdbc.query("""
+                SELECT kt || ':' || k AS team_key, league, avg(ovr)::float8 AS strength, count(*) AS n FROM (
+                  SELECT CASE WHEN cp.live AND cp.team_id IS NOT NULL THEN 'T' ELSE 'C' END AS kt,
+                         CASE WHEN cp.live AND cp.team_id IS NOT NULL THEN cp.team_id ELSE cp.club_id END AS k,
+                         CASE WHEN cp.live AND cp.team_id IS NOT NULL THEN ct.league_name ELSE l.name END AS league,
+                         cp.ovr,
+                         row_number() OVER (PARTITION BY (CASE WHEN cp.live AND cp.team_id IS NOT NULL THEN 'T' ELSE 'C' END),
+                                                         (CASE WHEN cp.live AND cp.team_id IS NOT NULL THEN cp.team_id ELSE cp.club_id END) ORDER BY cp.ovr DESC) AS rn
+                    FROM career_player cp
+                    LEFT JOIN career_team ct ON ct.career_id = cp.career_id AND ct.team_id = cp.team_id
+                    LEFT JOIN club c ON c.id = cp.club_id
+                    LEFT JOIN league l ON l.id = c.league_id
+                   WHERE cp.career_id = :c AND NOT cp.free_agent AND NOT COALESCE(ct.free_agent_pool, FALSE)
+                     AND (cp.team_id IS NOT NULL OR cp.club_id IS NOT NULL)
+                     AND (cp.live OR NOT EXISTS (SELECT 1 FROM career_player lv WHERE lv.career_id = cp.career_id AND lv.live))
+                ) s WHERE rn <= :top GROUP BY kt, k, league""", new MapSqlParameterSource("c", careerId).addValue("top", top),
+                (rs, i) -> new TeamStrengthRow(rs.getString("team_key"), rs.getString("league"), rs.getDouble("strength"), rs.getInt("n")));
+    }
+
+    /** Bu oyuncuların çoğunun oynadığı takımın anahtarı (kullanıcı takımı tahmini); kayıtta takımı olan yoksa boş. */
+    public java.util.Optional<String> dominantTeamKey(long careerId, Collection<Long> playerIds) {
+        if (playerIds.isEmpty()) {
+            return java.util.Optional.empty();
+        }
+        List<Integer> teams = jdbc.queryForList("""
+                SELECT team_id FROM career_player WHERE career_id = :c AND live AND team_id IS NOT NULL AND player_id IN (:ids)
+                 GROUP BY team_id ORDER BY count(*) DESC, team_id LIMIT 1""", new MapSqlParameterSource("c", careerId).addValue("ids", playerIds), Integer.class);
+        return teams.stream().findFirst().map((id) -> "T:" + id);
     }
 
     private Map<String, Integer> readMap(String json) {

@@ -168,6 +168,7 @@ public class CareerImportService {
         // Çift yazma: eski overlay tabloları yazıldı; kariyerin tek doğruluk kaynağı career_player onlardan tazelenir (E3-2).
         careerPlayerWriter.syncCareer(careerId);
         careerPlayerWriter.applyLeExtras(careerId, tables.get("players"), eaToBase);
+        careerPlayerWriter.applyContracts(careerId, tables.get("players"), tables.get("playerloans"), eaToBase);
         careerDeskService.takeSnapshot(careerId, "IMPORT", Objects.nonNull(upload.exportId()) ? "export " + upload.exportId() : null);
         log.info("Career import done careerId : {} players : {} teams : {} freeAgents : {} unmatched : {}",
                 careerId, playerRows.size(), teamParams.size(), freeAgents, unmatched);

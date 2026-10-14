@@ -183,6 +183,61 @@ class CareerRecommenderIntegrationTest {
         assertThat(sortedByOverall).as("sıralama OVR değil rol uyumu/fizibilite").isFalse();
     }
 
+
+    private void tactic(long careerId, int slot, String slotsJson) {
+        Long owner = jdbc.queryForObject("SELECT user_id FROM career WHERE id = ?", Long.class, careerId);
+        jdbc.update("INSERT INTO user_tactic (user_id, career_id, slot, name, formation, slots) VALUES (?, ?, ?, 't', '4-4-2', ?::jsonb)", owner, careerId, slot, slotsJson);
+    }
+
+    @Test
+    void aSlotWithAnAdvancedForwardAttackRoleNeverGetsTargetForwardOrFalseNineUnlessAlternativesAreOn() throws Exception {
+        long careerId = support.premiumCareer(support.register(), null);
+        tactic(careerId, 1, "[{\"slot\":\"ST1\",\"position\":\"ST\",\"roleId\":\"advanced_forward\",\"focus\":\"attack\"}]");
+        CareerRecommendationResponse strict = recommender.compute(squad(careerId), request("ST"));
+        assertThat(strict.getRoleSource()).isEqualTo("TACTIC");
+        assertThat(strict.getItems()).isNotEmpty();
+        strict.getItems().forEach((i) -> assertThat(i.getRoleId()).isEqualTo("advanced_forward_attack"));
+        CareerRecommendationRequest open = request("ST");
+        open.setAlternativeRoles(true);
+        CareerRecommendationResponse alt = recommender.compute(squad(careerId), open);
+        assertThat(alt.getRoleSource()).isEqualTo("ALTERNATIVES");
+        assertThat(alt.getItems().stream().map(CareerRecommendationResponse.Item::getRoleId).distinct().count()).as("alternatif roller satırda yazılır").isGreaterThan(1);
+    }
+
+    @Test
+    void theTacticSlotBeatsTheSquadAssignmentAndForceRoleBeatsTheTactic() throws Exception {
+        long careerId = support.premiumCareer(support.register(), null);
+        tactic(careerId, 1, "[{\"slot\":\"ST1\",\"position\":\"ST\",\"roleId\":\"target_forward\",\"focus\":\"attack\"}]");
+        assertThat(recommender.compute(squad(careerId), request("ST")).getRoleId()).isEqualTo("target_forward_attack");
+        CareerRecommendationRequest forced = request("ST");
+        forced.setRoleId("poacher");
+        forced.setFocus("attack");
+        forced.setForceRole(true);
+        CareerRecommendationResponse r = recommender.compute(squad(careerId), forced);
+        assertThat(r.getRoleSource()).isEqualTo("REQUEST");
+        assertThat(r.getRoleId()).isEqualTo("poacher_attack");
+    }
+
+    @Test
+    void aCenterBackRequestIsMostlyNaturalCenterBacksWithAtMostTwoLabelledOutOfPosition() throws Exception {
+        long careerId = support.premiumCareer(support.register(), null);
+        CareerRecommendationResponse r = recommender.compute(squad(careerId), request("CB"));
+        assertThat(r.getItems()).hasSize(10);
+        long natural = r.getItems().stream().filter((i) -> i.getPositionLabel() == null).count();
+        assertThat(natural).isGreaterThanOrEqualTo(8);
+        r.getItems().stream().filter((i) -> i.getPositionLabel() != null).forEach((i) -> assertThat(i.getPositionLabel()).startsWith("Mevki dışı (").endsWith("→CB)"));
+        r.getItems().stream().filter((i) -> i.getPositionLabel() == null).forEach((i) -> assertThat(i.getPlayer().getPositions()).contains("CB"));
+    }
+
+    @Test
+    void theDefaultBalancedProfileKeepsOldPlayersOutAndAtLeastFourOfTenAreInTheirPrime() throws Exception {
+        long careerId = support.premiumCareer(support.register(), null);
+        CareerRecommendationResponse r = recommender.compute(squad(careerId), request("CM"));
+        assertThat(r.getProfile()).isEqualToIgnoringCase("BALANCED");
+        r.getItems().forEach((i) -> assertThat(i.getPlayer().getAge()).isLessThanOrEqualTo(34));
+        assertThat(r.getItems().stream().filter((i) -> i.getPlayer().getAge() <= 27).count()).isGreaterThanOrEqualTo(4);
+    }
+
     private static List<Long> ids(CareerRecommendationResponse response) {
         return response.getItems().stream().map((i) -> i.getPlayer().getId()).toList();
     }

@@ -6,7 +6,10 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
-/** Kariyer öneri isteği: mevki zorunlu; rol verilmezse mevkideki tüm rollerin en uyumlusu (aday başına) kullanılır. */
+/**
+ * Kariyer öneri isteği (E3-6b): öneri girdisi (slot, mevki, rol, focus). Rol kaynağı sırası: user_tactic → mevcut kadro ataması → isteğin rolü → mevkinin varsayılan rolü.
+ * Varsayılan olarak yalnız o rol/focus için puanlanır; alternativeRoles=true ise mevkideki tüm roller değerlendirilir ve her satırda rol yazılır.
+ */
 @Getter
 @Setter
 public class CareerRecommendationRequest {
@@ -14,8 +17,22 @@ public class CareerRecommendationRequest {
     @NotBlank
     private String position;
 
-    /** Opsiyonel taban rol (örn. "poacher") ya da bileşik kimlik ("poacher_attack"). */
+    /** Taktikteki slot kimliği (user_tactic.slots[].slot); verilmezse mevkiye göre aranır. */
+    private String slotId;
+
+    /** Taban rol ("poacher") ya da bileşik kimlik ("poacher_attack"). */
     private String roleId;
+
+    private String focus;
+
+    /** true: isteğin rolü taktik/kadro atamasının önüne geçer. */
+    private boolean forceRole;
+
+    /** true: mevkideki tüm roller değerlendirilir (satırda rol açıkça yazılır). */
+    private boolean alternativeRoles;
+
+    /** BALANCED (varsayılan), NOW, FUTURE. */
+    private String profile;
 
     @Min(1)
     @Max(30)
@@ -24,4 +41,7 @@ public class CareerRecommendationRequest {
     private Integer ageMin;
 
     private Integer ageMax;
+
+    /** Yalnız simülasyon/rapor: kullanıcı takımı yerine bu LE takımının kadrosu ve gücü esas alınır (kayıttaki veri değişmez). */
+    private Integer userTeamId;
 }
