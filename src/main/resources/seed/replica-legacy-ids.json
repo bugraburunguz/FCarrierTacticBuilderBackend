@@ -61,8 +61,7 @@
  },
  {
   "from": "galacticos_real_2003",
-  "to": null,
-  "reason": "Los Galácticos 2002-03 yeni sette yok (Real Madrid yalnız del Bosque 1999-00 / 2001-02)"
+  "to": "delbosque_real_2003"
  },
  {
   "from": "cruyff_ajax_1972",
@@ -75,7 +74,7 @@
  {
   "from": "pulis_stoke_2011",
   "to": null,
-  "reason": "Stoke City yeni sette yok"
+  "reason": "Pulis Stoke 2010-11 kaldırıldı (Buğra kararı: uzun taç kimliğinin FC27'de karşılığı yok)"
  },
  {
   "from": "gunes_trabzonspor_2011",
@@ -99,8 +98,7 @@
  },
  {
   "from": "daum_fenerbahce_2005",
-  "to": null,
-  "reason": "Daum Fenerbahçe 2004-05 yeni sette yok"
+  "to": "daum_fenerbahce_2005"
  },
  {
   "from": "kartal_fenerbahce_2024",
@@ -112,8 +110,7 @@
  },
  {
   "from": "denizli_besiktas_2009",
-  "to": null,
-  "reason": "Denizli Beşiktaş 2008-09 yeni sette yok"
+  "to": "denizli_besiktas_2009"
  },
  {
   "from": "luisenrique_barcelona_2015",
@@ -129,8 +126,7 @@
  },
  {
   "from": "mancini_city_2012",
-  "to": null,
-  "reason": "Mancini City 2011-12 yeni sette yok"
+  "to": "mancini_city_2012"
  },
  {
   "from": "sarri_napoli_2018",

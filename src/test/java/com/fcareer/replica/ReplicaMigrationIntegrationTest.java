@@ -16,13 +16,13 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
-/** REP-04: eski 34 REPLICA preset'i yeni 106 replikaya taşındı; eski kayıtlar presets.json'dan ve `preset` tablosundan çıktı; eski uç bir sürüm Deprecation ile yaşar. */
+/** REP-04: eski 34 REPLICA preset'i yeni 112 replikaya taşındı; eski kayıtlar presets.json'dan ve `preset` tablosundan çıktı; eski uç bir sürüm Deprecation ile yaşar. */
 @IntegrationTest
 class ReplicaMigrationIntegrationTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final int LEGACY_REPLICAS = 34;
-    private static final int MAPPED = 29;
+    private static final int MAPPED = 33;
 
     @Autowired
     private MockMvc mockMvc;
@@ -68,8 +68,8 @@ class ReplicaMigrationIntegrationTest {
         String body = mockMvc.perform(get("/api/v1/replicas/legacy-ids")).andReturn().getResponse().getContentAsString();
         JsonNode data = MAPPER.readTree(body).at("/data");
         assertThat(data.path("pep_barcelona_2011").asText()).isEqualTo("guardiola_barcelona_2011");
-        assertThat(data.has("mancini_city_2012")).isTrue();
-        assertThat(data.path("mancini_city_2012").isNull()).isTrue();
+        assertThat(data.has("pulis_stoke_2011")).isTrue();
+        assertThat(data.path("pulis_stoke_2011").isNull()).isTrue();
     }
 
     @Test

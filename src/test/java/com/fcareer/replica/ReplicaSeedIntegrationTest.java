@@ -50,7 +50,7 @@ class ReplicaSeedIntegrationTest {
     @Test
     void theSeedHas107RecordsAndOnlyThePlaceholderHasNoTactic() throws Exception {
         JsonNode seed = seed();
-        assertThat(seed.size()).isEqualTo(107);
+        assertThat(seed.size()).isEqualTo(113);
         Set<String> ids = new HashSet<>();
         List<String> noTactic = new ArrayList<>();
         for (JsonNode r : seed) {
@@ -105,7 +105,7 @@ class ReplicaSeedIntegrationTest {
     @Test
     void all106ReplicasGetATacticCodeThatDecodesToExactlyTheSeedSettings() throws Exception {
         List<ReplicaService.Replica> all = replicas.all();
-        assertThat(all).hasSize(106);
+        assertThat(all).hasSize(112);
         for (ReplicaService.Replica r : all) {
             assertThat(r.tacticCode()).as(r.id()).hasSize(12);
             EaTactic tactic = codec.decode(r.tacticCode()).orElseThrow(() -> new AssertionError(r.id() + " decode"));
@@ -154,7 +154,7 @@ class ReplicaSeedIntegrationTest {
     @Test
     void theReplicaEndpointsServeTheCodeAndTheAnalysisWithoutLogin() throws Exception {
         String list = mockMvc.perform(get("/api/v1/replicas")).andReturn().getResponse().getContentAsString();
-        assertThat(MAPPER.readTree(list).at("/data").size()).isEqualTo(106);
+        assertThat(MAPPER.readTree(list).at("/data").size()).isEqualTo(112);
         String detail = mockMvc.perform(get("/api/v1/replicas/guardiola_barcelona_2009")).andReturn().getResponse().getContentAsString();
         JsonNode d = MAPPER.readTree(detail).at("/data");
         assertThat(d.path("tacticCode").asText()).hasSize(12);

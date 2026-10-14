@@ -28324,5 +28324,1589 @@
     "note": "İlk Şampiyonlar Ligi grubu; ligde düşüş — şampiyonluk sezonu tercih edildi"
    }
   ]
+ },
+ {
+  "id": "daum_fenerbahce_2005",
+  "kind": "REPLICA",
+  "category": "TURKISH_BIG4",
+  "club": "Fenerbahçe",
+  "coach": "Christoph Daum",
+  "season": "2004-05",
+  "honours": [
+   "Süper Lig şampiyonu (16. şampiyonluk; 34 maçta 80 puan, 77-24 averaj)"
+  ],
+  "whyIconic": "Daum'un ikinci döneminin ilk şampiyonluğu: 80 puan, ligin en az gol yiyen takımı (24), Trabzonspor'un 3 puan önünde; Kadıköy'de Kayserispor'u 7-0 yendi, Şampiyonlar Ligi grubunda Manchester United'ı yendi. Aurélio + Ümit Özat çift pivotunun önünde Alex'in 10 numarası.",
+  "realShape": {
+   "inPossession": "4-2-3-1 / 4-5-1 (34 maçın 19'u, ligin son 17 maçı); Aurélio + Ümit Özat çift pivot, Alex 10 numarada serbest, tek forvet",
+   "outOfPossession": "4-5-1 orta blok, çift pivot merkezi kapatır, kanatlar geri döner",
+   "keyMechanisms": [
+    "Aurélio + Ümit Özat çift pivotu: biri kurar, biri yıkar",
+    "Alex ekseni: ara pas, şut ve duran top",
+    "Tek forvet: Van Hooijdonk hava ve frikik / Márcio Nobre derinlik, devre arasından sonra Anelka",
+    "Tuncay'ın kanattan içeri ve ceza sahasına koşuları",
+    "Ligin en iyi savunması: Fábio Luciano liderliğinde kompakt hat"
+   ]
+  },
+  "fc27": {
+   "formation": "4-2-3-1 (2)",
+   "buildUp": "BALANCED",
+   "defensiveApproach": "BALANCED",
+   "lineHeight": 54,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Goalkeeper",
+     "focus": "Balanced",
+     "profile": "Rüştü Reçber tipi: refleks ve liderlik (ligde ara ara Volkan Demirel)",
+     "keyAttributes": [
+      "GK Reflexes",
+      "GK Diving",
+      "Reactions",
+      "GK Positioning"
+     ],
+     "keyPlayStyles": [
+      "Far Reach",
+      "Footwork"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Fullback",
+     "focus": "Balanced",
+     "profile": "Dengeli sol bek (isim VERIFY)",
+     "keyAttributes": [
+      "Stamina",
+      "Crossing",
+      "Standing Tackle",
+      "Sprint Speed"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Whipped Pass"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Defender",
+     "focus": "Defend",
+     "profile": "Fábio Luciano tipi: hava hakimi, pozisyon bilgisi yüksek lider stoper",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Heading Accuracy",
+      "Strength",
+      "Standing Tackle"
+     ],
+     "keyPlayStyles": [
+      "Aerial Fortress",
+      "Anticipate"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Stopper",
+     "focus": "Balanced",
+     "profile": "Önde topa çıkan ikinci stoper (isim VERIFY)",
+     "keyAttributes": [
+      "Aggression",
+      "Standing Tackle",
+      "Interceptions",
+      "Jumping"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Intercept"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Fullback",
+     "focus": "Defend",
+     "profile": "Geride kalıp dengeyi tutan sağ bek (Önder Turacı tipi, VERIFY)",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Standing Tackle",
+      "Stamina",
+      "Acceleration"
+     ],
+     "keyPlayStyles": [
+      "Jockey",
+      "Block"
+     ]
+    },
+    {
+     "slot": "LDM",
+     "position": "CDM",
+     "role": "Holding",
+     "focus": "Ball-Winning",
+     "profile": "Ümit Özat tipi: sert, top kazanan, liderlik eden ön libero",
+     "keyAttributes": [
+      "Standing Tackle",
+      "Aggression",
+      "Interceptions",
+      "Stamina"
+     ],
+     "keyPlayStyles": [
+      "Intercept",
+      "Bruiser"
+     ]
+    },
+    {
+     "slot": "RDM",
+     "position": "CDM",
+     "role": "Deep-Lying Playmaker",
+     "focus": "Build-Up",
+     "profile": "Mehmet Aurélio tipi: derinden ilk pası veren pivot",
+     "keyAttributes": [
+      "Short Passing",
+      "Long Passing",
+      "Interceptions",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Tiki Taka",
+      "Long Ball Pass"
+     ]
+    },
+    {
+     "slot": "LM",
+     "position": "LM",
+     "role": "Inside Forward",
+     "focus": "Balanced",
+     "profile": "Tuncay Şanlı tipi: kanattan içeri ve ceza sahasına koşan, gol atan",
+     "keyAttributes": [
+      "Acceleration",
+      "Finishing",
+      "Dribbling",
+      "Stamina"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Relentless"
+     ]
+    },
+    {
+     "slot": "CAM",
+     "position": "CAM",
+     "role": "Classic 10",
+     "focus": "Attack",
+     "profile": "Alex de Souza tipi Classic 10: oyunun ekseni, ara pas, frikik",
+     "keyAttributes": [
+      "Vision",
+      "Short Passing",
+      "Curve",
+      "Free Kick Accuracy"
+     ],
+     "keyPlayStyles": [
+      "Incisive Pass",
+      "Dead Ball",
+      "Finesse Shot"
+     ]
+    },
+    {
+     "slot": "RM",
+     "position": "RM",
+     "role": "Wide Midfielder",
+     "focus": "Support",
+     "profile": "Çalışkan sağ kanat, 4-5-1'de geri dönen (isim VERIFY)",
+     "keyAttributes": [
+      "Stamina",
+      "Crossing",
+      "Dribbling",
+      "Standing Tackle"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Whipped Pass"
+     ]
+    },
+    {
+     "slot": "ST",
+     "position": "ST",
+     "role": "Target Forward",
+     "focus": "Attack",
+     "profile": "Pierre van Hooijdonk tipi: hava gücü ve frikik (Márcio Nobre / devre arasından sonra Anelka rotasyonu)",
+     "keyAttributes": [
+      "Heading Accuracy",
+      "Strength",
+      "Finishing",
+      "Shot Power"
+     ],
+     "keyPlayStyles": [
+      "Precision Header",
+      "Dead Ball",
+      "Power Shot"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Elmas — Alex arkasında ikili forvet (Lyon maçı gibi)",
+    "formation": "4-1-2-1-2 (2)",
+    "buildUp": "BALANCED",
+    "defensiveApproach": "BALANCED",
+    "lineHeight": 56,
+    "changes": [
+     "CDM: Deep-Lying Playmaker/Defend (Aurélio)",
+     "LCM: Holding/Ball-Winning (Ümit Özat)",
+     "RCM: Half Winger/Attack (Tuncay)",
+     "CAM: Classic 10/Attack (Alex)",
+     "LST: Target Forward/Attack (Van Hooijdonk)",
+     "RST: Advanced Forward/Attack (Márcio Nobre)"
+    ]
+   },
+   "smartTactics": [
+    "Tactical Focus: Hücum → savunma yaklaşımı BALANCED→HIGH (focus kaymaları oyunun kuralıyla). Ne zaman: Kadıköy'de skor aranırken.",
+    "Tactical Focus: Savunma → BALANCED→DEEP (focus kaymaları oyunun kuralıyla). Ne zaman: derbi deplasmanlarında önde kalınca.",
+    "Quick Tactic: Overload Set Pieces — Alex/Van Hooijdonk duran topları"
+   ],
+   "tacticCode": null
+  },
+  "replicaFidelity": {
+   "score": 4,
+   "cannotReplicate": [
+    "Daum'un maça göre 4-2-3-1 / elmas / çift pivotlu 4-4-2 arasında geçişi Plan B ile kısmen verilir",
+    "Forvet rotasyonu (Van Hooijdonk / Nobre / Anelka) oyuncu değişikliğiyle verilir"
+   ]
+  },
+  "behaviorTags": [
+   "cam_create",
+   "st_target",
+   "cdm_ball_winner",
+   "cdm_deep_build",
+   "wm_cut_inside",
+   "set_piece_threat"
+  ],
+  "sources": [
+   "https://en.wikipedia.org/wiki/2004%E2%80%9305_S%C3%BCper_Lig (puan tablosu, şampiyonluk, 7-0, kupa finali 1-5)",
+   "model bilgisi — rol/formasyon VERIFY",
+   "Buğra (oyuncu bilgisi + Transfermarkt maç kadroları, 2026-10-14)"
+  ],
+  "verify": [
+   "Sol bek, sağ bek ve ikinci stoper isimleri",
+   "Sağ kanattaki oyuncu (4-5-1'deki rotasyon)",
+   "Anelka'nın devre arası transferi ve ilk 11 payı"
+  ]
+ },
+ {
+  "id": "denizli_besiktas_2009",
+  "kind": "REPLICA",
+  "category": "TURKISH_BIG4",
+  "club": "Beşiktaş",
+  "coach": "Mustafa Denizli",
+  "season": "2008-09",
+  "honours": [
+   "Süper Lig şampiyonu (13. şampiyonluk; 71 puan, 60-30 averaj)",
+   "Türkiye Kupası (finalde Fenerbahçe 4-2, İzmir)"
+  ],
+  "whyIconic": "Lig ve kupa çifti: kupa finalinde Fenerbahçe'yi 4-2 yendi, ligin son 4 maçını kazanıp (Galatasaray 2-1 dahil) zirveyi bırakmadı. Kaptan Delgado'nun oyun kurduğu, Bobô'nun golleriyle (sezonda 20) taşınan dengeli Denizli takımı.",
+  "realShape": {
+   "inPossession": "4-2-3-1 / 4-4-2; Delgado 10 numarada serbest, Tello soldan içe kesip şut-orta, tek forvet Bobô (Nobre rotasyonu)",
+   "outOfPossession": "4-4-1-1 orta blok, iki ön libero merkezi kapatır, kanatlar geri döner",
+   "keyMechanisms": [
+    "Delgado ekseni: ara pas ve ikinci dalga koşu",
+    "Tello'nun sol ayakla içeri kat edip şut/orta",
+    "Bobô'nun ceza sahası bitiriciliği; Nobre ile ikili forvet varyantı",
+    "Çift ön libero: biri top kazanır, biri oyunu kurar",
+    "Toraman'lı agresif stoper hattı, Üzülmez'in soldan katılımı"
+   ]
+  },
+  "fc27": {
+   "formation": "4-2-3-1 (2)",
+   "buildUp": "BALANCED",
+   "defensiveApproach": "BALANCED",
+   "lineHeight": 46,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Goalkeeper",
+     "focus": "Balanced",
+     "profile": "Rüştü Reçber tipi: tecrübeli, refleks ve liderlik",
+     "keyAttributes": [
+      "GK Reflexes",
+      "GK Diving",
+      "GK Positioning",
+      "Reactions"
+     ],
+     "keyPlayStyles": [
+      "Far Reach",
+      "Footwork"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Fullback",
+     "focus": "Balanced",
+     "profile": "İbrahim Üzülmez tipi: dengeli bindiren sol bek, duran top",
+     "keyAttributes": [
+      "Crossing",
+      "Stamina",
+      "Standing Tackle",
+      "Long Shots"
+     ],
+     "keyPlayStyles": [
+      "Whipped Pass",
+      "Relentless"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Defender",
+     "focus": "Defend",
+     "profile": "Gökhan Zan / Sivok tipi: pozisyonunu koruyan klasik stoper (VERIFY)",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Heading Accuracy",
+      "Standing Tackle",
+      "Strength"
+     ],
+     "keyPlayStyles": [
+      "Block",
+      "Aerial Fortress"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Stopper",
+     "focus": "Aggressive",
+     "profile": "İbrahim Toraman tipi: önde basan, sert ikili mücadele",
+     "keyAttributes": [
+      "Aggression",
+      "Standing Tackle",
+      "Jumping",
+      "Strength"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Slide Tackle"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Fullback",
+     "focus": "Defend",
+     "profile": "Serdar Kurtuluş tipi: geride kalan, Tello tarafını dengeleyen sağ bek (VERIFY)",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Standing Tackle",
+      "Stamina",
+      "Sprint Speed"
+     ],
+     "keyPlayStyles": [
+      "Jockey",
+      "Block"
+     ]
+    },
+    {
+     "slot": "LDM",
+     "position": "CDM",
+     "role": "Holding",
+     "focus": "Ball-Winning",
+     "profile": "Édouard Cissé tipi: top kazanan, fiziksel ön libero",
+     "keyAttributes": [
+      "Standing Tackle",
+      "Interceptions",
+      "Strength",
+      "Stamina"
+     ],
+     "keyPlayStyles": [
+      "Intercept",
+      "Bruiser"
+     ]
+    },
+    {
+     "slot": "RDM",
+     "position": "CDM",
+     "role": "Deep-Lying Playmaker",
+     "focus": "Build-Up",
+     "profile": "Fabian Ernst tipi (devre arasında geldi): derinden oyunu kuran ikinci pivot",
+     "keyAttributes": [
+      "Short Passing",
+      "Long Passing",
+      "Vision",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Tiki Taka",
+      "Long Ball Pass"
+     ]
+    },
+    {
+     "slot": "LM",
+     "position": "LM",
+     "role": "Inside Forward",
+     "focus": "Balanced",
+     "profile": "Rodrigo Tello tipi: sol kanattan içe kesen, şutu ve ortası olan",
+     "keyAttributes": [
+      "Long Shots",
+      "Curve",
+      "Dribbling",
+      "Crossing"
+     ],
+     "keyPlayStyles": [
+      "Finesse Shot",
+      "Whipped Pass"
+     ]
+    },
+    {
+     "slot": "CAM",
+     "position": "CAM",
+     "role": "Classic 10",
+     "focus": "Attack",
+     "profile": "Matías Delgado tipi (kaptan, 10 numara): ara pas, şut ve ikinci dalga",
+     "keyAttributes": [
+      "Vision",
+      "Short Passing",
+      "Long Shots",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Incisive Pass",
+      "Finesse Shot"
+     ]
+    },
+    {
+     "slot": "RM",
+     "position": "RM",
+     "role": "Winger",
+     "focus": "Balanced",
+     "profile": "Hološko / Ekrem Dağ tipi: çalışkan sağ kanat (rotasyon, VERIFY)",
+     "keyAttributes": [
+      "Sprint Speed",
+      "Stamina",
+      "Crossing",
+      "Dribbling"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Relentless"
+     ]
+    },
+    {
+     "slot": "ST",
+     "position": "ST",
+     "role": "Poacher",
+     "focus": "Attack",
+     "profile": "Bobô tipi: ceza sahası bitiricisi (sezonda 20 gol)",
+     "keyAttributes": [
+      "Finishing",
+      "Positioning",
+      "Reactions",
+      "Heading Accuracy"
+     ],
+     "keyPlayStyles": [
+      "Low Driven Shot",
+      "Precision Header"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "İkili forvet — Nobre + Bobô",
+    "formation": "4-4-2 (2)",
+    "buildUp": "BALANCED",
+    "defensiveApproach": "BALANCED",
+    "lineHeight": 48,
+    "changes": [
+     "LM: Wide Playmaker/Attack (Tello)",
+     "RM: Wide Midfielder/Support (sağ kanat)",
+     "LST: Target Forward/Balanced (Mert Nobre)",
+     "RST: Poacher/Attack (Bobô)"
+    ]
+   },
+   "smartTactics": [
+    "Tactical Focus: Hücum → BALANCED→HIGH (focus kaymaları oyunun kuralıyla). Ne zaman: iç sahada skor aranırken.",
+    "Tactical Focus: Savunma → BALANCED→DEEP (focus kaymaları oyunun kuralıyla). Ne zaman: derbi deplasmanı ve kupa finali sonu.",
+    "Quick Tactic: Overload Set Pieces — Üzülmez/Tello duran topları, Toraman kafa"
+   ],
+   "tacticCode": null
+  },
+  "replicaFidelity": {
+   "score": 3,
+   "cannotReplicate": [
+    "Delgado'nun 10 ile sağ kanat arasındaki serbestliği tek role sığmaz",
+    "Bobô / Nobre rotasyonu ve ikili forvet varyantı Plan B ile verilir"
+   ]
+  },
+  "behaviorTags": [
+   "cam_create",
+   "wm_cut_inside",
+   "st_poacher",
+   "cdm_ball_winner",
+   "cdm_deep_build",
+   "cb_aggressive"
+  ],
+  "sources": [
+   "https://en.wikipedia.org/wiki/2008%E2%80%9309_Be%C5%9Fikta%C5%9F_J.K._season (kadro, şampiyonluk, kupa finali 4-2, Bobô 12/20 gol, puan tablosu)",
+   "model bilgisi — rol/formasyon VERIFY",
+   "Buğra (oyuncu bilgisi + Transfermarkt maç kadroları, 2026-10-14)"
+  ],
+  "verify": [
+   "Sezonun ana formasyonu (4-2-3-1 mi 4-4-2 mi)",
+   "Sağ bek ve stoper ikilisinin sezon geneli isimleri",
+   "Devre arasından önce Cissé'nin yanındaki pivot"
+  ]
+ },
+ {
+  "id": "gerets_galatasaray_2006",
+  "kind": "REPLICA",
+  "category": "TURKISH_BIG4",
+  "club": "Galatasaray",
+  "coach": "Eric Gerets",
+  "season": "2005-06",
+  "honours": [
+   "Süper Lig şampiyonu (16. şampiyonluk; 83 puan, 82-34 averaj)"
+  ],
+  "whyIconic": "Türk futbolunda bir ilk: son haftaya lider giren Fenerbahçe Denizli'de 1-1 kalırken Galatasaray Kayserispor'u 3-0 yendi ve şampiyonluğu son gün aldı. Necati (18), Ümit Karan (16), Hakan Şükür (10) ve Ilić (12) ile 82 gollük hücum.",
+  "realShape": {
+   "inPossession": "4-1-2-1-2 elmas (34 maçın 24'ü); Saidou çapa, Ilić iki forvet arkasında, Sabri sağdan bindirir",
+   "outOfPossession": "4-4-2 önde baskı, Song liderliğinde yüksek hat",
+   "keyMechanisms": [
+    "Üç forvet rotasyonu: Hakan Şükür hedef, Necati derinlik, Ümit Karan bitirici",
+    "Ilić'in forvet arkasından gelen golleri (12)",
+    "Sabri Sarıoğlu'nun sağdan bindirmeleri",
+    "Song + Tomas sert stoper ikilisi",
+    "Gerets'in yüksek tempolu, önde baskılı oyunu"
+   ]
+  },
+  "fc27": {
+   "formation": "4-1-2-1-2 (2)",
+   "buildUp": "BALANCED",
+   "defensiveApproach": "HIGH",
+   "lineHeight": 63,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Goalkeeper",
+     "focus": "Balanced",
+     "profile": "Faryd Mondragón tipi: ligin 34 maçının hepsini oynayan, liderlik ve refleks",
+     "keyAttributes": [
+      "GK Reflexes",
+      "GK Diving",
+      "Reactions",
+      "GK Positioning"
+     ],
+     "keyPlayStyles": [
+      "Far Reach",
+      "Rush Out"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Fullback",
+     "focus": "Defend",
+     "profile": "Orhan Ak / Uğur Uçar tipi: sağ bek bindirirken geride kalan sol bek (VERIFY)",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Standing Tackle",
+      "Stamina",
+      "Strength"
+     ],
+     "keyPlayStyles": [
+      "Jockey",
+      "Block"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Stopper",
+     "focus": "Aggressive",
+     "profile": "Rigobert Song tipi: önde basan, lider, sert stoper",
+     "keyAttributes": [
+      "Aggression",
+      "Standing Tackle",
+      "Strength",
+      "Jumping"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Slide Tackle"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Defender",
+     "focus": "Defend",
+     "profile": "Stjepan Tomas tipi: pozisyon ve hava hakimiyeti",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Heading Accuracy",
+      "Standing Tackle",
+      "Strength"
+     ],
+     "keyPlayStyles": [
+      "Aerial Fortress",
+      "Block"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Attacking Wingback",
+     "focus": "Support",
+     "profile": "Sabri Sarıoğlu tipi: sürekli bindiren, orta açan sağ bek",
+     "keyAttributes": [
+      "Stamina",
+      "Sprint Speed",
+      "Crossing",
+      "Acceleration"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Whipped Pass"
+     ]
+    },
+    {
+     "slot": "CDM",
+     "position": "CDM",
+     "role": "Holding",
+     "focus": "Defend",
+     "profile": "Alioum Saidou tipi: savunma önünde çapa",
+     "keyAttributes": [
+      "Interceptions",
+      "Standing Tackle",
+      "Stamina",
+      "Aggression"
+     ],
+     "keyPlayStyles": [
+      "Intercept",
+      "Slide Tackle"
+     ]
+    },
+    {
+     "slot": "LCM",
+     "position": "CM",
+     "role": "Box-to-Box",
+     "focus": "Balanced",
+     "profile": "Hasan Şaş / Volkan Arslan tipi: iki yönlü sol iç (VERIFY)",
+     "keyAttributes": [
+      "Stamina",
+      "Dribbling",
+      "Short Passing",
+      "Long Shots"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Technical"
+     ]
+    },
+    {
+     "slot": "RCM",
+     "position": "CM",
+     "role": "Deep-Lying Playmaker",
+     "focus": "Build-Up",
+     "profile": "Ayhan Akman tipi: oyunu yönlendiren, pas kalitesi yüksek orta saha",
+     "keyAttributes": [
+      "Short Passing",
+      "Vision",
+      "Long Passing",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Tiki Taka",
+      "Incisive Pass"
+     ]
+    },
+    {
+     "slot": "CAM",
+     "position": "CAM",
+     "role": "Shadow Striker",
+     "focus": "Attack",
+     "profile": "Saša Ilić tipi: forvet arkasından ceza sahasına giren golcü 10 (sezonda 12 gol)",
+     "keyAttributes": [
+      "Positioning",
+      "Finishing",
+      "Long Shots",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Finesse Shot",
+      "Low Driven Shot"
+     ]
+    },
+    {
+     "slot": "LST",
+     "position": "ST",
+     "role": "Target Forward",
+     "focus": "Attack",
+     "profile": "Hakan Şükür tipi (kaptan): hava gücü, ceza sahası hakimiyeti",
+     "keyAttributes": [
+      "Heading Accuracy",
+      "Positioning",
+      "Finishing",
+      "Strength"
+     ],
+     "keyPlayStyles": [
+      "Precision Header",
+      "Aerial Fortress"
+     ]
+    },
+    {
+     "slot": "RST",
+     "position": "ST",
+     "role": "Advanced Forward",
+     "focus": "Attack",
+     "profile": "Necati Ateş tipi: derinliğe koşan, ligde 18 gollü forvet (Ümit Karan rotasyonu)",
+     "keyAttributes": [
+      "Acceleration",
+      "Finishing",
+      "Positioning",
+      "Sprint Speed"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Low Driven Shot"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Büyük maçlar — çift ön libero 4-4-2 (Saidou + Ayhan Akman)",
+    "formation": "4-4-2 (2)",
+    "buildUp": "BALANCED",
+    "defensiveApproach": "BALANCED",
+    "lineHeight": 52,
+    "changes": [
+     "LDM: Holding/Defend (Alioum Saidou)",
+     "RDM: Deep-Lying Playmaker/Build-Up (Ayhan Akman)",
+     "LM: Wide Midfielder/Support",
+     "RM: Winger/Balanced",
+     "RB: Fullback/Balanced (Sabri)",
+     "LST: Target Forward/Balanced (Hakan Şükür)",
+     "RST: Advanced Forward/Attack (Necati Ateş)"
+    ]
+   },
+   "smartTactics": [
+    "Tactical Focus: Hücum → HIGH→AGGRESSIVE (focus kaymaları oyunun kuralıyla). Ne zaman: son haftalardaki \"kazanmak zorunda\" maçları.",
+    "Tactical Focus: Savunma → HIGH→BALANCED (focus kaymaları oyunun kuralıyla). Ne zaman: derbide önde.",
+    "Quick Tactic: Get In Box — Hakan Şükür + Necati + Ilić kutuya"
+   ],
+   "tacticCode": null
+  },
+  "replicaFidelity": {
+   "score": 4,
+   "cannotReplicate": [
+    "Üç forvetin (Hakan / Necati / Ümit Karan) dönüşümlü kullanımı oyuncu değişikliğiyle verilir",
+    "Sezon içindeki orta saha rotasyonu (Ayhan Akman, Hasan Şaş, Volkan Arslan, Marek Heinz) tek 11'e sığmaz"
+   ]
+  },
+  "behaviorTags": [
+   "st_target",
+   "st_run_behind",
+   "cam_late_box_run",
+   "fb_overlap",
+   "cb_aggressive",
+   "high_press"
+  ],
+  "sources": [
+   "https://en.wikipedia.org/wiki/2005%E2%80%9306_Galatasaray_S.K._season (kadro istatistikleri, gol dağılımı, son hafta senaryosu, puan tablosu)",
+   "model bilgisi — rol/formasyon VERIFY",
+   "Buğra (oyuncu bilgisi + Transfermarkt maç kadroları, 2026-10-14)"
+  ],
+  "verify": [
+   "Elmasta sol iç oyuncusu (Hasan Şaş / Volkan Arslan)",
+   "Sol bekin Orhan Ak mı Uğur Uçar mı olduğu",
+   "Ümit Karan / Necati / Hakan rotasyonunun ilk 11 payı"
+  ]
+ },
+ {
+  "id": "cimsir_trabzonspor_2020",
+  "kind": "REPLICA",
+  "category": "TURKISH_BIG4",
+  "club": "Trabzonspor",
+  "coach": "Hüseyin Çimşir",
+  "season": "2019-20",
+  "honours": [
+   "Türkiye Kupası (finalde Alanyaspor 2-0; 10 yıllık kupa hasretinin sonu)",
+   "Süper Lig ikincisi (65 puan, ligin en golcüsü: 76 gol)"
+  ],
+  "whyIconic": "Sezon ortasında Ünal Karaman'dan devralan Çimşir'le takım zirveye çıktı, ligi ikinci bitirdi ve 10 yıllık kupa hasretini bitirdi. Sørloth ligde 24 golle gol kralı oldu (sezonda 33). Ligin en çok gol atan takımı.",
+  "realShape": {
+   "inPossession": "4-2-3-1; Sosa 10 numarada oyunu kurar, Nwakaeme soldan içe kesip çalımla yaratır, Sørloth hem derinlik hem hava hedefi",
+   "outOfPossession": "4-4-1-1 orta blok, kaptığında Sørloth'a hızlı dikey",
+   "keyMechanisms": [
+    "Sørloth: derinlik koşusu + hava gücü + bitiricilik",
+    "Nwakaeme'nin soldan bire birleri ve içe kat",
+    "Sosa'nın ara pası ve duran topları",
+    "Abdülkadir Ömür'ün sağdan içe gelen yaratıcılığı",
+    "Uğurcan Çakır'ın kurtarışları"
+   ]
+  },
+  "fc27": {
+   "formation": "4-2-3-1 (2)",
+   "buildUp": "BALANCED",
+   "defensiveApproach": "BALANCED",
+   "lineHeight": 52,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Goalkeeper",
+     "focus": "Balanced",
+     "profile": "Uğurcan Çakır tipi: refleks ve bire bir kurtarış",
+     "keyAttributes": [
+      "GK Reflexes",
+      "GK Diving",
+      "Reactions",
+      "GK Positioning"
+     ],
+     "keyPlayStyles": [
+      "Far Reach",
+      "Footwork"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Attacking Wingback",
+     "focus": "Support",
+     "profile": "Filip Novák tipi: soldan bindiren, ortası olan bek",
+     "keyAttributes": [
+      "Crossing",
+      "Stamina",
+      "Sprint Speed",
+      "Long Shots"
+     ],
+     "keyPlayStyles": [
+      "Whipped Pass",
+      "Relentless"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Ball-Playing Defender",
+     "focus": "Defend",
+     "profile": "Majid Hosseini tipi: pasla çıkan sol stoper (VERIFY)",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Short Passing",
+      "Composure",
+      "Standing Tackle"
+     ],
+     "keyPlayStyles": [
+      "Anticipate",
+      "Long Ball Pass"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Defender",
+     "focus": "Defend",
+     "profile": "Hüseyin Türkmen / Manuel da Costa tipi: fiziksel stoper (VERIFY)",
+     "keyAttributes": [
+      "Heading Accuracy",
+      "Strength",
+      "Standing Tackle",
+      "Defensive Awareness"
+     ],
+     "keyPlayStyles": [
+      "Aerial Fortress",
+      "Block"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Fullback",
+     "focus": "Balanced",
+     "profile": "João Pereira tipi: tecrübeli, iki yönlü sağ bek",
+     "keyAttributes": [
+      "Stamina",
+      "Standing Tackle",
+      "Crossing",
+      "Aggression"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Jockey"
+     ]
+    },
+    {
+     "slot": "LDM",
+     "position": "CDM",
+     "role": "Holding",
+     "focus": "Ball-Winning",
+     "profile": "Badou Ndiaye tipi: fiziksel, top kazanan ön libero",
+     "keyAttributes": [
+      "Standing Tackle",
+      "Interceptions",
+      "Strength",
+      "Stamina"
+     ],
+     "keyPlayStyles": [
+      "Intercept",
+      "Bruiser"
+     ]
+    },
+    {
+     "slot": "RDM",
+     "position": "CDM",
+     "role": "Deep-Lying Playmaker",
+     "focus": "Build-Up",
+     "profile": "Guilherme tipi: derinden pas dağıtan ikinci pivot (VERIFY)",
+     "keyAttributes": [
+      "Short Passing",
+      "Long Passing",
+      "Vision",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Tiki Taka",
+      "Long Ball Pass"
+     ]
+    },
+    {
+     "slot": "LM",
+     "position": "LM",
+     "role": "Inside Forward",
+     "focus": "Balanced",
+     "profile": "Anthony Nwakaeme tipi: soldan çalımla içe kesen yaratıcı",
+     "keyAttributes": [
+      "Dribbling",
+      "Ball Control",
+      "Agility",
+      "Finishing"
+     ],
+     "keyPlayStyles": [
+      "Technical",
+      "Trickster"
+     ]
+    },
+    {
+     "slot": "CAM",
+     "position": "CAM",
+     "role": "Playmaker",
+     "focus": "Balanced",
+     "profile": "José Sosa tipi (kaptan): ara pas, duran top, ritim",
+     "keyAttributes": [
+      "Vision",
+      "Short Passing",
+      "Curve",
+      "Free Kick Accuracy"
+     ],
+     "keyPlayStyles": [
+      "Incisive Pass",
+      "Dead Ball"
+     ]
+    },
+    {
+     "slot": "RM",
+     "position": "RM",
+     "role": "Wide Playmaker",
+     "focus": "Attack",
+     "profile": "Abdülkadir Ömür tipi: sağdan içe gelen genç yaratıcı (Yusuf Sarı rotasyonu)",
+     "keyAttributes": [
+      "Dribbling",
+      "Vision",
+      "Agility",
+      "Short Passing"
+     ],
+     "keyPlayStyles": [
+      "Technical",
+      "Incisive Pass"
+     ]
+    },
+    {
+     "slot": "ST",
+     "position": "ST",
+     "role": "Advanced Forward",
+     "focus": "Attack",
+     "profile": "Alexander Sørloth tipi: güçlü, derine koşan, havada da etkili gol kralı",
+     "keyAttributes": [
+      "Finishing",
+      "Strength",
+      "Sprint Speed",
+      "Heading Accuracy"
+     ],
+     "keyPlayStyles": [
+      "Power Shot",
+      "Precision Header",
+      "Rapid"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Hedef forvet — Sørloth'a top bağla",
+    "formation": "4-2-3-1 (2)",
+    "buildUp": "COUNTER",
+    "defensiveApproach": "BALANCED",
+    "lineHeight": 42,
+    "changes": [
+     "ST: Target Forward/Attack (Sørloth)",
+     "RM: Winger/Balanced",
+     "LB: Fullback/Balanced"
+    ]
+   },
+   "smartTactics": [
+    "Tactical Focus: Hücum → BALANCED→HIGH (focus kaymaları oyunun kuralıyla). Ne zaman: iç sahada skor aranırken.",
+    "Tactical Focus: Savunma → BALANCED→DEEP (focus kaymaları oyunun kuralıyla). Ne zaman: önde ve deplasmanda.",
+    "Quick Tactic: Overload Set Pieces — Sosa duran topları, Sørloth/Hosseini kafa"
+   ],
+   "tacticCode": null
+  },
+  "replicaFidelity": {
+   "score": 3,
+   "cannotReplicate": [
+    "Çimşir sezonun yalnız ikinci yarısında görevdeydi; ilk yarı Karaman dönemi",
+    "Sol kanatta Nwakaeme'nin serbestliği ve bek ile yer değiştirmeleri tek rolle sınırlı"
+   ]
+  },
+  "behaviorTags": [
+   "st_run_behind",
+   "st_target",
+   "wm_cut_inside",
+   "cam_create",
+   "cdm_ball_winner",
+   "fb_overlap"
+  ],
+  "sources": [
+   "https://en.wikipedia.org/wiki/2019%E2%80%9320_Trabzonspor_season (teknik direktör değişimi, kupa finali, Sørloth 24/33 gol, kadro, puan tablosu)",
+   "model bilgisi — rol/formasyon VERIFY"
+  ],
+  "verify": [
+   "Çimşir döneminin ana formasyonu",
+   "Stoper ikilisi ve ikinci pivotun sezon geneli isimleri",
+   "Sağ kanatta Abdülkadir Ömür / Yusuf Sarı payı"
+  ]
+ },
+ {
+  "id": "delbosque_real_2003",
+  "kind": "REPLICA",
+  "category": "LEGENDARY_SQUAD",
+  "club": "Real Madrid",
+  "coach": "Vicente del Bosque",
+  "season": "2002-03",
+  "honours": [
+   "La Liga şampiyonu",
+   "Şampiyonlar Ligi yarı final"
+  ],
+  "whyIconic": "Galácticos çağının zirvesi: Zidane, Figo, Raúl, Roberto Carlos'un yanına Ronaldo geldi ve ilk sezonunda ligi kazandılar. Makélélé'nin tek başına taşıdığı denge, sonradan \"Makélélé rolü\" diye anıldı.",
+  "realShape": {
+   "inPossession": "4-2-2-2; Zidane ve Figo dar 10'lar, Roberto Carlos tüm sol koridoru tek başına kullanır, Raúl–Ronaldo ikilisi",
+   "outOfPossession": "4-4-2 orta blok; savunma yükünün büyük kısmı Makélélé ve stoperlerde",
+   "keyMechanisms": [
+    "Makélélé: yıldızların savunma yükünü tek başına taşıyan çapa",
+    "Zidane'ın soldan içeri gelip oyunu yönetmesi",
+    "Figo'nun sağdan içe kat ve orta",
+    "Roberto Carlos'un sürekli bindirmesi",
+    "Raúl'un düşüp bağlaması, Ronaldo'nun derinlik ve bitiriciliği"
+   ]
+  },
+  "fc27": {
+   "formation": "4-2-2-2",
+   "buildUp": "BALANCED",
+   "defensiveApproach": "BALANCED",
+   "lineHeight": 54,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Goalkeeper",
+     "focus": "Balanced",
+     "profile": "Iker Casillas tipi: refleks ve bire bir",
+     "keyAttributes": [
+      "GK Reflexes",
+      "GK Diving",
+      "Reactions",
+      "GK Positioning"
+     ],
+     "keyPlayStyles": [
+      "Far Reach",
+      "Footwork"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Attacking Wingback",
+     "focus": "Attack",
+     "profile": "Roberto Carlos tipi: sol koridorun tek sahibi, füze şut",
+     "keyAttributes": [
+      "Sprint Speed",
+      "Stamina",
+      "Shot Power",
+      "Crossing"
+     ],
+     "keyPlayStyles": [
+      "Power Shot",
+      "Whipped Pass",
+      "Rapid"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Defender",
+     "focus": "Defend",
+     "profile": "Iván Helguera tipi: pozisyon bilgisi ve hava hakimiyeti",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Heading Accuracy",
+      "Standing Tackle",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Anticipate",
+      "Aerial Fortress"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Ball-Playing Defender",
+     "focus": "Build-Up",
+     "profile": "Fernando Hierro tipi: lider, uzun pas ve duran top",
+     "keyAttributes": [
+      "Long Passing",
+      "Composure",
+      "Heading Accuracy",
+      "Defensive Awareness"
+     ],
+     "keyPlayStyles": [
+      "Long Ball Pass",
+      "Dead Ball"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Fullback",
+     "focus": "Balanced",
+     "profile": "Míchel Salgado tipi: iki yönlü, sert sağ bek",
+     "keyAttributes": [
+      "Stamina",
+      "Standing Tackle",
+      "Aggression",
+      "Crossing"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Jockey"
+     ]
+    },
+    {
+     "slot": "LDM",
+     "position": "CDM",
+     "role": "Holding",
+     "focus": "Defend",
+     "profile": "Claude Makélélé tipi: savunma önünün tek sahibi, kısa pas",
+     "keyAttributes": [
+      "Interceptions",
+      "Standing Tackle",
+      "Defensive Awareness",
+      "Short Passing"
+     ],
+     "keyPlayStyles": [
+      "Intercept",
+      "Press Proven"
+     ]
+    },
+    {
+     "slot": "RDM",
+     "position": "CDM",
+     "role": "Deep-Lying Playmaker",
+     "focus": "Build-Up",
+     "profile": "Guti / Cambiasso / Flávio Conceição tipi ikinci pivot (rotasyon, VERIFY)",
+     "keyAttributes": [
+      "Short Passing",
+      "Vision",
+      "Composure",
+      "Long Passing"
+     ],
+     "keyPlayStyles": [
+      "Tiki Taka",
+      "Incisive Pass"
+     ]
+    },
+    {
+     "slot": "LAM",
+     "position": "CAM",
+     "role": "Playmaker",
+     "focus": "Roaming",
+     "profile": "Zinédine Zidane tipi: soldan içe gelip oyunu yöneten deha",
+     "keyAttributes": [
+      "Ball Control",
+      "Vision",
+      "Short Passing",
+      "Dribbling"
+     ],
+     "keyPlayStyles": [
+      "Technical",
+      "First Touch",
+      "Incisive Pass"
+     ]
+    },
+    {
+     "slot": "RAM",
+     "position": "CAM",
+     "role": "Classic 10",
+     "focus": "Wide",
+     "profile": "Luís Figo tipi: sağdan içe kat, orta ve ara pas",
+     "keyAttributes": [
+      "Dribbling",
+      "Crossing",
+      "Vision",
+      "Curve"
+     ],
+     "keyPlayStyles": [
+      "Trickster",
+      "Whipped Pass"
+     ]
+    },
+    {
+     "slot": "LST",
+     "position": "ST",
+     "role": "Advanced Forward",
+     "focus": "Support",
+     "profile": "Raúl tipi: düşüp bağlayan, kutuya geç giren ikinci forvet",
+     "keyAttributes": [
+      "Positioning",
+      "Finishing",
+      "Composure",
+      "Vision"
+     ],
+     "keyPlayStyles": [
+      "Finesse Shot",
+      "First Touch"
+     ]
+    },
+    {
+     "slot": "RST",
+     "position": "ST",
+     "role": "Advanced Forward",
+     "focus": "Attack",
+     "profile": "Ronaldo Nazário tipi: hız, bire bir ve bitiricilik",
+     "keyAttributes": [
+      "Acceleration",
+      "Finishing",
+      "Dribbling",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Quick Step",
+      "Finesse Shot"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Önde koruma — dörtlü orta saha",
+    "formation": "4-4-2 (2)",
+    "buildUp": "BALANCED",
+    "defensiveApproach": "BALANCED",
+    "lineHeight": 45,
+    "changes": [
+     "LM: Wide Playmaker/Build-Up (Zidane)",
+     "RM: Wide Midfielder/Support (Figo)",
+     "LB: Fullback/Balanced (Roberto Carlos daha temkinli)",
+     "LST: Advanced Forward/Versatile (Raúl)",
+     "RST: Advanced Forward/Attack (Ronaldo)"
+    ]
+   },
+   "smartTactics": [
+    "Tactical Focus: Hücum → BALANCED→HIGH (focus kaymaları oyunun kuralıyla). Ne zaman: Bernabéu'da skor aranırken.",
+    "Tactical Focus: Savunma → BALANCED→DEEP. Ne zaman: Avrupa deplasmanlarında önde.",
+    "Quick Tactic: Overload Set Pieces — Roberto Carlos ve Hierro frikikleri"
+   ],
+   "tacticCode": null
+  },
+  "replicaFidelity": {
+   "score": 4,
+   "cannotReplicate": [
+    "Makélélé'nin tek başına bütün merkezi kapatması oyunda bir role sığmaz; Holding/Defend yaklaştırır",
+    "Zidane–Figo serbestliği ve yer değiştirmeleri tek role sınırlı"
+   ]
+  },
+  "behaviorTags": [
+   "cdm_anchor",
+   "fb_overlap",
+   "cam_create",
+   "st_drop_deep",
+   "st_run_behind",
+   "star_freedom"
+  ],
+  "sources": [
+   "model bilgisi — rol/formasyon VERIFY"
+  ],
+  "verify": [
+   "İkinci pivotun (Guti / Cambiasso / Flávio Conceição) sezon geneli payı",
+   "Ronaldo'nun ligdeki gol sayısı ve ilk 11 payı",
+   "Şampiyonlar Ligi yarı final rakibi (Juventus)"
+  ]
+ },
+ {
+  "id": "mancini_city_2012",
+  "kind": "REPLICA",
+  "category": "LEGENDARY_SQUAD",
+  "club": "Manchester City",
+  "coach": "Roberto Mancini",
+  "season": "2011-12",
+  "honours": [
+   "Premier League şampiyonu (44 yıl sonra ilk lig şampiyonluğu, averajla)"
+  ],
+  "whyIconic": "Son haftada QPR karşısında 93:20'de Agüero'nun golüyle gelen, futbol tarihinin en dramatik şampiyonluklarından biri; sezon içinde Old Trafford'da 6-1. Silva–Nasri'nin dar 10'ları ve Yaya Touré'nin gücüyle.",
+  "realShape": {
+   "inPossession": "4-2-2-2 / 4-2-3-1; Silva ve Nasri dar içerde, bekler genişlik verir, Yaya Touré ikinci dalga",
+   "outOfPossession": "4-4-2 / 4-4-1-1 orta blok, Barry önü kapatır",
+   "keyMechanisms": [
+    "Silva'nın soldan iç koridorda oyun yönetmesi",
+    "Yaya Touré'nin topla ilerleyip ceza sahasına girmesi",
+    "Bekler (Clichy, Richards/Zabaleta) genişliği verir",
+    "Agüero'nun derinlik ve bitiricilik; Džeko hava hedefi",
+    "Kompany liderliğinde önde savunma"
+   ]
+  },
+  "fc27": {
+   "formation": "4-2-2-2",
+   "buildUp": "SHORT_PASSING",
+   "defensiveApproach": "BALANCED",
+   "lineHeight": 57,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Goalkeeper",
+     "focus": "Balanced",
+     "profile": "Joe Hart tipi: refleks ve hava toplarında güven",
+     "keyAttributes": [
+      "GK Reflexes",
+      "GK Diving",
+      "GK Handling",
+      "Reactions"
+     ],
+     "keyPlayStyles": [
+      "Far Reach",
+      "Cross Claimer"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Wingback",
+     "focus": "Balanced",
+     "profile": "Gaël Clichy tipi: hızlı, sol koridoru dolduran bek",
+     "keyAttributes": [
+      "Sprint Speed",
+      "Stamina",
+      "Standing Tackle",
+      "Crossing"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Relentless"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Defender",
+     "focus": "Defend",
+     "profile": "Joleon Lescott tipi: güvenilir, hava hakimi stoper",
+     "keyAttributes": [
+      "Heading Accuracy",
+      "Defensive Awareness",
+      "Standing Tackle",
+      "Strength"
+     ],
+     "keyPlayStyles": [
+      "Aerial Fortress",
+      "Block"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Ball-Playing Defender",
+     "focus": "Aggressive",
+     "profile": "Vincent Kompany tipi: önde basan, pasla çıkan lider",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Aggression",
+      "Short Passing",
+      "Strength"
+     ],
+     "keyPlayStyles": [
+      "Anticipate",
+      "Bruiser"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Attacking Wingback",
+     "focus": "Support",
+     "profile": "Micah Richards / Pablo Zabaleta tipi: güçlü, bindiren sağ bek",
+     "keyAttributes": [
+      "Stamina",
+      "Strength",
+      "Sprint Speed",
+      "Crossing"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Bruiser"
+     ]
+    },
+    {
+     "slot": "LDM",
+     "position": "CDM",
+     "role": "Holding",
+     "focus": "Defend",
+     "profile": "Gareth Barry tipi: pozisyon ve kısa pas ile denge",
+     "keyAttributes": [
+      "Interceptions",
+      "Short Passing",
+      "Defensive Awareness",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Intercept",
+      "Tiki Taka"
+     ]
+    },
+    {
+     "slot": "RDM",
+     "position": "CDM",
+     "role": "Box Crasher",
+     "focus": "Balanced",
+     "profile": "Yaya Touré tipi: topla ilerleyen, ceza sahasına giren güç",
+     "keyAttributes": [
+      "Strength",
+      "Dribbling",
+      "Long Shots",
+      "Stamina"
+     ],
+     "keyPlayStyles": [
+      "Power Shot",
+      "Bruiser",
+      "Press Proven"
+     ]
+    },
+    {
+     "slot": "LAM",
+     "position": "CAM",
+     "role": "Playmaker",
+     "focus": "Roaming",
+     "profile": "David Silva tipi: dar alanda oyun yöneten, ara pas",
+     "keyAttributes": [
+      "Vision",
+      "Ball Control",
+      "Agility",
+      "Short Passing"
+     ],
+     "keyPlayStyles": [
+      "Incisive Pass",
+      "Technical",
+      "First Touch"
+     ]
+    },
+    {
+     "slot": "RAM",
+     "position": "CAM",
+     "role": "Half Winger",
+     "focus": "Balanced",
+     "profile": "Samir Nasri tipi: sağ iç koridorda yaratıcı (Milner rotasyonu)",
+     "keyAttributes": [
+      "Dribbling",
+      "Short Passing",
+      "Agility",
+      "Vision"
+     ],
+     "keyPlayStyles": [
+      "Technical",
+      "Trickster"
+     ]
+    },
+    {
+     "slot": "LST",
+     "position": "ST",
+     "role": "Target Forward",
+     "focus": "Balanced",
+     "profile": "Edin Džeko tipi: hava hedefi, top saklama (Balotelli / Tevez rotasyonu)",
+     "keyAttributes": [
+      "Heading Accuracy",
+      "Strength",
+      "Finishing",
+      "Jumping"
+     ],
+     "keyPlayStyles": [
+      "Precision Header",
+      "Power Shot"
+     ]
+    },
+    {
+     "slot": "RST",
+     "position": "ST",
+     "role": "Advanced Forward",
+     "focus": "Attack",
+     "profile": "Sergio Agüero tipi: patlayıcı hız ve bitiricilik",
+     "keyAttributes": [
+      "Acceleration",
+      "Finishing",
+      "Agility",
+      "Positioning"
+     ],
+     "keyPlayStyles": [
+      "Quick Step",
+      "Finesse Shot",
+      "Rapid"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Tek forvet — 4-2-3-1 kontrol",
+    "formation": "4-2-3-1 (2)",
+    "buildUp": "SHORT_PASSING",
+    "defensiveApproach": "BALANCED",
+    "lineHeight": 55,
+    "changes": [
+     "LM: Inside Forward/Balanced (Silva)",
+     "CAM: Playmaker/Balanced (Nasri)",
+     "RM: Wide Midfielder/Support (Milner)",
+     "ST: Advanced Forward/Attack (Agüero)"
+    ]
+   },
+   "smartTactics": [
+    "Tactical Focus: Hücum → BALANCED→HIGH (focus kaymaları oyunun kuralıyla). Ne zaman: geride kalınca, QPR maçının son dakikaları gibi.",
+    "Tactical Focus: Savunma → BALANCED→DEEP. Ne zaman: büyük deplasmanlarda önde.",
+    "Quick Tactic: Get In Box — Džeko + Agüero + Touré kutuya"
+   ],
+   "tacticCode": null
+  },
+  "replicaFidelity": {
+   "score": 4,
+   "cannotReplicate": [
+    "Silva–Nasri'nin içeri gelip beklere alan açması rollerle yaklaşık verilir",
+    "Tevez / Balotelli / Džeko rotasyonu oyuncu değişikliğiyle verilir"
+   ]
+  },
+  "behaviorTags": [
+   "cam_create",
+   "cdm_box_crash",
+   "fb_overlap",
+   "st_target",
+   "st_run_behind",
+   "narrow_wingers"
+  ],
+  "sources": [
+   "model bilgisi — rol/formasyon VERIFY"
+  ],
+  "verify": [
+   "Yaya Touré'nin pivot mu 10 mu olarak sayıldığı",
+   "Sağ bekte Richards / Zabaleta payı",
+   "Lig sonunda ana formasyonun 4-2-2-2 mi 4-2-3-1 mi olduğu"
+  ]
  }
 ]
