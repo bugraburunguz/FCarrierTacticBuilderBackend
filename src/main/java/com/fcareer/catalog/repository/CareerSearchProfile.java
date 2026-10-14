@@ -146,7 +146,8 @@ final class CareerSearchProfile implements SearchProfile {
 
     @Override
     public String livePoolFilter() {
-        return "(cp.live OR NOT EXISTS (SELECT 1 FROM career_player lv WHERE lv.career_id = cp.career_id AND lv.live))";
+        // Korelasyonsuz alt sorgu: tek sefer hesaplanır (eski EXISTS her satır için tarıyordu; katalog kariyerinde O(n²), 55 sn).
+        return "(cp.live OR NOT COALESCE((SELECT bool_or(lv.live) FROM career_player lv WHERE lv.career_id = CAST(:careerId AS BIGINT)), FALSE))";
     }
 
     @Override

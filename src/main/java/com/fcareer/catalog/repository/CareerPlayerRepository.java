@@ -121,7 +121,7 @@ public class CareerPlayerRepository {
                     LEFT JOIN league l ON l.id = c.league_id
                    WHERE cp.career_id = :c AND NOT cp.free_agent AND NOT COALESCE(ct.free_agent_pool, FALSE)
                      AND (cp.team_id IS NOT NULL OR cp.club_id IS NOT NULL)
-                     AND (cp.live OR NOT EXISTS (SELECT 1 FROM career_player lv WHERE lv.career_id = cp.career_id AND lv.live))
+                     AND (cp.live OR NOT (SELECT COALESCE(bool_or(lv.live), FALSE) FROM career_player lv WHERE lv.career_id = :c))
                 ) s WHERE rn <= :top GROUP BY kt, k, league""", new MapSqlParameterSource("c", careerId).addValue("top", top),
                 (rs, i) -> new TeamStrengthRow(rs.getString("team_key"), rs.getString("league"), rs.getDouble("strength"), rs.getInt("n")));
     }
