@@ -306,6 +306,31 @@ class TacticRulesTest {
         assertThat(finding(highLine, "no_anchor")).as("yüksek hat").isPresent();
     }
 
+    /** Buğra kararı (E3-9 sonrası): hat >= HIGH tek başına yetmez; hat >= HIGH VE geri savunma < 5 gerekir. */
+    @Test
+    void noAnchor_aHighLineAloneIsNotEnough_itNeedsAThinRestDefenceToo() {
+        String[] noAnchor = {"LDM=box_crasher_balanced", "RDM=box_crasher_balanced"};
+        // 4-3-3 benzeri: 2 CB + 2 bek (dyFwd 8) + 2 B2B (d 0,55, dyFwd 8) geride kalır = 6 >= 5; çapa yok
+        Analysis pressing = run(base433(), BuildUpType.BALANCED, 85, Map.of(), "CDM=box_crasher_balanced");
+        assertThat(finding(pressing, "no_anchor")).as("yüksek hat ama geri savunma 6 >= 5: uyarı yok").isEmpty();
+        assertThat(finding(pressing, "no_anchor_info")).isPresent();
+        Analysis thin = run(BuildUpType.BALANCED, 85, "LDM=box_crasher_balanced", "RDM=box_crasher_balanced", "LB=attacking_wingback_attack", "RB=attacking_wingback_attack");
+        Finding f = finding(thin, "no_anchor").orElseThrow();
+        assertThat(f.evidence()).extracting((e) -> e.metric()).contains("HIGH_LINE_THIN_REST");
+        assertThat(finding(run(BuildUpType.BALANCED, 85, noAnchor), "no_anchor")).as("4 < 5: tetikler").isPresent();
+    }
+
+    /** Çapa tanımı: d >= 0,8 olan roller + tüm Deep-Lying Playmaker focus'ları (DLP Build-Up stoperlerin arasına düşer = perde). */
+    @Test
+    void noAnchor_anyDeepLyingPlaymakerFocusCountsAsAnAnchor() {
+        for (String dlp : new String[]{"deep_lying_playmaker_defend", "deep_lying_playmaker_roaming", "deep_lying_playmaker_build_up"}) {
+            Analysis a = run(BuildUpType.BALANCED, 85, "LDM=box_crasher_balanced", "RDM=" + dlp, "LB=attacking_wingback_attack", "RB=attacking_wingback_attack");
+            assertThat(finding(a, "no_anchor")).as(dlp).isEmpty();
+            assertThat(finding(a, "no_anchor_info")).as(dlp).isEmpty();
+        }
+        assertThat(finding(run(BuildUpType.BALANCED, 55, "LDM=box_crasher_balanced", "RDM=box_crasher_balanced"), "no_anchor_info")).isPresent();
+    }
+
     @Test
     void noAnchor_isSilentWithAHolder_andAWingbackBackFiveIsNotPunishedForPushingUp() {
         assertThat(finding(run(BuildUpType.BALANCED, 55), "no_anchor")).isEmpty();

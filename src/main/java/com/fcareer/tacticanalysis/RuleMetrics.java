@@ -24,6 +24,8 @@ public class RuleMetrics {
     private static final Set<String> STRIKERS = Set.of("ST", "CF");
     private static final Set<String> ANCHOR_POSITIONS = Set.of("CDM", "CM");
     private static final double ANCHOR_D_MIN = 0.8;
+    /** DLP (her focus) Build-Up'ta stoperlerin arasına düşer: perde sayılır. */
+    private static final String ANCHOR_ROLE = "deep_lying_playmaker";
     private static final long BACK_LINE_COVER = 3;
     private static final String PARAM_SIDE = "side";
     private static final String PARAM_MIN = "min";
@@ -53,7 +55,8 @@ public class RuleMetrics {
             case "RUNBEHIND_COUNT" -> OptionalDouble.of(ctx.outfield().stream().filter((p) -> p.m().runBehind() >= number(params, PARAM_MIN)).count());
             case "FALSE9_COUNT" -> OptionalDouble.of(ctx.outfield().stream().filter((p) -> "false_9".equals(p.m().role())).count());
             case "STRIKER_RUNBEHIND_MAX" -> max(ctx, (p) -> STRIKERS.contains(p.position()), (p) -> p.m().runBehind());
-            case "ANCHOR_COUNT" -> OptionalDouble.of(ctx.outfield().stream().filter((p) -> ANCHOR_POSITIONS.contains(p.position()) && p.m().d() >= ANCHOR_D_MIN).count());
+            case "ANCHOR_COUNT" -> OptionalDouble.of(ctx.outfield().stream().filter((p) -> ANCHOR_POSITIONS.contains(p.position()) && (p.m().d() >= ANCHOR_D_MIN || ANCHOR_ROLE.equals(p.m().role()))).count());
+            case "HIGH_LINE_THIN_REST" -> OptionalDouble.of(ctx.band().ordinal() >= number(params, "bandMin") && calculator.restDefence(ctx).count() < number(params, "restBelow") ? 1 : 0);
             case "SIDE_WINGER_CUTIN_MAX" -> max(ctx, side(params, WINGERS), (p) -> p.m().cutIn());
             case "SIDE_WINGER_W_MAX" -> max(ctx, side(params, WINGERS), (p) -> p.m().w());
             case "SIDE_FULLBACK_DYFWD_MAX" -> max(ctx, side(params, FULLBACKS), (p) -> p.m().dyFwd());

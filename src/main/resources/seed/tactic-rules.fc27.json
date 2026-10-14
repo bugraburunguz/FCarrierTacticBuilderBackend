@@ -426,10 +426,13 @@
           "value": 14
         },
         {
-          "metric": "BAND_ORDINAL",
-          "params": {},
+          "metric": "HIGH_LINE_THIN_REST",
+          "params": {
+            "bandMin": 2,
+            "restBelow": 5
+          },
           "op": "GTE",
-          "value": 2
+          "value": 1
         }
       ]
     },
