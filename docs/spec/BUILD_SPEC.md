@@ -4,7 +4,7 @@ Offline EA FC kariyer/menajerlik companion web uygulaması. Bu dosya **tek baş�
 
 ## 0. BU SPEC NASIL KULLANILIR
 - **Proje konumları (kesin):**
-  - Local kök: `C:\Users\bugra\OneDrive\Desktop\Projects\FCarrierTacticBuilder` — iki repo bunun altına klonlanır.
+  - Local kök: `/Users/user/Desktop/Projects/FCarrierTacticBuilder` — iki repo bunun altına klonlanır.
   - **Backend repo (private):** `https://github.com/bugraburunguz/FCarrierTacticBuilderBackend.git` → `...\FCarrierTacticBuilder\FCarrierTacticBuilderBackend` (Java/Spring Boot; Python ML servisi `/ml-service` alt klasörü).
   - **Web repo (private):** `https://github.com/bugraburunguz/FCarrierTacticBuilderWeb.git` → `...\FCarrierTacticBuilder\FCarrierTacticBuilderWeb` (React + TypeScript).
   - Docker Compose local kökte (`docker-compose.yml`), iki repoyu + pg/redis/ml'i ayağa kaldırır.
@@ -29,7 +29,7 @@ futbolu **davranışlarla** seçer → motor rolü/taktiği türetir → kadrosu
 - **Kafka/OpenFeign:** Buğra'nın iş stack'inde var ama bu ürün tek backend + ML (REST). Gerekmedikçe EKLENMEZ (house-style §1.6: gereksiz teknoloji yok).
 - Frontend: **React + TypeScript + Vite + TailwindCSS**. State: TanStack Query.
 - Auth: JWT (access+refresh), bcrypt. Ödeme: provider-abstraction (MVP'de stub).
-- Deploy: Docker Compose (app, pg, redis, ml). Repo kökü: `C:\Users\bugra\OneDrive\Desktop\Projects\FCarrierTacticBuilder`.
+- Deploy: Docker Compose (app, pg, redis, ml). Repo kökü: `/Users/user/Desktop/Projects/FCarrierTacticBuilder`.
 
 ## 3. MİMARİ (katmanlar)
 ```
@@ -282,7 +282,7 @@ Akış: upload (CSV/SQLite export) → `SaveImportParser` (şemaya map) → `use
 UX kuralı: davranış seçimi FM-tarzı; uyumsuz tag seçilemez (client).
 
 ## 13. BUILD SIRASI (Sonnet için faz sırası)
-1. Repo iskelet (`C:\Users\bugra\OneDrive\Desktop\Projects\FCarrierTacticBuilder`) + Docker Compose (app/pg/redis/ml) + Flyway V1 (§6 DDL).
+1. Repo iskelet (`/Users/user/Desktop/Projects/FCarrierTacticBuilder`) + Docker Compose (app/pg/redis/ml) + Flyway V1 (§6 DDL).
 2. Catalog entity/repo + `ExternalDataProvider`/Mock + drop-api ingestion + açık-dataset seed.
 3. Role library seeder (§7) + behavior_tag/preset seed (companion dosyalardan).
 4. **Fit Engine** (`fit_engine_spec.md`) + birim testler (6 senaryo) — ilk ve en kritik iş.
@@ -294,7 +294,7 @@ UX kuralı: davranış seçimi FM-tarzı; uyumsuz tag seçilemez (client).
 > Gate: Fit Engine testleri yeşil olmadan ileri gidilmez.
 
 ## 14. TEST
-Testcontainers (PG+Redis). Yüksek coverage: Fit Engine (deterministik fixture), RulesEngine, model validasyon (MAE eşiği), credit (transactional, refund), import parser (mock fixture). Solver için deterministik atama testi (§fit_engine_spec T3).
+Gömülü Postgres (zonky embedded-postgres; Testcontainers kullanılmaz), Redis yerine bellek içi test bean'leri. Yüksek coverage: Fit Engine (deterministik fixture), RulesEngine, model validasyon (MAE eşiği), credit (transactional, refund), import parser (mock fixture). Solver için deterministik atama testi (§fit_engine_spec T3).
 
 ## 15. CONFIG / UNKNOWN FLAGLARI (uydurma yok)
 - `fc27_potential_model` (FC27 pot sistemi değişti → ayrı kalibrasyon) — CONFIG.

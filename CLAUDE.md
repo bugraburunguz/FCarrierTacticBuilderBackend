@@ -27,7 +27,7 @@ Eski Azerlottery standardı `docs/archive/backend-standard.md` altında, referan
 - Ücretli (kredi) iş üreten her uç `CreditGuard` arkasında; bedava önizleme uçları ücretli alanı döndürmez.
 
 ## Çalıştırma / test
-- `mvn test` (embedded PG). Opt-in: `-Dea.live=true`, `-Dml.live=true`. ML: `cd ml-service && python -m pytest`.
+- `mvn test`: entegrasyon testleri zonky gömülü Postgres ile (Docker gerekmez, Testcontainers yok); Redis yerine bellek içi bean'ler (`TestSupportConfiguration`). Opt-in: `-Dea.live=true`, `-Dml.live=true`. ML: `cd ml-service && python -m pytest`.
 - Dev: README'deki `DevApplication` akışı.
 
 ## Çalışma biçimi
@@ -45,5 +45,5 @@ Eski Azerlottery standardı `docs/archive/backend-standard.md` altında, referan
 - Veri silme protokolü: dry-run → git dışında yedek (`../backups`) → tek transaction → kullanıcı onayı.
   `docker compose down -v`, `DROP`, `TRUNCATE`, `DELETE` onaysız çalıştırılmaz.
 - Ortam: macOS (Apple Silicon, arm64). Proje kökü `/Users/user/Desktop/Projects/FCarrierTacticBuilder`
-  (backend `main`, web `v3`, yedekler `backups/` git dışı). Backend testleri JDK 17 ile:
-  `JAVA_HOME=$(/usr/libexec/java_home -v 17) mvn test` (Homebrew `mvn` varsayılan olarak daha yeni JDK seçer).
+  (backend `main`, web `v3`, yedekler `backups/` git dışı). JDK 17: `~/.zshrc` jenv ile `JAVA_HOME`'u ayarlar;
+  `.zshrc` okumayan shell'de `JAVA_HOME=$(/usr/libexec/java_home -v 17)` ver.

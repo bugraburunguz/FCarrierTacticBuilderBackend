@@ -29,11 +29,11 @@ Karar kaydı `docs/review/08_DECISIONS_LOG.md`; çelişkide o geçerlidir.
 
 ## Test
 - Testler zorunludur: kabul kriteri önce kırmızı test olarak yazılır.
-- `mvn test` (gömülü Postgres). Redis gerektiren davranışlar Testcontainers ile; ortak oyun kuralı vektörleri `seed/ut-rules.fc27.json` içinde, web ile paylaşılır.
+- `mvn test` (gömülü Postgres: zonky `@AutoConfigureEmbeddedDatabase`, Docker gerekmez; Testcontainers kullanılmaz). Redis testte yok: `TestSupportConfiguration` sayaç/token deposunu bellek içi verir; ortak oyun kuralı vektörleri `seed/ut-rules.fc27.json` içinde, web ile paylaşılır.
 - Fit engine katsayı değişikliği senaryo testleri (T1–T6) yeşil olmadan commit edilmez.
 
 ## Commit
 `<ID>: kısa açıklama` (+ `BEHAVIOR CHANGE:` / `API CONTRACT CHANGE:` satırı gerekirse). Bir PR'da tek konu.
 
 ## Bilinen sorunlar
-- **Gömülü Postgres önbelleği bozulabilir:** Entegrasyon testleri toplu düşer ve loglarda `FATAL: invalid value for parameter "TimeZone"` ile "Gave up waiting for server to start" görünür. Önbellek klasörünü silip testi yeniden çalıştır: `%TEMP%\embedded-pg` (Windows) / `$TMPDIR/embedded-pg`.
+- **Gömülü Postgres önbelleği bozulabilir:** Entegrasyon testleri toplu düşer ve loglarda `FATAL: invalid value for parameter "TimeZone"` ile "Gave up waiting for server to start" görünür. Önbellek klasörünü silip testi yeniden çalıştır: `$TMPDIR/embedded-pg`.
