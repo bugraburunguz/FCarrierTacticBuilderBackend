@@ -35,10 +35,13 @@ class TacticCodeRoundTripIntegrationTest {
 
     @Test
     void importThenExportReturnsTheSameCodeForEveryPublishedTactic() throws Exception {
-        JsonNode vectors;
-        try (InputStream in = new ClassPathResource("tactic-code/easysbc-vectors.json").getInputStream()) {
-            vectors = objectMapper.readTree(in).path("vectors");
+        JsonNode vectors = objectMapper.createArrayNode();
+        for (String file : List.of("tactic-code/easysbc-vectors.json", "tactic-code/in-game-vectors.json")) {
+            try (InputStream in = new ClassPathResource(file).getInputStream()) {
+                ((com.fasterxml.jackson.databind.node.ArrayNode) vectors).addAll((com.fasterxml.jackson.databind.node.ArrayNode) objectMapper.readTree(in).path("vectors"));
+            }
         }
+        assertThat(vectors).as("64 EasySBC + 10 oyun içi T kodu").hasSize(74);
         List<String> failures = new ArrayList<>();
         for (JsonNode v : vectors) {
             String code = v.path("code").asText();
@@ -61,5 +64,21 @@ class TacticCodeRoundTripIntegrationTest {
             }
         }
         assertThat(failures).isEmpty();
+    }
+
+    /** 14 §2 / §6: `SYq8#eNaswmP` import edilince 11 rol sahada doğru slotlarda. */
+    @Test
+    void theSampleCodeImportsTheElevenRolesIntoTheRightSlots() {
+        ImportResponse imported = tacticCodeService.importCode("SYq8#eNaswmP");
+        assertThat(imported.isExact()).isTrue();
+        assertThat(imported.getFormation()).isEqualTo("4-2-3-1 (2)");
+        assertThat(imported.getBuildUp()).isEqualTo("Balanced");
+        assertThat(imported.getDepth()).isEqualTo(25);
+        java.util.Map<String, String> roles = new java.util.HashMap<>();
+        imported.getSlots().forEach((s) -> roles.put(s.getSlotId(), s.getRoleId()));
+        assertThat(roles).containsEntry("GK", "goalkeeper_balanced").containsEntry("RB", "fullback_balanced").containsEntry("RCB", "stopper_balanced")
+                .containsEntry("LCB", "defender_defend").containsEntry("LB", "fullback_balanced").containsEntry("RDM", "deep_lying_playmaker_defend")
+                .containsEntry("LDM", "deep_lying_playmaker_roaming").containsEntry("RM", "wide_midfielder_support").containsEntry("LM", "wide_midfielder_support")
+                .containsEntry("CAM", "playmaker_balanced").containsEntry("ST", "advanced_forward_attack");
     }
 }

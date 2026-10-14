@@ -1,0 +1,45 @@
+{
+  "source": "Buğra, oyun içi T01-T10, 2026-10-14 (14 §5): oyundaki kod codec beklentisiyle birebir aynı",
+  "vectors": [
+    {
+      "id": "T01",
+      "code": "HxhPhVrvr$jX"
+    },
+    {
+      "id": "T02",
+      "code": "SBqUoF8iY4%&"
+    },
+    {
+      "id": "T03",
+      "code": "hJ5L451tzC$m"
+    },
+    {
+      "id": "T04",
+      "code": "TgrZcfj$d1ng"
+    },
+    {
+      "id": "T05",
+      "code": "BhbLBJpVLpdh"
+    },
+    {
+      "id": "T06",
+      "code": "ex5o3i5$o#ag"
+    },
+    {
+      "id": "T07",
+      "code": "xBN7H1R47f1G"
+    },
+    {
+      "id": "T08",
+      "code": "MZoYdgYUW8gp"
+    },
+    {
+      "id": "T09",
+      "code": "KZmUT8iSUomK"
+    },
+    {
+      "id": "T10",
+      "code": "fZ7ngV3np9bx"
+    }
+  ]
+}

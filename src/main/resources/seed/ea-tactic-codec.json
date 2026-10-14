@@ -1,4 +1,11 @@
 {
+  "verification": {
+    "verified": true,
+    "source": "64 oyunda çalışan EasySBC kodu + Buğra oyun içi T01-T10 (10/10 birebir), 2026-10-14",
+    "combinations": { "verified": 113, "total": 113 },
+    "formations": { "verified": 29, "total": 29 },
+    "proof": "EaTacticCodecInGameVectorsTest: 74 kodun decode edilmiş taktiklerinde görülen (mevki, rol.focus) ve formasyonlar tablonun tamamını kapsar"
+  },
  "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789?@",
  "substitutions": {
   "0": "&",
