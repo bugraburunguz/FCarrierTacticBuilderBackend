@@ -231,6 +231,9 @@ public class VersioningService {
 
     private int styleCount(String json) {
         Map<String, Object> map = readMap(json);
+        if (Objects.isNull(map)) {
+            return 0;
+        }
         return map.values().stream().filter(List.class::isInstance).mapToInt(v -> ((List<?>) v).size()).sum();
     }
 
