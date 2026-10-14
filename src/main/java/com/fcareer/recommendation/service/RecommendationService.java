@@ -134,7 +134,7 @@ public class RecommendationService {
         }
         PlayerSearchRequest search = switch (view.getScope()) {
             case SQUAD -> PlayerSearchRequest.builder().gameVersionId(squad.gameVersionId()).gender(squad.gender())
-                    .ids(squad.playerIds()).careerId(squad.careerId()).sort("overall").size(CANDIDATE_POOL).build();
+                    .ids(squad.playerIds()).careerId(squad.careerId()).sort("name").ascending(true).size(CANDIDATE_POOL).build();
             case LEAGUE -> {
                 PlayerSearchRequest league = candidateSearch(role, intent, request, squad.ownedIds(), squad.gameVersionId(), null, squad.gender());
                 league.setLeagueId(request.getLeagueId());
@@ -183,7 +183,7 @@ public class RecommendationService {
             return OptionalDouble.empty();
         }
         PlayerSearchRequest own = PlayerSearchRequest.builder().gameVersionId(squad.gameVersionId()).gender(squad.gender())
-                .ids(squad.playerIds()).careerId(squad.careerId()).sort("overall").size(CANDIDATE_POOL).build();
+                .ids(squad.playerIds()).careerId(squad.careerId()).sort("name").ascending(true).size(CANDIDATE_POOL).build();
         return playerService.search(own).getItems().stream()
                 .mapToInt(PlayerSummaryResponse::getOverall)
                 .sorted().skip(Math.max(0, squad.playerIds().size() - SQUAD_CORE))
@@ -224,7 +224,8 @@ public class RecommendationService {
                 .valueMax(budget)
                 .includeUnvalued(request.isIncludeUnvalued())
                 .excludeIds(squadIds)
-                .sort("overall")
+                .sort("prescore")
+                .prescoreWeights(role.getAttrWeights())
                 .size(CANDIDATE_POOL)
                 .build();
     }

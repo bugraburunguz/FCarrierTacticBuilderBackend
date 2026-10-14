@@ -16,7 +16,13 @@ import com.fcareer.fitengine.model.FitRole;
 import com.fcareer.fitengine.model.WeaponState;
 import com.fcareer.fitengine.model.response.RoleFitResponse;
 import com.fcareer.fitengine.model.response.WeaponCheck;
+import com.fcareer.fitengine.configuration.FitEngineProperties;
+import com.fcareer.fitengine.level.LevelFitService;
+import com.fcareer.fitengine.norms.AttrNorms;
+import com.fcareer.fitengine.norms.RoleSeeds;
+import com.fcareer.fitengine.service.FitEngineV3;
 import com.fcareer.fitengine.service.RoleFitService;
+import com.fcareer.fitengine.service.RoleFitV3Service;
 import com.fcareer.roles.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,17 +59,24 @@ public class DevelopmentService {
     private final PlayerService playerService;
     private final RoleService roleService;
     private final RoleFitService roleFitService;
+    private final FitEngineV3 engine;
+    private final GrowthProjector growthProjector;
+    private final LevelFitService levelFitService;
+    private final FitEngineProperties fitProperties;
+    private final RoleSeeds roleSeeds;
+    private final AttrNorms attrNorms;
 
     public DevelopmentResponse plan(Long playerId, DevelopmentRequest request) {
         FitPlayer player = playerService.fitPlayers(List.of(playerId), request.getGameVersionId(), request.getCareerId()).get(0);
         int headroom = headroom(player);
+        boolean v3 = isV3(request.getCareerId());
         Set<String> targets = normalizedTargets(request.getTargetRoles());
         List<RoleDevelopment> perRole = new ArrayList<>();
         for (FitRole role : roleService.fitRolesById().values()) {
             if (!targets.isEmpty() && !matchesTarget(role, targets)) {
                 continue;
             }
-            bestPosition(player, role, headroom).ifPresent(perRole::add);
+            bestPosition(player, role, headroom, v3).ifPresent(perRole::add);
         }
         List<RoleDevelopment> ranked = perRole.stream()
                 .filter(r -> !targets.isEmpty() || r.getTotalGap() > 0)
@@ -104,7 +117,7 @@ public class DevelopmentService {
             WonderkidResponse row = toRow(summary);
             if (Objects.nonNull(role)) {
                 RoleDevelopment dev = Objects.isNull(fitById.get(summary.getId())) ? null
-                        : bestPosition(fitById.get(summary.getId()), role, headroom(fitById.get(summary.getId()))).orElse(null);
+                        : bestPosition(fitById.get(summary.getId()), role, headroom(fitById.get(summary.getId())), isV3(query.getCareerId())).orElse(null);
                 if (Objects.isNull(dev)) {
                     continue;
                 }
@@ -169,19 +182,74 @@ public class DevelopmentService {
         return byPotential;
     }
 
-    private java.util.Optional<RoleDevelopment> bestPosition(FitPlayer player, FitRole role, int headroom) {
+    private java.util.Optional<RoleDevelopment> bestPosition(FitPlayer player, FitRole role, int headroom, boolean v3) {
         RoleDevelopment best = null;
         for (String position : player.getPositions()) {
             if (!role.getPositions().contains(position)) {
                 continue;
             }
-            RoleDevelopment candidate = evaluate(player, role, position, headroom);
+            RoleDevelopment candidate = v3 ? evaluateV3(player, role, position, headroom) : evaluate(player, role, position, headroom);
             if (Objects.isNull(best) || candidate.getTotalGap() < best.getTotalGap()
                     || (candidate.getTotalGap() == best.getTotalGap() && candidate.getProjectedScore() > best.getProjectedScore())) {
                 best = candidate;
             }
         }
         return java.util.Optional.ofNullable(best);
+    }
+
+    /** Kariyerde v3 motoru (career-engine-version); katalog/UT çağrıları v1'de kalır. */
+    private boolean isV3(Long careerId) {
+        return Objects.nonNull(careerId) && FitEngineV3.VERSION.equals(fitProperties.getCareerEngineVersion());
+    }
+
+    /**
+     * v3 gelişim: currentScore = FitEngineV3.currentFit; projectedScore = bir sezon büyüme sonrası (GrowthProjector) currentFit; projectedRating = sezon sonu beklenen OVR.
+     * Açıklar (gaps) rolün temel attribute'larındaki seviye-normalize alt sınırdır (attr-norms + role-requirements).
+     */
+    private RoleDevelopment evaluateV3(FitPlayer player, FitRole role, String position, int headroom) {
+        FitEngineV3.Result current = engine.currentFit(player, position, role);
+        GrowthProjector.Projection projection = growthProjector.project(player);
+        FitEngineV3.Result future = engine.currentFit(projection.grown(), position, role);
+        List<DevelopmentGap> gaps = baseGaps(player, position, role, headroom);
+        boolean unlocks = !gaps.isEmpty() && gaps.stream().allMatch(DevelopmentGap::isClosable);
+        return RoleDevelopment.builder()
+                .roleId(role.getId()).roleName(role.getName()).position(position).focus(role.getFocus())
+                .currentScore(round1(current.currentFit())).currentBadge(v3Badge(player, position, role, current))
+                .gaps(gaps).totalGap(gaps.stream().mapToInt(DevelopmentGap::getGap).sum())
+                .projectedScore(round1(future.currentFit())).projectedBadge(v3Badge(projection.grown(), position, role, future))
+                .projectedRating(projection.projectedRating()).unlocks(unlocks)
+                .build();
+    }
+
+    private WeaponState v3Badge(FitPlayer player, String position, FitRole role, FitEngineV3.Result result) {
+        int gender = Objects.isNull(player.getGender()) ? 0 : player.getGender();
+        return levelFitService.levelFit(gender, position, role.getBaseRole(), role.getFocus(), player.getOverall(), result.currentFit())
+                .map((l) -> RoleFitV3Service.label(l.value(), fitProperties.getV3()).badge()).orElse(null);
+    }
+
+    private List<DevelopmentGap> baseGaps(FitPlayer player, String position, FitRole role, int headroom) {
+        int gender = Objects.isNull(player.getGender()) ? 0 : player.getGender();
+        List<DevelopmentGap> gaps = new ArrayList<>();
+        for (RoleSeeds.BaseAttr base : roleSeeds.baseAttrs(role.getBaseRole())) {
+            AttrNorms.Norm norm = attrNorms.norm(gender, position, base.attr()).orElse(null);
+            if (Objects.isNull(norm)) {
+                continue;
+            }
+            int needed = (int) Math.round(norm.p50() + base.minZ() * Math.max(norm.sd(), 3.0));
+            int value = player.attr(base.attr());
+            if (value >= needed) {
+                continue;
+            }
+            boolean hard = HARD_TO_TRAIN.contains(base.attr());
+            int gap = needed - value;
+            int maxGain = maxGain(headroom, hard);
+            gaps.add(DevelopmentGap.builder().attr(base.attr().getKey()).value(value).needed(needed).gap(gap).maxGain(maxGain).closable(gap <= maxGain).hardToTrain(hard).build());
+        }
+        return gaps;
+    }
+
+    private static double round1(double value) {
+        return Math.round(value * 10.0) / 10.0;
     }
 
     private RoleDevelopment evaluate(FitPlayer player, FitRole role, String position, int headroom) {
