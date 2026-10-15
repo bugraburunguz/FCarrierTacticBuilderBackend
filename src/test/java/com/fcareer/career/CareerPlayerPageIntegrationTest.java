@@ -129,27 +129,53 @@ class CareerPlayerPageIntegrationTest {
         call(get("/api/v1/players/" + outsider() + "/contract?career=" + careerId), null, stranger, 404);
     }
 
+    /** V3-06c/0a kararı: levelFit referansı her yerde oyuncunun kendi OVR bandı; kariyer bağlamı katalogla aynı sonucu verir (tohumlanmış kariyerde öznitelikler aynı). */
     @Test
-    void careerRolesUseTheLeagueAsTheLevelReference() throws Exception {
+    void careerRolesLevelFitEqualsTheCatalog() throws Exception {
         long outsider = outsider();
-        JsonNode roles = call(get("/api/v1/players/" + outsider + "/roles?career=" + careerId + "&engine=v3"), null, token, 200).at("/data");
-        assertThat(roles.size()).isPositive();
-        JsonNode reference = roles.get(0).at("/levelReference");
+        JsonNode career = call(get("/api/v1/players/" + outsider + "/roles?career=" + careerId + "&engine=v3"), null, token, 200).at("/data");
+        JsonNode catalog = call(get("/api/v1/players/" + outsider + "/roles?engine=v3"), null, token, 200).at("/data");
+        assertThat(career.size()).isPositive().isEqualTo(catalog.size());
+        for (int i = 0; i < career.size(); i++) {
+            assertThat(career.get(i).at("/roleId").asText()).isEqualTo(catalog.get(i).at("/roleId").asText());
+            assertThat(career.get(i).at("/levelFit").asDouble()).as(career.get(i).at("/roleId").asText()).isEqualTo(catalog.get(i).at("/levelFit").asDouble());
+            assertThat(career.get(i).at("/fitLabel").asText()).isEqualTo(catalog.get(i).at("/fitLabel").asText());
+            assertThat(career.get(i).has("levelReference")).isFalse();
+        }
+    }
+
+    /** Lig seviyesi göstergesinin girdisi: facets kullanıcının ligini ve lig gücünü (OVR) verir; bilinmiyorsa alan yok. */
+    @Test
+    void facetsCarryTheUserLeagueStrength() throws Exception {
+        JsonNode facets = call(get("/api/v1/players/facets?career=" + careerId), null, token, 200).at("/data");
         String userLeague = jdbc.queryForObject("SELECT l.name FROM career k JOIN club c ON c.id = k.club_id JOIN league l ON l.id = c.league_id WHERE k.id = ?",
                 String.class, careerId);
         Double leagueStrength = clubStrengthService.of(careerId).leagueStrength(userLeague);
-        if (leagueStrength != null) {
-            assertThat(reference.at("/kind").asText()).isEqualTo("LEAGUE");
-            assertThat(reference.at("/league").asText()).isEqualTo(userLeague);
-            assertThat(reference.at("/ovr").asInt()).isEqualTo((int) Math.round(leagueStrength));
-        } else {
-            assertThat(reference.at("/kind").asText()).isEqualTo("OVR");
+        // Paylaşılan test veritabanında (sıraya göre) ligde yeterli kulüp olmayabilir: o zaman alanlar yok (0 değil, ENG-02).
+        if (leagueStrength == null) {
+            assertThat(facets.has("leagueName")).isFalse();
+            assertThat(facets.has("leagueOvr")).isFalse();
+            return;
         }
-        roles.forEach((r) -> assertThat(r.at("/engineVersion").asText()).isEqualTo("v3"));
+        assertThat(facets.at("/leagueName").asText()).isEqualTo(userLeague);
+        assertThat(facets.at("/leagueOvr").asInt()).isEqualTo((int) Math.round(leagueStrength));
+    }
 
-        // Kariyersiz (UT/katalog) çağrıda referans alanı yok: mevcut davranış.
-        JsonNode catalog = call(get("/api/v1/players/" + outsider + "/roles?engine=v3"), null, token, 200).at("/data");
-        assertThat(catalog.get(0).has("levelReference")).isFalse();
+    /**
+     * Kök neden (V3-06c kapısı): yeni kariyerde havuz ilk oyuncu sorgusunda tohumlanır; facets ondan önce çağrılırsa kulüp/lig gücü boş havuzdan
+     * hesaplanıp data_version anahtarıyla önbellekte kalıyordu (tohumlama sürümü artırmaz). Güç hesabı havuzu önce tohumlamalı.
+     */
+    @Test
+    void leagueStrengthIsKnownEvenWhenFacetsComeBeforeAnyPlayerQuery() throws Exception {
+        Integer clubId = jdbc.queryForObject("SELECT club_id FROM career WHERE id = ?", Integer.class, careerId);
+        long fresh = call(post("/api/v1/careers"), Map.of("clubId", clubId, "budgetEur", BUDGET), token, 200).at("/data/id").asLong();
+        JsonNode first = call(get("/api/v1/players/facets?career=" + fresh), null, token, 200).at("/data");
+        call(get("/api/v1/players?career=" + fresh + "&size=1"), null, token, 200);
+        JsonNode after = call(get("/api/v1/players/facets?career=" + fresh), null, token, 200).at("/data");
+        JsonNode seeded = call(get("/api/v1/players/facets?career=" + careerId), null, token, 200).at("/data");
+        assertThat(first.has("leagueOvr")).isEqualTo(seeded.has("leagueOvr"));
+        assertThat(first.at("/leagueOvr").asInt()).isEqualTo(seeded.at("/leagueOvr").asInt());
+        assertThat(after.at("/leagueOvr").asInt()).isEqualTo(first.at("/leagueOvr").asInt());
     }
 
     private long outsider() {

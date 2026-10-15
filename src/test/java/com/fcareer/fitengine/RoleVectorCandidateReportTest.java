@@ -101,6 +101,11 @@ class RoleVectorCandidateReportTest {
 
     /** Rolün her (mevki, focus) vektörü için oyuncu başına levelFit; focus'lar arasında en yüksek değer alınır. */
     static void computeRole(FitEngineV3 engine, JsonNode role, Map<String, List<Entry>> pools, Map<Entry, Integer> index, int size, Map<String, double[]> out) {
+        computeRole(engine, role, pools, index, size, out, java.util.function.IntUnaryOperator.identity());
+    }
+
+    static void computeRole(FitEngineV3 engine, JsonNode role, Map<String, List<Entry>> pools, Map<Entry, Integer> index, int size, Map<String, double[]> out,
+                            java.util.function.IntUnaryOperator bandOvr) {
         String roleId = role.path("id").asText();
         for (JsonNode position : role.path("positions")) {
             double[] best = new double[size];
@@ -111,7 +116,7 @@ class RoleVectorCandidateReportTest {
                     if (pool.isEmpty()) {
                         continue;
                     }
-                    double[] levels = RoleFamiliarityValidationTest.levelFits(engine, pool, position.asText(), roleId, focus.asText());
+                    double[] levels = RoleFamiliarityValidationTest.levelFits(engine, pool, position.asText(), roleId, focus.asText(), bandOvr);
                     for (int i = 0; i < pool.size(); i++) {
                         int at = index.get(pool.get(i));
                         best[at] = Double.isNaN(best[at]) ? levels[i] : Math.max(best[at], levels[i]);

@@ -11,7 +11,6 @@ import com.fcareer.common.exception.NotFoundException;
 import com.fcareer.common.model.PageResponse;
 import com.fcareer.fitengine.model.FitPlayer;
 import com.fcareer.fitengine.model.FitRole;
-import com.fcareer.fitengine.model.response.LevelReference;
 import com.fcareer.recommendation.pipeline.model.CareerPlayerContractResponse;
 import com.fcareer.fitengine.norms.PosDist;
 import com.fcareer.fitengine.service.FitEngineV3;
@@ -75,9 +74,11 @@ public class CareerPlayerList {
         }
     };
 
+    /** V3-06c: lig adı ve lig gücü "Lig seviyesi" göstergesi içindir (web eşiği tek yerde); bilinmiyorsa alan yok. */
     public CareerPlayerRepository.CareerFacets facets(Long userId, Long careerId) {
-        careerService.requireOwned(userId, careerId);
-        return careerPlayerRepository.careerFacets(careerId);
+        CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
+        CareerPlayerRepository.CareerFacets facets = careerPlayerRepository.careerFacets(careerId);
+        return feasibilityInputs.leagueStrength(squad).map((l) -> facets.withLeague(l.league(), l.ovr())).orElse(facets);
     }
 
     /**
@@ -105,11 +106,6 @@ public class CareerPlayerList {
                 .feasibility(feasibility)
                 .budgetEur(squad.budgetEur()).budgetAfterPurchaseEur(afterPurchase)
                 .build();
-    }
-
-    /** V3-06b: kariyerde rol uyumunun seviye referansı (kullanıcının ligi). */
-    public LevelReference levelReference(Long userId, Long careerId) {
-        return feasibilityInputs.levelReference(careerService.squadPlayerIds(userId, careerId));
     }
 
     public PageResponse<PlayerSummaryResponse> search(Long userId, PlayerSearchRequest request, List<String> bucketNames, String roleId, String rolePosition) {

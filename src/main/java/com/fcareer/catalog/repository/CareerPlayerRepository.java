@@ -43,7 +43,10 @@ public class CareerPlayerRepository {
 
     /** Kariyer listesinin hangi süzgeçleri anlamlı: oyun tarihi, bütçe (NULL = bilinmiyor, ENG-02), sözleşme ve kiralık verisi var mı. */
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    public record CareerFacets(java.time.LocalDate gameDate, Long budgetEur, boolean contractData, boolean loanData) {
+    public record CareerFacets(java.time.LocalDate gameDate, Long budgetEur, boolean contractData, boolean loanData, String leagueName, Integer leagueOvr) {
+        public CareerFacets withLeague(String name, int ovr) {
+            return new CareerFacets(gameDate, budgetEur, contractData, loanData, name, ovr);
+        }
     }
 
     public CareerFacets careerFacets(long careerId) {
@@ -53,7 +56,7 @@ public class CareerPlayerRepository {
                        EXISTS (SELECT 1 FROM career_player cp WHERE cp.career_id = k.id AND cp.loan_from_team_id IS NOT NULL) AS loan_data
                   FROM career k WHERE k.id = :c""", Map.of("c", careerId), (rs, i) -> new CareerFacets(
                 Objects.isNull(rs.getDate("current_game_date")) ? null : rs.getDate("current_game_date").toLocalDate(),
-                rs.getObject("budget_eur") == null ? null : rs.getLong("budget_eur"), rs.getBoolean("contract_data"), rs.getBoolean("loan_data")));
+                rs.getObject("budget_eur") == null ? null : rs.getLong("budget_eur"), rs.getBoolean("contract_data"), rs.getBoolean("loan_data"), null, null));
     }
 
     /** V3-06b: oyuncu sayfasının sözleşme satırları; kayıtta olmayan alan null kalır (ENG-02). */
@@ -141,6 +144,8 @@ public class CareerPlayerRepository {
     }
 
     public List<TeamStrengthRow> teamStrengths(long careerId, int top) {
+        // Tohumlanmamış havuzdan boş güç hesaplanıp data_version anahtarıyla önbellekte kalmasın (V3-06c): byIds ile aynı tohumlama.
+        careerPlayerWriter.ensureSeeded(careerId);
         return jdbc.query("""
                 SELECT kt || ':' || k AS team_key, league, avg(ovr)::float8 AS strength, count(*) AS n FROM (
                   SELECT CASE WHEN cp.live AND cp.team_id IS NOT NULL THEN 'T' ELSE 'C' END AS kt,

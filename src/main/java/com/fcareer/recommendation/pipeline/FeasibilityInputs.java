@@ -3,7 +3,6 @@ package com.fcareer.recommendation.pipeline;
 import com.fcareer.career.service.CareerService;
 import com.fcareer.catalog.repository.CareerPlayerRepository;
 import com.fcareer.catalog.repository.PlayerSearchRepository;
-import com.fcareer.fitengine.model.response.LevelReference;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -64,8 +63,12 @@ public class FeasibilityInputs {
                 new FeasibilityBuckets.Input(ratio, clubGap, ovrGap, Objects.isNull(extra) ? null : extra.clubRank(), months, freeAgent));
     }
 
-    /** V3-06b: kullanıcının ligi ve lig gücü (rol uyumunun seviye referansı); kulüp ya da lig gücü bilinmiyorsa kendi OVR bandı. */
-    public LevelReference levelReference(CareerService.CareerSquad squad) {
+    /** Kullanıcının ligi ve lig gücü (OVR, ligdeki kulüp güçlerinin medyanı). */
+    public record LeagueStrength(String league, int ovr) {
+    }
+
+    /** V3-06c "Lig seviyesi" göstergesinin girdisi (rol uyumunu etkilemez); kulüp ya da lig gücü bilinmiyorsa boş. */
+    public java.util.Optional<LeagueStrength> leagueStrength(CareerService.CareerSquad squad) {
         ClubStrength strength = clubStrengthService.of(squad.careerId());
         String key = userTeamKey(squad, null);
         String league = Objects.isNull(key) ? null : strength.leagueOf(key);
@@ -73,7 +76,7 @@ public class FeasibilityInputs {
             league = strength.leagueOf("C:" + squad.clubId());
         }
         Double value = strength.leagueStrength(league);
-        return Objects.isNull(value) ? LevelReference.ownOvr() : LevelReference.league(league, (int) Math.round(value));
+        return Objects.isNull(value) ? java.util.Optional.empty() : java.util.Optional.of(new LeagueStrength(league, (int) Math.round(value)));
     }
 
     /** Oyun tarihine göre sözleşmede kalan tam ay (30 günlük); tarihlerden biri yoksa null. */

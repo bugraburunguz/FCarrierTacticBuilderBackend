@@ -177,6 +177,11 @@ class RoleFamiliarityValidationTest {
     }
 
     static double[] levelFits(FitEngineV3 engine, List<Entry> pool, String position, String role, String focus) {
+        return levelFits(engine, pool, position, role, focus, java.util.function.IntUnaryOperator.identity());
+    }
+
+    /** bandOvr: oyuncunun OVR'ından levelFit bandının merkezine (katalog = kendisi; V3-06b kariyer = sabit lig gücü). */
+    static double[] levelFits(FitEngineV3 engine, List<Entry> pool, String position, String role, String focus, java.util.function.IntUnaryOperator bandOvr) {
         double[] fits = new double[pool.size()];
         int[] ovrs = new int[pool.size()];
         for (int i = 0; i < fits.length; i++) {
@@ -187,7 +192,7 @@ class RoleFamiliarityValidationTest {
         Map<Integer, double[]> quantilesByOvr = new HashMap<>();
         double[] out = new double[fits.length];
         for (int i = 0; i < fits.length; i++) {
-            double[] q = quantilesByOvr.computeIfAbsent(ovrs[i], (ovr) -> {
+            double[] q = quantilesByOvr.computeIfAbsent(bandOvr.applyAsInt(ovrs[i]), (ovr) -> {
                 LevelFitCalculator.Band band = LevelFitCalculator.band(sortedOvrs, ovr, MIN_BAND, HALF, MAX_HALF);
                 List<Double> inBand = new ArrayList<>();
                 for (int k = 0; k < fits.length; k++) {
