@@ -178,6 +178,20 @@ class CareerPlayerPageIntegrationTest {
         assertThat(after.at("/leagueOvr").asInt()).isEqualTo(first.at("/leagueOvr").asInt());
     }
 
+    /** V3-06d Masa dönem bandı: kadronun toplam maaşı yalnız kadrodaki herkesin maaşı kayıtta varsa (eksikse alan yok; 0 değil, ENG-02). */
+    @Test
+    void facetsCarrySquadWageOnlyWhenEveryWageIsKnown() throws Exception {
+        assertThat(call(get("/api/v1/players/facets?career=" + careerId), null, token, 200).at("/data").has("squadWageEur")).isFalse();
+        List<Long> squad = jdbc.queryForList("SELECT base_player_id FROM user_player_state WHERE career_id = ? ORDER BY id", Long.class, careerId);
+        for (Long id : squad) {
+            jdbc.update("UPDATE career_player SET wage_eur = 1000 WHERE career_id = ? AND player_id = ?", careerId, id);
+        }
+        jdbc.update("UPDATE career SET data_version = data_version + 1 WHERE id = ?", careerId);
+        assertThat(call(get("/api/v1/players/facets?career=" + careerId), null, token, 200).at("/data/squadWageEur").asLong()).isEqualTo(1000L * squad.size());
+        jdbc.update("UPDATE career_player SET wage_eur = NULL WHERE career_id = ? AND player_id = ?", careerId, squad.get(0));
+        assertThat(call(get("/api/v1/players/facets?career=" + careerId), null, token, 200).at("/data").has("squadWageEur")).isFalse();
+    }
+
     private long outsider() {
         return jdbc.queryForObject("""
                 SELECT cp.player_id FROM career_player cp

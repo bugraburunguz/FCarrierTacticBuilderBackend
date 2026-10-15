@@ -43,9 +43,10 @@ public class CareerPlayerRepository {
 
     /** Kariyer listesinin hangi süzgeçleri anlamlı: oyun tarihi, bütçe (NULL = bilinmiyor, ENG-02), sözleşme ve kiralık verisi var mı. */
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-    public record CareerFacets(java.time.LocalDate gameDate, Long budgetEur, boolean contractData, boolean loanData, String leagueName, Integer leagueOvr) {
+    /** squadWageEur (V3-06d): kadrodaki herkesin maaşı kayıtta varsa toplamı, biri bile eksikse yok (ENG-02). */
+    public record CareerFacets(java.time.LocalDate gameDate, Long budgetEur, boolean contractData, boolean loanData, String leagueName, Integer leagueOvr, Long squadWageEur) {
         public CareerFacets withLeague(String name, int ovr) {
-            return new CareerFacets(gameDate, budgetEur, contractData, loanData, name, ovr);
+            return new CareerFacets(gameDate, budgetEur, contractData, loanData, name, ovr, squadWageEur);
         }
     }
 
@@ -53,10 +54,14 @@ public class CareerPlayerRepository {
         return jdbc.queryForObject("""
                 SELECT k.current_game_date, k.budget_eur,
                        EXISTS (SELECT 1 FROM career_player cp WHERE cp.career_id = k.id AND cp.contract_until IS NOT NULL) AS contract_data,
-                       EXISTS (SELECT 1 FROM career_player cp WHERE cp.career_id = k.id AND cp.loan_from_team_id IS NOT NULL) AS loan_data
+                       EXISTS (SELECT 1 FROM career_player cp WHERE cp.career_id = k.id AND cp.loan_from_team_id IS NOT NULL) AS loan_data,
+                       (SELECT CASE WHEN count(*) > 0 AND count(cp.wage_eur) = count(*) THEN sum(cp.wage_eur) END
+                          FROM user_player_state s LEFT JOIN career_player cp ON cp.career_id = s.career_id AND cp.player_id = s.base_player_id
+                         WHERE s.career_id = k.id) AS squad_wage
                   FROM career k WHERE k.id = :c""", Map.of("c", careerId), (rs, i) -> new CareerFacets(
                 Objects.isNull(rs.getDate("current_game_date")) ? null : rs.getDate("current_game_date").toLocalDate(),
-                rs.getObject("budget_eur") == null ? null : rs.getLong("budget_eur"), rs.getBoolean("contract_data"), rs.getBoolean("loan_data"), null, null));
+                rs.getObject("budget_eur") == null ? null : rs.getLong("budget_eur"), rs.getBoolean("contract_data"), rs.getBoolean("loan_data"), null, null,
+                rs.getObject("squad_wage") == null ? null : rs.getLong("squad_wage")));
     }
 
     /** V3-06b: oyuncu sayfasının sözleşme satırları; kayıtta olmayan alan null kalır (ENG-02). */
