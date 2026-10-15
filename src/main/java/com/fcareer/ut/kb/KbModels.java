@@ -22,7 +22,9 @@ public final class KbModels {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record SbcChallengeDto(long id, long setId, String name, String formation, String kind, JsonNode requirements, Integer itemScoreTarget, JsonNode reward) {
+    /** formation: bizim formasyon kimliği; eaFormation: EA ham kodu (eşlenmemişse arayüz "Formasyon tanınmadı (f…)"); eaType: EA görev tipi (V3-05d-b). */
+    public record SbcChallengeDto(long id, long setId, String name, String formation, String eaFormation, String eaType, String kind, JsonNode requirements,
+                                  Integer itemScoreTarget, JsonNode reward) {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

@@ -32,6 +32,10 @@ class PriceCaptureIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
+    private com.fcareer.ut.kb.KnowledgeBaseRepository kbRepository;
+    @Autowired
+    private com.fcareer.common.scheduling.JobLock jobLock;
+    @Autowired
     private JdbcTemplate jdbc;
 
     private long baseItem;
@@ -151,6 +155,21 @@ class PriceCaptureIntegrationTest {
         assertThat(data.get(0).at("/lowConfidence").asBoolean()).isTrue();
         assertThat(data.get(0).has("observedAt")).isTrue();
         assertThat(mockMvc.perform(get("/api/v1/ut/kb/prices")).andReturn().getResponse().getStatus()).isEqualTo(400);
+    }
+
+    /**
+     * V3-05d-b: katkı, 48 saate kadar eski yakalama zamanını olduğu gibi kabul eder (MAX_CLOCK_SKEW); saatlik toplama da aynı pencereyi kapsamalı.
+     * Önceden 3 saatlik pencere, sonradan içe aktarılan dosyanın gözlemlerini hiç toplamıyordu (price_agg 0).
+     */
+    @Test
+    void scheduledAggregationCoversObservationsUpTo48HoursOld() throws Exception {
+        long contributor = contributorId();
+        jdbc.update("INSERT INTO price_obs (ut_item_id, platform, observed_at, kind, value, contributor_id) VALUES (?, 'CONSOLE', now() - interval '20 hours', 'BIN', 1500, ?)", baseItem, contributor);
+
+        // Zamanlanmış işler testte kapalı (fcareer.ut.jobs.enabled=false): aynı sınıf elle kurulur.
+        new com.fcareer.ut.kb.UtScheduledJobs(kbRepository, jobLock, java.time.Clock.systemUTC()).aggregatePrices();
+
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM price_agg WHERE ut_item_id = ?", Integer.class, baseItem)).isEqualTo(1);
     }
 
     private long contributorId() throws Exception {

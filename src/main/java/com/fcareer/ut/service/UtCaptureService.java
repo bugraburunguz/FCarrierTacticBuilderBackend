@@ -77,6 +77,7 @@ public class UtCaptureService {
     private final com.fcareer.ut.repository.EaIdRepository eaIdRepository;
     private final com.fcareer.catalog.configuration.CatalogProperties catalogProperties;
     private final UtRules rules;
+    private final com.fcareer.tactics.service.FormationRegistry formationRegistry;
 
     private List<String> attrOrder;
 
@@ -342,14 +343,12 @@ public class UtCaptureService {
         return new CaptureConfig(formations, positions, mods, keyAttributes, chemistry, rarities);
     }
 
-    static String formationLabel(String name) {
-        if (Objects.isNull(name) || !name.matches("f\\d+[a-z]?")) {
-            return name;
-        }
-        String digits = name.substring(1).replaceAll("[a-z]", "");
-        String variant = name.substring(1).replaceAll("\\d", "");
-        String joined = String.join("-", digits.split(""));
-        return variant.isEmpty() ? joined : joined + " (" + variant + ")";
+    /**
+     * EA formasyon kodu → bizim formasyon kimliği, tek eşlemeden (FormationRegistry, formations.json `eaFormationId`); eşlemesi yoksa ham kod.
+     * V3-05d-b: önceki tahmin ("f451" → "4-5-1") yanlıştı: EA "f451" bizde "4-5-1 (CAM)".
+     */
+    private String formationLabel(String code) {
+        return Objects.isNull(code) ? null : formationRegistry.idsByEaCode().getOrDefault(code, code);
     }
 
     private Set<Long> duplicateIds(List<JsonNode> storage) {
@@ -544,8 +543,8 @@ public class UtCaptureService {
         }
         Map<Long, String> setNames = new HashMap<>();
         sets.forEach(s -> setNames.put(s.setId(), s.name()));
-        Map<String, String> formationLabels = new HashMap<>();
-        config.formations().forEach(f -> formationLabels.put(f.name(), f.label()));
+        // V3-05d-b: görev formasyonu tek eşlemeden; yakalamada formasyon yapılandırması (squaddata) olmasa da çözülür. Eşlemesi yoksa etiket yok, ham kod görevde kalır.
+        Map<String, String> formationLabels = formationRegistry.idsByEaCode();
         eaIdRepository.learnLeagues(ctx.leagues(), userId);
         eaIdRepository.learnNations(ctx.nations(), userId);
         Set<Integer> clubIds = new HashSet<>();

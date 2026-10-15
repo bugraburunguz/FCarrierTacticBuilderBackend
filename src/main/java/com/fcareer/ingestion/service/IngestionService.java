@@ -60,6 +60,7 @@ public class IngestionService {
     private final IngestionRunRepository runs;
     private final JdbcTemplate jdbc;
     private final com.fcareer.catalog.service.LeagueTierService leagueTierService;
+    private final org.springframework.context.ApplicationEventPublisher events;
     private final ExecutorService executor = Executors.newSingleThreadExecutor(runnable -> {
         Thread thread = new Thread(runnable, "ingestion");
         thread.setDaemon(true);
@@ -157,6 +158,7 @@ public class IngestionService {
         }
         runs.finish(runId);
         leagueTierService.apply();
+        events.publishEvent(new CatalogIngestedEvent(gameVersion, runId));
         log.info("Ingestion finished provider : {} created : {} updated : {}", provider.name(), created, updated);
         return new IngestionResult(provider.name(), gameVersion, created, updated, false);
     }

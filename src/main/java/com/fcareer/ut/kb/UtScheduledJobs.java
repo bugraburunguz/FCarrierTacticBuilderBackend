@@ -18,7 +18,11 @@ import java.time.Duration;
 public class UtScheduledJobs {
 
     private static final long PRICE_LOCK = 7_301_001L;
-    private static final Duration PRICE_WINDOW = Duration.ofHours(3);
+    /**
+     * V3-05d-b (BEHAVIOR CHANGE): katkı 48 saate kadar eski yakalama zamanını olduğu gibi kabul ettiği için (ContributionService.MAX_CLOCK_SKEW)
+     * toplama penceresi de 48 saat; önceki 3 saat, sonradan içe aktarılan dosyanın gözlemlerini hiç toplamıyordu.
+     */
+    private static final Duration PRICE_WINDOW = ContributionService.MAX_CLOCK_SKEW;
 
     private final KnowledgeBaseRepository repository;
     private final JobLock jobLock;

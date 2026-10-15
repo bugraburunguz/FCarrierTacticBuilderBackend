@@ -68,13 +68,17 @@ public class KnowledgeBaseRepository {
                 new MapSqlParameterSource().addValue("id", id).addValue("gv", gameVersion).addValue("name", Objects.requireNonNullElse(name, "SBC #" + id)).addValue("stubHash", STUB_HASH));
     }
 
-    public void upsertSbcChallenge(long id, long setId, String name, String formation, String kind, JsonNode requirements, Integer itemScoreTarget, JsonNode reward, String hash) {
+    /** formation: bizim formasyon kimliği (eşlenmişse); eaFormation: EA'nın ham kodu (eşlenmese de saklanır); eaType: EA görev tipi (V3-05d-b). */
+    public void upsertSbcChallenge(long id, long setId, String name, String formation, String eaFormation, String eaType, String kind, JsonNode requirements,
+                                   Integer itemScoreTarget, JsonNode reward, String hash) {
         jdbc.update("""
-                INSERT INTO sbc_challenge (id, set_id, name, formation, kind, requirements, item_score_target, reward, content_hash)
-                VALUES (:id, :setId, :name, :formation, :kind, CAST(:requirements AS jsonb), :target, CAST(:reward AS jsonb), :hash)
-                ON CONFLICT (id) DO UPDATE SET set_id = EXCLUDED.set_id, name = EXCLUDED.name, formation = EXCLUDED.formation, kind = EXCLUDED.kind,
-                  requirements = EXCLUDED.requirements, item_score_target = EXCLUDED.item_score_target, reward = EXCLUDED.reward, content_hash = EXCLUDED.content_hash
+                INSERT INTO sbc_challenge (id, set_id, name, formation, ea_formation, ea_type, kind, requirements, item_score_target, reward, content_hash)
+                VALUES (:id, :setId, :name, :formation, :eaFormation, :eaType, :kind, CAST(:requirements AS jsonb), :target, CAST(:reward AS jsonb), :hash)
+                ON CONFLICT (id) DO UPDATE SET set_id = EXCLUDED.set_id, name = EXCLUDED.name, formation = EXCLUDED.formation, ea_formation = EXCLUDED.ea_formation,
+                  ea_type = EXCLUDED.ea_type, kind = EXCLUDED.kind, requirements = EXCLUDED.requirements, item_score_target = EXCLUDED.item_score_target,
+                  reward = EXCLUDED.reward, content_hash = EXCLUDED.content_hash
                 """, new MapSqlParameterSource().addValue("id", id).addValue("setId", setId).addValue("name", name).addValue("formation", formation)
+                .addValue("eaFormation", eaFormation).addValue("eaType", eaType)
                 .addValue("kind", kind).addValue("requirements", json(requirements)).addValue("target", itemScoreTarget).addValue("reward", json(reward)).addValue("hash", hash));
     }
 
@@ -116,6 +120,16 @@ public class KnowledgeBaseRepository {
         jdbc.update("UPDATE " + safeTable(table) + " SET last_seen_at = now(), ends_at = COALESCE(:e, ends_at) WHERE id = :id", new MapSqlParameterSource().addValue("e", ts(endsAt)).addValue("id", id));
     }
 
+    public Optional<String> challengeKind(long id) {
+        return jdbc.queryForList("SELECT kind FROM sbc_challenge WHERE id = :id", Map.of("id", id), String.class).stream().findFirst();
+    }
+
+    /** V3-05d-b: anahtar için açık kuyruk kaydı kapanır (içerik aynı çıktı); kayıt silinmez. */
+    public void closeOpenQueue(String kind, String naturalKey, String status) {
+        jdbc.update("UPDATE contrib_queue SET status = :s, resolved_at = now() WHERE kind = :k AND natural_key = :n AND status = 'OPEN'",
+                Map.of("s", status, "k", kind, "n", naturalKey));
+    }
+
     public Optional<String> hashOf(String table, long id) {
         List<String> found = jdbc.queryForList("SELECT content_hash FROM " + safeTable(table) + " WHERE id = :id", Map.of("id", id), String.class);
         return found.stream().findFirst();
@@ -143,8 +157,8 @@ public class KnowledgeBaseRepository {
 
     private SbcSetDto withChallenges(SbcSetDto s) {
         List<SbcChallengeDto> challenges = jdbc.query("SELECT * FROM sbc_challenge WHERE set_id = :id ORDER BY id", Map.of("id", s.id()), (rs, i) -> new SbcChallengeDto(
-                rs.getLong("id"), rs.getLong("set_id"), rs.getString("name"), rs.getString("formation"), rs.getString("kind"), read(rs.getString("requirements")),
-                (Integer) rs.getObject("item_score_target"), read(rs.getString("reward"))));
+                rs.getLong("id"), rs.getLong("set_id"), rs.getString("name"), rs.getString("formation"), rs.getString("ea_formation"), rs.getString("ea_type"),
+                rs.getString("kind"), read(rs.getString("requirements")), (Integer) rs.getObject("item_score_target"), read(rs.getString("reward"))));
         return s.withChallenges(challenges.size(), challenges);
     }
 
@@ -204,6 +218,11 @@ public class KnowledgeBaseRepository {
 
     public Optional<Long> itemIdByResource(long eaResourceId, short gameVersion) {
         return jdbc.queryForList("SELECT id FROM ut_item WHERE ea_resource_id = :r AND game_version_id = :gv", Map.of("r", eaResourceId, "gv", gameVersion), Long.class).stream().findFirst();
+    }
+
+    public int itemCount(short gameVersion) {
+        Integer count = jdbc.queryForObject("SELECT count(*) FROM ut_item WHERE game_version_id = :gv", Map.of("gv", gameVersion), Integer.class);
+        return Objects.isNull(count) ? 0 : count;
     }
 
     public int syncBaseItems(short gameVersion) {

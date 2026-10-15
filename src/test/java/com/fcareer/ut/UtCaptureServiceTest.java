@@ -30,7 +30,9 @@ class UtCaptureServiceTest {
         try {
             UtCatalogJoinRepository repository = Mockito.mock(UtCatalogJoinRepository.class);
             Mockito.when(repository.findByEaResourceIds(Mockito.anyCollection())).thenReturn(catalog);
-            UtCaptureService created = new UtCaptureService(new ObjectMapper(), repository, Mockito.mock(com.fcareer.ut.repository.EaIdRepository.class), new com.fcareer.catalog.configuration.CatalogProperties(), rulesWithRarities(rarityOverrides));
+            com.fcareer.tactics.service.FormationRegistry formations = Mockito.mock(com.fcareer.tactics.service.FormationRegistry.class);
+            Mockito.when(formations.idsByEaCode()).thenReturn(Map.of("f4231a", "4-2-3-1 (2)", "f442", "4-4-2", "f41212", "4-1-2-1-2 (geniş)", "f451", "4-5-1 (CAM)"));
+            UtCaptureService created = new UtCaptureService(new ObjectMapper(), repository, Mockito.mock(com.fcareer.ut.repository.EaIdRepository.class), new com.fcareer.catalog.configuration.CatalogProperties(), rulesWithRarities(rarityOverrides), formations);
             Method load = UtCaptureService.class.getDeclaredMethod("loadAttrOrder");
             load.setAccessible(true);
             load.invoke(created);
@@ -99,7 +101,8 @@ class UtCaptureServiceTest {
                 + "\"formationData\":[{\"id\":1,\"index\":0,\"name\":\"f4231a\",\"uniquePositionSlots\":[0,25],\"generalPositionSlots\":[0,25]}],\"styleAttribMods\":[{\"styleId\":250,\"statBonus\":[1,1],\"style\":0,\"styleType\":0}]}";
         String squad = "{\"formation\":\"f4231a\",\"chemistry\":27,\"squadName\":\"Ana\",\"players\":[{\"index\":0,\"itemData\":" + item(1, 10, 80, "GK", 1) + ",\"chemistry\":3},{\"index\":1,\"itemData\":" + item(2, 11, 90, "ST", 1) + ",\"chemistry\":2}]}";
         CaptureResult result = service.process(List.of(capture(CDN + "/config/companion/squadData.json", 1, squadData), capture(UT + "/squad/active", 2, squad)));
-        assertThat(result.activeSquad().formationLabel()).isEqualTo("4-2-3-1 (a)");
+        // V3-05d-b: etiket tek eşlemeden (formations.json eaFormationId), tahmin değil: f4231a = "4-2-3-1 (2)"
+        assertThat(result.activeSquad().formationLabel()).isEqualTo("4-2-3-1 (2)");
         assertThat(result.activeSquad().slots().get(1).position()).isEqualTo("ST");
         assertThat(result.activeSquad().slots().get(0).card().faceLabels()).contains("DIV");
         assertThat(result.config().formations()).hasSize(1);
@@ -143,6 +146,18 @@ class UtCaptureServiceTest {
         String json = new ObjectMapper().writeValueAsString(result);
         assertThat(json).doesNotContain("900000000001");
         RewardItemFixture.FORBIDDEN.stream().filter(f -> !f.equals("\"id\"")).forEach(f -> assertThat(json).as(f).doesNotContain(f));
+    }
+
+    /** V3-05d-b: yakalamada formasyon yapılandırması (squaddata) olmasa da görev formasyonu tek eşlemeden çözülür; eşlemesi olmayan kod ham kalır. */
+    @Test
+    void challengeFormationResolvesWithoutTheCaptureConfigAndUnknownCodesStayRaw() {
+        String sbc = "{\"categories\":[{\"categoryId\":2,\"name\":\"Upgrades\",\"sets\":[{\"setId\":5,\"name\":\"S\",\"challengesCount\":2,\"challengesCompletedCount\":0,\"repeatable\":false,\"awards\":[]}]}]}";
+        String challenges = "{\"challenges\":[{\"challengeId\":51,\"name\":\"a\",\"formation\":\"f41212\",\"type\":\"OPEN_CHALLENGE\",\"elgReq\":[],\"awards\":[]},"
+                + "{\"challengeId\":52,\"name\":\"b\",\"formation\":\"f999\",\"type\":\"OPEN_CHALLENGE\",\"elgReq\":[],\"awards\":[]}]}";
+        CaptureResult result = service.process(List.of(capture(UT + "/sbs/hub/v2", 1, sbc), capture(UT + "/sbs/setId/5/challenges", 2, challenges)));
+
+        assertThat(result.sbcChallenges()).extracting("formation", "formationLabel").containsExactly(
+                org.assertj.core.groups.Tuple.tuple("f41212", "4-1-2-1-2 (geniş)"), org.assertj.core.groups.Tuple.tuple("f999", null));
     }
 
     @Test

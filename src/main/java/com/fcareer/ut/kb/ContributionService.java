@@ -62,9 +62,14 @@ public class ContributionService {
     private static final int CONFIRM_REWARD = 1;
     private static final int CONFLICT_PENALTY = -3;
     private static final Set<String> TEXT_FIELDS = Set.of("name", "description", "setName", "formationLabel", "category", "label", "title");
+    /** Bizim ham alanlardan türettiğimiz alanlar (V3-05d-b): içerik kimliğine girmez. */
+    private static final Set<String> DERIVED_FIELDS = Set.of("kind");
+    private static final Set<String> HASH_SKIPPED = java.util.stream.Stream.concat(TEXT_FIELDS.stream(), DERIVED_FIELDS.stream()).collect(java.util.stream.Collectors.toUnmodifiableSet());
+    private static final String CONFIRMED = "CONFIRMED";
     private static final String UNDETERMINED_LOCALE = "und";
     private static final int MAX_LOCALE = 16;
-    private static final Duration MAX_CLOCK_SKEW = Duration.ofHours(48);
+    /** Yakalama saati sunucudan en çok bu kadar uzaksa olduğu gibi kabul edilir; fiyat toplama penceresi de bu (UtScheduledJobs). */
+    static final Duration MAX_CLOCK_SKEW = Duration.ofHours(48);
     private static final String MARKET_SOURCE = "transfermarket";
     private static final Set<String> PLATFORMS = Set.of("CONSOLE", "PC");
 
@@ -121,7 +126,17 @@ public class ContributionService {
         }
         if (stored.get().equals(hash)) {
             repository.touch(table, entity.id(), entity.endsAt());
+            if (SBC_CHALLENGE.equals(entity.kind())) {
+                // İçerik aynı; türetilmiş sütunlar (formasyon kimliği, EA tipi, kind) güncel kodla yeniden yazılır (V3-05d-b).
+                apply(entity, hash, CONFIRMED);
+            }
             return Outcome.UNCHANGED;
+        }
+        if (SBC_CHALLENGE.equals(entity.kind()) && stored.get().equals(legacyChallengeHash(entity.payload(), repository.challengeKind(entity.id()).orElse(null)))) {
+            // Eski tanımlı hash (türetilmiş kind dahildi): içerik değişmedi, yalnız bizim türetmemiz değişti → çatışma değil, yeni tanıma geçilir.
+            apply(entity, hash, CONFIRMED);
+            repository.closeOpenQueue(entity.kind(), entity.key(), "RESOLVED");
+            return Outcome.UPDATED;
         }
         if (repository.distinctContributors(entity.kind(), entity.key(), hash) >= CONFIRMING_CONTRIBUTORS) {
             apply(entity, hash, "CONFIRMED");
@@ -179,6 +194,15 @@ public class ContributionService {
                 && Duration.between(Instant.ofEpochMilli(capturedAtMillis), clock.instant()).abs().compareTo(MAX_CLOCK_SKEW) > 0;
     }
 
+    /**
+     * V3-05d-b — EA görev tipi → KB türü (BEHAVIOR CHANGE): ONE_CLICK_CHALLENGE → SINGLE_ITEM (tek kart teslimi; yakalamada şartlar yalnız
+     * PLAYER_ATTRIBUTE/ACADEMY_PLAYER_SLOTTING/SCOPE, formasyon yok). BRICK_CHALLENGE ve diğerleri formasyonlu kadro (SQUAD); BRICK'in anlamı doğrulanmadı.
+     * Önceki eşleme "ONE_CLICK"/"BRICK" adlarına bakıyordu, EA'nın gönderdiği "*_CHALLENGE" adlarıyla hiç eşleşmiyordu.
+     */
+    static String kindOf(String eaType) {
+        return Objects.nonNull(eaType) && eaType.startsWith("ONE_CLICK") ? "SINGLE_ITEM" : "SQUAD";
+    }
+
     private static Integer repeatable(ObjectNode p) {
         if (p.hasNonNull("repeatCount") && p.get("repeatCount").asInt() > 0) {
             return p.get("repeatCount").asInt();
@@ -195,7 +219,7 @@ public class ContributionService {
             case SBC_CHALLENGE -> {
                 long setId = p.path("setId").asLong();
                 repository.ensureSetStub(setId, gv, text(p, "setName"));
-                repository.upsertSbcChallenge(entity.id(), setId, p.path("name").asText("Challenge #" + entity.id()), text(p, "formationLabel"),
+                repository.upsertSbcChallenge(entity.id(), setId, p.path("name").asText("Challenge #" + entity.id()), text(p, "formationLabel"), text(p, "formation"), text(p, "type"),
                         p.path("kind").asText("SQUAD"), p.path("requirements").isMissingNode() ? objectMapper.createArrayNode() : p.path("requirements"),
                         p.hasNonNull("itemScoreTarget") ? p.path("itemScoreTarget").asInt() : null, RewardAllowlist.rewards(p.path("awards"), objectMapper), hash);
             }
@@ -243,7 +267,7 @@ public class ContributionService {
             p.put("name", challenge.name());
             p.put("formation", challenge.formation());
             p.put("formationLabel", challenge.formationLabel());
-            p.put("kind", "ONE_CLICK".equals(challenge.type()) || "BRICK".equals(challenge.type()) ? "ITEM_SCORE" : "SQUAD");
+            p.put("kind", kindOf(challenge.type()));
             p.put("type", challenge.type());
             p.set("awards", objectMapper.valueToTree(challenge.awards()));
             p.set("requirements", objectMapper.valueToTree(challenge.requirements()));
@@ -339,23 +363,42 @@ public class ContributionService {
         return Objects.nonNull(epoch) && epoch >= MIN_EPOCH && epoch <= MAX_EPOCH ? Instant.ofEpochSecond(epoch) : null;
     }
 
-    /** Hash yalnız yapıyı kapsar (BE-BUG-07): lokalize ad/açıklama/etiketler her derinlikte çıkarılır, id'ler ve sayılar kalır. */
+    /**
+     * Hash yalnız yapıyı kapsar (BE-BUG-07): lokalize ad/açıklama/etiketler her derinlikte çıkarılır, id'ler ve sayılar kalır.
+     * V3-05d-b: bizim kodumuzun ham alanlardan türettiği alanlar (DERIVED_FIELDS, ör. görev `kind`) da çıkarılır; türetme düzeltilince katkılar çatışmaz.
+     */
     private JsonNode structural(JsonNode payload) {
+        return structural(payload, HASH_SKIPPED);
+    }
+
+    private JsonNode structural(JsonNode payload, Set<String> skipped) {
         if (payload.isObject()) {
             ObjectNode copy = objectMapper.createObjectNode();
             payload.fields().forEachRemaining(e -> {
-                if (!TEXT_FIELDS.contains(e.getKey())) {
-                    copy.set(e.getKey(), structural(e.getValue()));
+                if (!skipped.contains(e.getKey())) {
+                    copy.set(e.getKey(), structural(e.getValue(), skipped));
                 }
             });
             return copy;
         }
         if (payload.isArray()) {
             ArrayNode copy = objectMapper.createArrayNode();
-            payload.forEach(n -> copy.add(structural(n)));
+            payload.forEach(n -> copy.add(structural(n, skipped)));
             return copy;
         }
         return payload;
+    }
+
+    /**
+     * V3-05d-b geçişi: V3-05d-b öncesi görev hash'i türetilmiş `kind`'ı da içeriyordu. Saklı satırın kind'ıyla eski tanımla hesaplanır;
+     * saklı hash'e eşitse içerik aynıdır (yalnız türetme değişmiştir).
+     */
+    public String legacyChallengeHash(ObjectNode payload, String storedKind) {
+        ObjectNode copy = payload.deepCopy();
+        if (Objects.nonNull(storedKind)) {
+            copy.put("kind", storedKind);
+        }
+        return hash(structural(copy, TEXT_FIELDS));
     }
 
     private String hash(JsonNode payload) {

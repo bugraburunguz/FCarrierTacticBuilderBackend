@@ -27,6 +27,16 @@ public class FormationRegistry {
         log.info("Formations loaded count : {}", formations.size());
     }
 
+    /**
+     * V3-05d-b: EA formasyon kodu (ör. "f41212") → bizim formasyon kimliği. TEK eşleme yeri (formations.json `eaFormationId`);
+     * yakalama, SBC görevi ve aktif kadro buradan okur. Eşlemesi olmayan kod haritada yok (çağıran ham kodu saklar).
+     */
+    public Map<String, String> idsByEaCode() {
+        Map<String, String> byCode = new LinkedHashMap<>();
+        formations.values().stream().filter(f -> Objects.nonNull(f.eaFormationId())).forEach(f -> byCode.put(f.eaFormationId(), f.id()));
+        return byCode;
+    }
+
     public List<FormationDefinition> findAll() {
         return List.copyOf(formations.values());
     }
