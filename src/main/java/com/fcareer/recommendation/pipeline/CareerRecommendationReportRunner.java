@@ -58,6 +58,9 @@ public class CareerRecommendationReportRunner implements ApplicationRunner {
     private String output;
     @org.springframework.beans.factory.annotation.Value("${fcareer.report.recommendations.timing:false}")
     private boolean timingOnly;
+    /** Süre ölçümünün mevkileri (V3-06c: ≥ 10 ihtiyaç); varsayılan rapor mevkileri. */
+    @org.springframework.beans.factory.annotation.Value("${fcareer.report.recommendations.timing-positions:LB,CB,ST,CM}")
+    private List<String> timingPositions;
 
     @Override
     public void run(ApplicationArguments args) throws IOException {
@@ -132,7 +135,7 @@ public class CareerRecommendationReportRunner implements ApplicationRunner {
     private void timing(CareerService.CareerSquad squad) throws IOException {
         StringBuilder md = new StringBuilder(String.format(Locale.ROOT, "# Öneri süresi — kariyer %d\n\n| Mevki | Soğuk (ms) | p50 | p95 | en yavaş |\n|---|---|---|---|---|\n", careerId));
         List<Long> all = new ArrayList<>();
-        for (String position : POSITIONS) {
+        for (String position : timingPositions) {
             CareerRecommendationRequest request = requestFor(position);
             long cold = timed(squad, request);
             List<Long> runs = new ArrayList<>();
