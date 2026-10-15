@@ -147,4 +147,14 @@ final class CatalogSearchProfile implements SearchProfile {
     public String gameDate() {
         return "CURRENT_DATE";
     }
+
+    @Override
+    public String knownGameDate() {
+        return "CAST(NULL AS DATE)";
+    }
+
+    @Override
+    public String onLoanFilter() {
+        return "FALSE";
+    }
 }

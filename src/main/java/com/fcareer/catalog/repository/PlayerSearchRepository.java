@@ -52,6 +52,7 @@ public class PlayerSearchRepository {
                 + p.potential() + " AS potential, " + p.value() + " AS value_eur, " + p.estimated() + " AS estimated,\n"
                 + p.freeAgentSelect() + " AS free_agent,\n"
                 + p.gameDate() + " AS ref_date,\n"
+                + p.contractUntil() + " AS contract_until, (" + p.onLoanFilter() + ") AS on_loan,\n"
                 + p.faceOfficial() + " AS face_official,\n"
                 + p.attrsJson() + " AS attrs_json\n";
     }
@@ -72,6 +73,20 @@ public class PlayerSearchRepository {
         params.addValue("offset", (long) request.getPage() * request.getSize());
         String sql = select(profile) + profile.from() + where + " ORDER BY " + orderBy(profile, request, params) + " LIMIT :limit OFFSET :offset";
         return jdbc.query(sql, params, (rs, i) -> toSummary(rs));
+    }
+
+    /** Süzülmüş havuzun hafif satırı (V3-06a): kova ve rol sıralaması Java'da hesaplanır, tam satır yalnız istenen sayfa için okunur. */
+    public record Candidate(long id, int overall, Long valueEur, boolean freeAgent) {
+    }
+
+    /** Aynı süzgeçlerle tüm havuz (sayfasız), istekteki sıralamayla. */
+    public List<Candidate> candidates(PlayerSearchRequest request) {
+        SearchProfile profile = profileOf(request);
+        MapSqlParameterSource params = new MapSqlParameterSource();
+        String where = where(profile, request, params);
+        String sql = "SELECT b.id AS id, " + profile.overall() + " AS overall, " + profile.value() + " AS value_eur, COALESCE(" + profile.freeAgentSelect() + ", FALSE) AS free_agent"
+                + profile.from() + where + " ORDER BY " + orderBy(profile, request, params);
+        return jdbc.query(sql, params, (rs, i) -> new Candidate(rs.getLong("id"), rs.getInt("overall"), nullableLong(rs, "value_eur"), rs.getBoolean("free_agent")));
     }
 
     public record LeagueQuality(int id, String name, double averageOverall) {
@@ -144,6 +159,13 @@ public class PlayerSearchRepository {
         addBound(request.getPotentialMax(), p.potential() + " <= :potentialMax", "potentialMax", clauses, params);
         addBound(request.getValueMax(), request.isIncludeUnvalued()
                 ? "(" + p.value() + " IS NULL OR " + p.value() + " <= :valueMax)" : p.value() + " <= :valueMax", "valueMax", clauses, params);
+        addBound(request.getValueMin(), p.value() + " >= :valueMin", "valueMin", clauses, params);
+        if (request.isOnLoan()) {
+            clauses.add(p.onLoanFilter());
+        }
+        // Sözleşme süzgeci yalnız kayıttaki oyun tarihiyle (ENG-04): tarih bilinmiyorsa hiçbir satır eşleşmez, gerçek tarihe düşülmez.
+        addBound(request.getContractMonthsLeft(), "(" + p.contractUntil() + " IS NOT NULL AND " + p.knownGameDate() + " IS NOT NULL AND " + p.contractUntil()
+                + " <= " + p.knownGameDate() + " + (CAST(:contractMonthsLeft AS INTEGER) * INTERVAL '1 month'))", "contractMonthsLeft", clauses, params);
         addBound(request.getClubId(), p.clubId() + " = :clubId", "clubId", clauses, params);
         addBound(request.getTeamId(), p.teamId() + " = :teamId", "teamId", clauses, params);
         if (request.isFreeAgent()) {
@@ -282,6 +304,8 @@ public class PlayerSearchRepository {
                 .valuationEstimated(rs.getBoolean("estimated"))
                 .freeAgent(rs.getBoolean("free_agent"))
                 .faceAssetId(nullableLong(rs, "ea_id"))
+                .contractUntil(Objects.isNull(rs.getDate("contract_until")) ? null : rs.getDate("contract_until").toLocalDate())
+                .onLoan(rs.getBoolean("on_loan") ? Boolean.TRUE : null)
                 .build();
     }
 

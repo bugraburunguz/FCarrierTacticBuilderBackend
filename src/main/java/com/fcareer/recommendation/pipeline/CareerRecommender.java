@@ -30,8 +30,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -58,7 +56,6 @@ public class CareerRecommender {
     private static final String CHARGE_REASON = "RECOMMEND_CAREER";
     private static final int PROS = 3;
     private static final int CONS = 2;
-    private static final int DAYS_PER_MONTH = 30;
     private static final String FREE = "FREE";
     private static final String YOUNG = "YOUNG";
     private static final String READY = "READY";
@@ -96,7 +93,7 @@ public class CareerRecommender {
     private final FitEngineV3 engine;
     private final LevelFitService levelFitService;
     private final FitEngineProperties fitProperties;
-    private final FeasibilityBuckets feasibilityBuckets;
+    private final FeasibilityInputs feasibilityInputs;
     private final Diversifier diversifier;
     private final GrowthProjector growthProjector;
     private final ClubRepository clubRepository;
@@ -105,7 +102,6 @@ public class CareerRecommender {
     private final RecommendProperties properties;
     private final CreditGuard creditGuard;
     private final BillingProperties billingProperties;
-    private final ClubStrengthService clubStrengthService;
     private final TacticSlotLookup tacticSlotLookup;
     private final com.fcareer.fitengine.service.FitNarrativeService narrativeService;
 
@@ -171,11 +167,10 @@ public class CareerRecommender {
                 }
             }
         }
-        ClubStrength strength = clubStrengthService.of(squad.careerId());
-        String userKey = userTeamKey(squad, request);
-        Double userStrength = strength.clubStrength(userKey);
-        Double firstEleven = squadPlayers.stream().map(FitPlayer::getOverall).sorted(Comparator.reverseOrder()).limit(properties.getFirstEleven()).mapToInt(Integer::intValue).average()
-                .stream().boxed().findFirst().orElse(null);
+        // Kova girdileri tek yerden (FeasibilityInputs; kariyer oyuncu listesi de aynı hesabı kullanır).
+        FeasibilityInputs.Context feasibilityContext = feasibilityInputs.context(squad, request.getUserTeamId(), squadPlayers.stream().map(FitPlayer::getOverall).toList());
+        Double userStrength = feasibilityContext.userStrength();
+        Double firstEleven = feasibilityContext.firstEleven();
 
         Integer ageMax = Objects.isNull(request.getAgeMax()) ? profile.getMaxAge() : request.getAgeMax();
         List<PlayerSummaryResponse> pool = candidatePool(squad, request, targetRoles, poolSize, ageMax, Objects.isNull(request.getUserTeamId()));
@@ -184,11 +179,10 @@ public class CareerRecommender {
             List<Long> ids = pool.stream().map(PlayerSummaryResponse::getId).toList();
             Map<Long, FitPlayer> players = playerService.fitPlayers(ids, squad.gameVersionId(), squad.careerId()).stream().collect(Collectors.toMap(FitPlayer::getId, (p) -> p, (a, b) -> a));
             Map<Long, CareerPlayerRepository.Extra> extras = careerPlayerRepository.extras(squad.careerId(), ids);
-            LocalDate gameDate = playerSearchRepository.careerGameDate(squad.careerId()).orElse(null);
             for (PlayerSummaryResponse summary : pool) {
                 FitPlayer player = players.get(summary.getId());
                 if (Objects.nonNull(player)) {
-                    scored.add(score(player, summary, targetRoles, position, extras.get(summary.getId()), squad, strength, userStrength, firstEleven, starters, profile, gameDate));
+                    scored.add(score(player, summary, targetRoles, position, extras.get(summary.getId()), feasibilityContext, starters, profile));
                 }
             }
         }
@@ -204,8 +198,8 @@ public class CareerRecommender {
         return new CareerService.CareerSquad(squad.playerIds(), squad.gameVersionId(), budget, squad.gender(), squad.clubId(), squad.careerId(), squad.ownedIds());
     }
 
-    private Scored score(FitPlayer player, PlayerSummaryResponse summary, List<FitRole> roles, String position, CareerPlayerRepository.Extra extra, CareerService.CareerSquad squad,
-                         ClubStrength strength, Double userStrength, Double firstEleven, Map<String, Starter> starters, RecommendProperties.Profile profile, LocalDate gameDate) {
+    private Scored score(FitPlayer player, PlayerSummaryResponse summary, List<FitRole> roles, String position, CareerPlayerRepository.Extra extra,
+                         FeasibilityInputs.Context feasibilityContext, Map<String, Starter> starters, RecommendProperties.Profile profile) {
         FitRole bestRole = null;
         FitEngineV3.Result best = null;
         for (FitRole role : roles) {
@@ -219,13 +213,11 @@ public class CareerRecommender {
         Optional<LevelFitService.LevelFit> level = levelFitService.levelFit(gender, position, bestRole.getBaseRole(), bestRole.getFocus(), player.getOverall(), best.currentFit());
         String label = level.map((l) -> RoleFitV3Service.label(l.value(), fitProperties.getV3()).name()).orElse(null);
 
-        Double targetStrength = Objects.isNull(extra) ? null : strength.clubStrength(extra.teamKey());
-        Double clubGap = Objects.nonNull(targetStrength) && Objects.nonNull(userStrength) ? targetStrength - userStrength : null;
-        Double ovrGap = Objects.isNull(firstEleven) ? null : player.getOverall() - firstEleven;
-        Double ratio = Objects.nonNull(squad.budgetEur()) && Objects.nonNull(summary.getValueEur()) && squad.budgetEur() > 0 ? summary.getValueEur() / (double) squad.budgetEur() : null;
-        Integer months = Objects.nonNull(extra) && Objects.nonNull(extra.contractUntil()) && Objects.nonNull(gameDate)
-                ? (int) Math.max(0, ChronoUnit.DAYS.between(gameDate, extra.contractUntil()) / DAYS_PER_MONTH) : null;
-        FeasibilityBuckets.Result feasibility = feasibilityBuckets.classify(new FeasibilityBuckets.Input(ratio, clubGap, ovrGap, Objects.isNull(extra) ? null : extra.clubRank(), months, summary.isFreeAgent()));
+        FeasibilityInputs.Derived derived = feasibilityInputs.derive(feasibilityContext, player.getOverall(), summary.getValueEur(), summary.isFreeAgent(), extra);
+        Double targetStrength = derived.targetStrength();
+        Double clubGap = derived.clubGap();
+        Double ovrGap = derived.ovrGap();
+        FeasibilityBuckets.Result feasibility = feasibilityInputs.classify(derived);
         double penalty = switch (feasibility.bucket()) {
             case ALINABILIR -> 0;
             case ZOR -> properties.getRankPenalty().getHard();
@@ -317,13 +309,6 @@ public class CareerRecommender {
 
     private boolean canPlay(FitPlayer player, String position) {
         return player.getPositions().stream().anyMatch((p) -> p.equals(position) || posDist.factor(p, position) >= properties.getMinPositionFactor());
-    }
-
-    private String userTeamKey(CareerService.CareerSquad squad, CareerRecommendationRequest request) {
-        if (Objects.nonNull(request.getUserTeamId())) {
-            return "T:" + request.getUserTeamId();
-        }
-        return careerPlayerRepository.dominantTeamKey(squad.careerId(), squad.ownedIds()).orElse(Objects.isNull(squad.clubId()) ? null : "C:" + squad.clubId());
     }
 
     /**

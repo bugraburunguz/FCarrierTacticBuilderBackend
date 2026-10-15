@@ -43,6 +43,7 @@ public class PlayerController {
     private final CareerService careerService;
     private final FitService fitService;
     private final com.fcareer.career.desk.SpoilerPolicy spoilerPolicy;
+    private final com.fcareer.recommendation.pipeline.CareerPlayerList careerPlayerList;
 
     @GetMapping
     public PageResponse<PlayerSummaryResponse> search(
@@ -60,6 +61,12 @@ public class PlayerController {
             @RequestParam(name = "pot_min", required = false) Integer potentialMin,
             @RequestParam(name = "pot_max", required = false) Integer potentialMax,
             @RequestParam(name = "value_max", required = false) Long valueMax,
+            @RequestParam(name = "value_min", required = false) Long valueMin,
+            @RequestParam(name = "on_loan", required = false, defaultValue = "false") boolean onLoan,
+            @RequestParam(name = "contract_months", required = false) Integer contractMonths,
+            @RequestParam(name = "bucket", required = false) List<String> buckets,
+            @RequestParam(name = "role", required = false) String role,
+            @RequestParam(name = "role_pos", required = false) String rolePosition,
             @RequestParam(name = "age_min", required = false) Integer ageMin,
             @RequestParam(name = "age_max", required = false) Integer ageMax,
             @RequestParam(name = "wf_min", required = false) Integer weakFootMin,
@@ -80,7 +87,7 @@ public class PlayerController {
         Map<String, Integer> attrMin = new HashMap<>();
         Map<String, Integer> attrMax = new HashMap<>();
         allParams.forEach((key, value) -> collectAttrBound(key, value, attrMin, attrMax));
-        PageResponse<PlayerSummaryResponse> page0 = playerService.search(PlayerSearchRequest.builder()
+        PlayerSearchRequest request = PlayerSearchRequest.builder()
                 .gameVersionId(gameVersionId)
                 .query(query)
                 .positions(orEmpty(positions))
@@ -93,6 +100,9 @@ public class PlayerController {
                 .potentialMin(spoilerPolicy.minBand(careerId, potentialMin))
                 .potentialMax(spoilerPolicy.maxBand(careerId, potentialMax))
                 .valueMax(valueMax)
+                .valueMin(valueMin)
+                .onLoan(onLoan)
+                .contractMonthsLeft(contractMonths)
                 .ageMin(ageMin)
                 .ageMax(ageMax)
                 .weakFootMin(weakFootMin)
@@ -109,9 +119,18 @@ public class PlayerController {
                 .ascending(!ORDER_DESC.equalsIgnoreCase(order))
                 .page(page)
                 .size(size)
-                .build());
+                .build();
+        // V3-06a: kariyer havuzunda ulaşılabilirlik kovası (sütun + süzgeç) ve FitEngineV3 rol sıralaması; katalogda mevcut davranış.
+        PageResponse<PlayerSummaryResponse> page0 = careerId == null ? playerService.search(request)
+                : careerPlayerList.search(user == null ? null : user.id(), request, buckets, role, rolePosition);
         spoilerPolicy.maskAll(careerId, page0.getItems());
         return page0;
+    }
+
+    /** V3-06a: kariyer listesinde hangi süzgeçlerin verisi var (oyun tarihi, bütçe, sözleşme, kiralık); veri yoksa web süzgeci gizler. */
+    @GetMapping("/facets")
+    public com.fcareer.catalog.repository.CareerPlayerRepository.CareerFacets facets(@AuthenticationPrincipal AuthUser user, @RequestParam(name = "career") Long careerId) {
+        return careerPlayerList.facets(user == null ? null : user.id(), careerId);
     }
 
     @GetMapping("/{id}/roles")

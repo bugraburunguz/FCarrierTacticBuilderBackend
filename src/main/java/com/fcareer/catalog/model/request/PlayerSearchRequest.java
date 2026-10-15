@@ -37,6 +37,12 @@ public class PlayerSearchRequest {
     private Integer overallMax;
     private Integer potentialMin;
     private Long valueMax;
+    /** V3-06a: değer alt sınırı (değeri bilinmeyen satır eşleşmez). */
+    private Long valueMin;
+    /** V3-06a: yalnız başka kulübe kiralık oyuncular (kariyer kaydı). */
+    private boolean onLoan;
+    /** V3-06a: sözleşmesi kayıttaki oyun tarihinden en çok N ay sonra biten oyuncular. */
+    private Integer contractMonthsLeft;
     private Integer clubId;
     private Long careerId;
     private Integer teamId;

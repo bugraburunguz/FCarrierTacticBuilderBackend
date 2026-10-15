@@ -67,5 +67,9 @@ interface SearchProfile {
 
     /** Yaş hesabının referans tarihi (kariyerde oyun tarihi, yoksa bugün). */
     String gameDate();
+    /** Yalnız kayıt dosyasındaki oyun tarihi (bilinmiyorsa NULL); sözleşme süzgeci gerçek tarihe düşmez (ENG-04). */
+    String knownGameDate();
+    /** Kiralıkta olan oyuncu koşulu (kaynak kiralık bilmiyorsa FALSE). */
+    String onLoanFilter();
 
 }

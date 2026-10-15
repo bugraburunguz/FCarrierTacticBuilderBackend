@@ -35,6 +35,27 @@ public class CareerPlayerRepository {
     private final ObjectMapper objectMapper;
     private final CareerPlayerWriter careerPlayerWriter;
 
+    /** Kariyer verisi sürümü: içe aktarma/düzenlemede artar; liste önbelleğinin anahtarıdır. */
+    public long careerDataVersion(long careerId) {
+        Long version = jdbc.queryForObject("SELECT data_version FROM career WHERE id = :c", Map.of("c", careerId), Long.class);
+        return Objects.isNull(version) ? 0 : version;
+    }
+
+    /** Kariyer listesinin hangi süzgeçleri anlamlı: oyun tarihi, bütçe (NULL = bilinmiyor, ENG-02), sözleşme ve kiralık verisi var mı. */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    public record CareerFacets(java.time.LocalDate gameDate, Long budgetEur, boolean contractData, boolean loanData) {
+    }
+
+    public CareerFacets careerFacets(long careerId) {
+        return jdbc.queryForObject("""
+                SELECT k.current_game_date, k.budget_eur,
+                       EXISTS (SELECT 1 FROM career_player cp WHERE cp.career_id = k.id AND cp.contract_until IS NOT NULL) AS contract_data,
+                       EXISTS (SELECT 1 FROM career_player cp WHERE cp.career_id = k.id AND cp.loan_from_team_id IS NOT NULL) AS loan_data
+                  FROM career k WHERE k.id = :c""", Map.of("c", careerId), (rs, i) -> new CareerFacets(
+                Objects.isNull(rs.getDate("current_game_date")) ? null : rs.getDate("current_game_date").toLocalDate(),
+                rs.getObject("budget_eur") == null ? null : rs.getLong("budget_eur"), rs.getBoolean("contract_data"), rs.getBoolean("loan_data")));
+    }
+
     public Map<Long, Row> byIds(long careerId, Collection<Long> playerIds) {
         Map<Long, Row> out = new HashMap<>();
         if (playerIds.isEmpty()) {

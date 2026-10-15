@@ -159,4 +159,14 @@ final class CareerSearchProfile implements SearchProfile {
     public String gameDate() {
         return "COALESCE(k.current_game_date, CURRENT_DATE)";
     }
+
+    @Override
+    public String knownGameDate() {
+        return "k.current_game_date";
+    }
+
+    @Override
+    public String onLoanFilter() {
+        return "cp.loan_from_team_id IS NOT NULL";
+    }
 }

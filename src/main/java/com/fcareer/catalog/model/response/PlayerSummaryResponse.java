@@ -46,4 +46,12 @@ public class PlayerSummaryResponse {
     private String faceUrl;
     private Boolean changed;
     private com.fcareer.versioning.model.VersionModels.ChangeSummary changeSummary;
+    /** Kariyer kaydındaki sözleşme bitişi (V3-06a; kayıtta yoksa alan yok). */
+    private java.time.LocalDate contractUntil;
+    /** Kariyerde başka kulübe kiralık (V3-06a; değilse alan yok). */
+    private Boolean onLoan;
+    /** Ulaşılabilirlik kovası: ALINABILIR / ZOR / HAYAL (V3-06a; yalnız kariyer listesinde, öneri hattının sınıflandırıcısı). */
+    private String feasibility;
+    /** Seçili rolde FitEngineV3 anlık uyum (V3-06a; yalnız rol sıralamasında). */
+    private Double roleFit;
 }
