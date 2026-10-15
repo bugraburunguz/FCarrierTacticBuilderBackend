@@ -21,6 +21,7 @@ import java.util.function.BiFunction;
 public final class SbcChallengeParser {
 
     static final String SCOPE = "SCOPE";
+    private static final String UNKNOWN = "UNKNOWN";
     private static final int SCOPE_MAX = 1;
     private static final int SCOPE_EXACT = 2;
     private static final int SCOPE_RANGE = 3;
@@ -33,7 +34,7 @@ public final class SbcChallengeParser {
         List<SbcChallengeView> result = new ArrayList<>();
         for (JsonNode challenge : body.path("challenges")) {
             List<Reward> awards = new ArrayList<>();
-            challenge.path("awards").forEach(a -> awards.add(new Reward(a.path("type").asText(null), a.hasNonNull("value") ? a.get("value").asLong() : null, a.path("count").asInt(1))));
+            challenge.path("awards").forEach(a -> awards.add(RewardAllowlist.reward(a, "type")));
             String formation = challenge.path("formation").asText(null);
             result.add(new SbcChallengeView(setId, setName, challenge.path("challengeId").asLong(), challenge.path("name").asText(null),
                     challenge.path("status").asText(null), challenge.path("type").asText(null), formation, Objects.isNull(formation) ? null : formationLabels.get(formation),
@@ -72,7 +73,8 @@ public final class SbcChallengeParser {
                 continue;
             }
             for (Map.Entry<String, Integer> main : mains) {
-                result.add(new SbcRequirement(kindOf(main.getKey()), op, main.getValue(), level, refs, count, group));
+                String kind = kindOf(main.getKey());
+                result.add(new SbcRequirement(kind, op, main.getValue(), level, refs, count, group, UNKNOWN.equals(kind) ? main.getKey() : null));
             }
         }
         return result;
@@ -85,7 +87,8 @@ public final class SbcChallengeParser {
         if (Objects.nonNull(level)) {
             return new SbcRequirement("LEVEL_COUNT", op, count, level, List.of(), count, raw);
         }
-        return new SbcRequirement(Objects.nonNull(count) ? "PLAYER_COUNT" : "UNKNOWN", op, count, null, List.of(), count, raw);
+        return Objects.nonNull(count) ? new SbcRequirement("PLAYER_COUNT", op, count, null, List.of(), count, raw)
+                : new SbcRequirement(UNKNOWN, op, null, null, List.of(), null, raw, raw.isEmpty() ? null : raw.get(0).path("type").asText(null));
     }
 
     /** EA eligibility type → normalize kind (05 §2.1/§2.2). Bilinmeyen tip UNKNOWN olur; ham hâli requirement.raw'da kalır. */
@@ -110,7 +113,11 @@ public final class SbcChallengeParser {
             case "FIRST_OWNER_PLAYERS_COUNT" -> "FIRST_OWNER";
             case "PLAYER_TRADABILITY" -> "TRADABILITY";
             case "LEGEND_COUNT" -> "LEGEND_COUNT";
-            default -> "UNKNOWN";
+            // V3-05c-c, yakalamada görüldü; anlamı DOĞRULANMADI (05_SBC_VERI_HATTI §2.3): çözücü zorlamaz, şart metni + ham değer gösterilir.
+            case "PLAYER_ATTRIBUTE" -> "PLAYER_ATTRIBUTE";
+            // EA iç adı "academy" = Evolutions (/academy/ uçları evolution verir); Evolution oyuncusunun kadroya konmasıyla ilgili olduğu varsayımı DOĞRULANMADI.
+            case "ACADEMY_PLAYER_SLOTTING" -> "ACADEMY_SLOTTING";
+            default -> UNKNOWN;
         };
     }
 }

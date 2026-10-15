@@ -18,6 +18,7 @@ import com.fcareer.ut.model.UtCaptureModels.MarketPrice;
 import com.fcareer.ut.model.UtCaptureModels.ObjectiveGroupView;
 import com.fcareer.ut.model.UtCaptureModels.SbcChallengeView;
 import com.fcareer.ut.model.UtCaptureModels.SbcSetView;
+import com.fcareer.ut.service.RewardAllowlist;
 import com.fcareer.ut.service.UtCaptureService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -190,16 +191,17 @@ public class ContributionService {
         ObjectNode p = entity.payload();
         switch (entity.kind()) {
             case SBC_SET -> repository.upsertSbcSet(entity.id(), gv, p.path("name").asText("SBC #" + entity.id()), text(p, "description"), p.path("category").asText("OTHER"),
-                    repeatable(p), entity.endsAt(), p.path("reward").isMissingNode() ? objectMapper.createArrayNode() : p.path("reward"), status, hash);
+                    repeatable(p), entity.endsAt(), RewardAllowlist.rewards(p.path("reward"), objectMapper), status, hash);
             case SBC_CHALLENGE -> {
                 long setId = p.path("setId").asLong();
                 repository.ensureSetStub(setId, gv, text(p, "setName"));
                 repository.upsertSbcChallenge(entity.id(), setId, p.path("name").asText("Challenge #" + entity.id()), text(p, "formationLabel"),
                         p.path("kind").asText("SQUAD"), p.path("requirements").isMissingNode() ? objectMapper.createArrayNode() : p.path("requirements"),
-                        p.hasNonNull("itemScoreTarget") ? p.path("itemScoreTarget").asInt() : null, p.path("awards"), hash);
+                        p.hasNonNull("itemScoreTarget") ? p.path("itemScoreTarget").asInt() : null, RewardAllowlist.rewards(p.path("awards"), objectMapper), hash);
             }
             case OBJECTIVE_GROUP -> {
-                repository.upsertObjectiveGroup(entity.id(), gv, p.path("name").asText("Grup #" + entity.id()), text(p, "gameMode"), null, entity.endsAt(), p.path("rewards"), p.path("objectives"), hash);
+                repository.upsertObjectiveGroup(entity.id(), gv, p.path("name").asText("Grup #" + entity.id()), text(p, "gameMode"), null, entity.endsAt(),
+                        RewardAllowlist.rewards(p.path("rewards"), objectMapper), RewardAllowlist.objectives(p.path("objectives"), objectMapper), hash);
                 if (!"CONFIRMED".equals(status)) {
                     repository.setStatus("objective_group", entity.id(), status);
                 }

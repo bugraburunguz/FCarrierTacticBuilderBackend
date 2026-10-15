@@ -103,6 +103,65 @@ class SbcChallengeParserTest {
         }
     }
 
+    /** V3-05c-c: gerçek yakalamada görülen 16 elgReq tipinin her biri tanınır (yapı tipleri SCOPE/PLAYER_COUNT/PLAYER_LEVEL/*_ID ayrı testte). */
+    @org.junit.jupiter.params.ParameterizedTest(name = "{0} → {1}")
+    @org.junit.jupiter.params.provider.CsvSource({
+            "PLAYER_ATTRIBUTE, PLAYER_ATTRIBUTE",
+            "ACADEMY_PLAYER_SLOTTING, ACADEMY_SLOTTING",
+            "PLAYER_QUALITY, QUALITY",
+            "CHEMISTRY_POINTS, CHEMISTRY",
+            "CLUB_COUNT, CLUB_COUNT",
+            "LEAGUE_COUNT, LEAGUE_COUNT",
+            "SAME_LEAGUE_COUNT, SAME_LEAGUE",
+            "SAME_NATION_COUNT, SAME_NATION",
+            "TEAM_RATING_1_TO_100, TEAM_RATING",
+            "SAME_CLUB_COUNT, SAME_CLUB"})
+    void observedMainTypesMapToNamedKinds(String eaType, String kind) throws Exception {
+        assertThat(parseElg("[" + req(eaType, 1, 2) + "," + req("SCOPE", 1, 0) + "]")).singleElement().satisfies(r -> {
+            assertThat(r.kind()).isEqualTo(kind);
+            assertThat(r.value()).isEqualTo(2);
+            assertThat(r.raw()).isNotEmpty();
+        });
+    }
+
+    @Test
+    void observedStructuralTypesBuildTheirRequirement() throws Exception {
+        assertThat(parseElg("[" + req("PLAYER_COUNT", 1, 11) + "," + req("SCOPE", 1, 2) + "]")).singleElement().satisfies(r -> {
+            assertThat(r.kind()).isEqualTo("PLAYER_COUNT");
+            assertThat(r.op()).isEqualTo("EXACT");
+        });
+        assertThat(parseElg("[" + req("PLAYER_COUNT", 1, 1) + "," + req("PLAYER_LEVEL", 1, 3) + "]")).singleElement().satisfies(r -> assertThat(r.kind()).isEqualTo("LEVEL_COUNT"));
+        for (String ref : java.util.List.of("CLUB_ID", "LEAGUE_ID", "NATION_ID")) {
+            assertThat(parseElg("[" + req("PLAYER_COUNT", 1, 2) + "," + req(ref, 1, 77) + "]")).as(ref).singleElement().satisfies(r -> {
+                assertThat(r.kind()).isEqualTo("FROM");
+                assertThat(r.refs()).singleElement().satisfies(x -> assertThat(x.id()).isEqualTo(77));
+            });
+        }
+    }
+
+    @Test
+    void unknownTypeIsKeptAsUnknownWithItsEaTypeAndRawValue() throws Exception {
+        assertThat(parseElg("[" + req("SOMETHING_NEW", 1, 5) + "]")).singleElement().satisfies(r -> {
+            assertThat(r.kind()).isEqualTo("UNKNOWN");
+            assertThat(r.eaType()).isEqualTo("SOMETHING_NEW");
+            assertThat(r.value()).isEqualTo(5);
+        });
+        // tanınmayan tip, aynı slottaki bilinen yapı tiplerinin yanında da düşmez
+        assertThat(parseElg("[" + req("SOMETHING_NEW", 1, 5) + "," + req("PLAYER_COUNT", 1, 2) + "," + req("SCOPE", 1, 1) + "]")).singleElement()
+                .satisfies(r -> assertThat(r.eaType()).isEqualTo("SOMETHING_NEW"));
+    }
+
+    @Test
+    void rewardItemDataIsKeptThroughTheAllowlist() throws Exception {
+        JsonNode body = new ObjectMapper().readTree("{\"challenges\":[{\"challengeId\":1,\"name\":\"t\",\"elgReq\":[],\"awards\":[{\"type\":\"item\",\"value\":50000777,\"count\":1,\"itemData\":"
+                + RewardItemFixture.ITEM_DATA + "}]}]}");
+        SbcChallengeView challenge = SbcChallengeParser.parse(1, "s", body, (kind, id) -> null, Map.of()).get(0);
+        assertThat(challenge.awards()).singleElement().satisfies(a -> {
+            assertThat(a.item().assetId()).isEqualTo(777L);
+            assertThat(a.item().possiblePositions()).containsExactly("ST", "CF");
+        });
+    }
+
     @Test
     void secondMainTypeInTheSameSlotDoesNotOverwriteTheFirst() throws Exception {
         java.util.List<SbcRequirement> result = parseElg("[" + req("PLAYER_RARITY", 1, 3) + "," + req("PLAYER_MIN_OVR", 1, 80) + "," + req("PLAYER_COUNT", 1, 2) + "," + req("SCOPE", 1, 0) + "]");

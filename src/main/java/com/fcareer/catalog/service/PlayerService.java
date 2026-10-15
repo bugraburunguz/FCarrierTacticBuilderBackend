@@ -71,6 +71,11 @@ public class PlayerService {
         return detail(base.getId(), gameVersionId);
     }
 
+    /** V3-05c-c: SBC ödül kartının adı için toplu assetId → ad; bilinmeyen kimlik atlanır. */
+    public List<BasePlayerRepository.AssetName> namesByAsset(java.util.Collection<Long> assetIds) {
+        return assetIds.isEmpty() ? List.of() : basePlayerRepository.findCatalogNamesByAssetIds(assetIds);
+    }
+
     public PlayerDetailResponse detail(Long playerId, Short gameVersionId) {
         return detail(playerId, gameVersionId, null);
     }

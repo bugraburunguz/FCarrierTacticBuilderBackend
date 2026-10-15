@@ -52,6 +52,25 @@ Ham şekil: `eligibilityRequirements[] = { scope, count, kvPairs: { <key>: [valu
 ```
 `kind` listesi: `TEAM_RATING, TEAM_STAR_RATING, CHEMISTRY_TOTAL, CHEMISTRY_PER_PLAYER, PLAYER_COUNT, QUALITY, RARITY, RARITY_GROUP, SAME_NATION, SAME_LEAGUE, SAME_CLUB, NATION_COUNT, LEAGUE_COUNT, CLUB_COUNT, NATION_ID, LEAGUE_ID, CLUB_ID, MIN_OVR, MAX_OVR, EXACT_OVR, FIRST_OWNER, TRADABILITY, LEGEND_COUNT, UNKNOWN`. `UNKNOWN` gelirse ham hâli sakla, admin kuyruğuna "yeni anahtar" uyarısı düşür.
 
+### 2.3 Gerçek FC27 yakalamasında görülen `elgReq` tipleri (V3-05c-c)
+Kaynak: Buğra'nın uzantı yakalaması (yalnız tip adları incelendi; testler sentetik). Hepsi parser'da tanınır, her biri için birim test var (`SbcChallengeParserTest`).
+
+| EA tipi | Parser `kind` | Anlam | Durum |
+|---|---|---|---|
+| SCOPE | (yön) | 0 MIN · 1 MAX · 2 EXACT · 3 RANGE | bilinen |
+| PLAYER_COUNT | PLAYER_COUNT / şartın adedi | aynı slottaki şartın oyuncu sayısı | bilinen |
+| PLAYER_LEVEL | LEVEL_COUNT | PLAYER_COUNT ile: "en az N oyuncu bu seviyede" | bilinen |
+| CLUB_ID / LEAGUE_ID / NATION_ID | FROM (refs) | "bu kulüp/lig/ülkeden en az N" | bilinen |
+| PLAYER_QUALITY | QUALITY | 1 bronz · 2 gümüş · 3 altın | bilinen (`VERIFY` §2.1) |
+| CHEMISTRY_POINTS | CHEMISTRY | takım kimyası | bilinen |
+| CLUB_COUNT / LEAGUE_COUNT | CLUB_COUNT / LEAGUE_COUNT | farklı kulüp/lig sayısı | bilinen |
+| SAME_LEAGUE_COUNT / SAME_NATION_COUNT / SAME_CLUB_COUNT | SAME_LEAGUE / SAME_NATION / SAME_CLUB | aynı lig/ülke/kulüpten sayı | bilinen |
+| TEAM_RATING_1_TO_100 | TEAM_RATING | takım reytingi | bilinen |
+| **PLAYER_ATTRIBUTE** | PLAYER_ATTRIBUTE | **doğrulanmadı.** Kodda ve veride karşılığı yok; adı bir özellik eşiğini düşündürüyor ama hangi özellik ve değerin ne olduğu bilinmiyor | arayüz "Özellik şartı (doğrulanmadı)", çözücü zorlamaz, ham değer saklanır |
+| **ACADEMY_PLAYER_SLOTTING** | ACADEMY_SLOTTING | **doğrulanmadı.** Tek dayanak: EA'nın iç adı "academy" = Evolutions (`/academy/` uçları evolution verir, `UtCaptureService`). Evolution oyuncusunun kadroya konmasıyla ilgili olduğu varsayımdır; değerin anlamı bilinmiyor | arayüz "Evolution oyuncusu şartı (doğrulanmadı)", çözücü zorlamaz |
+
+Listede olmayan tip sessizce düşmez: `kind: "UNKNOWN"` + `eaType` (EA tip adı) + `raw`; arayüzde "Bilinmeyen şart" çipi, çözücü notlarında görünür.
+
 ---
 ## 3. ŞEMA (mevcut V13 `sbc_set`/`sbc_challenge`'a eklenecekler)
 Flyway `V15__sbc_pipeline.sql`:

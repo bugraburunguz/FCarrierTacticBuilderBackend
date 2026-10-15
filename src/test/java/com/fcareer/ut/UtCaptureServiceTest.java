@@ -126,6 +126,26 @@ class UtCaptureServiceTest {
     }
 
     @Test
+    void rewardCardDataSurvivesFromHubObjectivesAndChallengesThroughTheAllowlist() throws Exception {
+        String itemAward = "{\"type\":\"item\",\"value\":50000777,\"count\":1,\"itemData\":" + RewardItemFixture.ITEM_DATA + "}";
+        String objectives = "{\"objectiveGroups\":[{\"groupId\":7,\"name\":\"Weekly\",\"gameMode\":\"CLUB\",\"groupStatus\":\"IN_PROGRESS\",\"startDateTime\":100,\"endDateTime\":200,"
+                + "\"awardSetList\":[{\"awards\":[{\"awardType\":\"item\",\"value\":50000777,\"count\":1,\"itemData\":" + RewardItemFixture.ITEM_DATA + "}]}],\"objectives\":[]}]}";
+        String sbc = "{\"categories\":[{\"categoryId\":2,\"name\":\"Upgrades\",\"sets\":[{\"setId\":5,\"name\":\"Player\",\"challengesCount\":1,\"challengesCompletedCount\":0,"
+                + "\"repeatable\":false,\"endTime\":999,\"awards\":[" + itemAward + ",{\"type\":\"pack\",\"value\":519,\"count\":1}]}]}]}";
+        String challenges = "{\"challenges\":[{\"challengeId\":51,\"name\":\"c\",\"elgReq\":[],\"awards\":[" + itemAward + "]}]}";
+        CaptureResult result = service.process(List.of(capture("https://f.ea.com/fc/user/objective/list", 1, objectives), capture(UT + "/sbs/hub/v2", 2, sbc),
+                capture(UT + "/sbs/setId/5/challenges", 3, challenges)));
+
+        assertThat(result.sbcSets().get(0).awards().get(0).item().assetId()).isEqualTo(777L);
+        assertThat(result.sbcSets().get(0).awards().get(1).item()).isNull();
+        assertThat(result.objectives().get(0).rewards().get(0).item().rating()).isEqualTo(88);
+        assertThat(result.sbcChallenges().get(0).awards().get(0).item().teamid()).isEqualTo(903);
+        String json = new ObjectMapper().writeValueAsString(result);
+        assertThat(json).doesNotContain("900000000001");
+        RewardItemFixture.FORBIDDEN.stream().filter(f -> !f.equals("\"id\"")).forEach(f -> assertThat(json).as(f).doesNotContain(f));
+    }
+
+    @Test
     void ignoresUnknownEndpointsAndCountsInvalidBodies() {
         CaptureResult result = service.process(List.of(capture(UT + "/playStats", 1, "{}"), capture(UT + "/club", 2, "not json"), new Capture(null, 200, 3L, "{}")));
         assertThat(result.stats().ignored()).isEqualTo(1);

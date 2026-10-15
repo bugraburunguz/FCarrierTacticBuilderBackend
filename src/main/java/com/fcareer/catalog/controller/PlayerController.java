@@ -34,6 +34,7 @@ import static com.fcareer.common.constants.ApiConstants.API_V1;
 public class PlayerController {
 
     private static final int MAX_SIMILAR = 20;
+    private static final int MAX_ASSET_IDS = 100;
     private static final String MIN_SUFFIX = "_min";
     private static final String MAX_SUFFIX = "_max";
     private static final String ORDER_DESC = "desc";
@@ -176,6 +177,15 @@ public class PlayerController {
         PlayerDetailResponse detail = playerService.detail(id, gameVersionId, careerId);
         spoilerPolicy.mask(careerId, detail.getSummary());
         return detail;
+    }
+
+    /** V3-05c-c: SBC ödül kartı (EA verisinden çizilir) için toplu assetId → katalog adı; en çok MAX_ASSET_IDS, bilinmeyen kimlik yanıtta yok. */
+    @GetMapping("/assets")
+    public List<com.fcareer.catalog.repository.BasePlayerRepository.AssetName> namesByAsset(@RequestParam(name = "id") List<Long> assetIds) {
+        if (assetIds.size() > MAX_ASSET_IDS) {
+            throw new InvalidTacticException("id");
+        }
+        return playerService.namesByAsset(new java.util.LinkedHashSet<>(assetIds));
     }
 
     /** UT oyuncu sayfası (/ut/players/:assetId): EA oyuncu kimliğiyle katalog detayı (kariyersiz; potansiyel maskesi kapalı katalog görünümü). */

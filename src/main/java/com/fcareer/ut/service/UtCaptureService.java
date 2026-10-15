@@ -2,6 +2,7 @@ package com.fcareer.ut.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fcareer.ut.model.UtCaptureModels.ActiveSquad;
 import com.fcareer.ut.model.UtCaptureModels.Capture;
 import com.fcareer.ut.model.UtCaptureModels.CaptureCard;
@@ -511,7 +512,7 @@ public class UtCaptureService {
 
     private List<Reward> rewards(JsonNode awardSets) {
         List<Reward> rewards = new ArrayList<>();
-        awardSets.forEach(set -> set.path("awards").forEach(a -> rewards.add(new Reward(a.path("awardType").asText(null), longOrNull(a, "value"), a.path("count").asInt(1)))));
+        awardSets.forEach(set -> set.path("awards").forEach(a -> rewards.add(RewardAllowlist.reward(a, "awardType"))));
         return rewards;
     }
 
@@ -529,7 +530,7 @@ public class UtCaptureService {
 
     private static List<Reward> hubRewards(JsonNode awards) {
         List<Reward> result = new ArrayList<>();
-        awards.forEach(a -> result.add(new Reward(a.path("type").asText(null), a.hasNonNull("value") ? a.get("value").asLong() : null, a.path("count").asInt(1))));
+        awards.forEach(a -> result.add(RewardAllowlist.reward(a, "type")));
         return result;
     }
 
@@ -588,9 +589,23 @@ public class UtCaptureService {
             return details;
         }
         for (int i = 0; i < Math.min(raw.size(), bodies.size()) && details.size() < MAX_SBC_DETAILS; i++) {
-            details.add(new SbcDetail(path(raw.get(i).url().toLowerCase(Locale.ROOT)).replaceAll("^https?://[^/]+", ""), bodies.get(i)));
+            details.add(new SbcDetail(path(raw.get(i).url().toLowerCase(Locale.ROOT)).replaceAll("^https?://[^/]+", ""), withAllowlistedAwards(bodies.get(i))));
         }
         return details;
+    }
+
+    /** V3-05c-c: ham ayrıntı gövdesindeki ödüller de allowlist'ten geçer (itemData'nın kart örneği kimliği, sahip, fiyat vb. yanıta çıkmaz). */
+    private JsonNode withAllowlistedAwards(JsonNode body) {
+        if (!body.isObject() || !body.path("challenges").isArray()) {
+            return body;
+        }
+        ObjectNode copy = ((ObjectNode) body).deepCopy();
+        copy.withArray("challenges").forEach(c -> {
+            if (c.isObject() && c.has("awards")) {
+                ((ObjectNode) c).set("awards", RewardAllowlist.rewards(c.path("awards"), objectMapper));
+            }
+        });
+        return copy;
     }
 
     private List<EvolutionSlot> evolutions(List<JsonNode> bodies) {

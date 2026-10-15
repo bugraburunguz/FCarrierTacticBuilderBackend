@@ -76,6 +76,16 @@ class ContributionPipelineIntegrationTest {
     }
 
     @Test
+    void storedRewardKeepsOnlyAllowlistedCardFields() throws Exception {
+        String itemHub = hub("Player", 86_400, "").replace("\"awards\":[{", "\"awards\":[{\"type\":\"item\",\"value\":50000777,\"count\":1,\"itemData\":" + RewardItemFixture.ITEM_DATA.strip() + "},{");
+        contribute(Instant.now().toEpochMilli(), itemHub);
+
+        String reward = jdbc.queryForObject("SELECT reward::text FROM sbc_set WHERE id = ?", String.class, SET_ID);
+        assertThat(reward).contains("\"assetId\": 777").contains("519").doesNotContain("900000000001");
+        RewardItemFixture.FORBIDDEN.forEach(f -> assertThat(reward).as(f).doesNotContain(f));
+    }
+
+    @Test
     void endsAtComesFromTheCaptureTimeNotTheArrivalTime() throws Exception {
         Instant captured = Instant.now().minusSeconds(7_200);
         contribute(captured.toEpochMilli(), hub("Marquee", 86_400, ""));

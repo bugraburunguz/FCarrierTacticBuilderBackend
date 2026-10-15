@@ -49,7 +49,21 @@ public final class UtCaptureModels {
                               Long expiresIn, CaptureCard card, Long resourceId, Long capturedAt) {
     }
 
-    public record Reward(String type, Long value, int count) {
+    /** item: ödül kartıysa EA itemData'sının yalnız izinli alanları (RewardAllowlist); paket/coin ödülünde yok. */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record Reward(String type, Long value, int count, RewardItem item) {
+        public Reward(String type, Long value, int count) {
+            this(type, value, count, null);
+        }
+    }
+
+    /**
+     * V3-05c-c: ödül kartının EA verisi — yalnız bu 9 alan (allowlist). Kart örneği kimliği (id), sahip sayısı, zaman damgası, son satış fiyatı,
+     * sözleşme, istatistikler, sadakat, kiralık, sakatlık, yığın, satış değeri, ticaret durumu ve diğer her şey alınmaz.
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record RewardItem(Long resourceId, Long assetId, Integer rating, String preferredPosition, List<String> possiblePositions, Integer rareflag,
+                             Integer nation, Integer leagueId, Integer teamid) {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -70,9 +84,15 @@ public final class UtCaptureModels {
     public record SbcRef(String kind, int id, String name) {
     }
 
-    /** kind: 05 §2.2 listesi (TEAM_RATING, CHEMISTRY, RARITY_GROUP, MIN_OVR, FROM, LEVEL_COUNT, UNKNOWN ...); op: MIN, MAX, EXACT, RANGE; count: aynı slottaki PLAYER_COUNT; raw: ham elgReq girdileri. */
+    /**
+     * kind: 05 §2.2 listesi (TEAM_RATING, CHEMISTRY, RARITY_GROUP, MIN_OVR, FROM, LEVEL_COUNT, PLAYER_ATTRIBUTE, ACADEMY_SLOTTING, UNKNOWN ...); op: MIN, MAX, EXACT, RANGE;
+     * count: aynı slottaki PLAYER_COUNT; raw: ham elgReq girdileri; eaType: kind UNKNOWN iken EA'nın tip adı (sessizce düşmez, arayüz "Bilinmeyen şart").
+     */
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record SbcRequirement(String kind, String op, Integer value, Integer level, List<SbcRef> refs, Integer count, List<JsonNode> raw) {
+    public record SbcRequirement(String kind, String op, Integer value, Integer level, List<SbcRef> refs, Integer count, List<JsonNode> raw, String eaType) {
+        public SbcRequirement(String kind, String op, Integer value, Integer level, List<SbcRef> refs, Integer count, List<JsonNode> raw) {
+            this(kind, op, value, level, refs, count, raw, null);
+        }
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
