@@ -112,8 +112,9 @@ public class UtKnowledgeController {
     public List<ItemDto> items(@RequestParam(required = false) String q, @RequestParam(required = false) Integer minRating, @RequestParam(required = false) Integer maxRating,
                                @RequestParam(required = false) String pos, @RequestParam(required = false) Integer league, @RequestParam(required = false) Integer nation,
                                @RequestParam(required = false) Integer club, @RequestParam(required = false) String type,
+                               @RequestParam(required = false) List<Long> resource,
                                @RequestParam(defaultValue = "40") int limit, @RequestParam(defaultValue = "0") int offset) {
-        return repository.items(gameVersion(), new ItemSearch(q, minRating, maxRating, pos, league, nation, club, type, limit, offset));
+        return repository.items(gameVersion(), new ItemSearch(q, minRating, maxRating, pos, league, nation, club, type, resource, limit, offset));
     }
 
     @GetMapping("/kb/items/{id}")

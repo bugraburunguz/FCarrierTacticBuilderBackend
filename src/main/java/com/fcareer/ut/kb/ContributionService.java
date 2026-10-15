@@ -114,7 +114,7 @@ public class ContributionService {
         boolean trusted = contributor.trust() >= ContributorService.TRUSTED_THRESHOLD;
         String table = table(entity.kind());
         var stored = repository.hashOf(table, entity.id());
-        if (stored.isEmpty() || "stub".equals(stored.get())) {
+        if (stored.isEmpty() || KnowledgeBaseRepository.STUB_HASH.equals(stored.get())) {
             apply(entity, hash, trusted ? "CONFIRMED" : "PENDING");
             return Outcome.CREATED;
         }

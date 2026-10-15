@@ -39,23 +39,32 @@ public class KnowledgeBaseRepository {
     private final NamedParameterJdbcTemplate jdbc;
     private final ObjectMapper objectMapper;
 
+    /** Set gövdesi gelmeden challenge'dan açılan taslak satırın içerik özeti (ContributionService de bunu tanır). */
+    public static final String STUB_HASH = "stub";
+
     // ---- yazma ----
 
+    /**
+     * İlk eklemede first_seen_at = now(). İçerik özeti değişince content_changed_at = now(); taslak satırın (ensureSetStub, özet 'stub')
+     * ilk gerçek içeriği değişiklik sayılmaz. first_seen_at güncellemede korunur.
+     */
     public void upsertSbcSet(long id, short gameVersion, String name, String description, String category, Integer repeatable, Instant endsAt, JsonNode reward, String status, String hash) {
         jdbc.update("""
-                INSERT INTO sbc_set (id, game_version_id, name, description, category, repeatable, ends_at, reward, status, content_hash, updated_at)
-                VALUES (:id, :gv, :name, :description, :category, :repeatable, :endsAt, CAST(:reward AS jsonb), :status, :hash, now())
+                INSERT INTO sbc_set (id, game_version_id, name, description, category, repeatable, ends_at, reward, status, content_hash, updated_at, first_seen_at)
+                VALUES (:id, :gv, :name, :description, :category, :repeatable, :endsAt, CAST(:reward AS jsonb), :status, :hash, now(), now())
                 ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, description = EXCLUDED.description, category = EXCLUDED.category,
                   repeatable = EXCLUDED.repeatable, ends_at = COALESCE(EXCLUDED.ends_at, sbc_set.ends_at), reward = EXCLUDED.reward,
-                  status = EXCLUDED.status, content_hash = EXCLUDED.content_hash, updated_at = now()
+                  status = EXCLUDED.status, content_hash = EXCLUDED.content_hash, updated_at = now(),
+                  content_changed_at = CASE WHEN sbc_set.content_hash <> EXCLUDED.content_hash AND sbc_set.content_hash <> :stubHash
+                    THEN now() ELSE sbc_set.content_changed_at END
                 """, new MapSqlParameterSource().addValue("id", id).addValue("gv", gameVersion).addValue("name", name).addValue("description", description)
                 .addValue("category", category).addValue("repeatable", repeatable).addValue("endsAt", ts(endsAt)).addValue("reward", json(reward))
-                .addValue("status", status).addValue("hash", hash));
+                .addValue("status", status).addValue("hash", hash).addValue("stubHash", STUB_HASH));
     }
 
     public void ensureSetStub(long id, short gameVersion, String name) {
-        jdbc.update("INSERT INTO sbc_set (id, game_version_id, name, status, content_hash) VALUES (:id, :gv, :name, 'PENDING', 'stub') ON CONFLICT (id) DO NOTHING",
-                new MapSqlParameterSource().addValue("id", id).addValue("gv", gameVersion).addValue("name", Objects.requireNonNullElse(name, "SBC #" + id)));
+        jdbc.update("INSERT INTO sbc_set (id, game_version_id, name, status, content_hash) VALUES (:id, :gv, :name, 'PENDING', :stubHash) ON CONFLICT (id) DO NOTHING",
+                new MapSqlParameterSource().addValue("id", id).addValue("gv", gameVersion).addValue("name", Objects.requireNonNullElse(name, "SBC #" + id)).addValue("stubHash", STUB_HASH));
     }
 
     public void upsertSbcChallenge(long id, long setId, String name, String formation, String kind, JsonNode requirements, Integer itemScoreTarget, JsonNode reward, String hash) {
@@ -124,7 +133,7 @@ public class KnowledgeBaseRepository {
         if (includeChallenges) {
             return sets.stream().map(this::withChallenges).toList();
         }
-        return sets.stream().map(s -> new SbcSetDto(s.id(), s.name(), s.description(), s.category(), s.repeatable(), s.startsAt(), s.endsAt(), s.reward(), s.status(), challengeCount(s.id()), null)).toList();
+        return sets.stream().map(s -> s.withChallenges(challengeCount(s.id()), null)).toList();
     }
 
     public Optional<SbcSetDto> sbcSet(long id) {
@@ -135,7 +144,7 @@ public class KnowledgeBaseRepository {
         List<SbcChallengeDto> challenges = jdbc.query("SELECT * FROM sbc_challenge WHERE set_id = :id ORDER BY id", Map.of("id", s.id()), (rs, i) -> new SbcChallengeDto(
                 rs.getLong("id"), rs.getLong("set_id"), rs.getString("name"), rs.getString("formation"), rs.getString("kind"), read(rs.getString("requirements")),
                 (Integer) rs.getObject("item_score_target"), read(rs.getString("reward"))));
-        return new SbcSetDto(s.id(), s.name(), s.description(), s.category(), s.repeatable(), s.startsAt(), s.endsAt(), s.reward(), s.status(), challenges.size(), challenges);
+        return s.withChallenges(challenges.size(), challenges);
     }
 
     private int challengeCount(long setId) {
@@ -174,6 +183,10 @@ public class KnowledgeBaseRepository {
         addEq(where, params, "i.nation_id = :nationId", "nationId", search.nationId());
         addEq(where, params, "i.club_id = :clubId", "clubId", search.clubId());
         addEq(where, params, "i.card_type = :cardType", "cardType", search.cardType());
+        if (Objects.nonNull(search.resourceIds()) && !search.resourceIds().isEmpty()) {
+            where.add("i.ea_resource_id IN (:resourceIds)");
+            params.addValue("resourceIds", search.resourceIds());
+        }
         return jdbc.query("SELECT i.*, p.code AS promo_code FROM ut_item i LEFT JOIN ut_promo p ON p.id = i.promo_id WHERE " + String.join(" AND ", where)
                 + " ORDER BY i.rating DESC, i.id LIMIT :limit OFFSET :offset", params, itemMapper());
     }
@@ -332,7 +345,8 @@ public class KnowledgeBaseRepository {
 
     private RowMapper<SbcSetDto> setMapper() {
         return (rs, i) -> new SbcSetDto(rs.getLong("id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), (Integer) rs.getObject("repeatable"),
-                instant(rs.getTimestamp("starts_at")), instant(rs.getTimestamp("ends_at")), read(rs.getString("reward")), rs.getString("status"), 0, null);
+                instant(rs.getTimestamp("starts_at")), instant(rs.getTimestamp("ends_at")), read(rs.getString("reward")), rs.getString("status"), 0, null,
+                instant(rs.getTimestamp("first_seen_at")), instant(rs.getTimestamp("content_changed_at")));
     }
 
     private RowMapper<ItemDto> itemMapper() {

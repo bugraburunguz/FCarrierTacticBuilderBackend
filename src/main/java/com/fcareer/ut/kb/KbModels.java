@@ -12,8 +12,13 @@ public final class KbModels {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    /** firstSeenAt: set ilk görüldüğünde; contentChangedAt: içerik özeti son değiştiğinde (yoksa alan yok). Rozet kuralları web'de. */
     public record SbcSetDto(long id, String name, String description, String category, Integer repeatable, Instant startsAt, Instant endsAt,
-                            JsonNode reward, String status, int challengeCount, List<SbcChallengeDto> challenges) {
+                            JsonNode reward, String status, int challengeCount, List<SbcChallengeDto> challenges, Instant firstSeenAt, Instant contentChangedAt) {
+
+        SbcSetDto withChallenges(int count, List<SbcChallengeDto> list) {
+            return new SbcSetDto(id, name, description, category, repeatable, startsAt, endsAt, reward, status, count, list, firstSeenAt, contentChangedAt);
+        }
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -47,6 +52,8 @@ public final class KbModels {
     public record QueueItem(long id, String kind, String naturalKey, JsonNode candidates, Instant createdAt) {
     }
 
-    public record ItemSearch(String q, Integer minRating, Integer maxRating, String position, Integer leagueId, Integer nationId, Integer clubId, String cardType, int limit, int offset) {
+    /** resourceIds: EA kaynak kimlikleri (ör. SBC ödül öğeleri); boşsa süzülmez. */
+    public record ItemSearch(String q, Integer minRating, Integer maxRating, String position, Integer leagueId, Integer nationId, Integer clubId, String cardType,
+                             List<Long> resourceIds, int limit, int offset) {
     }
 }
