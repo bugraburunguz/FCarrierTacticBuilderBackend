@@ -27,6 +27,9 @@ public class PlayerRoleFit {
     private Double currentFit;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private Double levelFit;
+    /** V3-06b: levelFit'in ölçüldüğü düzey (kariyerde kullanıcının ligi); kariyersiz çağrıda yok. */
+    @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    private LevelReference levelReference;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
     private String engineVersion;
     @com.fasterxml.jackson.annotation.JsonInclude(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)

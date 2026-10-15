@@ -140,10 +140,18 @@ public class PlayerController {
                                      @RequestParam(name = "gv", required = false) Short gameVersionId,
                                      @RequestParam(name = "career", required = false) Long careerId,
                                      @RequestParam(name = "engine", required = false) String engineVersion) {
-        if (careerId != null) {
-            careerService.requireOwned(user == null ? null : user.id(), careerId);
+        if (careerId == null) {
+            return fitService.rolesFor(id, gameVersionId, null, engineVersion);
         }
-        return fitService.rolesFor(id, gameVersionId, careerId, engineVersion);
+        // V3-06b: kariyerde levelFit kullanıcının ligine göre ölçülür (v3); sahiplik levelReference içinde doğrulanır.
+        return fitService.rolesFor(id, gameVersionId, careerId, engineVersion, careerPlayerList.levelReference(user == null ? null : user.id(), careerId));
+    }
+
+    /** V3-06b: kariyer oyuncu sayfasının sözleşme ve değer verisi; kova ve alım sonrası bütçe öneri hattından. */
+    @GetMapping("/{id}/contract")
+    public com.fcareer.recommendation.pipeline.model.CareerPlayerContractResponse contract(@AuthenticationPrincipal AuthUser user, @PathVariable Long id,
+                                                                                           @RequestParam(name = "career") Long careerId) {
+        return careerPlayerList.contract(user == null ? null : user.id(), careerId, id);
     }
 
     /** Aralık modunda potansiyele göre sıralama sıra bilgisiyle tam değeri sızdırır; OVR sıralamasına düşer. */

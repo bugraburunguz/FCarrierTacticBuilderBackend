@@ -16,6 +16,7 @@ import com.fcareer.fitengine.model.request.FitRoleRequest;
 import com.fcareer.fitengine.model.request.SquadFitRequest;
 import com.fcareer.fitengine.model.response.AttributeGap;
 import com.fcareer.fitengine.model.response.FitRoleResult;
+import com.fcareer.fitengine.model.response.LevelReference;
 import com.fcareer.fitengine.model.response.PlayerRoleFit;
 import com.fcareer.fitengine.model.response.RoleFitResponse;
 import com.fcareer.fitengine.model.response.SlotAssignment;
@@ -64,23 +65,32 @@ public class FitService {
 
     /** engineVersion: açıkça istenen motor (UT oyuncu sayfası v3 ister); boşsa kariyerde kariyer motoru, değilse genel motor. */
     public List<PlayerRoleFit> rolesFor(Long playerId, Short gameVersionId, Long careerId, String engineVersion) {
+        return rolesFor(playerId, gameVersionId, careerId, engineVersion, null);
+    }
+
+    /** reference (V3-06b): v3'te levelFit'in ölçüldüğü düzey (kariyerde kullanıcının ligi); null ise oyuncunun kendi OVR bandı, yanıtta alan yok. */
+    public List<PlayerRoleFit> rolesFor(Long playerId, Short gameVersionId, Long careerId, String engineVersion, LevelReference reference) {
         if (Objects.nonNull(engineVersion) && !FitEngineV3.VERSION.equals(engineVersion) && !"v1".equals(engineVersion)) {
             throw new InvalidTacticException("engine " + engineVersion);
         }
         String engine = Objects.nonNull(engineVersion) ? engineVersion : Objects.nonNull(careerId) ? fitProperties.getCareerEngineVersion() : fitProperties.getEngineVersion();
         FitPlayer player = playerService.fitPlayers(List.of(playerId), gameVersionId, careerId).get(0);
         List<FitRole> roles = roleService.fitRolesById().values().stream().sorted(Comparator.comparing(FitRole::getName)).toList();
+        boolean v3 = FitEngineV3.VERSION.equals(engine);
+        LevelReference levelReference = v3 ? reference : null;
+        Integer levelOvr = Objects.isNull(levelReference) ? null : levelReference.ovr();
         List<PlayerRoleFit> fits = new ArrayList<>();
         for (String position : player.getPositions()) {
             for (FitRole role : roles) {
                 if (!role.getPositions().contains(position)) {
                     continue;
                 }
-                RoleFitResponse fit = roleFit(player, role, null, position, engine);
+                RoleFitResponse fit = v3 ? roleFitV3Service.calculate(player, role, null, position, levelOvr) : roleFit(player, role, null, position, engine);
                 fits.add(PlayerRoleFit.builder().position(position).roleId(role.getId()).roleName(role.getName()).focus(role.getFocus())
                         .score(Math.round(fit.getScore() * 10.0) / 10.0).projectedRating(fit.getProjectedRating())
                         .badge(fit.getBadge()).badgeText(fit.getBadgeText())
-                        .engineVersion(fit.getEngineVersion()).currentFit(fit.getCurrentFit()).levelFit(fit.getLevelFit()).fitLabel(fit.getFitLabel()).narrative(fit.getNarrative())
+                        .engineVersion(fit.getEngineVersion()).currentFit(fit.getCurrentFit()).levelFit(fit.getLevelFit()).levelReference(levelReference)
+                        .fitLabel(fit.getFitLabel()).narrative(fit.getNarrative())
                         .reasons(Objects.isNull(fit.getReasons()) ? List.of() : fit.getReasons().stream().limit(ROLE_REASONS).toList())
                         .gaps(gaps(fit)).build());
             }

@@ -3,6 +3,7 @@ package com.fcareer.recommendation.pipeline;
 import com.fcareer.career.service.CareerService;
 import com.fcareer.catalog.repository.CareerPlayerRepository;
 import com.fcareer.catalog.repository.PlayerSearchRepository;
+import com.fcareer.fitengine.model.response.LevelReference;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -58,10 +59,29 @@ public class FeasibilityInputs {
         Double clubGap = Objects.nonNull(targetStrength) && Objects.nonNull(ctx.userStrength()) ? targetStrength - ctx.userStrength() : null;
         Double ovrGap = Objects.isNull(ctx.firstEleven()) ? null : overall - ctx.firstEleven();
         Double ratio = Objects.nonNull(ctx.budgetEur()) && Objects.nonNull(valueEur) && ctx.budgetEur() > 0 ? valueEur / (double) ctx.budgetEur() : null;
-        Integer months = Objects.nonNull(extra) && Objects.nonNull(extra.contractUntil()) && Objects.nonNull(ctx.gameDate())
-                ? (int) Math.max(0, ChronoUnit.DAYS.between(ctx.gameDate(), extra.contractUntil()) / DAYS_PER_MONTH) : null;
+        Integer months = monthsLeft(ctx.gameDate(), Objects.isNull(extra) ? null : extra.contractUntil());
         return new Derived(targetStrength, clubGap, ovrGap,
                 new FeasibilityBuckets.Input(ratio, clubGap, ovrGap, Objects.isNull(extra) ? null : extra.clubRank(), months, freeAgent));
+    }
+
+    /** V3-06b: kullanıcının ligi ve lig gücü (rol uyumunun seviye referansı); kulüp ya da lig gücü bilinmiyorsa kendi OVR bandı. */
+    public LevelReference levelReference(CareerService.CareerSquad squad) {
+        ClubStrength strength = clubStrengthService.of(squad.careerId());
+        String key = userTeamKey(squad, null);
+        String league = Objects.isNull(key) ? null : strength.leagueOf(key);
+        if (Objects.isNull(league) && Objects.nonNull(squad.clubId())) {
+            league = strength.leagueOf("C:" + squad.clubId());
+        }
+        Double value = strength.leagueStrength(league);
+        return Objects.isNull(value) ? LevelReference.ownOvr() : LevelReference.league(league, (int) Math.round(value));
+    }
+
+    /** Oyun tarihine göre sözleşmede kalan tam ay (30 günlük); tarihlerden biri yoksa null. */
+    public static Integer monthsLeft(LocalDate gameDate, LocalDate contractUntil) {
+        if (Objects.isNull(gameDate) || Objects.isNull(contractUntil)) {
+            return null;
+        }
+        return (int) Math.max(0, ChronoUnit.DAYS.between(gameDate, contractUntil) / DAYS_PER_MONTH);
     }
 
     public FeasibilityBuckets.Result classify(Derived derived) {

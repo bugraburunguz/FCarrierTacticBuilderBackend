@@ -11,6 +11,8 @@ import com.fcareer.common.exception.NotFoundException;
 import com.fcareer.common.model.PageResponse;
 import com.fcareer.fitengine.model.FitPlayer;
 import com.fcareer.fitengine.model.FitRole;
+import com.fcareer.fitengine.model.response.LevelReference;
+import com.fcareer.recommendation.pipeline.model.CareerPlayerContractResponse;
 import com.fcareer.fitengine.norms.PosDist;
 import com.fcareer.fitengine.service.FitEngineV3;
 import com.fcareer.roles.service.RoleService;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -75,6 +78,38 @@ public class CareerPlayerList {
     public CareerPlayerRepository.CareerFacets facets(Long userId, Long careerId) {
         careerService.requireOwned(userId, careerId);
         return careerPlayerRepository.careerFacets(careerId);
+    }
+
+    /**
+     * V3-06b: oyuncu sayfasının sözleşme ve değer verisi. Kova öneri hattının sınıflandırıcısından; kadrodaki oyuncu için kova ve alım
+     * sonrası bütçe yok. Kayıtta olmayan alan null kalır (ENG-02).
+     */
+    public CareerPlayerContractResponse contract(Long userId, Long careerId, Long playerId) {
+        CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
+        PlayerSummaryResponse summary = playerService.summary(playerId, squad.gameVersionId(), careerId);
+        CareerPlayerRepository.Contract contract = careerPlayerRepository.contract(careerId, playerId).orElse(null);
+        boolean inSquad = squad.ownedIds().contains(playerId);
+        FeasibilityInputs.Context context = context(squad);
+        String feasibility = inSquad ? null : feasibilityInputs.classify(feasibilityInputs.derive(context, summary.getOverall(), summary.getValueEur(), summary.isFreeAgent(),
+                careerPlayerRepository.extras(careerId, List.of(playerId)).get(playerId))).bucket().name();
+        LocalDate contractUntil = Objects.isNull(contract) ? null : contract.contractUntil();
+        Long afterPurchase = !inSquad && Objects.nonNull(squad.budgetEur()) && Objects.nonNull(summary.getValueEur()) ? squad.budgetEur() - summary.getValueEur() : null;
+        return CareerPlayerContractResponse.builder()
+                .inSquad(inSquad)
+                .valueEur(summary.getValueEur()).valuationEstimated(summary.isValuationEstimated())
+                .wageEur(Objects.isNull(contract) ? null : contract.wageEur())
+                .releaseClauseEur(Objects.isNull(contract) ? null : contract.releaseClauseEur())
+                .contractUntil(contractUntil).gameDate(context.gameDate())
+                .monthsLeft(FeasibilityInputs.monthsLeft(context.gameDate(), contractUntil))
+                .onLoan(Objects.nonNull(contract) && contract.onLoan())
+                .feasibility(feasibility)
+                .budgetEur(squad.budgetEur()).budgetAfterPurchaseEur(afterPurchase)
+                .build();
+    }
+
+    /** V3-06b: kariyerde rol uyumunun seviye referansı (kullanıcının ligi). */
+    public LevelReference levelReference(Long userId, Long careerId) {
+        return feasibilityInputs.levelReference(careerService.squadPlayerIds(userId, careerId));
     }
 
     public PageResponse<PlayerSummaryResponse> search(Long userId, PlayerSearchRequest request, List<String> bucketNames, String roleId, String rolePosition) {

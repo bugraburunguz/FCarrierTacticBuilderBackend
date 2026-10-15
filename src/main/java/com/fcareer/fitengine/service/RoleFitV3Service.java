@@ -64,11 +64,17 @@ public class RoleFitV3Service {
     }
 
     public RoleFitResponse calculate(FitPlayer player, FitRole role, IntentProfile intent, String slotPosition) {
+        return calculate(player, role, intent, slotPosition, null);
+    }
+
+    /** levelOvr: levelFit'in ölçüldüğü OVR bandı (V3-06b: kariyerde kullanıcının lig gücü); null ise oyuncunun kendi OVR'ı. */
+    public RoleFitResponse calculate(FitPlayer player, FitRole role, IntentProfile intent, String slotPosition, Integer levelOvr) {
         String position = resolvePosition(player, role, intent, slotPosition);
         FitEngineV3.Result result = engine.currentFit(player, position, role);
         int gender = Objects.isNull(player.getGender()) ? 0 : player.getGender();
-        Optional<LevelFitService.LevelFit> level = Objects.isNull(player.getOverall()) ? Optional.empty()
-                : levelFitService.levelFit(gender, position, role.getBaseRole(), role.getFocus(), player.getOverall(), result.currentFit());
+        Integer bandOvr = Objects.nonNull(levelOvr) ? levelOvr : player.getOverall();
+        Optional<LevelFitService.LevelFit> level = Objects.isNull(bandOvr) ? Optional.empty()
+                : levelFitService.levelFit(gender, position, role.getBaseRole(), role.getFocus(), bandOvr, result.currentFit());
         double badgeBasis = level.map(LevelFitService.LevelFit::value).orElse(result.currentFit());
         FitLabel label = label(badgeBasis, properties.getV3());
         Double levelValue = level.map(LevelFitService.LevelFit::value).orElse(null);

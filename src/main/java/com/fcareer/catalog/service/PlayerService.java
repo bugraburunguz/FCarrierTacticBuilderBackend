@@ -189,6 +189,11 @@ public class PlayerService {
         return summaryOf(playerId, gameVersionId, null);
     }
 
+    /** Kariyer havuzundaki tek oyuncunun liste satırı (değer, tahmini değer, serbest oyuncu); yoksa 404. */
+    public PlayerSummaryResponse summary(Long playerId, Short gameVersionId, Long careerId) {
+        return summaryOf(playerId, resolveGameVersion(gameVersionId), careerId);
+    }
+
     private PlayerSummaryResponse summaryOf(Long playerId, short gameVersionId, Long careerId) {
         PlayerSearchRequest request = new PlayerSearchRequest();
         request.setCareerId(careerId);
