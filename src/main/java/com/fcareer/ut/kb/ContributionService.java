@@ -330,8 +330,10 @@ public class ContributionService {
                 if (isSkewed(price.capturedAt())) {
                     skewed++;
                 }
-                repository.insertPriceObservation(itemId.get(), platform, at, "BIN", price.buyNow().intValue(), contributor.id());
-                recorded++;
+                // V3-05d-c: tekrar gelen gözlem (aynı yük yeniden içe aktarıldı) yazılmaz ve sayılmaz.
+                if (repository.insertPriceObservation(itemId.get(), platform, at, "BIN", price.buyNow().intValue(), contributor.id())) {
+                    recorded++;
+                }
             }
         }
         if (unknown + noResource > 0) {

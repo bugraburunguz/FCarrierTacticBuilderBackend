@@ -273,9 +273,10 @@ public class KnowledgeBaseRepository {
                 "day", rs.getDate("day").toString(), "recorded", rs.getInt("recorded"), "skippedUnknownItem", rs.getInt("skipped_unknown_item"), "skippedNoResource", rs.getInt("skipped_no_resource"), "clockSkew", rs.getInt("clock_skew")));
     }
 
-    public void insertPriceObservation(long itemId, String platform, Instant at, String kind, int value, long contributorId) {
-        jdbc.update("INSERT INTO price_obs (ut_item_id, platform, observed_at, kind, value, contributor_id) VALUES (:i, :p, :at, :k, :v, :c)",
-                new MapSqlParameterSource().addValue("i", itemId).addValue("p", platform).addValue("at", ts(at)).addValue("k", kind).addValue("v", value).addValue("c", contributorId));
+    /** V3-05d-c: aynı doğal anahtarlı gözlem ikinci kez yazılmaz (ux_price_obs_natural); yazıldıysa true. */
+    public boolean insertPriceObservation(long itemId, String platform, Instant at, String kind, int value, long contributorId) {
+        return jdbc.update("INSERT INTO price_obs (ut_item_id, platform, observed_at, kind, value, contributor_id) VALUES (:i, :p, :at, :k, :v, :c) ON CONFLICT DO NOTHING",
+                new MapSqlParameterSource().addValue("i", itemId).addValue("p", platform).addValue("at", ts(at)).addValue("k", kind).addValue("v", value).addValue("c", contributorId)) > 0;
     }
 
     /**

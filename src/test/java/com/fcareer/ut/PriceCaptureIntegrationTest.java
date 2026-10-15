@@ -80,6 +80,26 @@ class PriceCaptureIntegrationTest {
         return call(post("/api/v1/ut/contrib/capture"), Map.of("captures", new Object[]{Map.of("url", UT + path, "ts", capturedAtMillis, "body", body)}), login(user), 200);
     }
 
+    /** V3-05d-c: aynı katkı yükü tekrar içe aktarılınca aynı gözlem ikinci kez yazılmaz (katkıcı + kart + platform + tür + fiyat + gözlem zamanı). */
+    @Test
+    void theSamePayloadTwiceDoesNotDuplicateObservations() throws Exception {
+        long user = register();
+        jdbc.update("INSERT INTO contributor (user_id, trust) VALUES (?, 100)", user);
+        String token = login(user);
+        long capturedAt = Instant.now().minusSeconds(3_600).toEpochMilli();
+        String body = "{\"auctionInfo\":[" + auction(TOTW_RESOURCE, 91, 5000, 3000) + "," + auction(TOTW_RESOURCE, 91, 5200, 3000) + "]}";
+        Map<String, Object> payload = Map.of("captures", new Object[]{Map.of("url", UT + "/transfermarket", "ts", capturedAt, "body", body)});
+
+        JsonNode first = call(post("/api/v1/ut/contrib/capture"), payload, token, 200);
+        int afterFirst = count(totwItem);
+        JsonNode second = call(post("/api/v1/ut/contrib/capture"), payload, token, 200);
+
+        assertThat(afterFirst).isEqualTo(2);
+        assertThat(count(totwItem)).isEqualTo(afterFirst);
+        assertThat(first.at("/data/pricesRecorded").asInt()).isEqualTo(2);
+        assertThat(second.at("/data/pricesRecorded").asInt()).isZero();
+    }
+
     @Test
     void promoPriceGoesToThePromoItemNotTheBaseCard() throws Exception {
         JsonNode result = contribute("/transfermarket", auction(TOTW_RESOURCE, 91, 5000, 3000), auction(77_777_777L, 91, 5000, 3000));
