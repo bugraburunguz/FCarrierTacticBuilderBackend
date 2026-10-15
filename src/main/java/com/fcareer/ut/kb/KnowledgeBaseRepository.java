@@ -24,6 +24,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -218,6 +219,17 @@ public class KnowledgeBaseRepository {
                   position = EXCLUDED.position, alt_positions = EXCLUDED.alt_positions, club_id = EXCLUDED.club_id, league_id = EXCLUDED.league_id, nation_id = EXCLUDED.nation_id,
                   weak_foot = EXCLUDED.weak_foot, skill_moves = EXCLUDED.skill_moves, accelerate = EXCLUDED.accelerate, updated_at = now()
                 """, Map.of("gv", gameVersion));
+    }
+
+    /** V3-05d: verilen EA kaynak kimliklerinin son gözlenen fiyatı (tek sorgu); gözlemi olmayan kimlik sonuçta yok. */
+    public List<KbModels.LatestPrice> latestPrices(Collection<Long> resourceIds, short gameVersion, String platform) {
+        return jdbc.query("""
+                SELECT DISTINCT ON (i.ea_resource_id) i.ea_resource_id, COALESCE(a.p50, a.min_bin) AS price, a.bucket, a.low_confidence
+                  FROM ut_item i JOIN price_agg a ON a.ut_item_id = i.id AND a.platform = :p
+                 WHERE i.ea_resource_id IN (:ids) AND i.game_version_id = :gv AND COALESCE(a.p50, a.min_bin) IS NOT NULL
+                 ORDER BY i.ea_resource_id, a.bucket DESC""",
+                new MapSqlParameterSource().addValue("ids", resourceIds).addValue("gv", gameVersion).addValue("p", platform),
+                (rs, n) -> new KbModels.LatestPrice(rs.getLong("ea_resource_id"), rs.getInt("price"), instant(rs.getTimestamp("bucket")), rs.getBoolean("low_confidence")));
     }
 
     public List<PricePoint> prices(long itemId, String platform, Instant since) {

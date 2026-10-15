@@ -43,6 +43,10 @@ public final class KbModels {
                           Integer weakFoot, Integer skillMoves, String accelerate, boolean untradeableOnly, String status, String quality) {
     }
 
+    /** V3-05d: kartın son gözlenen fiyatı (price_agg son kova: p50, yoksa en düşük BIN); gözlemi olmayan kart için kayıt yok. */
+    public record LatestPrice(long resourceId, int price, Instant observedAt, boolean lowConfidence) {
+    }
+
     public record PricePoint(Instant bucket, Integer p10, Integer p50, Integer minBin, int samples, boolean lowConfidence) {
     }
 

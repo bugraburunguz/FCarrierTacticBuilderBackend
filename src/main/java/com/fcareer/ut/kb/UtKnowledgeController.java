@@ -51,6 +51,7 @@ public class UtKnowledgeController {
     private static final String RULES_RESOURCE = "seed/ut-rules.fc27.json";
     private static final Duration LINK_TTL = Duration.ofMinutes(15);
     private static final Set<String> PLATFORMS = Set.of("CONSOLE", "PC");
+    private static final int MAX_PRICE_IDS = 400;
     private static final Map<String, Duration> RANGES = Map.of("24h", Duration.ofHours(24), "7d", Duration.ofDays(7), "30d", Duration.ofDays(30), "season", Duration.ofDays(120));
 
     private final KnowledgeBaseRepository repository;
@@ -121,6 +122,16 @@ public class UtKnowledgeController {
     public Map<String, Object> item(@PathVariable long id) {
         ItemDto item = repository.item(id).orElseThrow(() -> new NotFoundException("item", id));
         return Map.of("item", item, "versions", repository.versionsOf(item.eaAssetId(), gameVersion()));
+    }
+
+    /** V3-05d: SBC alışveriş listesi — toplu son gözlenen fiyat (yalnız katkı gözlemi; tahmin yok), en çok MAX_PRICE_IDS kimlik. */
+    @GetMapping("/kb/prices")
+    public List<KbModels.LatestPrice> latestPrices(@RequestParam(name = "resource") List<Long> resourceIds, @RequestParam(defaultValue = "CONSOLE") String platform) {
+        String normalized = platform.toUpperCase();
+        if (!PLATFORMS.contains(normalized) || resourceIds.size() > MAX_PRICE_IDS) {
+            throw new InvalidTacticException("platform/resource");
+        }
+        return repository.latestPrices(new java.util.LinkedHashSet<>(resourceIds), gameVersion(), normalized);
     }
 
     @GetMapping("/kb/items/{id}/prices")

@@ -134,6 +134,25 @@ class PriceCaptureIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT low_confidence FROM price_agg WHERE ut_item_id = ?", Boolean.class, baseItem)).isFalse();
     }
 
+    /** V3-05d: SBC alışveriş listesi için toplu son fiyat — yalnız gözlem (price_agg); gözlemi olmayan kart yanıtta yok (tahmin yok). */
+    @Test
+    void latestObservedPricesComeInOneCallAndUnobservedCardsAreAbsent() throws Exception {
+        long contributor = contributorId();
+        for (int value : new int[]{1000, 1100, 1200}) {
+            observation(baseItem, value, contributor);
+        }
+        aggregate();
+
+        JsonNode data = objectMapper.readTree(mockMvc.perform(get("/api/v1/ut/kb/prices?resource=" + ASSET + "&resource=" + TOTW_RESOURCE + "&resource=1"))
+                .andReturn().getResponse().getContentAsString()).at("/data");
+        assertThat(data).hasSize(1);
+        assertThat(data.get(0).at("/resourceId").asLong()).isEqualTo(ASSET);
+        assertThat(data.get(0).at("/price").asInt()).isEqualTo(1100);
+        assertThat(data.get(0).at("/lowConfidence").asBoolean()).isTrue();
+        assertThat(data.get(0).has("observedAt")).isTrue();
+        assertThat(mockMvc.perform(get("/api/v1/ut/kb/prices")).andReturn().getResponse().getStatus()).isEqualTo(400);
+    }
+
     private long contributorId() throws Exception {
         long user = register();
         jdbc.update("INSERT INTO contributor (user_id, trust) VALUES (?, 100)", user);
