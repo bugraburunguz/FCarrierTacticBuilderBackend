@@ -1,10 +1,13 @@
 {
-  "version": 1,
+  "version": 2,
   "deny": ["/auth", "accountinfo", "connect", "nucleus", "phishing", "/fc/user/season", "sid="],
-  "personalOnly": ["/club", "/user/credits", "/tradepile", "/watchlist", "/squad/", "/storagepile"],
+  "personalOnly": ["/club", "/user/credits", "/tradepile", "/watchlist", "/squad/", "/storagepile", "/purchased/items"],
   "contrib": {
     "match": ["/sbs/", "/objective/", "/academy/", "players.json", "players_meta", "itemraritytunables", "squaddata", "/transfermarket"],
     "stripFields": ["tradeId", "sellerName", "sellerId", "buyerName", "buyerId", "sellerEstablished"]
   },
+  "personalMatch": ["/club", "/squad", "/transfermarket", "/tradepile", "/watchlist", "/sbs/", "objective", "dynamicobjective", "/milestone", "/scenario",
+    "/academy", "/user/credits", "/storagepile", "/purchased/items", "players.json", "players_icons", "players_meta", "squaddata.json",
+    "keyattributes.json", "chemistry/", "itemraritytunables"],
   "minExtensionVersion": "0.3.0"
 }
