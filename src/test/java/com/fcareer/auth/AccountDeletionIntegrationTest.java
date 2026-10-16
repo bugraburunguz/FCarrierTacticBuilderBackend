@@ -160,7 +160,9 @@ class AccountDeletionIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT count(*) FROM contrib_event WHERE natural_key = ? AND contributor_id IS NULL", Integer.class, "del-" + account.userId())).isEqualTo(1);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM price_obs WHERE ut_item_id = ? AND contributor_id IS NULL", Integer.class, 880_000 + account.userId())).isEqualTo(1);
 
-        // Oturumlar kapandı.
+        // Oturumlar kapandı; açık erişim anahtarı (süresi dolmamış JWT) da reddedilir (DEPLOY-01 0c).
+        call(get("/api/v1/me"), null, account.token(), 401);
+        call(get("/api/v1/careers"), null, account.token(), 401);
         call(post("/api/v1/auth/refresh"), Map.of("refreshToken", account.refreshToken()), null, 401);
         call(post("/api/v1/auth/login"), Map.of("email", account.email(), "password", PASSWORD), null, 401);
     }

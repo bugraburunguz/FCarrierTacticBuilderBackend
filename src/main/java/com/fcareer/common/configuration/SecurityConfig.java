@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 import com.fcareer.auth.configuration.SecurityProperties;
+import com.fcareer.auth.repository.AppUserRepository;
 import com.fcareer.auth.security.JwtAuthenticationFilter;
 import com.fcareer.auth.security.JwtService;
 import com.fcareer.auth.security.RateLimitFilter;
@@ -53,10 +54,11 @@ public class SecurityConfig {
     private final ObjectMapper objectMapper;
     private final Clock clock;
     private final Environment environment;
+    private final AppUserRepository appUserRepository;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtService);
+        JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtService, appUserRepository::existsById);
         RateLimitFilter rateLimitFilter = new RateLimitFilter(securityProperties, redisCounter, messageService,
                 objectMapper, clock);
         AdminKeyFilter adminKeyFilter = new AdminKeyFilter(ingestionProperties, redisCounter, securityProperties.isTrustProxy());

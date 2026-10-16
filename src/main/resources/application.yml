@@ -7,10 +7,12 @@ spring:
     fallback-to-system-locale: false
   web:
     locale: tr-TR
+  # DEPLOY-01: yerel compose DB_URL/DB_USERNAME/DB_PASSWORD verir; Railway Postgres PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD
+  # (DATABASE_URL JDBC biçiminde değil). İkisi de yoksa yerel varsayılan.
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/fcareer}
-    username: ${DB_USERNAME:fcareer}
-    password: ${DB_PASSWORD:fcareer}
+    url: ${DB_URL:jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:fcareer}}
+    username: ${DB_USERNAME:${PGUSER:fcareer}}
+    password: ${DB_PASSWORD:${PGPASSWORD:fcareer}}
   jpa:
     open-in-view: false
     hibernate:
@@ -19,8 +21,8 @@ spring:
     enabled: true
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      # DEPLOY-01: Railway Redis REDIS_URL (parola dahil); yerel compose REDIS_HOST.
+      url: ${REDIS_URL:redis://${REDIS_HOST:localhost}:${REDIS_PORT:6379}}
   mail:
     host: ${MAIL_HOST:}
     port: ${MAIL_PORT:587}
@@ -52,7 +54,8 @@ fcareer:
     reference-ttl: 6h
 
 server:
-  port: ${SERVER_PORT:8080}
+  # DEPLOY-01: Railway PORT'u verir (servis değişkeni olarak sabitlenir; docs/deploy/RAILWAY.md).
+  port: ${PORT:${SERVER_PORT:8080}}
   # PROD-PREP 6a: X-Forwarded-For işlenmez (istemci ekleyebilir). İstemci IP'si yalnız FCAREER_TRUST_PROXY=true iken X-Real-IP'den (ClientIp).
   forward-headers-strategy: none
 
