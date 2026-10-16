@@ -24,7 +24,9 @@ public final class CareerDeskModels {
     public static final int MAX_BACKUP_SEASONS = 100;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record SnapshotDto(long id, Instant takenAt, Integer season, String transferWindow, String source, int playerCount, String note) {
+    /** gameDate (V3-06e): kayıt anındaki oyun tarihi (career_snapshot.game_date); bilinmiyorsa alan yok. */
+    public record SnapshotDto(long id, Instant takenAt, Integer season, String transferWindow, String source, int playerCount, String note,
+                              @JsonInclude(JsonInclude.Include.NON_NULL) java.time.LocalDate gameDate) {
     }
 
     /** kind: CHANGED (overall/potansiyel), TRANSFER (takım değişti), NEW (yeni oyuncu), REMOVED (dosyada yok). */
@@ -36,7 +38,9 @@ public final class CareerDeskModels {
     public record DiffResult(Long fromSnapshot, Long toSnapshot, int changed, int transfers, int added, int removed, List<DiffRow> rows) {
     }
 
-    public record HistoryPoint(long snapshotId, Instant takenAt, Integer season, int overall, int potential, Integer teamId) {
+    /** gameDate (V3-06e): Gelişim grafiğinin x ekseni; kayıt anındaki oyun tarihi, bilinmiyorsa alan yok (web içe aktarma sırasına düşer). */
+    public record HistoryPoint(long snapshotId, Instant takenAt, Integer season, int overall, int potential, Integer teamId,
+                               @JsonInclude(JsonInclude.Include.NON_NULL) java.time.LocalDate gameDate) {
     }
 
     public record OvrUpdate(@NotNull Long playerId, @NotNull @Min(1) @Max(99) Integer overall, @Min(1) @Max(99) Integer potential) {

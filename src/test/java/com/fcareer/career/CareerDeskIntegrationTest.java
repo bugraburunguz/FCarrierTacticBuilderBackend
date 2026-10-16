@@ -71,6 +71,31 @@ class CareerDeskIntegrationTest {
         call(put("/api/v1/careers/" + careerId + "/players/ratings"), Map.of("updates", List.of(Map.of("playerId", 999_999_999L, "overall", 70))), token, 422);
     }
 
+    /** V3-06e Gelişim grafiği x ekseni: kayıt anındaki oyun tarihi (career_snapshot.game_date) snapshots ve history yanıtında; yoksa alan yok. */
+    @Test
+    void snapshotsAndHistoryCarryTheGameDateOfEachSnapshot() throws Exception {
+        String token = register();
+        long careerId = createCareer(token);
+        JsonNode squad = call(get("/api/v1/careers/" + careerId + "/squad"), null, token, 200).at("/data");
+        long playerId = squad.get(0).at("/player/id").asLong();
+        int overall = squad.get(0).at("/player/overall").asInt();
+
+        call(put("/api/v1/careers/" + careerId + "/players/ratings"), Map.of("updates", List.of(Map.of("playerId", playerId, "overall", overall))), token, 200);
+        call(patch("/api/v1/careers/" + careerId), Map.of("gameDate", "2027-01-15"), token, 200);
+        call(put("/api/v1/careers/" + careerId + "/players/ratings"), Map.of("updates", List.of(Map.of("playerId", playerId, "overall", overall + 1))), token, 200);
+        call(patch("/api/v1/careers/" + careerId), Map.of("gameDate", "2027-06-01"), token, 200);
+        call(put("/api/v1/careers/" + careerId + "/players/ratings"), Map.of("updates", List.of(Map.of("playerId", playerId, "overall", overall + 3))), token, 200);
+
+        JsonNode history = call(get("/api/v1/careers/" + careerId + "/players/" + playerId + "/history"), null, token, 200).at("/data");
+        assertThat(history).hasSize(3);
+        assertThat(history.get(0).has("gameDate")).isFalse();
+        assertThat(history.get(1).get("gameDate").asText()).isEqualTo("2027-01-15");
+        assertThat(history.get(2).get("gameDate").asText()).isEqualTo("2027-06-01");
+        JsonNode snapshots = call(get("/api/v1/careers/" + careerId + "/snapshots"), null, token, 200).at("/data");
+        assertThat(snapshots.get(0).get("gameDate").asText()).isEqualTo("2027-06-01");
+        assertThat(snapshots.get(2).has("gameDate")).isFalse();
+    }
+
     @Test
     void spoilerModeHidesExactPotentialOnServerSide() throws Exception {
         String token = register();

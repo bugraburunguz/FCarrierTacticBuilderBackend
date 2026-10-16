@@ -83,9 +83,8 @@ public class CareerDeskService {
     @Transactional(readOnly = true)
     public List<SnapshotDto> snapshots(Long userId, Long careerId) {
         careerService.requireOwned(userId, careerId);
-        return jdbc.query("SELECT id, taken_at, season, transfer_window, source, player_count, note FROM career_snapshot WHERE career_id = :c ORDER BY id DESC",
-                Map.of("c", careerId), (rs, i) -> new SnapshotDto(rs.getLong("id"), rs.getTimestamp("taken_at").toInstant(), (Integer) rs.getObject("season"),
-                        rs.getString("transfer_window"), rs.getString("source"), rs.getInt("player_count"), rs.getString("note")));
+        return jdbc.query("SELECT id, taken_at, season, transfer_window, source, player_count, note, game_date FROM career_snapshot WHERE career_id = :c ORDER BY id DESC",
+                Map.of("c", careerId), (rs, i) -> snapshotOf(rs));
     }
 
     /** from/to verilmezse son iki snapshot karşılaştırılır. Yalnız değişenler döner: overall/potansiyel, takım değişimi, yeni ve kaybolan oyuncular. */
@@ -139,11 +138,11 @@ public class CareerDeskService {
     public List<HistoryPoint> history(Long userId, Long careerId, Long playerId) {
         careerService.requireOwned(userId, careerId);
         return jdbc.query("""
-                SELECT s.id, s.taken_at, s.season, p.overall, p.potential, p.team_id FROM career_snapshot s
+                SELECT s.id, s.taken_at, s.season, s.game_date, p.overall, p.potential, p.team_id FROM career_snapshot s
                 JOIN career_snapshot_player p ON p.snapshot_id = s.id AND p.base_player_id = :p
                 WHERE s.career_id = :c ORDER BY s.id
                 """, Map.of("c", careerId, "p", playerId), (rs, i) -> new HistoryPoint(rs.getLong("id"), rs.getTimestamp("taken_at").toInstant(), (Integer) rs.getObject("season"),
-                rs.getInt("overall"), spoilerPolicy.bandOrSame(careerId, rs.getInt("potential")), (Integer) rs.getObject("team_id")));
+                rs.getInt("overall"), spoilerPolicy.bandOrSame(careerId, rs.getInt("potential")), (Integer) rs.getObject("team_id"), gameDateOf(rs)));
     }
 
     /** Konsol oyuncusu için sezon arası hızlı güncelleme: yalnız değişen OVR/POT girilir, canlı veri güncellenir ve MANUAL snapshot alınır. */
@@ -166,9 +165,18 @@ public class CareerDeskService {
         careerPlayerWriter.ensureSeeded(careerId);
         careerPlayerWriter.syncPlayers(careerId, batch.updates().stream().map(OvrUpdate::playerId).toList());
         long id = takeSnapshot(careerId, "MANUAL", batch.note());
-        return jdbc.queryForObject("SELECT id, taken_at, season, transfer_window, source, player_count, note FROM career_snapshot WHERE id = :id", Map.of("id", id),
-                (rs, i) -> new SnapshotDto(rs.getLong("id"), rs.getTimestamp("taken_at").toInstant(), (Integer) rs.getObject("season"), rs.getString("transfer_window"),
-                        rs.getString("source"), rs.getInt("player_count"), rs.getString("note")));
+        return jdbc.queryForObject("SELECT id, taken_at, season, transfer_window, source, player_count, note, game_date FROM career_snapshot WHERE id = :id", Map.of("id", id),
+                (rs, i) -> snapshotOf(rs));
+    }
+
+    private static SnapshotDto snapshotOf(java.sql.ResultSet rs) throws java.sql.SQLException {
+        return new SnapshotDto(rs.getLong("id"), rs.getTimestamp("taken_at").toInstant(), (Integer) rs.getObject("season"), rs.getString("transfer_window"),
+                rs.getString("source"), rs.getInt("player_count"), rs.getString("note"), gameDateOf(rs));
+    }
+
+    private static java.time.LocalDate gameDateOf(java.sql.ResultSet rs) throws java.sql.SQLException {
+        java.sql.Date date = rs.getDate("game_date");
+        return Objects.isNull(date) ? null : date.toLocalDate();
     }
 
     private int currentPotential(long careerId, long playerId, int overall) {
