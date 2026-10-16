@@ -3,6 +3,7 @@ package com.fcareer.auth.service;
 import com.fcareer.auth.configuration.SecurityProperties;
 import com.fcareer.auth.entity.AppUserEntity;
 import com.fcareer.auth.model.SubscriptionType;
+import com.fcareer.auth.model.request.ChangePasswordRequest;
 import com.fcareer.auth.model.request.LoginRequest;
 import com.fcareer.auth.model.request.RefreshRequest;
 import com.fcareer.auth.model.request.RegisterRequest;
@@ -19,6 +20,7 @@ import com.fcareer.common.exception.EmailAlreadyRegisteredException;
 import com.fcareer.common.exception.InvalidCredentialsException;
 import com.fcareer.common.exception.InvalidRefreshTokenException;
 import com.fcareer.common.exception.NotFoundException;
+import com.fcareer.common.exception.WrongCurrentPasswordException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -125,6 +127,25 @@ public class AuthService {
                     return new InvalidRefreshTokenException();
                 });
         AppUserEntity user = appUserRepository.findById(userId).orElseThrow(InvalidRefreshTokenException::new);
+        return issueTokens(user);
+    }
+
+    /**
+     * V3-07a: şifre değiştir. Mevcut şifre bcrypt ile doğrulanır (yanlışsa 422); yeni hash yazılır, kullanıcının tüm refresh ve bağlantı token'ları
+     * iptal edilir (diğer cihazlar çıkış yapar) ve bu oturum için yeni token'lar verilir.
+     */
+    @Transactional
+    public TokenResponse changePassword(Long userId, ChangePasswordRequest request) {
+        AppUserEntity user = appUserRepository.findById(userId).orElseThrow(InvalidCredentialsException::new);
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+            log.warn("Password change rejected, wrong current password userId : {}", userId);
+            throw new WrongCurrentPasswordException();
+        }
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        appUserRepository.save(user);
+        refreshTokenStore.revokeAll(userId);
+        linkTokenStore.revokeAll(userId);
+        log.info("Password changed, sessions revoked userId : {}", userId);
         return issueTokens(user);
     }
 

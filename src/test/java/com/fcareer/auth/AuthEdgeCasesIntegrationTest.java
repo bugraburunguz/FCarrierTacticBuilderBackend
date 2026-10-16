@@ -58,6 +58,27 @@ class AuthEdgeCasesIntegrationTest {
         assertThat(mockMvc.perform(again).andReturn().getResponse().getStatus()).isEqualTo(401);
     }
 
+    /** V3-07a profil: şifre değiştir — mevcut şifre doğrulanır (yanlışsa 422, oturum düşmez), yeni şifre kayıt kurallarıyla, diğer oturumlar kapanır. */
+    @Test
+    void changingThePasswordChecksTheCurrentOneAndRevokesOtherSessions() throws Exception {
+        String email = "pw-" + UUID.randomUUID() + "@example.com";
+        JsonNode session = call(post("/api/v1/auth/register"), Map.of("email", email, "password", "Sup3rSecret!"), 200).at("/data");
+        String otherRefresh = call(post("/api/v1/auth/login"), Map.of("email", email, "password", "Sup3rSecret!"), 200).at("/data/refreshToken").asText();
+        String bearer = "Bearer " + session.at("/accessToken").asText();
+
+        call(post("/api/v1/me/password").header("Authorization", bearer), Map.of("currentPassword", "yanlis-sifre", "newPassword", "Yen1Sifre!!"), 422);
+        call(post("/api/v1/me/password").header("Authorization", bearer), Map.of("currentPassword", "Sup3rSecret!", "newPassword", "kisa"), 400);
+        call(post("/api/v1/me/password"), Map.of("currentPassword", "Sup3rSecret!", "newPassword", "Yen1Sifre!!"), 401);
+        call(post("/api/v1/auth/login"), Map.of("email", email, "password", "Sup3rSecret!"), 200);
+
+        JsonNode fresh = call(post("/api/v1/me/password").header("Authorization", bearer), Map.of("currentPassword", "Sup3rSecret!", "newPassword", "Yen1Sifre!!"), 200).at("/data");
+        assertThat(fresh.at("/accessToken").asText()).isNotBlank();
+        call(post("/api/v1/auth/login"), Map.of("email", email, "password", "Sup3rSecret!"), 401);
+        call(post("/api/v1/auth/login"), Map.of("email", email, "password", "Yen1Sifre!!"), 200);
+        call(post("/api/v1/auth/refresh"), Map.of("refreshToken", otherRefresh), 401);
+        call(post("/api/v1/auth/refresh"), Map.of("refreshToken", fresh.at("/refreshToken").asText()), 200);
+    }
+
     @Test
     void oversizedRefreshTokensAreRejectedBeforeHashing() throws Exception {
         call(post("/api/v1/auth/refresh"), Map.of("refreshToken", "x".repeat(129)), 400);

@@ -72,6 +72,17 @@ class RateLimitFilterTest {
         assertThat(run("/api/v1/auth/login", "10.0.0.1").getStatus()).isEqualTo(429);
     }
 
+    /** V3-07a: şifre değiştir de şifre deneme yüzeyi — auth kovası ve Redis yokken fail-closed. */
+    @Test
+    void passwordChangeUsesTheAuthBucketAndFailsClosed() throws Exception {
+        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(1L);
+        run("/api/v1/me/password", "10.0.0.9");
+        verify(counter).increment(org.mockito.ArgumentMatchers.contains("auth:"), eq(Duration.ofMinutes(1)));
+
+        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenThrow(new RedisConnectionFailureException("down"));
+        assertThat(run("/api/v1/me/password", "10.0.0.9").getStatus()).isEqualTo(429);
+    }
+
     @Test
     void generalApiFailsOpenWhenRedisIsDown() throws Exception {
         when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenThrow(new RedisConnectionFailureException("down"));

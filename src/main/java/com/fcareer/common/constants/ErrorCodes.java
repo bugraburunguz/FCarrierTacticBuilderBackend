@@ -28,6 +28,7 @@ public final class ErrorCodes {
     public static final String UNSUPPORTED_MEDIA_TYPE = "fc.exception.0024";
     public static final String DATA_CONFLICT = "fc.exception.0025";
     public static final String INVALID_VERIFICATION_TOKEN = "fc.exception.0026";
+    public static final String WRONG_CURRENT_PASSWORD = "fc.exception.0027";
     public static final String UNKNOWN_ERROR = "fc.exception.9999";
 
     private ErrorCodes() {

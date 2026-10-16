@@ -32,6 +32,7 @@ import static com.fcareer.common.constants.RedisConstants.RATE_LIMIT_PREFIX;
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private static final String AUTH_PATH = API_V1 + "/auth";
+    private static final String PASSWORD_PATH = API_V1 + "/me/password";
     private static final String SOLVER_PATH = API_V1 + "/ut/sbc/streamlined";
     private static final String ANALYSIS_PATH = API_V1 + "/tactics/analysis";
     private static final Duration WINDOW = Duration.ofMinutes(1);
@@ -50,7 +51,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        boolean authPath = request.getRequestURI().startsWith(AUTH_PATH);
+        // Şifre değiştir (V3-07a) şifre deneme yüzeyi: /auth ile aynı sıkı, fail-closed kova.
+        boolean authPath = request.getRequestURI().startsWith(AUTH_PATH) || request.getRequestURI().equals(PASSWORD_PATH);
         boolean solverPath = request.getRequestURI().startsWith(SOLVER_PATH);
         boolean analysisPath = request.getRequestURI().startsWith(ANALYSIS_PATH);
         String bucket = authPath ? "auth:" : solverPath ? "solver:" : analysisPath ? "analysis:" : "api:";

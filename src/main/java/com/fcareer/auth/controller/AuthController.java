@@ -1,5 +1,6 @@
 package com.fcareer.auth.controller;
 
+import com.fcareer.auth.model.request.ChangePasswordRequest;
 import com.fcareer.auth.model.request.LoginRequest;
 import com.fcareer.auth.model.request.RefreshRequest;
 import com.fcareer.auth.model.request.RegisterRequest;
@@ -61,6 +62,12 @@ public class AuthController {
     @PostMapping("/auth/logout")
     public void logout(@Valid @RequestBody RefreshRequest request) {
         authService.logout(request);
+    }
+
+    /** V3-07a: şifre değiştir (oturum gerekir; /auth ile aynı sıkı hız sınırı). Diğer oturumlar kapanır, bu oturum için yeni token'lar döner. */
+    @PostMapping("/me/password")
+    public TokenResponse changePassword(@AuthenticationPrincipal AuthUser user, @Valid @RequestBody ChangePasswordRequest request) {
+        return authService.changePassword(user.id(), request);
     }
 
     @GetMapping("/me")
