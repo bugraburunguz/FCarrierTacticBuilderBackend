@@ -59,7 +59,7 @@ public class SecurityConfig {
         JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtService);
         RateLimitFilter rateLimitFilter = new RateLimitFilter(securityProperties, redisCounter, messageService,
                 objectMapper, clock);
-        AdminKeyFilter adminKeyFilter = new AdminKeyFilter(ingestionProperties, redisCounter);
+        AdminKeyFilter adminKeyFilter = new AdminKeyFilter(ingestionProperties, redisCounter, securityProperties.isTrustProxy());
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())

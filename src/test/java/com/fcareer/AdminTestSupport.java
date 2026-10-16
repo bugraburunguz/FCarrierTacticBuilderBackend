@@ -20,7 +20,7 @@ public final class AdminTestSupport {
 
     public static String adminToken(MockMvc mockMvc, JdbcTemplate jdbc, ObjectMapper objectMapper) throws Exception {
         String email = "admin-" + UUID.randomUUID() + "@example.com";
-        mockMvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsBytes(Map.of("email", email, "password", PASSWORD)))).andReturn();
+        mockMvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsBytes(Map.of("email", email, "password", PASSWORD, "privacyVersion", 1)))).andReturn();
         jdbc.update("UPDATE app_user SET role = 'ADMIN' WHERE email = ?", email);
         String response = mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsBytes(Map.of("email", email, "password", PASSWORD))))
                 .andReturn().getResponse().getContentAsString();

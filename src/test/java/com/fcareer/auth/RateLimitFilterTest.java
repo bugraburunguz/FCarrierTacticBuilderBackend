@@ -115,6 +115,60 @@ class RateLimitFilterTest {
         assertThat(run("/api/v1/ut/sbc/streamlined", "10.0.0.1").getStatus()).isEqualTo(429);
     }
 
+    /** PROD-PREP 6a: sahte X-Forwarded-For (güven açık ya da kapalı) ve güven kapalıyken sahte X-Real-IP ile auth sınırı aşılamaz. */
+    @Test
+    void spoofedForwardingHeadersCannotBypassTheLimit() throws Exception {
+        for (boolean trust : new boolean[] {false, true}) {
+            java.util.Map<String, Long> counts = new java.util.HashMap<>();
+            when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenAnswer(call -> counts.merge(call.getArgument(0), 1L, Long::sum));
+            filter = filter(trust);
+            for (int i = 1; i <= 3; i++) {
+                assertThat(run("/api/v1/auth/login", "10.0.0.1", "X-Forwarded-For", "198.51.100." + i).getStatus()).isEqualTo(200);
+            }
+            assertThat(run("/api/v1/auth/login", "10.0.0.1", "X-Forwarded-For", "198.51.100.99").getStatus()).as("trust=" + trust).isEqualTo(429);
+            if (!trust) {
+                assertThat(run("/api/v1/auth/login", "10.0.0.1", "X-Real-IP", "198.51.100.77").getStatus()).isEqualTo(429);
+            }
+        }
+    }
+
+    /** PROD-PREP 6a: güven açıkken nginx'in ilettiği X-Real-IP istemcileri ayırır (Railway edge → nginx → backend). */
+    @Test
+    void trustedRealIpSeparatesClientsBehindTheProxy() throws Exception {
+        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(1L);
+        filter = filter(true);
+        run("/api/v1/auth/login", "10.0.0.1", "X-Real-IP", "203.0.113.5");
+        verify(counter).increment(org.mockito.ArgumentMatchers.contains("ip203.0.113.5"), eq(Duration.ofMinutes(1)));
+    }
+
+    /** PROD-PREP 4: hesap silme de şifre deneme yüzeyi — auth kovası. */
+    @Test
+    void accountDeletionUsesTheAuthBucket() throws Exception {
+        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(1L);
+        run("/api/v1/me/delete", "10.0.0.9");
+        verify(counter).increment(org.mockito.ArgumentMatchers.contains("auth:"), eq(Duration.ofMinutes(1)));
+    }
+
+    private RateLimitFilter filter(boolean trustProxy) {
+        ResourceBundleMessageSource messages = new ResourceBundleMessageSource();
+        messages.setBasename("messages");
+        messages.setDefaultEncoding("UTF-8");
+        SecurityProperties properties = new SecurityProperties();
+        properties.getRateLimit().setAuthPerMinute(3);
+        properties.setTrustProxy(trustProxy);
+        return new RateLimitFilter(properties, counter, new MessageService(messages), new ObjectMapper(),
+                Clock.fixed(Instant.parse("2026-10-05T12:00:00Z"), ZoneOffset.UTC));
+    }
+
+    private MockHttpServletResponse run(String path, String remote, String header, String value) throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", path);
+        request.setRemoteAddr(remote);
+        request.addHeader(header, value);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        filter.doFilter(request, response, new MockFilterChain());
+        return response;
+    }
+
     @Test
     void ignoresNonApiPaths() throws Exception {
         assertThat(run("/actuator/health", "10.0.0.1").getStatus()).isEqualTo(200);

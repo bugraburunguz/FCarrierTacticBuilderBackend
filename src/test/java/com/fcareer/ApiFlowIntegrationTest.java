@@ -59,10 +59,10 @@ class ApiFlowIntegrationTest {
     @Test
     void registerLoginRefreshAndRotation() throws Exception {
         String email = uniqueEmail();
-        JsonNode registered = call(post("/api/v1/auth/register"), Map.of("email", email, "password", PASSWORD), null, 200);
+        JsonNode registered = call(post("/api/v1/auth/register"), Map.of("email", email, "password", PASSWORD, "privacyVersion", 1), null, 200);
         assertThat(registered.at("/success").asBoolean()).isTrue();
 
-        JsonNode duplicate = call(post("/api/v1/auth/register"), Map.of("email", email.toUpperCase(), "password", PASSWORD), null, 409);
+        JsonNode duplicate = call(post("/api/v1/auth/register"), Map.of("email", email.toUpperCase(), "password", PASSWORD, "privacyVersion", 1), null, 409);
         assertThat(duplicate.at("/success").asBoolean()).isFalse();
         assertThat(duplicate.at("/error/0/code").asText()).isEqualTo("fc.exception.0006");
 
@@ -97,7 +97,8 @@ class ApiFlowIntegrationTest {
         String token = registerAndGetToken();
         JsonNode me = call(get("/api/v1/me"), null, token, 200);
         long userId = me.at("/data/id").asLong();
-        assertThat(me.at("/data/creditBalance").asInt()).isEqualTo(20);
+        // PROD-PREP 2: günlük kredi 30 (FCAREER_DAILY_CREDITS varsayılanı).
+        assertThat(me.at("/data/creditBalance").asInt()).isEqualTo(30);
         assertThat(me.at("/data/showAds").asBoolean()).isTrue();
 
         long careerId = createCareer(token, 0).at("/data/id").asLong();
@@ -105,20 +106,20 @@ class ApiFlowIntegrationTest {
 
         JsonNode first = call(post("/api/v1/fit/squad"), body, token, 200);
         assertThat(first.at("/data/charged").asInt()).isEqualTo(5);
-        assertThat(first.at("/data/balance").asInt()).isEqualTo(15);
+        assertThat(first.at("/data/balance").asInt()).isEqualTo(25);
         assertThat(first.at("/data/result/slots")).hasSize(11);
         assertThat(first.at("/data/result/summary").asText()).contains("Kadro taktiğe");
 
         JsonNode invalid = call(post("/api/v1/fit/squad"), Map.of("careerId", careerId, "tactic", Map.of("formation", "9-9-9")), token, 400);
         assertThat(invalid.at("/error/0/code").asText()).isEqualTo("fc.exception.0002");
-        assertThat(call(get("/api/v1/me"), null, token, 200).at("/data/creditBalance").asInt()).isEqualTo(15);
+        assertThat(call(get("/api/v1/me"), null, token, 200).at("/data/creditBalance").asInt()).isEqualTo(25);
 
         assertThatThrownBy(() -> creditGuard.runCharged(userId, 5, "TEST", () -> {
             throw new IllegalStateException("boom");
         })).isInstanceOf(IllegalStateException.class);
-        assertThat(creditService.status(userId).balance()).isEqualTo(15);
+        assertThat(creditService.status(userId).balance()).isEqualTo(25);
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 5; i++) {
             assertThat(call(post("/api/v1/fit/squad"), body, token, 200).at("/data/charged").asInt()).isEqualTo(5);
         }
         JsonNode exhausted = call(post("/api/v1/fit/squad"), body, token, 402);
@@ -419,7 +420,7 @@ class ApiFlowIntegrationTest {
     }
 
     private String registerAndGetToken() throws Exception {
-        JsonNode registered = call(post("/api/v1/auth/register"), Map.of("email", uniqueEmail(), "password", PASSWORD), null, 200);
+        JsonNode registered = call(post("/api/v1/auth/register"), Map.of("email", uniqueEmail(), "password", PASSWORD, "privacyVersion", 1), null, 200);
         return registered.at("/data/accessToken").asText();
     }
 

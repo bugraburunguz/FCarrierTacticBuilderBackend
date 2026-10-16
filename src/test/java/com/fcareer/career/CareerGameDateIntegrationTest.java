@@ -52,7 +52,7 @@ class CareerGameDateIntegrationTest {
 
     @Test
     void ageFollowsTheCareersGameDateInResultsAndFilters() throws Exception {
-        String token = call(post("/api/v1/auth/register"), Map.of("email", "gd-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!"), null, 200).at("/data/accessToken").asText();
+        String token = call(post("/api/v1/auth/register"), Map.of("email", "gd-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!", "privacyVersion", 1), null, 200).at("/data/accessToken").asText();
         long careerId = call(post("/api/v1/careers"), Map.of("clubId", clubRepository.findAll().get(0).getId(), "budgetEur", 1_000_000), token, 200).at("/data/id").asLong();
         long playerId = call(get("/api/v1/careers/" + careerId + "/squad"), null, token, 200).at("/data/0/player/id").asLong();
         LocalDate dob = jdbc.queryForObject("SELECT dob FROM base_player WHERE id = ?", LocalDate.class, playerId);

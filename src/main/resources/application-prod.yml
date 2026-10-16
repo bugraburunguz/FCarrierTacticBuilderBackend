@@ -1,0 +1,37 @@
+# PROD-PREP 6b/6c/6e: prod profili (SPRING_PROFILES_ACTIVE=prod). Ortak değerler application.yml'de; burada yalnız prod'a özgü sıkılaştırma.
+fcareer:
+  auth:
+    email-verification:
+      # Prod'da zorunlu: kayıtta emailVerified=false, kredi doğrulamadan sonra. MAIL_HOST boşsa ProdConfigGuard açılışı durdurur.
+      enabled: true
+fcareer.security:
+  # Web ve API aynı kökenden (nginx) sunulur; çapraz köken yalnız WEB_BASE_URL.
+  cors-allowed-origins: ${WEB_BASE_URL}
+fcareer.billing:
+  stub-enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
+  info:
+    env:
+      enabled: false
+
+server:
+  error:
+    include-stacktrace: never
+    include-exception: false
+    include-message: never
+    include-binding-errors: never
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

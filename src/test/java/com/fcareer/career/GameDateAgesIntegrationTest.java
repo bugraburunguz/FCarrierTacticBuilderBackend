@@ -56,7 +56,7 @@ class GameDateAgesIntegrationTest {
         if (basePlayerRepository.count() == 0) {
             ingestionService.run();
         }
-        token = call(post("/api/v1/auth/register"), Map.of("email", "gda-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!"), null, 200).at("/data/accessToken").asText();
+        token = call(post("/api/v1/auth/register"), Map.of("email", "gda-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!", "privacyVersion", 1), null, 200).at("/data/accessToken").asText();
         careerId = call(post("/api/v1/careers"), Map.of("clubId", clubRepository.findAll().get(0).getId(), "budgetEur", 5_000_000), token, 200).at("/data/id").asLong();
         call(patch("/api/v1/careers/" + careerId), Map.of("gameDate", GAME_DATE.toString()), token, 200);
     }

@@ -22,7 +22,7 @@ class FrameworkErrorsIntegrationTest {
     private GlobalExceptionAdvice advice;
 
     private String token() throws Exception {
-        String body = "{\"email\":\"fw-" + java.util.UUID.randomUUID() + "@example.com\",\"password\":\"Sup3rSecret!\"}";
+        String body = "{\"email\":\"fw-" + java.util.UUID.randomUUID() + "@example.com\",\"password\":\"Sup3rSecret!\",\"privacyVersion\":1}";
         String response = mockMvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON).content(body)).andReturn().getResponse().getContentAsString();
         return new com.fasterxml.jackson.databind.ObjectMapper().readTree(response).at("/data/accessToken").asText();
     }

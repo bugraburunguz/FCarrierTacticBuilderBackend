@@ -33,6 +33,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private static final String AUTH_PATH = API_V1 + "/auth";
     private static final String PASSWORD_PATH = API_V1 + "/me/password";
+    private static final String DELETE_PATH = API_V1 + "/me/delete";
     private static final String SOLVER_PATH = API_V1 + "/ut/sbc/streamlined";
     private static final String ANALYSIS_PATH = API_V1 + "/tactics/analysis";
     private static final Duration WINDOW = Duration.ofMinutes(1);
@@ -51,8 +52,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        // Şifre değiştir (V3-07a) şifre deneme yüzeyi: /auth ile aynı sıkı, fail-closed kova.
-        boolean authPath = request.getRequestURI().startsWith(AUTH_PATH) || request.getRequestURI().equals(PASSWORD_PATH);
+        // Şifre değiştir (V3-07a) ve hesap silme (PROD-PREP 4) şifre deneme yüzeyi: /auth ile aynı sıkı, fail-closed kova.
+        boolean authPath = request.getRequestURI().startsWith(AUTH_PATH) || request.getRequestURI().equals(PASSWORD_PATH)
+                || request.getRequestURI().equals(DELETE_PATH);
         boolean solverPath = request.getRequestURI().startsWith(SOLVER_PATH);
         boolean analysisPath = request.getRequestURI().startsWith(ANALYSIS_PATH);
         String bucket = authPath ? "auth:" : solverPath ? "solver:" : analysisPath ? "analysis:" : "api:";
@@ -86,7 +88,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         if (Objects.nonNull(authentication) && authentication.getPrincipal() instanceof AuthUser user) {
             return "u" + user.id();
         }
-        return "ip" + request.getRemoteAddr();
+        return "ip" + ClientIp.of(request, properties.isTrustProxy());
     }
 
     private long minuteBucket() {

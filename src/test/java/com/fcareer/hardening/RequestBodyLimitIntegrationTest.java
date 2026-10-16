@@ -21,7 +21,7 @@ class RequestBodyLimitIntegrationTest {
     private MockMvc mockMvc;
 
     private String token() throws Exception {
-        String body = "{\"email\":\"lim-" + UUID.randomUUID() + "@example.com\",\"password\":\"Sup3rSecret!\"}";
+        String body = "{\"email\":\"lim-" + UUID.randomUUID() + "@example.com\",\"password\":\"Sup3rSecret!\",\"privacyVersion\":1}";
         String response = mockMvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON).content(body)).andReturn().getResponse().getContentAsString();
         return new com.fasterxml.jackson.databind.ObjectMapper().readTree(response).at("/data/accessToken").asText();
     }

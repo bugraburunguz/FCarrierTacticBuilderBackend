@@ -54,6 +54,12 @@ public class AppUserEntity {
     @Column(nullable = false)
     private String role = "USER";
 
+    /** PROD-PREP 3: aydınlatma metnini okuduğunu onayladığı an ve metnin sürümü (bilgilendirme onayı). */
+    @Column(columnDefinition = "timestamptz")
+    private Instant privacyAckAt;
+
+    private Integer privacyAckVersion;
+
     @CreatedDate
     @Column(columnDefinition = "timestamptz", updatable = false)
     private Instant createdAt;

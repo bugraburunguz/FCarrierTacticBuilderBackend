@@ -34,7 +34,7 @@ class AuthEdgeCasesIntegrationTest {
     @Test
     void replayingALoggedOutTokenDoesNotRevokeTheOtherSessions() throws Exception {
         String email = "edge-" + UUID.randomUUID() + "@example.com";
-        String firstRefresh = call(post("/api/v1/auth/register"), Map.of("email", email, "password", "Sup3rSecret!"), 200).at("/data/refreshToken").asText();
+        String firstRefresh = call(post("/api/v1/auth/register"), Map.of("email", email, "password", "Sup3rSecret!", "privacyVersion", 1), 200).at("/data/refreshToken").asText();
         String secondRefresh = call(post("/api/v1/auth/login"), Map.of("email", email, "password", "Sup3rSecret!"), 200).at("/data/refreshToken").asText();
 
         call(post("/api/v1/auth/logout"), Map.of("refreshToken", firstRefresh), 200);
@@ -46,7 +46,7 @@ class AuthEdgeCasesIntegrationTest {
     @Test
     void logoutRevokesTheUsersLinkTokens() throws Exception {
         String email = "link-" + UUID.randomUUID() + "@example.com";
-        JsonNode session = call(post("/api/v1/auth/register"), Map.of("email", email, "password", "Sup3rSecret!"), 200).at("/data");
+        JsonNode session = call(post("/api/v1/auth/register"), Map.of("email", email, "password", "Sup3rSecret!", "privacyVersion", 1), 200).at("/data");
         var linkResponse = mockMvc.perform(post("/api/v1/ut/capture/link").header("Authorization", "Bearer " + session.at("/accessToken").asText())).andReturn().getResponse();
         String linkToken = objectMapper.readTree(linkResponse.getContentAsString()).at("/data/token").asText();
         var capture = post("/api/v1/ut/capture").header("X-Link-Token", linkToken).contentType(MediaType.APPLICATION_JSON).content("{\"captures\":[]}");
@@ -62,7 +62,7 @@ class AuthEdgeCasesIntegrationTest {
     @Test
     void changingThePasswordChecksTheCurrentOneAndRevokesOtherSessions() throws Exception {
         String email = "pw-" + UUID.randomUUID() + "@example.com";
-        JsonNode session = call(post("/api/v1/auth/register"), Map.of("email", email, "password", "Sup3rSecret!"), 200).at("/data");
+        JsonNode session = call(post("/api/v1/auth/register"), Map.of("email", email, "password", "Sup3rSecret!", "privacyVersion", 1), 200).at("/data");
         String otherRefresh = call(post("/api/v1/auth/login"), Map.of("email", email, "password", "Sup3rSecret!"), 200).at("/data/refreshToken").asText();
         String bearer = "Bearer " + session.at("/accessToken").asText();
 

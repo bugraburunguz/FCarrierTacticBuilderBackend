@@ -366,7 +366,7 @@ public class KnowledgeBaseRepository {
     }
 
     public List<Long> contributorsOf(String kind, String naturalKey, String hash) {
-        return jdbc.queryForList("SELECT DISTINCT contributor_id FROM contrib_event WHERE kind = :k AND natural_key = :n AND content_hash = :h", Map.of("k", kind, "n", naturalKey, "h", hash), Long.class);
+        return jdbc.queryForList("SELECT DISTINCT contributor_id FROM contrib_event WHERE kind = :k AND natural_key = :n AND content_hash = :h AND contributor_id IS NOT NULL", Map.of("k", kind, "n", naturalKey, "h", hash), Long.class);
     }
 
     // ---- yardımcılar ----

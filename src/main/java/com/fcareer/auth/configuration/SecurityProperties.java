@@ -17,6 +17,8 @@ public class SecurityProperties {
     private RateLimit rateLimit = new RateLimit();
     private int minPasswordLength = 8;
     private List<String> corsAllowedOrigins = new ArrayList<>();
+    /** PROD-PREP 6a: true iken istemci IP'si güvenilen X-Real-IP başlığından (ClientIp); yalnız ters vekil arkasında açılır. */
+    private boolean trustProxy;
 
     @Getter
     @Setter

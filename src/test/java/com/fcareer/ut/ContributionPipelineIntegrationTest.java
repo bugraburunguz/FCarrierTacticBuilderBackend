@@ -44,7 +44,7 @@ class ContributionPipelineIntegrationTest {
         jdbc.update("DELETE FROM contrib_event");
         jdbc.update("DELETE FROM sbc_challenge");
         jdbc.update("DELETE FROM sbc_set");
-        JsonNode registered = call(post("/api/v1/auth/register"), Map.of("email", "pipe-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!"), null, 200);
+        JsonNode registered = call(post("/api/v1/auth/register"), Map.of("email", "pipe-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!", "privacyVersion", 1), null, 200);
         long user = call(get("/api/v1/me"), null, registered.at("/data/accessToken").asText(), 200).at("/data/id").asLong();
         jdbc.update("INSERT INTO contributor (user_id, trust) VALUES (?, 100)", user);
         token = registered.at("/data/accessToken").asText();
@@ -118,7 +118,7 @@ class ContributionPipelineIntegrationTest {
     }
 
     private String secondContributor() throws Exception {
-        JsonNode registered = call(post("/api/v1/auth/register"), Map.of("email", "pipe2-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!"), null, 200);
+        JsonNode registered = call(post("/api/v1/auth/register"), Map.of("email", "pipe2-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!", "privacyVersion", 1), null, 200);
         long user = call(get("/api/v1/me"), null, registered.at("/data/accessToken").asText(), 200).at("/data/id").asLong();
         jdbc.update("INSERT INTO contributor (user_id, trust) VALUES (?, 100)", user);
         return registered.at("/data/accessToken").asText();
@@ -175,7 +175,7 @@ class ContributionPipelineIntegrationTest {
     }
 
     private String newToken() throws Exception {
-        JsonNode registered = call(post("/api/v1/auth/register"), Map.of("email", "pipe-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!"), null, 200);
+        JsonNode registered = call(post("/api/v1/auth/register"), Map.of("email", "pipe-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!", "privacyVersion", 1), null, 200);
         String bearer = registered.at("/data/accessToken").asText();
         long user = call(get("/api/v1/me"), null, bearer, 200).at("/data/id").asLong();
         jdbc.update("INSERT INTO contributor (user_id, trust) VALUES (?, 100)", user);

@@ -23,7 +23,7 @@ class AdminKeyFilterTest {
 
     AdminKeyFilterTest() {
         properties.setAdminKey("secret-key");
-        filter = new AdminKeyFilter(properties, counter);
+        filter = new AdminKeyFilter(properties, counter, false);
     }
 
     @AfterEach

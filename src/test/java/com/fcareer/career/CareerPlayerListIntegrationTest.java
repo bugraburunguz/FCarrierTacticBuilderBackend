@@ -65,7 +65,7 @@ class CareerPlayerListIntegrationTest {
         if (basePlayerRepository.count() == 0) {
             ingestionService.run();
         }
-        token = call(post("/api/v1/auth/register"), Map.of("email", "list-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!"), null, 200).at("/data/accessToken").asText();
+        token = call(post("/api/v1/auth/register"), Map.of("email", "list-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!", "privacyVersion", 1), null, 200).at("/data/accessToken").asText();
         Integer clubId = jdbc.queryForObject("SELECT club_id FROM player_rating WHERE game_version_id = ? GROUP BY club_id ORDER BY count(*) DESC, club_id LIMIT 1",
                 Integer.class, catalogProperties.getDefaultGameVersion());
         careerId = call(post("/api/v1/careers"), Map.of("clubId", clubId, "budgetEur", 2_000_000), token, 200).at("/data/id").asLong();

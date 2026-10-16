@@ -3,6 +3,7 @@ package com.fcareer.billing.service;
 import com.fcareer.auth.entity.AppUserEntity;
 import com.fcareer.auth.model.SubscriptionType;
 import com.fcareer.auth.repository.AppUserRepository;
+import com.fcareer.billing.configuration.BillingProperties;
 import com.fcareer.billing.model.SubscriptionStatus;
 import com.fcareer.billing.repository.SubscriptionRepository;
 import com.fcareer.common.exception.NotFoundException;
@@ -26,9 +27,13 @@ public class EntitlementService {
     private final AppUserRepository appUserRepository;
     private final Clock clock;
     private final ContributorService contributorService;
+    private final BillingProperties billingProperties;
 
     @Transactional
     public boolean isPremium(AppUserEntity user) {
+        if (billingProperties.isFreeBeta()) {
+            return true; // PROD-PREP 2: ücretsiz beta — herkes Premium hakkı alır
+        }
         if (contributorService.isActive(user.getId())) {
             return true; // 08 D-20: aktif katkıcı PREMIUM haklarını alır
         }

@@ -50,7 +50,7 @@ class LoanedOutAvailabilityIntegrationTest {
 
     @Test
     void loanedOutPlayersNeverStartButStayOwned() throws Exception {
-        String token = call(post("/api/v1/auth/register"), Map.of("email", "loan-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!"), null, 200).at("/data/accessToken").asText();
+        String token = call(post("/api/v1/auth/register"), Map.of("email", "loan-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!", "privacyVersion", 1), null, 200).at("/data/accessToken").asText();
         long careerId = call(post("/api/v1/careers"), Map.of("clubId", clubRepository.findAll().get(0).getId(), "budgetEur", 50_000_000), token, 200).at("/data/id").asLong();
         List<Long> squad = jdbc.queryForList("SELECT base_player_id FROM user_player_state WHERE career_id = ? ORDER BY id", Long.class, careerId);
         Set<Long> loanedOut = new HashSet<>(squad.subList(0, 3));

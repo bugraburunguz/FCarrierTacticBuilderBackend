@@ -33,7 +33,7 @@ class EmailVerificationIntegrationTest {
     private OutboxVerificationMailer outbox;
 
     private String register(String email) throws Exception {
-        return call(post("/api/v1/auth/register"), Map.of("email", email, "password", "Sup3rSecret!"), null, 200).at("/data/accessToken").asText();
+        return call(post("/api/v1/auth/register"), Map.of("email", email, "password", "Sup3rSecret!", "privacyVersion", 1), null, 200).at("/data/accessToken").asText();
     }
 
     private String lastTokenFor(String email) {

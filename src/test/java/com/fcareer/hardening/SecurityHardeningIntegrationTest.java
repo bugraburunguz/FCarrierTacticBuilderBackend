@@ -149,7 +149,7 @@ class SecurityHardeningIntegrationTest {
 
     private String register() throws Exception {
         JsonNode registered = call(post("/api/v1/auth/register"),
-                Map.of("email", "user-" + UUID.randomUUID() + "@example.com", "password", PASSWORD), null, 200);
+                Map.of("email", "user-" + UUID.randomUUID() + "@example.com", "password", PASSWORD, "privacyVersion", 1), null, 200);
         return registered.at("/data/accessToken").asText();
     }
 

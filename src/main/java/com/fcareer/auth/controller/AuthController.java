@@ -6,11 +6,16 @@ import com.fcareer.auth.model.request.RefreshRequest;
 import com.fcareer.auth.model.request.RegisterRequest;
 import com.fcareer.auth.model.response.MeResponse;
 import com.fcareer.auth.model.response.TokenResponse;
+import com.fcareer.auth.configuration.SecurityProperties;
 import com.fcareer.auth.security.AuthUser;
+import com.fcareer.auth.security.ClientIp;
+import com.fcareer.auth.service.AccountDeletionService;
 import com.fcareer.auth.service.AuthService;
 import com.fcareer.auth.service.EmailVerificationService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,13 +35,15 @@ public class AuthController {
 
     private final AuthService authService;
     private final EmailVerificationService emailVerificationService;
+    private final AccountDeletionService accountDeletionService;
+    private final SecurityProperties securityProperties;
 
     public record VerifyEmailRequest(@NotBlank @Size(max = 128) String token) {
     }
 
     @PostMapping("/auth/register")
     public TokenResponse register(@Valid @RequestBody RegisterRequest request, HttpServletRequest http) {
-        return authService.register(request, http.getRemoteAddr());
+        return authService.register(request, ClientIp.of(http, securityProperties.isTrustProxy()));
     }
 
     @PostMapping("/auth/verify-email")
@@ -68,6 +75,24 @@ public class AuthController {
     @PostMapping("/me/password")
     public TokenResponse changePassword(@AuthenticationPrincipal AuthUser user, @Valid @RequestBody ChangePasswordRequest request) {
         return authService.changePassword(user.id(), request);
+    }
+
+    public record DeleteAccountRequest(@NotBlank @Size(max = 72) String password, @NotBlank @Size(max = 254) String emailConfirm) {
+    }
+
+    /** PROD-PREP 4 (KVKK): hesabı ve kişisel veriyi kalıcı siler; bilgi tabanı katkıları anonimleşir. Mevcut şifre + e-posta onayı zorunlu. */
+    @PostMapping("/me/delete")
+    public void deleteAccount(@AuthenticationPrincipal AuthUser user, @Valid @RequestBody DeleteAccountRequest request) {
+        accountDeletionService.delete(user.id(), request.password(), request.emailConfirm());
+    }
+
+    public record PrivacyAckRequest(@NotNull @Min(1) Integer version) {
+    }
+
+    /** PROD-PREP 3: aydınlatma metni bilgilendirme bandı onayı (yeni sürüm ya da önceden onayı olmayan hesap). */
+    @PostMapping("/me/privacy-ack")
+    public void acknowledgePrivacy(@AuthenticationPrincipal AuthUser user, @Valid @RequestBody PrivacyAckRequest request) {
+        authService.acknowledgePrivacy(user.id(), request.version());
     }
 
     @GetMapping("/me")

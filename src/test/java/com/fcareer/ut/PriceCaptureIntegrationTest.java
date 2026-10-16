@@ -241,13 +241,13 @@ class PriceCaptureIntegrationTest {
     }
 
     private long register() throws Exception {
-        JsonNode registered = call(post("/api/v1/auth/register"), Map.of("email", "price-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!"), null, 200);
+        JsonNode registered = call(post("/api/v1/auth/register"), Map.of("email", "price-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!", "privacyVersion", 1), null, 200);
         return call(get("/api/v1/me"), null, registered.at("/data/accessToken").asText(), 200).at("/data/id").asLong();
     }
 
     private String login(long userId) throws Exception {
         String email = jdbc.queryForObject("SELECT email FROM app_user WHERE id = ?", String.class, userId);
-        return call(post("/api/v1/auth/login"), Map.of("email", email, "password", "Sup3rSecret!"), null, 200).at("/data/accessToken").asText();
+        return call(post("/api/v1/auth/login"), Map.of("email", email, "password", "Sup3rSecret!", "privacyVersion", 1), null, 200).at("/data/accessToken").asText();
     }
 
     private JsonNode call(MockHttpServletRequestBuilder builder, Object body, String token, int expectedStatus) throws Exception {

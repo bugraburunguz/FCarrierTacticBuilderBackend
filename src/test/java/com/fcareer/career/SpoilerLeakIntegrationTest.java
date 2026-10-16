@@ -46,7 +46,7 @@ class SpoilerLeakIntegrationTest {
         if (basePlayerRepository.count() == 0) {
             ingestionService.run();
         }
-        token = call(post("/api/v1/auth/register"), Map.of("email", "spoil-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!"), null, 200).at("/data/accessToken").asText();
+        token = call(post("/api/v1/auth/register"), Map.of("email", "spoil-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!", "privacyVersion", 1), null, 200).at("/data/accessToken").asText();
         long clubId = clubRepository.findAll().get(0).getId();
         careerId = call(post("/api/v1/careers"), Map.of("clubId", clubId, "budgetEur", 50_000_000), token, 200).at("/data/id").asLong();
         playerId = call(get("/api/v1/careers/" + careerId + "/squad"), null, token, 200).at("/data/0/player/id").asLong();

@@ -1,6 +1,8 @@
 package com.fcareer.auth.model.request;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotBlank;
 import com.fcareer.common.validation.MaxUtf8Bytes;
 import jakarta.validation.constraints.Size;
@@ -24,4 +26,9 @@ public class RegisterRequest {
     @Size(min = 8, max = 72)
     @MaxUtf8Bytes(72)
     private String password;
+
+    /** PROD-PREP 3: okunduğu onaylanan aydınlatma metni sürümü (kayıt formundaki zorunlu kutu). */
+    @NotNull
+    @Min(1)
+    private Integer privacyVersion;
 }

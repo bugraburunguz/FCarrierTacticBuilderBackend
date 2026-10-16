@@ -56,7 +56,7 @@ class UserTacticIntegrationTest {
     }
 
     private String register() throws Exception {
-        return call(post("/api/v1/auth/register"), Map.of("email", "ut-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!"), null, 200).at("/data/accessToken").asText();
+        return call(post("/api/v1/auth/register"), Map.of("email", "ut-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!", "privacyVersion", 1), null, 200).at("/data/accessToken").asText();
     }
 
     private long career(String token) throws Exception {

@@ -2,6 +2,7 @@ package com.fcareer.billing.service;
 
 import com.fcareer.auth.entity.AppUserEntity;
 import com.fcareer.auth.repository.AppUserRepository;
+import com.fcareer.billing.configuration.BillingProperties;
 import com.fcareer.billing.entity.CreditTransactionEntity;
 import com.fcareer.billing.model.CreditTransactionType;
 import com.fcareer.billing.model.response.CreditStatus;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Objects;
 
 @Slf4j
@@ -28,6 +30,7 @@ public class CreditService {
     private final CreditTransactionRepository creditTransactionRepository;
     private final EntitlementService entitlementService;
     private final Clock clock;
+    private final BillingProperties billingProperties;
 
     @Transactional
     public CreditStatus status(Long userId) {
@@ -66,19 +69,27 @@ public class CreditService {
 
     /** Yeni hesap günlük kredisiyle başlar; e-posta doğrulaması gerekiyorsa doğrulanana kadar 0 (BE-SEC-06). */
     public void initialize(AppUserEntity user) {
+        user.setDailyCreditLimit(billingProperties.getDailyCredits());
         user.setCreditBalance(user.isEmailVerified() ? user.getDailyCreditLimit() : 0);
-        user.setLastCreditRefresh(LocalDate.now(clock));
+        user.setLastCreditRefresh(today());
     }
 
     /** Doğrulama bağlantısı kullanılınca günlük kredi bir kez verilir. */
     public void grantOnVerification(AppUserEntity user) {
+        user.setDailyCreditLimit(billingProperties.getDailyCredits());
         user.setCreditBalance(Math.max(user.getCreditBalance(), user.getDailyCreditLimit()));
-        user.setLastCreditRefresh(LocalDate.now(clock));
+        user.setLastCreditRefresh(today());
         record(user.getId(), CreditTransactionType.REFRESH, user.getDailyCreditLimit(), "EMAIL_VERIFIED");
     }
 
+    /** Kredi günü Europe/Istanbul'a göre (BillingProperties.creditZone); sunucu saat diliminden bağımsız. */
+    private LocalDate today() {
+        return LocalDate.now(clock.withZone(ZoneId.of(billingProperties.getCreditZone())));
+    }
+
+    /** Gün dönümünde bakiye limitin altındaysa limite tamamlanır, üstündeyse dokunulmaz (birikmez). Limit tek yerden (config); kullanıcıdaki kopya güncellenir. */
     private void refreshIfNeeded(AppUserEntity user) {
-        LocalDate today = LocalDate.now(clock);
+        LocalDate today = today();
         if (Objects.equals(user.getLastCreditRefresh(), today)) {
             return;
         }
@@ -86,6 +97,7 @@ public class CreditService {
             user.setLastCreditRefresh(today);
             return;
         }
+        user.setDailyCreditLimit(billingProperties.getDailyCredits());
         int granted = Math.max(user.getDailyCreditLimit() - user.getCreditBalance(), 0);
         user.setCreditBalance(Math.max(user.getCreditBalance(), user.getDailyCreditLimit()));
         user.setLastCreditRefresh(today);

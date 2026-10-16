@@ -1,5 +1,6 @@
 package com.fcareer.ingestion.security;
 
+import com.fcareer.auth.security.ClientIp;
 import com.fcareer.common.redis.RedisCounter;
 import com.fcareer.ingestion.configuration.IngestionProperties;
 import jakarta.servlet.FilterChain;
@@ -42,6 +43,8 @@ public class AdminKeyFilter extends OncePerRequestFilter {
 
     private final IngestionProperties properties;
     private final RedisCounter counter;
+    /** PROD-PREP 6a: deneme sayacı anahtarı için istemci IP'si (ClientIp). */
+    private final boolean trustProxy;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -61,7 +64,7 @@ public class AdminKeyFilter extends OncePerRequestFilter {
             response.setStatus(HttpStatus.FORBIDDEN.value());
             return;
         }
-        String failKey = FAIL_PREFIX + request.getRemoteAddr();
+        String failKey = FAIL_PREFIX + ClientIp.of(request, trustProxy);
         if (lockedOut(failKey)) {
             log.warn("Admin key locked out path : {}", request.getRequestURI());
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());

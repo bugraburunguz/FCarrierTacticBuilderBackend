@@ -28,7 +28,7 @@ class NoPaymentProviderIntegrationTest {
     @Test
     void subscribeNeverGrantsPremiumWithoutAProvider() throws Exception {
         var register = mockMvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsBytes(Map.of("email", "user-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!")))).andReturn().getResponse();
+                .content(objectMapper.writeValueAsBytes(Map.of("email", "user-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!", "privacyVersion", 1)))).andReturn().getResponse();
         String token = objectMapper.readTree(register.getContentAsString()).at("/data/accessToken").asText();
 
         var response = mockMvc.perform(post("/api/v1/billing/subscribe").header("Authorization", "Bearer " + token)).andReturn().getResponse();

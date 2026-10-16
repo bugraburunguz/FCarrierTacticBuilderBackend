@@ -228,7 +228,7 @@ class CareerPlayerEquivalenceIntegrationTest {
 
     private String register() throws Exception {
         JsonNode registered = json(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(Map.of("email", "eq-" + UUID.randomUUID() + "@example.com", "password", PASSWORD))), null);
+                .content(objectMapper.writeValueAsString(Map.of("email", "eq-" + UUID.randomUUID() + "@example.com", "password", PASSWORD, "privacyVersion", 1))), null);
         return registered.at("/data/accessToken").asText();
     }
 

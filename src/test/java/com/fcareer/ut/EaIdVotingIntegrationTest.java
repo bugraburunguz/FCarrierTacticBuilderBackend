@@ -27,7 +27,7 @@ class EaIdVotingIntegrationTest {
     private EaIdRepository eaIds;
 
     private long newUser() throws Exception {
-        String body = "{\"email\":\"vote-" + UUID.randomUUID() + "@example.com\",\"password\":\"Sup3rSecret!\"}";
+        String body = "{\"email\":\"vote-" + UUID.randomUUID() + "@example.com\",\"password\":\"Sup3rSecret!\",\"privacyVersion\":1}";
         String response = mockMvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON).content(body)).andReturn().getResponse().getContentAsString();
         String token = new ObjectMapper().readTree(response).at("/data/accessToken").asText();
         String me = mockMvc.perform(get("/api/v1/me").header("Authorization", "Bearer " + token)).andReturn().getResponse().getContentAsString();

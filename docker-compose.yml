@@ -78,6 +78,10 @@ services:
       FCAREER_BOOTSTRAP_ADMIN_EMAIL: ${FCAREER_BOOTSTRAP_ADMIN_EMAIL:-}
       FCAREER_RATELIMIT_REGISTER_DAILY_PER_IP: ${FCAREER_RATELIMIT_REGISTER_DAILY_PER_IP:-5}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
+      FCAREER_FREE_BETA: ${FCAREER_FREE_BETA:-false}
+      FCAREER_DAILY_CREDITS: ${FCAREER_DAILY_CREDITS:-30}
+      # Backend yalnız web nginx üzerinden erişilir (port yayınlanmaz). nginx gelen X-Real-IP'yi (Railway edge) iletir, yoksa bağlantı adresini yazar.
+      FCAREER_TRUST_PROXY: ${FCAREER_TRUST_PROXY:-true}
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
       interval: 10s

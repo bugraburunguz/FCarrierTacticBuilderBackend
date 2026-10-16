@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.time.Clock;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Locale;
@@ -57,6 +58,7 @@ public class AuthService {
     private final RegistrationLimiter registrationLimiter;
     private final EmailVerificationService emailVerification;
     private final BootstrapAdmin bootstrapAdmin;
+    private final Clock clock;
     private final SecureRandom secureRandom = new SecureRandom();
     private volatile String dummyHash;
 
@@ -83,6 +85,8 @@ public class AuthService {
         user.setSubscriptionType(SubscriptionType.FREE);
         user.setDailyCreditLimit(billingProperties.getDailyCredits());
         user.setEmailVerified(!emailVerification.required());
+        user.setPrivacyAckVersion(request.getPrivacyVersion());
+        user.setPrivacyAckAt(clock.instant());
         if (bootstrapAdmin.matches(email)) {
             user.setRole(AuthUser.ROLE_ADMIN);
             log.info("bootstrap admin atandı");
@@ -168,7 +172,18 @@ public class AuthService {
                 .emailVerified(user.isEmailVerified())
                 .emailVerificationRequired(emailVerification.required())
                 .createdAt(user.getCreatedAt())
+                .privacyAckVersion(user.getPrivacyAckVersion())
+                .privacyAckAt(user.getPrivacyAckAt())
                 .build();
+    }
+
+    /** PROD-PREP 3: bilgilendirme bandında "okudum" — onaylanan sürüm ve zaman yazılır. */
+    @Transactional
+    public void acknowledgePrivacy(Long userId, int version) {
+        AppUserEntity user = appUserRepository.findById(userId).orElseThrow(() -> new NotFoundException(USER, userId));
+        user.setPrivacyAckVersion(version);
+        user.setPrivacyAckAt(clock.instant());
+        log.info("Privacy notice acknowledged userId : {} version : {}", userId, version);
     }
 
     private TokenResponse issueTokens(AppUserEntity user) {

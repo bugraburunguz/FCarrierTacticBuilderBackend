@@ -25,4 +25,6 @@ public class MeResponse {
     private boolean emailVerified;
     private boolean emailVerificationRequired;
     private Instant createdAt;
+    private Integer privacyAckVersion;
+    private Instant privacyAckAt;
 }
