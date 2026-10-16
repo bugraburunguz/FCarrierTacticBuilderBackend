@@ -162,14 +162,20 @@ class KnowledgeBaseIntegrationTest {
         long contributor = register();
         admin("/api/v1/admin/ut/contributors/" + contributor + "/grant");
         long contributorId = jdbc.queryForObject("SELECT id FROM contributor WHERE user_id = ?", Long.class, contributor);
-        for (int value : List.of(1000, 1100, 1200, 90000)) {
-            jdbc.update("INSERT INTO price_obs (ut_item_id, platform, observed_at, kind, value, contributor_id) VALUES (?, 'CONSOLE', now(), 'BIN', ?, ?)", itemId, value, contributorId);
+        try {
+            for (int value : List.of(1000, 1100, 1200, 90000)) {
+                jdbc.update("INSERT INTO price_obs (ut_item_id, platform, observed_at, kind, value, contributor_id) VALUES (?, 'CONSOLE', now(), 'BIN', ?, ?)", itemId, value, contributorId);
+            }
+            call(post("/api/v1/admin/ut/prices/aggregate").header("Authorization", admin()), null, null, 200);
+            JsonNode prices = call(get("/api/v1/ut/kb/items/" + itemId + "/prices?platform=CONSOLE&range=24h"), null, null, 200).at("/data");
+            assertThat(prices).isNotEmpty();
+            assertThat(prices.get(0).get("p50").asInt()).isEqualTo(1100);
+            call(get("/api/v1/ut/kb/items/" + itemId + "/prices?platform=XBOX"), null, null, 400);
+        } finally {
+            // Katalog kartına bağlı fiyat satırları kalırsa UtItemBaseSyncIntegrationTest kartı silemez (CI'da Linux sırasıyla düşüyordu).
+            jdbc.update("DELETE FROM price_obs WHERE ut_item_id = ?", itemId);
+            jdbc.update("DELETE FROM price_agg WHERE ut_item_id = ?", itemId);
         }
-        call(post("/api/v1/admin/ut/prices/aggregate").header("Authorization", admin()), null, null, 200);
-        JsonNode prices = call(get("/api/v1/ut/kb/items/" + itemId + "/prices?platform=CONSOLE&range=24h"), null, null, 200).at("/data");
-        assertThat(prices).isNotEmpty();
-        assertThat(prices.get(0).get("p50").asInt()).isEqualTo(1100);
-        call(get("/api/v1/ut/kb/items/" + itemId + "/prices?platform=XBOX"), null, null, 400);
     }
 
     @Test

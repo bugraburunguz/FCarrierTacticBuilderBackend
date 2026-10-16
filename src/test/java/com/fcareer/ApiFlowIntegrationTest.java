@@ -381,7 +381,10 @@ class ApiFlowIntegrationTest {
         assertThat(lineup.at("/data/rules").isMissingNode()).isTrue();
         assertThat(lineup.at("/data/attackPattern").isMissingNode()).isTrue();
         assertThat(lineup.at("/data/slots/0/roleFit/reasons").isMissingNode()).isTrue();
-        assertThat(lineup.at("/data/slots/0/roleFit/badge").isTextual()).isTrue();
+        // Kariyer yolu v3 motoru; seviye normları yoksa v1'e düşer (badge), varsa v3 (fitLabel). Normlar paylaşılan DB'de başka testten
+        // dolabildiği için (CI sırası) ikisi de kabul: bedava dizilişte rozet etiketi her zaman var.
+        JsonNode roleFit = lineup.at("/data/slots/0/roleFit");
+        assertThat(roleFit.at("/badge").isTextual() || roleFit.at("/fitLabel").isTextual()).as(roleFit.toString()).isTrue();
         assertThat(call(get("/api/v1/me"), null, token, 200).at("/data/creditBalance").asInt()).isEqualTo(before);
     }
 
