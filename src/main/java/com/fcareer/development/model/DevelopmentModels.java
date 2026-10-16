@@ -49,10 +49,14 @@ public final class DevelopmentModels {
         private String focus;
         private double currentScore;
         private WeaponState currentBadge;
+        /** v3 (V3-07c): rozetin türediği seviye yüzdesi ve etiketi (GOOD|AT_LEVEL|WEAK|WRONG_ROLE); gösterilen yüzde bu. v2'de boş. */
+        private Double currentLevelFit;
+        private String currentFitLabel;
         private List<DevelopmentGap> gaps;
         private int totalGap;
         private double projectedScore;
         private WeaponState projectedBadge;
+        private String projectedFitLabel;
         private int projectedRating;
         private boolean unlocks;
     }
@@ -99,6 +103,8 @@ public final class DevelopmentModels {
         private Integer leagueId;
         private Long budgetMax;
         private Long careerId;
+        /** Kariyer verildiğinde ulaşılabilirlik kovası için (sahiplik controller'da doğrulanır). */
+        private Long userId;
         private String roleId;
         private String sort;
         private int limit;
@@ -128,5 +134,11 @@ public final class DevelopmentModels {
         private Double roleScore;
         private WeaponState roleBadge;
         private WeaponState projectedBadge;
+        /** V3-07c 0a: rol rozetinin türediği seviye yüzdesi ve etiketi (gösterilen yüzde bu; roleScore ham rol puanıdır). */
+        private Double roleLevelFit;
+        private String roleFitLabel;
+        private String projectedFitLabel;
+        /** V3-07c: kariyerde ulaşılabilirlik kovası (oyuncu sayfasıyla aynı sınıflandırıcı); kariyersiz ve kadrodaki oyuncuda yok. */
+        private String feasibility;
     }
 }

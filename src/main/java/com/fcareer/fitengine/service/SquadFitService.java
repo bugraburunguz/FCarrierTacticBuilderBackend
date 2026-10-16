@@ -217,6 +217,8 @@ public class SquadFitService {
                         .combined(round1(combined[p][slotIndex]))
                         .roleFitScore(roleFits[p][slotIndex].getScore())
                         .badge(roleFits[p][slotIndex].getBadge())
+                        .levelFit(roleFits[p][slotIndex].getLevelFit())
+                        .fitLabel(roleFits[p][slotIndex].getFitLabel())
                         .build())
                 .toList();
     }

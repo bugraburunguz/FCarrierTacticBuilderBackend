@@ -58,7 +58,7 @@ public class DevelopmentController {
         }
         List<WonderkidResponse> rows = developmentService.wonderkids(WonderkidQuery.builder()
                 .gameVersionId(gameVersionId).gender(gender).position(position).maxAge(maxAge)
-                .minPotential(minPotential).leagueId(leagueId).budgetMax(budgetMax).careerId(careerId).roleId(roleId)
+                .minPotential(minPotential).leagueId(leagueId).budgetMax(budgetMax).careerId(careerId).userId(user == null ? null : user.id()).roleId(roleId)
                 .sort(sort).limit(limit).build());
         if (spoilerPolicy.ranged(careerId)) {
             rows.forEach(r -> {

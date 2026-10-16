@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.configuration.CatalogProperties;
 import com.fcareer.catalog.repository.BasePlayerRepository;
+import com.fcareer.fitengine.configuration.FitEngineProperties;
 import com.fcareer.fitengine.model.FitRole;
+import com.fcareer.fitengine.service.RoleFitV3Service;
 import com.fcareer.ingestion.service.IngestionService;
 import com.fcareer.roles.service.RoleService;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,6 +52,10 @@ class CareerPlayerListIntegrationTest {
     private RoleService roleService;
     @Autowired
     private CatalogProperties catalogProperties;
+    @Autowired
+    private com.fcareer.fitengine.level.FitLevelNormsBuilder levelNormsBuilder;
+    @Autowired
+    private com.fcareer.fitengine.level.LevelFitService levelFitService;
 
     private String token;
     private long careerId;
@@ -148,6 +154,54 @@ class CareerPlayerListIntegrationTest {
             assertThat(second.get(0).at("/roleFit").asDouble()).isLessThanOrEqualTo(previous);
         }
         call(get("/api/v1/players?career=" + careerId + "&sort=role&role=yok_boyle_rol"), null, token, 404);
+    }
+
+    /** V3-07c (API CONTRACT CHANGE): wonderkid satırları kariyerde aynı sınıflandırıcının kovasını taşır (oyuncu sayfasıyla aynı); kadrodakilerde kova yok. */
+    @Test
+    void wonderkidsCarryTheSameFeasibilityBucketAsThePlayerPage() throws Exception {
+        givePotentials();
+        JsonNode rows = call(get("/api/v1/wonderkids?career=" + careerId + "&maxAge=40&minPot=1&limit=8&sort=potential"), null, token, 200).at("/data");
+        assertThat(rows.size()).isPositive();
+        int withBucket = 0;
+        for (JsonNode row : rows) {
+            long id = row.at("/id").asLong();
+            String expected = call(get("/api/v1/players/" + id + "/contract?career=" + careerId), null, token, 200).at("/data/feasibility").asText(null);
+            assertThat(row.at("/feasibility").asText(null)).as("oyuncu " + id).isEqualTo(expected);
+            withBucket += expected == null ? 0 : 1;
+        }
+        assertThat(withBucket).isPositive();
+        JsonNode anonymous = call(get("/api/v1/wonderkids?maxAge=40&minPot=1&limit=3"), null, null, 200).at("/data");
+        anonymous.forEach((row) -> assertThat(row.has("feasibility")).isFalse());
+    }
+
+    /** V3-07c 0a: wonderkid rol uyumu etiketi ve gösterilecek yüzde aynı sayıdan (roleLevelFit); rozet rengi etiketten türer. */
+    @Test
+    void wonderkidRoleLabelAndPercentShareOneBasis() throws Exception {
+        givePotentials();
+        if (jdbc.queryForObject("SELECT count(*) FROM fit_level_norms", Integer.class) == 0) {
+            levelNormsBuilder.rebuild(catalogProperties.getDefaultGameVersion());
+            levelFitService.refresh();
+        }
+        JsonNode rows = call(get("/api/v1/wonderkids?career=" + careerId + "&maxAge=40&minPot=1&limit=8&role=poacher_attack&pos=ST"), null, token, 200).at("/data");
+        assertThat(rows.size()).isPositive();
+        FitEngineProperties.V3 v3 = new FitEngineProperties().getV3();
+        assertThat(rows.findValues("roleLevelFit")).as("seviye normuyla en az bir satır").isNotEmpty();
+        for (JsonNode row : rows) {
+            if (!row.has("roleLevelFit")) {
+                // Seviye normu yoksa (test veritabanı) ne etiket ne renk: ekran ham rol puanını etiketsiz gösterir.
+                assertThat(row.has("roleFitLabel")).as(row.toString()).isFalse();
+                assertThat(row.has("roleBadge")).as(row.toString()).isFalse();
+                continue;
+            }
+            RoleFitV3Service.FitLabel label = RoleFitV3Service.label(row.at("/roleLevelFit").asDouble(), v3);
+            assertThat(row.at("/roleFitLabel").asText()).isEqualTo(label.name());
+            assertThat(row.at("/roleBadge").asText(null)).isEqualTo(label.badge() == null ? null : label.badge().name());
+        }
+    }
+
+    /** Kariyer havuzunda potansiyel içe aktarmadan gelir (cp.pot); test kendi kariyerinin oyuncularına yazar (bu kariyere özgü satırlar). */
+    private void givePotentials() {
+        jdbc.update("UPDATE career_player SET pot = LEAST(ovr + 12, 99) WHERE career_id = ? AND pot IS NULL AND ovr IS NOT NULL", careerId);
     }
 
     private long anyPlayer() {

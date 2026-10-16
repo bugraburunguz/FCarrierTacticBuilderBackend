@@ -82,6 +82,23 @@ public class CareerPlayerList {
     }
 
     /**
+     * V3-07c: verilen oyuncuların ulaşılabilirlik kovası (wonderkids gibi başka listeler için). Oyuncu sayfasıyla ({@link #contract}) aynı
+     * sınıflandırıcı ve aynı kariyer bağlamı; kadrodaki (sahip olunan) oyuncuya kova verilmez.
+     */
+    public Map<Long, String> feasibility(Long userId, Long careerId, List<Long> playerIds) {
+        if (playerIds.isEmpty()) {
+            return Map.of();
+        }
+        CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
+        List<PlayerSummaryResponse> items = playerSearchRepository.search(PlayerSearchRequest.builder()
+                .gameVersionId(squad.gameVersionId()).careerId(careerId).ids(playerIds).page(0).size(playerIds.size()).build())
+                .stream().filter((p) -> !squad.ownedIds().contains(p.getId())).toList();
+        annotate(squad, items);
+        return items.stream().filter((p) -> Objects.nonNull(p.getFeasibility()))
+                .collect(Collectors.toMap(PlayerSummaryResponse::getId, PlayerSummaryResponse::getFeasibility, (a, b) -> a));
+    }
+
+    /**
      * V3-06b: oyuncu sayfasının sözleşme ve değer verisi. Kova öneri hattının sınıflandırıcısından; kadrodaki oyuncu için kova ve alım
      * sonrası bütçe yok. Kayıtta olmayan alan null kalır (ENG-02).
      */

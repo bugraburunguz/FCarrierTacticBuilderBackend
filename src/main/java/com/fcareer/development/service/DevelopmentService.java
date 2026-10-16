@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -65,6 +66,7 @@ public class DevelopmentService {
     private final FitEngineProperties fitProperties;
     private final RoleSeeds roleSeeds;
     private final AttrNorms attrNorms;
+    private final com.fcareer.recommendation.pipeline.CareerPlayerList careerPlayerList;
 
     public DevelopmentResponse plan(Long playerId, DevelopmentRequest request) {
         FitPlayer player = playerService.fitPlayers(List.of(playerId), request.getGameVersionId(), request.getCareerId()).get(0);
@@ -127,12 +129,20 @@ public class DevelopmentService {
                 row.setRoleScore(dev.getCurrentScore());
                 row.setRoleBadge(dev.getCurrentBadge());
                 row.setProjectedBadge(dev.getProjectedBadge());
+                row.setRoleLevelFit(dev.getCurrentLevelFit());
+                row.setRoleFitLabel(dev.getCurrentFitLabel());
+                row.setProjectedFitLabel(dev.getProjectedFitLabel());
             }
             result.add(row);
         }
         result.sort(comparator(query.getSort(), Objects.nonNull(role)));
         int limit = query.getLimit() <= 0 ? DEFAULT_LIMIT : Math.min(query.getLimit(), MAX_LIMIT);
-        return result.stream().limit(limit).toList();
+        List<WonderkidResponse> rows = result.stream().limit(limit).toList();
+        if (Objects.nonNull(query.getCareerId()) && Objects.nonNull(query.getUserId())) {
+            Map<Long, String> buckets = careerPlayerList.feasibility(query.getUserId(), query.getCareerId(), rows.stream().map(WonderkidResponse::getId).toList());
+            rows.forEach((r) -> r.setFeasibility(buckets.get(r.getId())));
+        }
+        return rows;
     }
 
     private PlayerSearchRequest searchRequest(WonderkidQuery query, int page) {
@@ -212,19 +222,25 @@ public class DevelopmentService {
         FitEngineV3.Result future = engine.currentFit(projection.grown(), position, role);
         List<DevelopmentGap> gaps = baseGaps(player, position, role, headroom);
         boolean unlocks = !gaps.isEmpty() && gaps.stream().allMatch(DevelopmentGap::isClosable);
+        Optional<LevelFitService.LevelFit> level = v3Level(player, position, role, current);
+        Optional<LevelFitService.LevelFit> futureLevel = v3Level(projection.grown(), position, role, future);
+        Optional<RoleFitV3Service.FitLabel> label = level.map((l) -> RoleFitV3Service.label(l.value(), fitProperties.getV3()));
+        Optional<RoleFitV3Service.FitLabel> futureLabel = futureLevel.map((l) -> RoleFitV3Service.label(l.value(), fitProperties.getV3()));
         return RoleDevelopment.builder()
                 .roleId(role.getId()).roleName(role.getName()).position(position).focus(role.getFocus())
-                .currentScore(round1(current.currentFit())).currentBadge(v3Badge(player, position, role, current))
+                .currentScore(round1(current.currentFit())).currentBadge(label.map(RoleFitV3Service.FitLabel::badge).orElse(null))
+                .currentLevelFit(level.map((l) -> round1(l.value())).orElse(null)).currentFitLabel(label.map(Enum::name).orElse(null))
                 .gaps(gaps).totalGap(gaps.stream().mapToInt(DevelopmentGap::getGap).sum())
-                .projectedScore(round1(future.currentFit())).projectedBadge(v3Badge(projection.grown(), position, role, future))
+                .projectedScore(round1(future.currentFit())).projectedBadge(futureLabel.map(RoleFitV3Service.FitLabel::badge).orElse(null))
+                .projectedFitLabel(futureLabel.map(Enum::name).orElse(null))
                 .projectedRating(projection.projectedRating()).unlocks(unlocks)
                 .build();
     }
 
-    private WeaponState v3Badge(FitPlayer player, String position, FitRole role, FitEngineV3.Result result) {
+    /** Rozet, etiket ve gösterilen yüzde aynı sayıdan (levelFit; V3-07c 0a). */
+    private Optional<LevelFitService.LevelFit> v3Level(FitPlayer player, String position, FitRole role, FitEngineV3.Result result) {
         int gender = Objects.isNull(player.getGender()) ? 0 : player.getGender();
-        return levelFitService.levelFit(gender, position, role.getBaseRole(), role.getFocus(), player.getOverall(), result.currentFit())
-                .map((l) -> RoleFitV3Service.label(l.value(), fitProperties.getV3()).badge()).orElse(null);
+        return levelFitService.levelFit(gender, position, role.getBaseRole(), role.getFocus(), player.getOverall(), result.currentFit());
     }
 
     private List<DevelopmentGap> baseGaps(FitPlayer player, String position, FitRole role, int headroom) {

@@ -18,4 +18,7 @@ public class DepthEntry {
     private double combined;
     private double roleFitScore;
     private WeaponState badge;
+    /** v3: rozetin türediği seviye yüzdesi ve etiketi (RoleFitResponse ile aynı); ekran yüzdesi ve etiketi bundan (V3-07c). v2'de boş. */
+    private Double levelFit;
+    private String fitLabel;
 }
