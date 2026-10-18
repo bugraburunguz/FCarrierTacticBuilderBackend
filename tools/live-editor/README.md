@@ -8,6 +8,7 @@ Hepsi **sadece okur**; oyun verisini değiştirmez. Live Editor'ün Lua motoru d
 | `fc27_career_export.lua` (**tek kaynak**, export v2) | Oyuncular, takımlar, ligler, kariyer bağlamı (`context`: kariyerde mi, oyun tarihi, kullanıcı takımı), kontratlar, kiralıklar vb. Her tablo satır sayısı + FNV-1a checksum taşır. Şema: `docs/review/v2/07_LIVE_EDITOR.md` §4 | Kullanıcı (kariyerin **içinde**) → sitede İçe aktar sayfasına log'u yükler |
 | `fc27_names_rawdump.lua` | `playernames` tablosunun sıkıştırılmış isim bloğunu ham bayt olarak yazar | Sadece katalog yazarı (yılda bir) |
 | `decode-names.mjs` | Ham baytlardan 43 bin ismi çözer, `playernames` FCDUMP bloğu üretir | Katalog yazarı |
+| `fc27_db_probe.lua` | Teşhis: her veritabanındaki tabloların kısa adı/şeması (meta'da adı olmayanlar dahil) ve verilen oyuncu kimliklerinin geçtiği satırlar (`DBPROBE`). Kariyer kiralıklarının hangi tabloda durduğunu bulmak için | Kullanıcı (kariyerin içinde), bir kez |
 | `fc27_name_probe*.lua`, `fc27_names_stream.lua` | Keşif/teşhis script'leri (artık gerekmez) | – |
 
 ## Katalog isimlerini yenileme (yeni oyun sürümü)
