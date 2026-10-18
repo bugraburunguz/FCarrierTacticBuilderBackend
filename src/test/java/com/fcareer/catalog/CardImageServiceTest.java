@@ -2,6 +2,7 @@ package com.fcareer.catalog;
 
 import com.fcareer.catalog.configuration.CatalogProperties;
 import com.fcareer.catalog.service.CardImageService;
+import com.fcareer.catalog.service.UpstreamImageCache;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -108,9 +109,40 @@ class CardImageServiceTest {
         assertThat(service.card(203244)).isEmpty();
         assertThat(hits.get()).isEqualTo(1);
 
-        now.set(now.get().plusSeconds(25 * 3600));
+        now.set(now.get().plusSeconds(8 * 24 * 3600));
         assertThat(service.card(203244)).isEmpty();
-        assertThat(hits.get()).as("bulunamayan 24 saat sonra yeniden denenir").isEqualTo(2);
+        assertThat(hits.get()).as("bulunamayan 7 gün sonra yeniden denenir").isEqualTo(2);
+    }
+
+    /** Kalıcı depo (DB): kartlar değişmez; yeniden başlatmadan sonra var olan görsel için kaynağa gidilmez, eksik olan 7 gün hatırlanır. */
+    @Test
+    void storedCardsSurviveARestartAndMissingOnesAreRecheckedAfterAWeek() {
+        java.util.Map<Long, UpstreamImageCache.Stored> db = new java.util.HashMap<>();
+        UpstreamImageCache.Store store = new UpstreamImageCache.Store() {
+            @Override
+            public java.util.Optional<UpstreamImageCache.Stored> load(long id) {
+                return java.util.Optional.ofNullable(db.get(id));
+            }
+
+            @Override
+            public void save(long id, UpstreamImageCache.Stored stored) {
+                db.put(id, stored);
+            }
+        };
+        new CardImageService(properties, RestClient.builder(), clock, store).card(231747);
+        new CardImageService(properties, RestClient.builder(), clock, store).card(203244);
+        assertThat(hits.get()).isEqualTo(2);
+
+        CardImageService restarted = new CardImageService(properties, RestClient.builder(), clock, store);
+        assertThat(restarted.card(231747)).isPresent();
+        assertThat(restarted.card(203244)).isEmpty();
+        assertThat(hits.get()).as("yeniden başlatma sonrası kaynağa gidilmez").isEqualTo(2);
+
+        now.set(now.get().plusSeconds(8 * 24 * 3600));
+        assertThat(new CardImageService(properties, RestClient.builder(), clock, store).card(203244)).isEmpty();
+        assertThat(hits.get()).as("eksik kart 7 gün sonra yeniden denenir").isEqualTo(3);
+        assertThat(new CardImageService(properties, RestClient.builder(), clock, store).card(231747)).isPresent();
+        assertThat(hits.get()).as("var olan kart hiç yeniden indirilmez").isEqualTo(3);
     }
 
     @Test

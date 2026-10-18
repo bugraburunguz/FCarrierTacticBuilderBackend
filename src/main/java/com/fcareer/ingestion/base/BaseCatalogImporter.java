@@ -351,6 +351,24 @@ public class BaseCatalogImporter {
         return names;
     }
 
+    /** Ana kayıttaki (temel katalog) kulübün EA takım kimliği, EA oyuncu kimliğine göre. Kariyer kiralıklarının kaynak kulübü için. */
+    public Map<Long, Integer> baseTeamIds(java.util.Collection<Long> eaIds, short gameVersionId) {
+        Map<Long, Integer> teams = new HashMap<>();
+        if (eaIds.isEmpty()) {
+            return teams;
+        }
+        jdbc.query("""
+                SELECT b.ea_resource_id, c.ea_team_id FROM base_player b
+                  JOIN player_rating r ON r.base_player_id = b.id AND r.game_version_id = :gv
+                  JOIN club c ON c.id = r.club_id
+                 WHERE b.owner_career_id IS NULL AND b.ea_resource_id IN (:ids) AND c.ea_team_id IS NOT NULL""",
+                new MapSqlParameterSource().addValue("ids", eaIds).addValue("gv", gameVersionId),
+                rs -> {
+                    teams.put(rs.getLong(1), rs.getInt(2));
+                });
+        return teams;
+    }
+
     private static void vote(Map<Integer, Map<String, Integer>> votes, Integer nameId, String value) {
         if (Objects.nonNull(nameId)) {
             votes.computeIfAbsent(nameId, k -> new HashMap<>()).merge(value, 1, Integer::sum);

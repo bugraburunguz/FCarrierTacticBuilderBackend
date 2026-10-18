@@ -23,6 +23,8 @@ public class FaceImageController {
 
     private static final Duration MISSING_TTL = Duration.ofHours(1);
     private static final Duration FOUND_TTL = Duration.ofHours(24);
+    /** Kart görselleri değişmez (sunucuda kalıcı önbellek): tarayıcı 30 gün tutar. */
+    private static final Duration CARD_TTL = Duration.ofDays(30);
 
     private final FaceImageService faceImageService;
     private final CardImageService cardImageService;
@@ -37,7 +39,7 @@ public class FaceImageController {
     @GetMapping("/card/{id:\\d+}")
     public ResponseEntity<byte[]> card(@PathVariable long id) {
         return cardImageService.card(id)
-                .map(image -> ResponseEntity.ok().contentType(MediaType.parseMediaType(image.contentType())).cacheControl(CacheControl.maxAge(FOUND_TTL).cachePublic()).body(image.bytes()))
+                .map(image -> ResponseEntity.ok().contentType(MediaType.parseMediaType(image.contentType())).cacheControl(CacheControl.maxAge(CARD_TTL).cachePublic()).body(image.bytes()))
                 .orElseGet(() -> ResponseEntity.ok().contentType(MediaType.IMAGE_GIF).header("X-Card-Image", "missing")
                         .cacheControl(CacheControl.maxAge(FOUND_TTL).cachePublic()).body(TRANSPARENT_PIXEL));
     }

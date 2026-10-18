@@ -29,6 +29,17 @@ public final class UpstreamImageCache {
     public record Image(byte[] bytes, String contentType) {
     }
 
+    /** Kalıcı depodaki kayıt: image null ise kaynakta yok (fetchedAt'ten itibaren missTtl boyunca yeniden denenmez). */
+    public record Stored(Image image, Instant fetchedAt) {
+    }
+
+    /** İsteğe bağlı kalıcı depo (ör. DB): yeniden başlatmada var olan görsel için kaynağa gidilmez. */
+    public interface Store {
+        Optional<Stored> load(long id);
+
+        void save(long id, Stored stored);
+    }
+
     private static final int MAX_BYTES = 2 * 1024 * 1024;
     private static final int MAX_MISSES = 20_000;
     private static final Duration TIMEOUT = Duration.ofSeconds(5);
@@ -41,12 +52,19 @@ public final class UpstreamImageCache {
     private final Clock clock;
     private final long maxCachedBytes;
     private final Duration missTtl;
+    private final Store store;
     private final Semaphore upstream = new Semaphore(MAX_CONCURRENT);
     private final Map<Long, Image> cache = new LinkedHashMap<>(16, 0.75f, true);
     private final Map<Long, Instant> misses = new LinkedHashMap<>();
     private long cachedBytes;
 
     public UpstreamImageCache(String label, Supplier<String> template, RestClient.Builder builder, Clock clock, long maxCachedBytes, Duration missTtl) {
+        this(label, template, builder, clock, maxCachedBytes, missTtl, null);
+    }
+
+    public UpstreamImageCache(String label, Supplier<String> template, RestClient.Builder builder, Clock clock, long maxCachedBytes, Duration missTtl,
+                              Store store) {
+        this.store = store;
         this.label = label;
         this.template = template;
         this.clock = clock;
@@ -75,15 +93,55 @@ public final class UpstreamImageCache {
                 return Optional.empty();
             }
         }
+        Optional<Stored> stored = loadStored(id);
+        if (stored.isPresent()) {
+            Stored hit = stored.get();
+            if (Objects.nonNull(hit.image())) {
+                synchronized (this) {
+                    remember(id, hit.image());
+                }
+                return Optional.of(hit.image());
+            }
+            if (hit.fetchedAt().plus(missTtl).isAfter(clock.instant())) {
+                synchronized (this) {
+                    forget(id, hit.fetchedAt());
+                }
+                return Optional.empty();
+            }
+        }
         Optional<Image> fetched = fetch(id);
         synchronized (this) {
             if (fetched.isPresent()) {
                 remember(id, fetched.get());
             } else {
-                forget(id);
+                forget(id, clock.instant());
             }
         }
+        saveStored(id, new Stored(fetched.orElse(null), clock.instant()));
         return fetched;
+    }
+
+    private Optional<Stored> loadStored(long id) {
+        if (Objects.isNull(store)) {
+            return Optional.empty();
+        }
+        try {
+            return store.load(id);
+        } catch (RuntimeException e) {
+            log.warn("{} image store read failed id : {} reason : {}", label, id, e.getClass().getSimpleName());
+            return Optional.empty();
+        }
+    }
+
+    private void saveStored(long id, Stored stored) {
+        if (Objects.isNull(store)) {
+            return;
+        }
+        try {
+            store.save(id, stored);
+        } catch (RuntimeException e) {
+            log.warn("{} image store write failed id : {} reason : {}", label, id, e.getClass().getSimpleName());
+        }
     }
 
     private Optional<Image> fetch(long id) {
@@ -119,8 +177,8 @@ public final class UpstreamImageCache {
         }
     }
 
-    private void forget(long id) {
-        misses.put(id, clock.instant());
+    private void forget(long id, Instant at) {
+        misses.put(id, at);
         if (misses.size() > MAX_MISSES) {
             Iterator<Long> eldest = misses.keySet().iterator();
             eldest.next();

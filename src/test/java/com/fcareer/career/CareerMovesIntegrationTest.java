@@ -85,7 +85,8 @@ class CareerMovesIntegrationTest {
         long careerId = support.premiumCareer(token, null);
         var us = clubRepository.findAll().get(0);
         long otherClubId = jdbc.queryForObject("""
-                SELECT r.club_id FROM player_rating r WHERE r.game_version_id = 27 AND r.club_id <> ? GROUP BY r.club_id HAVING count(*) >= 3
+                SELECT r.club_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id AND b.owner_career_id IS NULL
+                 WHERE r.game_version_id = 27 AND r.club_id <> ? GROUP BY r.club_id HAVING count(*) >= 3
                  ORDER BY r.club_id LIMIT 1""", Long.class, us.getId());
         String otherName = jdbc.queryForObject("SELECT name FROM club WHERE id = ?", String.class, otherClubId);
         List<Long> ours = basePlayersOf(us.getId(), 3);

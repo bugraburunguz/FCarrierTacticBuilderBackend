@@ -17,6 +17,23 @@ class CardImageEndpointIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+    @Autowired
+    private com.fcareer.catalog.repository.CardImageRepository repository;
+
+    @Test
+    void theDatabaseStoreKeepsFoundAndMissingCards() {
+        java.time.Instant at = java.time.Instant.parse("2026-10-18T10:00:00Z");
+        byte[] webp = {'R', 'I', 'F', 'F', 9};
+        repository.save(910_001L, new com.fcareer.catalog.service.UpstreamImageCache.Stored(new com.fcareer.catalog.service.UpstreamImageCache.Image(webp, "image/webp"), at));
+        repository.save(910_002L, new com.fcareer.catalog.service.UpstreamImageCache.Stored(null, at));
+
+        var found = repository.load(910_001L).orElseThrow();
+        assertThat(found.image().bytes()).isEqualTo(webp);
+        assertThat(found.image().contentType()).isEqualTo("image/webp");
+        assertThat(found.fetchedAt()).isEqualTo(at);
+        assertThat(repository.load(910_002L).orElseThrow().image()).isNull();
+        assertThat(repository.load(910_003L)).isEmpty();
+    }
 
     @Test
     void aMissingCardIsATransparentPixelNotA404() throws Exception {

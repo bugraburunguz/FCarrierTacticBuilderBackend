@@ -54,7 +54,8 @@ public final class LeExportV2Parser {
     }
 
     /** Dışa aktarımın bağlamı (07 §4.1 `context`). */
-    public record LeContext(boolean inCareer, String mode, LocalDate gameDate, Integer userTeamId, String saveUid) {
+    /** transferBudget: betik 2.0.2'den (GetUserTransferBudget, oyun içi para birimi); yoksa null. */
+    public record LeContext(boolean inCareer, String mode, LocalDate gameDate, Integer userTeamId, String saveUid, Long transferBudget) {
     }
 
     public record LeExport(String exportId, LeContext context, Map<String, List<Map<String, String>>> tables, List<String> warnings) {
@@ -372,7 +373,9 @@ public final class LeExportV2Parser {
         }
         JsonNode team = node.hasNonNull("userTeamId") ? node.get("userTeamId") : node.path("userTeamIdMem");
         Integer userTeam = team.isNumber() && team.asInt() > 0 ? team.asInt() : null;
-        return new LeContext(inCareer, node.path("mode").asText(null), date, userTeam, node.path("saveUid").asText(null));
+        JsonNode budget = node.path("transferBudget");
+        Long transferBudget = budget.isNumber() && budget.asLong() >= 0 ? budget.asLong() : null;
+        return new LeContext(inCareer, node.path("mode").asText(null), date, userTeam, node.path("saveUid").asText(null), transferBudget);
     }
 
     /** Aynı veriden aynı kimlik: META + tablo checksum'larının SHA-1 özeti (aynı dosyanın tekrar yüklenmesi tanınır). */

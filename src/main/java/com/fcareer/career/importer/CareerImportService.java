@@ -73,7 +73,7 @@ public class CareerImportService {
             }
         });
         Map<Long, Integer> playerTeam = readLinks(tables.get("teamplayerlinks"), nationalTeams, freeAgentTeams);
-        Map<Long, Integer> loanedFrom = readLoans(tables.get("playerloans"));
+        Map<Long, Integer> loanedFrom = loanSources(tables, career.getGameVersionId(), playerTeam);
         Map<Long, Long> eaToBase = eaIdMap();
         Map<Long, Long> generated = baseCatalogImporter.upsertCareerPlayers(careerId, tables, career.getGameVersionId());
         eaToBase.putAll(generated);
@@ -162,13 +162,24 @@ public class CareerImportService {
                     WHERE t.career_id = :c AND NOT t.free_agent_pool AND lower(t.name) = lower(c.name) LIMIT 1""",
                     new MapSqlParameterSource().addValue("c", careerId).addValue("club", career.getClubId()));
         }
+        // Betik 2.0.2: oyunun transfer bütçesi (oyun içi para birimi); kayıtta yoksa kullanıcının elle girdiği bütçe korunur.
+        if (Objects.nonNull(context) && Objects.nonNull(context.transferBudget())) {
+            jdbc.update("UPDATE career SET budget_eur = :b WHERE id = :c", Map.of("b", context.transferBudget(), "c", careerId));
+        }
         if (Objects.nonNull(context) && Objects.nonNull(context.gameDate())) {
             jdbc.update("UPDATE career SET current_game_date = :d WHERE id = :c", Map.of("d", java.sql.Date.valueOf(context.gameDate()), "c", careerId));
         }
         // Çift yazma: eski overlay tabloları yazıldı; kariyerin tek doğruluk kaynağı career_player onlardan tazelenir (E3-2).
         careerPlayerWriter.syncCareer(careerId);
         careerPlayerWriter.applyLeExtras(careerId, tables.get("players"), eaToBase);
-        careerPlayerWriter.applyContracts(careerId, tables.get("players"), tables.get("playerloans"), eaToBase);
+        // Kiralık bitiş tarihi: playerloans ve diğer veritabanı kopyaları (betik 2.0.2).
+        List<Map<String, String>> allLoans = new ArrayList<>();
+        tables.forEach((name, rows) -> {
+            if (name.equals("playerloans") || name.startsWith("playerloans_db")) {
+                allLoans.addAll(rows);
+            }
+        });
+        careerPlayerWriter.applyContracts(careerId, tables.get("players"), allLoans, eaToBase);
         careerDeskService.takeSnapshot(careerId, "IMPORT", Objects.nonNull(upload.exportId()) ? "export " + upload.exportId() : null);
         log.info("Career import done careerId : {} players : {} teams : {} freeAgents : {} unmatched : {}",
                 careerId, playerRows.size(), teamParams.size(), freeAgents, unmatched);
@@ -224,6 +235,32 @@ public class CareerImportService {
                 new MapSqlParameterSource().addValue("c", careerId).addValue("t", teamId).addValue("club", career.getClubId()));
         Integer count = jdbc.queryForObject("SELECT count(*) FROM user_player_state WHERE career_id = :c", Map.of("c", careerId), Integer.class);
         return Objects.isNull(count) ? 0 : count;
+    }
+
+    /**
+     * Kiralık kaynakları (betik 2.0.2): önce playerloans, sonra diğer veritabanı kopyaları (playerloans_db*), sonra kadro durumu
+     * (fca_squadstatus loanedout=1, oyunun IsPlayerLoanedOut sorgusu). Kariyerde yapılan kiralıklar ilk kopyada olmayabilir. Kadro durumundaki
+     * kiralığın kaynak kulübü ana kayıttaki kulüptür; ana kayıtta zaten şu anki takımındaysa (kaynak belirsiz) eklenmez.
+     */
+    private Map<Long, Integer> loanSources(Map<String, List<Map<String, String>>> tables, short gameVersionId, Map<Long, Integer> playerTeam) {
+        Map<Long, Integer> loans = readLoans(tables.get("playerloans"));
+        tables.keySet().stream().filter(name -> name.startsWith("playerloans_db")).sorted()
+                .forEach(name -> readLoans(tables.get(name)).forEach(loans::putIfAbsent));
+        List<Long> flagged = new ArrayList<>();
+        for (Map<String, String> row : tables.getOrDefault("fca_squadstatus", List.of())) {
+            Long playerId = toLong(row.get("playerid"));
+            if (Objects.nonNull(playerId) && "1".equals(row.get("loanedout")) && !loans.containsKey(playerId)) {
+                flagged.add(playerId);
+            }
+        }
+        if (!flagged.isEmpty()) {
+            baseCatalogImporter.baseTeamIds(flagged, gameVersionId).forEach((playerId, baseTeam) -> {
+                if (!Objects.equals(baseTeam, playerTeam.get(playerId))) {
+                    loans.put(playerId, baseTeam);
+                }
+            });
+        }
+        return loans;
     }
 
     private Map<Long, Integer> readLoans(List<Map<String, String>> rows) {

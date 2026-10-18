@@ -9,7 +9,7 @@ require 'imports/other/helpers'
 local UserMgr = require 'imports/career_mode/FCECareerModeUserManager'
 local SYNC_URL, SYNC_TOKEN = nil, nil          -- site kişisel script üretirken doldurur (opsiyonel)
 local PROBE = false                            -- true = yalnız tüm tabloların şemasını dök
-local MARK, VER, SCHEMA_V, MAX_CHUNK = "FCX2", "2.0.1", 2, 16000   -- 2.0.1: boolean'lar JSON'da (inCareer artık null değil)
+local MARK, VER, SCHEMA_V, MAX_CHUNK = "FCX2", "2.0.2", 2, 16000   -- 2.0.1: boolean'lar JSON'da; 2.0.2: bütçe, kadro kiralık/ön sözleşme, DBMAP
 
 local function safe(f, ...) if type(f) ~= "function" then return nil end local ok, v = pcall(f, ...) if ok then return v end end
 local function nrec(t) local n = t.written_records if n < 0 then n = n + 65536 end return n end
@@ -53,6 +53,11 @@ local ctx = { inCareer = in_cm, leVersion = LE_VERSION, gameModule = LE.game_nam
 if in_cm then
   local d = safe(GetCurrentDate) if d and d.year then ctx.gameDate = string.format("%04d-%02d-%02d", d.year, d.month, d.day) end
   ctx.userTeamIdMem = safe(GetUserTeamID); ctx.userNationalTeamId = safe(GetUserNationalTeamID)
+  -- 2.0.2: transfer bütçesi, yalnız okur (Set* çağrılmaz). GetTransferBudget LE'de kullanımdan kalktı (nil döner); imza belgesiz olduğu için
+  -- önce argümansız, sonra kullanıcı takımıyla denenir.
+  local budget = safe(GetUserTransferBudget)
+  if type(budget) ~= "number" then budget = safe(GetUserTransferBudget, ctx.userTeamIdMem) end
+  if type(budget) == "number" and budget >= 0 then ctx.transferBudget = math.floor(budget) end
   local um = UserMgr:new()
   ctx.mode = safe(um.IsManagerCareer, um) and "MANAGER" or (safe(um.IsPlayerCareer, um) and "PLAYER" or "UNKNOWN")
   local cu = LE.db:GetTable("career_users")
@@ -71,6 +76,25 @@ local metaJson = string.format('{"schema":"fccareer.le-export","schemaVersion":%
 emit("META", metaJson); push("meta", metaJson)
 
 local summary = {}
+-- Satır listesini FCX2 tablosu olarak yazar (HEADER/CHUNK/END + FNV-1a): hem DB tabloları hem türetilmiş tablolar (fca_*) için.
+local function emitRows(name, cols, iterate)
+  local hdr = {} for i, c in ipairs(cols) do hdr[i] = jstr(c) end
+  emit("HEADER", name, "[" .. table.concat(hdr, ",") .. "]")
+  local buf, blen, seq, rows, h = {}, 0, 0, 0, 2166136261
+  local function flush() if #buf == 0 then return end seq = seq + 1
+    local body = "[" .. table.concat(buf, ",") .. "]" emit("CHUNK", name, tostring(seq), body)
+    push("chunk/" .. name .. "/" .. seq, body) buf, blen = {}, 0 end
+  iterate(function(values) local v = {} for i = 1, #cols do v[i] = jval(values[i]) end
+    local line = "[" .. table.concat(v, ",") .. "]" h = fnv(h, line) rows = rows + 1
+    buf[#buf + 1] = line blen = blen + #line if blen >= MAX_CHUNK then flush() end end)
+  flush() emit("END", name, tostring(rows), string.format("fnv1a32:%08x", h), tostring(seq))
+  summary[#summary + 1] = name .. ": " .. rows
+end
+local function emitTable(name, t)
+  local cols, rd = {}, {} for fname in pairs(t.fields) do cols[#cols + 1] = fname end table.sort(cols)
+  for i, c in ipairs(cols) do rd[i] = reader(t.fields[c]) end
+  emitRows(name, cols, function(row) each(t, function(r) local v = {} for i = 1, #cols do v[i] = rd[i](r) end row(v) end) end)
+end
 for _, spec in ipairs(TABLES) do
   local name, required, cmOnly = spec[1], spec[2] == 1, spec[3] == 1
   if cmOnly and not in_cm then goto continue end
@@ -78,21 +102,45 @@ for _, spec in ipairs(TABLES) do
     local t = LE.db:GetTable(name)
     if not t or not t.fields then warnings[#warnings + 1] = "MISSINGTABLE " .. name
       if required then error("zorunlu tablo yok") end return end
-    local cols, rd = {}, {} for fname in pairs(t.fields) do cols[#cols + 1] = fname end table.sort(cols)
-    for i, c in ipairs(cols) do rd[i] = reader(t.fields[c]) end
-    local hdr = {} for i, c in ipairs(cols) do hdr[i] = jstr(c) end
-    emit("HEADER", name, "[" .. table.concat(hdr, ",") .. "]")
-    local buf, blen, seq, rows, h = {}, 0, 0, 0, 2166136261
-    local function flush() if #buf == 0 then return end seq = seq + 1
-      local body = "[" .. table.concat(buf, ",") .. "]" emit("CHUNK", name, tostring(seq), body)
-      push("chunk/" .. name .. "/" .. seq, body) buf, blen = {}, 0 end
-    each(t, function(r) local v = {} for i = 1, #cols do v[i] = jval(rd[i](r)) end
-      local line = "[" .. table.concat(v, ",") .. "]" h = fnv(h, line) rows = rows + 1
-      buf[#buf + 1] = line blen = blen + #line if blen >= MAX_CHUNK then flush() end end)
-    flush() emit("END", name, tostring(rows), string.format("fnv1a32:%08x", h), tostring(seq))
-    summary[#summary + 1] = name .. ": " .. rows end)
+    emitTable(name, t) end)
   if not ok then emit("ERROR", name, tostring(err)) summary[#summary + 1] = name .. ": HATA" end
   ::continue::
+end
+
+-- 2.0.2: LE.db:GetTable adı eşleşen İLK tabloyu döner. FC27'de aynı ad birden çok veritabanında olabilir (temel + kariyer): kariyerde yapılan
+-- kiralıklar ilk kopyada yoktu. Teşhis: her veritabanının tablo adı → satır sayısı (DBMAP); kiralık tablosunun diğer kopyaları playerloans_db<N>.
+local TABLE = require 'imports/t3db/table'
+local okMap, errMap = pcall(function()
+  LE.db:LoadMeta()
+  local db, dbi, loans = LE.db:GetDBFromService(), 0, 0
+  while db and db > 0 do
+    dbi = dbi + 1
+    local names, tp = {}, LE.db:GetTableFromDB(db)
+    while tp and tp > 0 do
+      local t = TABLE:new() t:Load(tp, LE.db.meta)
+      if not t:HasNoName() then
+        names[#names + 1] = jstr(t.name) .. ":" .. tostring(nrec(t))
+        if t.name == "playerloans" and t.fields then loans = loans + 1
+          if loans > 1 then emitTable("playerloans_db" .. dbi, t) end end
+      end
+      tp = LE.db:GetNextTable(tp)
+    end
+    emit("DBMAP", tostring(dbi), "{" .. table.concat(names, ",") .. "}")
+    db = LE.db:GetNextDB(db)
+  end end)
+if not okMap then warnings[#warnings + 1] = "DBMAP " .. tostring(errMap) end
+
+-- 2.0.2: kullanıcı kadrosu için oyunun kendi sorguları (salt okuma): kiralıkta mı (IsPlayerLoanedOut), ön sözleşmeli mi (IsPlayerPresigned).
+-- Kiralık tablosu kariyer kiralığını taşımasa da kadrodaki kiralık oyuncu böyle bilinir; kaynak kulüp ana kayıttaki kulüptür.
+local userTeam = ctx.userTeamIdMem
+if in_cm and userTeam and userTeam > 0 then
+  local okSq, errSq = pcall(function()
+    local links = LE.db:GetTable("teamplayerlinks")
+    local pid, tid = reader(links.fields.playerid), reader(links.fields.teamid)
+    emitRows("fca_squadstatus", {"playerid", "loanedout", "presigned"}, function(row)
+      each(links, function(r) if tid(r) == userTeam then local p = pid(r)
+        row({ p, safe(IsPlayerLoanedOut, p) == true and 1 or 0, safe(IsPlayerPresigned, p) == true and 1 or 0 }) end end) end) end)
+  if not okSq then warnings[#warnings + 1] = "SQUADSTATUS " .. tostring(errSq) end
 end
 if in_cm and type(GetPlayersStats) == "function" then local s = safe(GetPlayersStats)
   if type(s) == "table" then emit("HEADER", "player_season_stats", '["playerid","teamid","compobjid","app","goals","assists","avg","yellow","red","clean_sheets"]')

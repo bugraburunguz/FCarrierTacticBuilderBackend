@@ -32,10 +32,24 @@ class LeExportScriptTest {
     void speaksTheV2ProtocolTheBackendParses() throws Exception {
         String lua = script();
 
-        assertThat(lua).contains("\"FCX2\"").contains("\"FCX2\", \"2.0.1\", 2,").contains("fccareer.le-export");
+        assertThat(lua).contains("\"FCX2\"").contains("\"FCX2\", \"2.0.2\", 2,").contains("fccareer.le-export");
         for (String kind : new String[]{"META", "HEADER", "CHUNK", "END", "ERROR", "DONE"}) {
             assertThat(lua).contains("emit(\"" + kind + "\"");
         }
+    }
+
+    /**
+     * 2.0.2: kariyerde yapılan kiralıklar playerloans'ın ilk kopyasında yoktu. Betik kadro için oyunun kendi sorgularını (IsPlayerLoanedOut,
+     * IsPlayerPresigned) fca_squadstatus olarak, transfer bütçesini (GetUserTransferBudget) bağlama yazar; her veritabanının tablo listesini
+     * (DBMAP) ve kiralık tablosunun diğer kopyalarını dışa aktarır. Yalnız okur: Set*, Terminate*, Delete*, Transfer*, Loan* çağrısı yok.
+     */
+    @Test
+    void readsSquadLoanStatusBudgetAndAllLoanTablesWithoutWriting() throws Exception {
+        String lua = script();
+
+        assertThat(lua).contains("safe(IsPlayerLoanedOut, p)").contains("safe(IsPlayerPresigned, p)").contains("\"fca_squadstatus\"")
+                .contains("safe(GetUserTransferBudget)").contains("ctx.transferBudget").contains("emit(\"DBMAP\"").contains("\"playerloans_db\" .. dbi");
+        assertThat(lua).doesNotContainPattern("(?<!-- )\\b(Set\\w+Budget|SetTransferBudget|TerminateLoan|DeletePresignedContract|DeleteDBTableRow|TransferPlayer|LoanPlayer|EditDBTableField|InsertDBTableRow)\\s*\\(");
     }
 
     /** 2.0.0 jval() boolean'ı null yazıyordu: META'da "inCareer":null → sunucu kariyer dışı sanıyordu. */

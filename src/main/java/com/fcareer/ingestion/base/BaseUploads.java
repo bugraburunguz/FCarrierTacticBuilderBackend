@@ -76,7 +76,7 @@ public final class BaseUploads {
             date = null;
         }
         Integer team = Objects.isNull(row.get("userteamid")) ? null : Integer.valueOf(row.get("userteamid").trim());
-        return new LeExportV2Parser.LeContext(!"0".equals(row.get("incareer")), row.get("mode"), date, Objects.nonNull(team) && team > 0 ? team : null, row.get("saveuid"));
+        return new LeExportV2Parser.LeContext(!"0".equals(row.get("incareer")), row.get("mode"), date, Objects.nonNull(team) && team > 0 ? team : null, row.get("saveuid"), null);
     }
 
     private static List<Map<String, String>> readCsv(MultipartFile file) {
