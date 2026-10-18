@@ -19,6 +19,16 @@
 - Gerçek kariyer log'u + probe'daki iki `previousteam` satırı yerelde: 9 kiralık LOAN_IN, Román/Gutiérrez TRANSFER_IN.
   Giden oyuncular bu denemede `previousteam` satırları olmadığı için LOAN_OUT çıktı; gerçek 2.0.3 log'unda satılanların satırı beklenir (doğrulanacak).
 
+## Gerçek 2.0.3 log'u (2026-12-27 oyun tarihi)
+- `previousteam` 2020 satır; satılan 7 oyuncunun hepsinde `previousteamid = 1928` → TRANSFER_OUT doğrulandı. Román/Gutiérrez 111592 (serbest).
+- **INCOMPLETE nations:** `isocountrycode` alanına bellekten çöp bayt karışıyor ("AL" + `H,\x01...`, bir kısmı geçersiz UTF-8). Lua özeti
+  ham baytla; sunucu log'u UTF-8 okuyup geçersiz baytı U+FFFD yaptığı için özet tutmuyordu. Parser artık log'u Latin-1 (ham bayt) okur,
+  özeti ham baytla doğrular, metni sonra UTF-8'e çevirir. Ülke kodu yine çöp içerebilir; sunucu bu alanı kullanmıyor.
+- **Kiralıktan dönen oyuncu (Shorrock):** ana kayıtta bizden Sligo'ya kiralık; kiralık bitince döndü ama oyun playerloans satırını silmedi.
+  Kaynağı oyuncunun şu anki takımı olan kiralık bitmiş sayılır: kiralık işareti kalkar (kadro adaylarına geri döner), ana kulübü şu anki
+  kulübü olur, hareket listesinde görünmez. Önceden "Sligo → Port Vale transfer" ve "bizden kiralıkta" görünüyordu.
+- Yerelde sonuç: 11 LOAN_IN (9 kullanıcı kiralığı + Asamoah, Faal), 2 TRANSFER_IN, 7 TRANSFER_OUT, uyarılar yalnız FC27'de olmayan 3 tablo.
+
 ## Açık
 - Kiralık bitiş tarihi ve satın alma opsiyonu kariyer kiralıkları için okunamıyor (tabloda yok).
 - Kullanıcı 2.0.3 ile yeni log almalı; giden oyuncuların sınıflandırması o log'la doğrulanacak.

@@ -120,13 +120,19 @@ public final class LeExportV2Parser {
         // ~22 bin oyuncu satırıyla belleği tüketebilirdi.
         Selection selection = new Selection(prefer);
         Block block = null;
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8), 1 << 16)) {
-            String line;
-            while (Objects.nonNull(line = reader.readLine())) {
-                if (!line.contains(MARK)) {
+        // Log Latin-1 okunur: her karakter tam bir ham bayttır. Özet Lua'daki gibi ham baytlar üzerinden hesaplanır; metin ardından UTF-8'e
+        // çevrilir. Bellekten okunan dizgelerde geçersiz UTF-8 bayt olabiliyor (2.0.3 nations.isocountrycode); UTF-8 okumada U+FFFD olup özeti bozuyordu.
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.ISO_8859_1), 1 << 16)) {
+            String rawLine;
+            while (Objects.nonNull(rawLine = reader.readLine())) {
+                if (!rawLine.contains(MARK)) {
                     continue;
                 }
-                String[] parts = line.split("\t", MAX_FIELDS);
+                String[] rawParts = rawLine.split("\t", MAX_FIELDS);
+                String[] parts = new String[rawParts.length];
+                for (int i = 0; i < rawParts.length; i++) {
+                    parts[i] = utf8(rawParts[i]);
+                }
                 if (parts.length <= KIND || !parts[2].contains(MARK)) {
                     continue;
                 }
@@ -150,7 +156,7 @@ public final class LeExportV2Parser {
                 Map<String, Table> tables = block.tables;
                 switch (parts[KIND]) {
                     case "HEADER" -> table(tables, parts).columns = stringList(readJson(parts[5], "HEADER"));
-                    case "CHUNK" -> chunk(table(tables, parts), parts);
+                    case "CHUNK" -> chunk(table(tables, parts), rawParts);
                     case "END" -> end(table(tables, parts), parts);
                     case "ERROR" -> table(tables, parts).error = parts.length > 5 ? parts[5] : "error";
                     case "DONE" -> block.warnings.addAll(stringList(readJson(parts.length > TABLE ? parts[TABLE] : "[]", "DONE")));
@@ -260,13 +266,18 @@ public final class LeExportV2Parser {
         return tables.computeIfAbsent(parts[TABLE], k -> new Table());
     }
 
-    private static void chunk(Table table, String[] parts) {
+    /** rawParts: Latin-1 okunmuş (ham bayt) alanlar; özet ham baytla, satır UTF-8 metinle. */
+    private static void chunk(Table table, String[] rawParts) {
         table.chunks++;
-        String body = parts.length > 6 ? parts[6] : "[]";
+        String body = rawParts.length > 6 ? rawParts[6] : "[]";
         for (String raw : splitRows(body)) {
-            table.hash = fnv(table.hash, raw);
-            table.rows.add(toRow(table.columns, raw));
+            table.hash = fnv(table.hash, raw.getBytes(StandardCharsets.ISO_8859_1));
+            table.rows.add(toRow(table.columns, utf8(raw)));
         }
+    }
+
+    private static String utf8(String latin1) {
+        return new String(latin1.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
     }
 
     private static void end(Table table, String[] parts) {
@@ -292,8 +303,13 @@ public final class LeExportV2Parser {
 
     /** Lua `fnv()` ile birebir: satır dizgesinin UTF-8 baytları üzerinde FNV-1a 32 bit. */
     static long fnv(long seed, String text) {
+        return fnv(seed, text.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** Ham baytlar üzerinde FNV-1a 32 bit (Lua dizgeleri bayt dizisidir). */
+    static long fnv(long seed, byte[] bytes) {
         long h = seed;
-        for (byte b : text.getBytes(StandardCharsets.UTF_8)) {
+        for (byte b : bytes) {
             h = ((h ^ (b & 0xFF)) * FNV_PRIME) & MASK_32;
         }
         return h;

@@ -183,4 +183,43 @@ class CareerLoanSourcesIntegrationTest {
         assertThat(byEa.get(sold).at("/type").asText()).isEqualTo("TRANSFER_OUT");
         assertThat(byEa.get(signedFree).at("/type").asText()).as("previousteam = serbest havuz: kiralık olamaz, transfer").isEqualTo("TRANSFER_IN");
     }
+
+    /**
+     * Ana kayıtta bizden başka kulübe kiralık olan oyuncu (Shorrock → Sligo) kiralık bitince bize döner; oyun playerloans satırını silmez.
+     * Kaynağı oyuncunun şu anki takımı olan kiralık bitmiştir: oyuncu kiralık sayılmaz, hareket de değildir (ana kulübü biziz).
+     */
+    @Test
+    void aBaseLoanWhoseSourceIsThePlayersCurrentTeamIsOver() throws Exception {
+        String token = support.register();
+        long careerId = support.premiumCareer(token, null);
+        var us = clubRepository.findAll().get(0);
+        long otherClubId = jdbc.queryForObject("""
+                SELECT r.club_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id AND b.owner_career_id IS NULL
+                 WHERE r.game_version_id = 27 AND r.club_id <> ? ORDER BY r.club_id DESC LIMIT 1""", Long.class, us.getId());
+        String otherName = jdbc.queryForObject("SELECT name FROM club WHERE id = ?", String.class, otherClubId);
+        long returned = jdbc.queryForObject("""
+                SELECT b.ea_resource_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id
+                 WHERE r.club_id = ? AND r.game_version_id = 27 AND b.owner_career_id IS NULL ORDER BY b.id LIMIT 1""", Long.class, otherClubId);
+        int usTeam = eaTeamId(us.getId());
+        int otherTeam = eaTeamId(otherClubId);
+
+        List<String> log = new ArrayList<>();
+        log.add(PREFIX + "META\t{\"schema\":\"fccareer.le-export\",\"schemaVersion\":2,\"script\":\"2.0.3\",\"context\":{\"inCareer\":true,"
+                + "\"gameDate\":\"2026-12-27\",\"userTeamIdMem\":" + usTeam + "}}");
+        table(log, "players", "[\"playerid\",\"overallrating\",\"potential\"]", List.of("[" + returned + ",60,65]"));
+        table(log, "teams", "[\"teamid\",\"teamname\"]", List.of("[" + usTeam + ",\"" + us.getName() + "\"]", "[" + otherTeam + ",\"" + otherName + "\"]"));
+        table(log, "teamplayerlinks", "[\"playerid\",\"teamid\"]", List.of("[" + returned + "," + usTeam + "]"));
+        table(log, "playerloans", "[\"playerid\",\"teamidloanedfrom\",\"loandateend\"]", List.of("[" + returned + "," + usTeam + ",162215]"));
+        table(log, "previousteam", "[\"playerid\",\"previousteamid\"]", List.of());
+        log.add(PREFIX + "DONE\t[]");
+        var file = new MockMultipartFile("log", "live_editor.log", "text/plain", String.join("\n", log).getBytes(StandardCharsets.UTF_8));
+        support.json(multipart("/api/v1/careers/" + careerId + "/import").file(file), token);
+
+        JsonNode moves = support.json(get("/api/v1/careers/" + careerId + "/moves").header(HttpHeaders.AUTHORIZATION, "Bearer " + token), null).at("/data");
+        assertThat(StreamSupport.stream(moves.spliterator(), false).map(m -> m.at("/eaId").asLong())).as("kiralıktan dönen oyuncu hareket değil").doesNotContain(returned);
+        Integer loanFrom = jdbc.queryForObject("""
+                SELECT cp.loan_from_team_id FROM career_player cp JOIN base_player b ON b.id = cp.player_id
+                 WHERE cp.career_id = ? AND b.ea_resource_id = ? AND b.owner_career_id IS NULL""", Integer.class, careerId, returned);
+        assertThat(loanFrom).as("bitmiş kiralık: kiralık kaynağı yok").isNull();
+    }
 }

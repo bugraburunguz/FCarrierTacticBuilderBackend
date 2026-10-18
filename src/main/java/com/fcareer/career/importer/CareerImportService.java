@@ -75,7 +75,8 @@ public class CareerImportService {
         Map<Long, Integer> playerTeam = readLinks(tables.get("teamplayerlinks"), nationalTeams, freeAgentTeams);
         Integer userTeam = Objects.nonNull(context) && Objects.nonNull(context.userTeamId()) ? context.userTeamId()
                 : jdbc.queryForObject("SELECT ea_team_id FROM club WHERE id = :club", Map.of("club", career.getClubId()), Integer.class);
-        Map<Long, Integer> loanedFrom = loanSources(tables, career.getGameVersionId(), playerTeam, userTeam, freeAgentTeams);
+        Set<Long> returnedFromLoan = new HashSet<>();
+        Map<Long, Integer> loanedFrom = loanSources(tables, career.getGameVersionId(), playerTeam, userTeam, freeAgentTeams, returnedFromLoan);
         Map<Long, Long> eaToBase = eaIdMap();
         Map<Long, Long> generated = baseCatalogImporter.upsertCareerPlayers(careerId, tables, career.getGameVersionId());
         eaToBase.putAll(generated);
@@ -173,12 +174,19 @@ public class CareerImportService {
         }
         // Çift yazma: eski overlay tabloları yazıldı; kariyerin tek doğruluk kaynağı career_player onlardan tazelenir (E3-2).
         careerPlayerWriter.syncCareer(careerId);
+        // Kiralıktan dönen oyuncunun ana kulübü şu anki kulübüdür (katalog onu ana kayıttaki kiralık kulübünde tutar); hareket sayılmaz.
+        if (!returnedFromLoan.isEmpty()) {
+            jdbc.update("""
+                    UPDATE career_player cp SET base_club_id = cp.club_id FROM base_player b
+                     WHERE cp.career_id = :c AND b.id = cp.player_id AND b.owner_career_id IS NULL AND b.ea_resource_id IN (:ids)""",
+                    new MapSqlParameterSource().addValue("c", careerId).addValue("ids", returnedFromLoan));
+        }
         careerPlayerWriter.applyLeExtras(careerId, tables.get("players"), eaToBase);
         // Kiralık bitiş tarihi: playerloans ve diğer veritabanı kopyaları (betik 2.0.2).
         List<Map<String, String>> allLoans = new ArrayList<>();
         tables.forEach((name, rows) -> {
             if (name.equals("playerloans") || name.startsWith("playerloans_db")) {
-                allLoans.addAll(rows);
+                rows.stream().filter(row -> !returnedFromLoan.contains(toLong(row.get("playerid")))).forEach(allLoans::add);
             }
         });
         careerPlayerWriter.applyContracts(careerId, tables.get("players"), allLoans, eaToBase);
@@ -245,10 +253,18 @@ public class CareerImportService {
      * kiralığın kaynak kulübü ana kayıttaki kulüptür; ana kayıtta zaten şu anki takımındaysa (kaynak belirsiz) eklenmez.
      */
     private Map<Long, Integer> loanSources(Map<String, List<Map<String, String>>> tables, short gameVersionId, Map<Long, Integer> playerTeam,
-                                           Integer userTeam, Set<Integer> freeAgentTeams) {
+                                           Integer userTeam, Set<Integer> freeAgentTeams, Set<Long> returned) {
         Map<Long, Integer> loans = readLoans(tables.get("playerloans"));
         tables.keySet().stream().filter(name -> name.startsWith("playerloans_db")).sorted()
                 .forEach(name -> readLoans(tables.get(name)).forEach(loans::putIfAbsent));
+        // Oyun biten kiralığın satırını silmez: kaynağı oyuncunun şu anki takımı olan kiralık bitmiştir (oyuncu ana kulübüne dönmüş).
+        loans.entrySet().removeIf(entry -> {
+            boolean over = Objects.equals(entry.getValue(), playerTeam.get(entry.getKey()));
+            if (over) {
+                returned.add(entry.getKey());
+            }
+            return over;
+        });
         List<Long> flagged = new ArrayList<>();
         for (Map<String, String> row : tables.getOrDefault("fca_squadstatus", List.of())) {
             Long playerId = toLong(row.get("playerid"));
@@ -263,7 +279,7 @@ public class CareerImportService {
                 }
             });
         }
-        inferUserTeamLoans(tables.get("previousteam"), loans, gameVersionId, playerTeam, userTeam, freeAgentTeams);
+        inferUserTeamLoans(tables.get("previousteam"), loans, gameVersionId, playerTeam, userTeam, freeAgentTeams, returned);
         return loans;
     }
 
@@ -273,7 +289,7 @@ public class CareerImportService {
      * kulübü görünmüyorsa kiralıktır (kaynak: ana kayıttaki kulüp). Serbest oyuncu kiralanamaz; serbestten gelen ya da serbest kalan transferdir.
      */
     private void inferUserTeamLoans(List<Map<String, String>> previousRows, Map<Long, Integer> loans, short gameVersionId,
-                                    Map<Long, Integer> playerTeam, Integer userTeam, Set<Integer> freeAgentTeams) {
+                                    Map<Long, Integer> playerTeam, Integer userTeam, Set<Integer> freeAgentTeams, Set<Long> returned) {
         if (Objects.isNull(previousRows) || Objects.isNull(userTeam)) {
             return;
         }
@@ -292,6 +308,7 @@ public class CareerImportService {
             }
         });
         candidates.removeAll(loans.keySet());
+        candidates.removeAll(returned);
         baseCatalogImporter.baseTeamIds(candidates, gameVersionId).forEach((playerId, baseTeam) -> {
             Integer team = playerTeam.get(playerId);
             boolean moved = Objects.nonNull(team) && !Objects.equals(team, baseTeam);

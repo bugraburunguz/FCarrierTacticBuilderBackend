@@ -203,6 +203,36 @@ class LeExportV2ParserTest {
         assertThat(export.tables().get("players").get(0)).containsEntry("overallrating", "66");
     }
 
+    /**
+     * 2.0.3 kariyer log'u: nations.isocountrycode alanına bellekten çöp bayt karışıyor ("AL" + 0xB8 ...). Lua özeti ham baytlar üzerinden;
+     * log UTF-8 okununca geçersiz bayt U+FFFD'ye dönüp özet tutmuyor ve tablo INCOMPLETE sayılıyordu. Özet ham baytla doğrulanmalı.
+     */
+    @Test
+    void checksumsAreVerifiedOnRawBytesEvenWhenAStringHasInvalidUtf8() throws Exception {
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        for (String line : goodLog().subList(0, goodLog().size() - 1)) {
+            out.write((line + "\n").getBytes(StandardCharsets.UTF_8));
+        }
+        byte[] bad = "[1,\"AL".getBytes(StandardCharsets.UTF_8);
+        byte[] row = new byte[bad.length + 1 + "\",\"Türkiye\"]".getBytes(StandardCharsets.UTF_8).length];
+        System.arraycopy(bad, 0, row, 0, bad.length);
+        row[bad.length] = (byte) 0xB8;
+        byte[] tail = "\",\"Türkiye\"]".getBytes(StandardCharsets.UTF_8);
+        System.arraycopy(tail, 0, row, bad.length + 1, tail.length);
+        long h = 2166136261L;
+        for (byte b : row) {
+            h = ((h ^ (b & 0xFF)) * 16777619L) & 0xFFFFFFFFL;
+        }
+        out.write((PREFIX + "HEADER\tnations\t[\"nationid\",\"isocountrycode\",\"nationname\"]\n" + PREFIX + "CHUNK\tnations\t1\t[").getBytes(StandardCharsets.UTF_8));
+        out.write(row);
+        out.write(("]\n" + PREFIX + "END\tnations\t1\t" + String.format("fnv1a32:%08x", h) + "\t1\n" + PREFIX + "DONE\t[]").getBytes(StandardCharsets.UTF_8));
+
+        LeExport export = LeExportV2Parser.parse(new ByteArrayInputStream(out.toByteArray()));
+
+        assertThat(export.warnings()).noneMatch(w -> w.startsWith("INCOMPLETE"));
+        assertThat(export.tables().get("nations").get(0)).containsEntry("nationid", "1").containsEntry("nationname", "Türkiye");
+    }
+
     @Test
     void aLogWithoutAnyFcx2MetaIsNotAV2Export() {
         assertThat(LeExportV2Parser.isV2(new ByteArrayInputStream("10:00\tINFO\t[LUA API] FCDUMP\tBEGIN\tplayers\tfields=3".getBytes(StandardCharsets.UTF_8)))).isFalse();
