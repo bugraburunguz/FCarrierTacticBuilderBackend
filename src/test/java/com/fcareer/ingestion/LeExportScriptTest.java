@@ -32,7 +32,7 @@ class LeExportScriptTest {
     void speaksTheV2ProtocolTheBackendParses() throws Exception {
         String lua = script();
 
-        assertThat(lua).contains("\"FCX2\"").contains("\"FCX2\", \"2.0.2\", 2,").contains("fccareer.le-export");
+        assertThat(lua).contains("\"FCX2\"").contains("\"FCX2\", \"2.0.3\", 2,").contains("fccareer.le-export");
         for (String kind : new String[]{"META", "HEADER", "CHUNK", "END", "ERROR", "DONE"}) {
             assertThat(lua).contains("emit(\"" + kind + "\"");
         }
@@ -50,6 +50,12 @@ class LeExportScriptTest {
         assertThat(lua).contains("safe(IsPlayerLoanedOut, p)").contains("safe(IsPlayerPresigned, p)").contains("\"fca_squadstatus\"")
                 .contains("safe(GetUserTransferBudget)").contains("ctx.transferBudget").contains("emit(\"DBMAP\"").contains("\"playerloans_db\" .. dbi");
         assertThat(lua).doesNotContainPattern("(?<!-- )\\b(Set\\w+Budget|SetTransferBudget|TerminateLoan|DeletePresignedContract|DeleteDBTableRow|TransferPlayer|LoanPlayer|EditDBTableField|InsertDBTableRow)\\s*\\(");
+    }
+
+    /** 2.0.3: kariyer kiralıkları hiçbir tabloda yok; kalıcı transferi ayırmak için previousteam (oyuncunun ayrıldığı kulüp) kariyerde dışa aktarılır. */
+    @Test
+    void exportsPreviousTeamInCareer() throws Exception {
+        assertThat(script()).contains("{\"previousteam\",0,1}");
     }
 
     /** 2.0.0 jval() boolean'ı null yazıyordu: META'da "inCareer":null → sunucu kariyer dışı sanıyordu. */

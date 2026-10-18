@@ -130,4 +130,57 @@ class CareerLoanSourcesIntegrationTest {
 
         assertThat(jdbc.queryForObject("SELECT budget_eur FROM career WHERE id = ?", Long.class, careerId)).isEqualTo(12_345_678L);
     }
+
+    /**
+     * Betik 2.0.3: oyun kariyer kiralıklarını hiçbir tabloya yazmıyor (kariyerdeki playerloans ana kayıtla aynı), kalıcı transferde ise
+     * previousteam'e eski kulübü yazıyor. Kullanıcı takımına gelen/giden ve previousteam'de ana kayıttaki kulübü görünmeyen oyuncu kiralıktır.
+     */
+    @Test
+    void withoutAPreviousTeamRowAMoveToOrFromTheUserTeamIsALoan() throws Exception {
+        String token = support.register();
+        long careerId = support.premiumCareer(token, null);
+        var us = clubRepository.findAll().get(0);
+        long otherClubId = jdbc.queryForObject("""
+                SELECT r.club_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id AND b.owner_career_id IS NULL
+                 WHERE r.game_version_id = 27 AND r.club_id <> ? GROUP BY r.club_id HAVING count(*) >= 3
+                 ORDER BY r.club_id DESC LIMIT 1""", Long.class, us.getId());
+        String otherName = jdbc.queryForObject("SELECT name FROM club WHERE id = ?", String.class, otherClubId);
+        String query = """
+                SELECT b.ea_resource_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id
+                 WHERE r.club_id = ? AND r.game_version_id = 27 AND b.owner_career_id IS NULL ORDER BY b.id LIMIT 3""";
+        List<Long> theirs = jdbc.queryForList(query, Long.class, otherClubId);
+        List<Long> ours = jdbc.queryForList(query, Long.class, us.getId());
+        int usTeam = eaTeamId(us.getId());
+        int otherTeam = eaTeamId(otherClubId);
+        long loanedIn = theirs.get(0);
+        long bought = theirs.get(1);
+        long loanedOut = ours.get(0);
+        long sold = ours.get(1);
+        long signedFree = theirs.get(2);
+
+        List<String> log = new ArrayList<>();
+        log.add(PREFIX + "META\t{\"schema\":\"fccareer.le-export\",\"schemaVersion\":2,\"script\":\"2.0.3\",\"context\":{\"inCareer\":true,"
+                + "\"gameDate\":\"2026-10-19\",\"userTeamIdMem\":" + usTeam + "}}");
+        table(log, "players", "[\"playerid\",\"overallrating\",\"potential\"]",
+                List.of("[" + loanedIn + ",70,75]", "[" + bought + ",71,76]", "[" + loanedOut + ",60,65]", "[" + sold + ",61,66]", "[" + signedFree + ",62,67]"));
+        table(log, "teams", "[\"teamid\",\"teamname\"]", List.of("[" + usTeam + ",\"" + us.getName() + "\"]", "[" + otherTeam + ",\"" + otherName + "\"]"));
+        table(log, "teamplayerlinks", "[\"playerid\",\"teamid\"]", List.of("[" + loanedIn + "," + usTeam + "]", "[" + bought + "," + usTeam + "]",
+                "[" + loanedOut + "," + otherTeam + "]", "[" + sold + "," + otherTeam + "]", "[" + signedFree + "," + usTeam + "]"));
+        table(log, "playerloans", "[\"playerid\",\"teamidloanedfrom\"]", List.of());
+        table(log, "previousteam", "[\"playerid\",\"previousteamid\"]", List.of("[" + bought + "," + otherTeam + "]", "[" + sold + "," + usTeam + "]",
+                "[" + signedFree + ",111592]"));
+        log.add(PREFIX + "DONE\t[]");
+        var file = new MockMultipartFile("log", "live_editor.log", "text/plain", String.join("\n", log).getBytes(StandardCharsets.UTF_8));
+        support.json(multipart("/api/v1/careers/" + careerId + "/import").file(file), token);
+
+        JsonNode moves = support.json(get("/api/v1/careers/" + careerId + "/moves").header(HttpHeaders.AUTHORIZATION, "Bearer " + token), null).at("/data");
+        Map<Long, JsonNode> byEa = new HashMap<>();
+        StreamSupport.stream(moves.spliterator(), false).forEach(m -> byEa.put(m.at("/eaId").asLong(), m));
+        assertThat(byEa.get(loanedIn).at("/type").asText()).as("previousteam kaydı yok: kiralık").isEqualTo("LOAN_IN");
+        assertThat(byEa.get(loanedIn).at("/fromClub").asText()).isEqualTo(otherName);
+        assertThat(byEa.get(bought).at("/type").asText()).as("previousteam = ana kayıttaki kulüp: transfer").isEqualTo("TRANSFER_IN");
+        assertThat(byEa.get(loanedOut).at("/type").asText()).isEqualTo("LOAN_OUT");
+        assertThat(byEa.get(sold).at("/type").asText()).isEqualTo("TRANSFER_OUT");
+        assertThat(byEa.get(signedFree).at("/type").asText()).as("previousteam = serbest havuz: kiralık olamaz, transfer").isEqualTo("TRANSFER_IN");
+    }
 }

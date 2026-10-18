@@ -73,7 +73,9 @@ public class CareerImportService {
             }
         });
         Map<Long, Integer> playerTeam = readLinks(tables.get("teamplayerlinks"), nationalTeams, freeAgentTeams);
-        Map<Long, Integer> loanedFrom = loanSources(tables, career.getGameVersionId(), playerTeam);
+        Integer userTeam = Objects.nonNull(context) && Objects.nonNull(context.userTeamId()) ? context.userTeamId()
+                : jdbc.queryForObject("SELECT ea_team_id FROM club WHERE id = :club", Map.of("club", career.getClubId()), Integer.class);
+        Map<Long, Integer> loanedFrom = loanSources(tables, career.getGameVersionId(), playerTeam, userTeam, freeAgentTeams);
         Map<Long, Long> eaToBase = eaIdMap();
         Map<Long, Long> generated = baseCatalogImporter.upsertCareerPlayers(careerId, tables, career.getGameVersionId());
         eaToBase.putAll(generated);
@@ -242,7 +244,8 @@ public class CareerImportService {
      * (fca_squadstatus loanedout=1, oyunun IsPlayerLoanedOut sorgusu). Kariyerde yapılan kiralıklar ilk kopyada olmayabilir. Kadro durumundaki
      * kiralığın kaynak kulübü ana kayıttaki kulüptür; ana kayıtta zaten şu anki takımındaysa (kaynak belirsiz) eklenmez.
      */
-    private Map<Long, Integer> loanSources(Map<String, List<Map<String, String>>> tables, short gameVersionId, Map<Long, Integer> playerTeam) {
+    private Map<Long, Integer> loanSources(Map<String, List<Map<String, String>>> tables, short gameVersionId, Map<Long, Integer> playerTeam,
+                                           Integer userTeam, Set<Integer> freeAgentTeams) {
         Map<Long, Integer> loans = readLoans(tables.get("playerloans"));
         tables.keySet().stream().filter(name -> name.startsWith("playerloans_db")).sorted()
                 .forEach(name -> readLoans(tables.get(name)).forEach(loans::putIfAbsent));
@@ -260,7 +263,45 @@ public class CareerImportService {
                 }
             });
         }
+        inferUserTeamLoans(tables.get("previousteam"), loans, gameVersionId, playerTeam, userTeam, freeAgentTeams);
         return loans;
+    }
+
+    /**
+     * Betik 2.0.3: oyun kariyerde yapılan kiralıkları hiçbir tabloya yazmaz (kariyerdeki playerloans ana kayıtla aynı kalır), kalıcı transferde
+     * ise previousteam'e oyuncunun ayrıldığı kulübü yazar. Kullanıcı takımına gelen ya da ondan giden oyuncu, previousteam'de ana kayıttaki
+     * kulübü görünmüyorsa kiralıktır (kaynak: ana kayıttaki kulüp). Serbest oyuncu kiralanamaz; serbestten gelen ya da serbest kalan transferdir.
+     */
+    private void inferUserTeamLoans(List<Map<String, String>> previousRows, Map<Long, Integer> loans, short gameVersionId,
+                                    Map<Long, Integer> playerTeam, Integer userTeam, Set<Integer> freeAgentTeams) {
+        if (Objects.isNull(previousRows) || Objects.isNull(userTeam)) {
+            return;
+        }
+        Map<Long, Integer> previousTeam = new HashMap<>();
+        for (Map<String, String> row : previousRows) {
+            Long playerId = toLong(row.get("playerid"));
+            Integer team = toInt(row.get("previousteamid"));
+            if (Objects.nonNull(playerId) && Objects.nonNull(team)) {
+                previousTeam.put(playerId, team);
+            }
+        }
+        Set<Long> candidates = new HashSet<>(baseCatalogImporter.basePlayersOfTeam(userTeam, gameVersionId));
+        playerTeam.forEach((playerId, team) -> {
+            if (Objects.equals(team, userTeam)) {
+                candidates.add(playerId);
+            }
+        });
+        candidates.removeAll(loans.keySet());
+        baseCatalogImporter.baseTeamIds(candidates, gameVersionId).forEach((playerId, baseTeam) -> {
+            Integer team = playerTeam.get(playerId);
+            boolean moved = Objects.nonNull(team) && !Objects.equals(team, baseTeam);
+            Integer previous = previousTeam.get(playerId);
+            // Ana katalog oyunun ana kaydından eski olabilir (oyuncu katalogda kulüpte, oyunda serbest): previousteam serbest havuzsa da transferdir.
+            boolean free = freeAgentTeams.contains(team) || freeAgentTeams.contains(baseTeam) || freeAgentTeams.contains(previous);
+            if (moved && !free && !Objects.equals(previous, baseTeam)) {
+                loans.put(playerId, baseTeam);
+            }
+        });
     }
 
     private Map<Long, Integer> readLoans(List<Map<String, String>> rows) {

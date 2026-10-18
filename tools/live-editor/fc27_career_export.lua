@@ -9,7 +9,7 @@ require 'imports/other/helpers'
 local UserMgr = require 'imports/career_mode/FCECareerModeUserManager'
 local SYNC_URL, SYNC_TOKEN = nil, nil          -- site kişisel script üretirken doldurur (opsiyonel)
 local PROBE = false                            -- true = yalnız tüm tabloların şemasını dök
-local MARK, VER, SCHEMA_V, MAX_CHUNK = "FCX2", "2.0.2", 2, 16000   -- 2.0.1: boolean'lar JSON'da; 2.0.2: bütçe, kadro kiralık/ön sözleşme, DBMAP
+local MARK, VER, SCHEMA_V, MAX_CHUNK = "FCX2", "2.0.3", 2, 16000   -- 2.0.1: boolean'lar JSON'da; 2.0.2: bütçe, kadro kiralık/ön sözleşme, DBMAP; 2.0.3: previousteam
 
 local function safe(f, ...) if type(f) ~= "function" then return nil end local ok, v = pcall(f, ...) if ok then return v end end
 local function nrec(t) local n = t.written_records if n < 0 then n = n + 65536 end return n end
@@ -69,7 +69,9 @@ else ctx.mode = "BASE" end
 
 local TABLES = { {"players",1}, {"teams",1}, {"teamplayerlinks",1}, {"leagues"}, {"leagueteamlinks"}, {"nations"},
   {"editedplayernames"}, {"dcplayernames"}, {"manager"}, {"formations"}, {"playerloans",0,1}, {"career_users",0,1},
-  {"career_calendar",0,1}, {"career_playercontract",0,1}, {"career_presignedcontract",0,1}, {"career_youthplayers",0,1} }
+  {"career_calendar",0,1}, {"career_playercontract",0,1}, {"career_presignedcontract",0,1}, {"career_youthplayers",0,1},
+  -- 2.0.3: oyun kariyer kiralıklarını tabloya yazmaz; kalıcı transferde previousteam'e ayrıldığı kulübü yazar (sunucu kiralığı buradan ayırır).
+  {"previousteam",0,1} }
 
 local meta = {} for k, v in pairs(ctx) do meta[#meta + 1] = jstr(k) .. ":" .. jval(v) end
 local metaJson = string.format('{"schema":"fccareer.le-export","schemaVersion":%d,"script":"%s","context":{%s}}', SCHEMA_V, VER, table.concat(meta, ","))
