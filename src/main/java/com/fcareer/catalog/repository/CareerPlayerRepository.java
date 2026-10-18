@@ -65,16 +65,19 @@ public class CareerPlayerRepository {
     }
 
     /** V3-06b: oyuncu sayfasının sözleşme satırları; kayıtta olmayan alan null kalır (ENG-02). */
-    public record Contract(Long wageEur, Long releaseClauseEur, java.time.LocalDate contractUntil, boolean onLoan) {
+    /** loanedOut: kiralık kaynağı kullanıcının kulübü (oyuncu bizden kiralık gitmiş); onLoan her iki yönde de true. */
+    public record Contract(Long wageEur, Long releaseClauseEur, java.time.LocalDate contractUntil, boolean onLoan, boolean loanedOut) {
     }
 
     public java.util.Optional<Contract> contract(long careerId, long playerId) {
         return jdbc.query("""
-                SELECT wage_eur, release_clause_eur, contract_until, loan_from_team_id IS NOT NULL AS on_loan
-                  FROM career_player WHERE career_id = :c AND player_id = :p""", Map.of("c", careerId, "p", playerId), (rs, i) -> new Contract(
+                SELECT cp.wage_eur, cp.release_clause_eur, cp.contract_until, cp.loan_from_team_id IS NOT NULL AS on_loan,
+                       COALESCE(cp.loan_from_team_id = (SELECT c.ea_team_id FROM career k JOIN club c ON c.id = k.club_id WHERE k.id = cp.career_id), false) AS loaned_out
+                  FROM career_player cp WHERE cp.career_id = :c AND cp.player_id = :p""", Map.of("c", careerId, "p", playerId), (rs, i) -> new Contract(
                 rs.getObject("wage_eur") == null ? null : rs.getLong("wage_eur"),
                 rs.getObject("release_clause_eur") == null ? null : rs.getLong("release_clause_eur"),
-                Objects.isNull(rs.getDate("contract_until")) ? null : rs.getDate("contract_until").toLocalDate(), rs.getBoolean("on_loan"))).stream().findFirst();
+                Objects.isNull(rs.getDate("contract_until")) ? null : rs.getDate("contract_until").toLocalDate(), rs.getBoolean("on_loan"),
+                rs.getBoolean("loaned_out"))).stream().findFirst();
     }
 
     public Map<Long, Row> byIds(long careerId, Collection<Long> playerIds) {

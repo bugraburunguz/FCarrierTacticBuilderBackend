@@ -22,7 +22,9 @@ import java.lang.annotation.Target;
         "fcareer.security.rate-limit.enabled=false",
         "fcareer.ratelimit.register.daily-per-ip=0",
         "fcareer.billing.stub-enabled=true",
-        "fcareer.ut.jobs.enabled=false"
+        "fcareer.ut.jobs.enabled=false",
+        // Testler EA kart görsellerine asla istek atmaz (vekil kapalı).
+        "fcareer.catalog.card-image-url-template="
 })
 @AutoConfigureEmbeddedDatabase(provider = AutoConfigureEmbeddedDatabase.DatabaseProvider.ZONKY)
 @AutoConfigureMockMvc

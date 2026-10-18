@@ -141,6 +141,19 @@ class RateLimitFilterTest {
         verify(counter).increment(org.mockito.ArgumentMatchers.contains("ip203.0.113.5"), eq(Duration.ofMinutes(1)));
     }
 
+    /** Kart görselleri (sayfa başına ~48 istek) genel API kovasını doldurmasın: kendi kovası (img:) ve sınırı. */
+    @Test
+    void cardImagesHaveTheirOwnBucket() throws Exception {
+        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(1L);
+        run("/api/v1/img/card/231747", "10.0.0.3");
+        verify(counter).increment(org.mockito.ArgumentMatchers.contains("img:"), eq(Duration.ofMinutes(1)));
+
+        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(150L);
+        assertThat(run("/api/v1/img/card/231747", "10.0.0.3").getStatus()).as("genel API sınırını aşan sayı görselde serbest").isEqualTo(200);
+        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(10_000L);
+        assertThat(run("/api/v1/img/card/231747", "10.0.0.3").getStatus()).isEqualTo(429);
+    }
+
     /** PROD-PREP 4: hesap silme de şifre deneme yüzeyi — auth kovası. */
     @Test
     void accountDeletionUsesTheAuthBucket() throws Exception {

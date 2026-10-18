@@ -32,10 +32,18 @@ class LeExportScriptTest {
     void speaksTheV2ProtocolTheBackendParses() throws Exception {
         String lua = script();
 
-        assertThat(lua).contains("\"FCX2\"").contains("\"FCX2\", \"2.0.0\", 2,").contains("fccareer.le-export");
+        assertThat(lua).contains("\"FCX2\"").contains("\"FCX2\", \"2.0.1\", 2,").contains("fccareer.le-export");
         for (String kind : new String[]{"META", "HEADER", "CHUNK", "END", "ERROR", "DONE"}) {
             assertThat(lua).contains("emit(\"" + kind + "\"");
         }
+    }
+
+    /** 2.0.0 jval() boolean'ı null yazıyordu: META'da "inCareer":null → sunucu kariyer dışı sanıyordu. */
+    @Test
+    void jsonValuesKeepBooleans() throws Exception {
+        String lua = script();
+
+        assertThat(lua).contains("elseif t == \"boolean\" then return v and \"true\" or \"false\"");
     }
 
     @Test

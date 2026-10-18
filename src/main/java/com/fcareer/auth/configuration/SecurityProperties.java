@@ -34,7 +34,9 @@ public class SecurityProperties {
     public static class RateLimit {
         private boolean enabled = true;
         private int authPerMinute = 10;
-        private int apiPerMinute = 120;
+        private int apiPerMinute = 300;
+        /** Kart/yüz görselleri (/img/**): sayfa başına onlarca istek; kendi kovası. */
+        private int imagePerMinute = 1200;
         private int solverPerMinute = 10;
         /** Ücretsiz taktik analizi (/tactics/analysis): dakikada istek sayısı. */
         private int analysisPerMinute = 30;

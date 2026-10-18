@@ -222,6 +222,32 @@ node extension/build.mjs --web-origin https://<web domain>
 1. Gizlilik metni sürüm/tarih: web repo `src/features/legal/privacyVersion.ts` → `PRIVACY_DATE` yayın günü (ör. `'20 Ekim 2026'`), metin değiştiyse `PRIVACY_VERSION` +1; `docs/legal/gizlilik-aydinlatma.md` güncel taslakla aynı olmalı (taslağın `<!-- -->` bloğu çıkarılır, sürüm satırı `{{SURUM}}`/`{{TARIH}}` kalır). Commit → CI → web yeniden dağıtılır.
 2. Taslak notları (hukukçu kontrolü, KVKK md. 9 standart sözleşme + 5 iş günü bildirim, VERBIS) — kod dışı, senin.
 
+## 13. Ana veriyi (temel katalog) oyunun ana menü dışa aktarımıyla güncelleme
+
+Kariyer hareketleri ("Kayda göre hareketler") kariyer kaydını temel katalogla karşılaştırır; temel katalog oyunun **güncellemesiz ana menü** verisi
+olmalı. Mevcut katalog EA reyting sitesinden geldiği için ~1.700 oyuncuda kulüp/OVR farklı (kariyerle karışma bulunmadı: kulüp farkı olan 1.777
+oyuncudan yalnız 3'ü kariyer değeriyle aynı).
+
+1. **Yedek:** Postgres → Backups → elle yedek al (11. adım). **Görmelisin:** yeni yedek satırı.
+2. LE'de ana menüdeyken dışa aktarım betiğini (2.0.1) çalıştır. Log'da kariyer dışa aktarımı da olabilir: sunucu temel veri için yalnız
+   ana menü (`BASE`) dışa aktarımını seçer, yalnız kariyer dışa aktarımı varsa **reddeder** (kariyer verisi kataloğa yazılamaz).
+3. Yükle (yönetici anahtarı yalnız panoda; dosya yolu senin log'un):
+   ```bash
+   read -rs ADMIN_KEY && export ADMIN_KEY
+   ```
+   ```bash
+   curl -sS -X POST "https://<web domain>/api/v1/admin/ingestion/import-base" -H "X-Admin-Key: $ADMIN_KEY" -F "log=@live_editor.log" -F overwrite=true -F label="FC27 ana menü"
+   ```
+   ```bash
+   unset ADMIN_KEY
+   ```
+   - `overwrite=true`: mevcut oyuncuların kulüp/OVR/öznitelikleri ana menü değerleriyle güncellenir (değişiklikler sürüm geçmişine yazılır, `changesRecorded`).
+   - `full` **verme**: dosyada olmayan oyuncuyu "kaldırıldı" işaretler.
+   - Klasik Lig (Classic XI, … XI), yer tutucu ve "Erkekler - Diğer" takımları kataloğa girmez.
+4. **Görmelisin:** JSON yanıtta `playersInFile` ≈ 21.950, `updated` > 0, `created` küçük. Ana kayıttaki kulüp kariyer satırına içe aktarma
+   anında kopyalanır: kariyer log'unu **yeniden içe aktar**, sonra Kadro → Hareketler'de Iván Román "Serbest → Port Vale" (önceden "Crewe Alexandra →").
+5. **Geri dönüş:** 1. adımdaki yedeği geri yükle (11. adım).
+
 ## Geri dönüş
 
 - **Önceki dağıtıma dön:** servis → Deployments → önceki dağıtımın üç noktası → Rollback; "Both the Docker image and custom variables are restored" ([deployment actions](https://docs.railway.com/deployments/deployment-actions)). İmaj saklama planla sınırlı: Hobby 72 saat, Pro 120 saat ([plans](https://docs.railway.com/pricing/plans)).

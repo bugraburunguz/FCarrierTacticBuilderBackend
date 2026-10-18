@@ -33,8 +33,9 @@ spring:
       mail.smtp.starttls.enable: true
   servlet:
     multipart:
-      max-file-size: 26MB
-      max-request-size: 28MB
+      # LE log'u oturum boyunca birikir (dışa aktarım başına ~11 MB); ayrıştırıcı akarak en fazla iki dışa aktarımı bellekte tutar.
+      max-file-size: 64MB
+      max-request-size: 66MB
 
 fcareer:
   mail:
@@ -94,7 +95,10 @@ fcareer.security:
   rate-limit:
     enabled: true
     auth-per-minute: 10
-    api-per-minute: 120
+    # Kullanıcı başına dakikada (oturumsuzsa IP başına). 120 hızlı sekme gezintisinde doluyordu (sayfa başına ~10-20 istek).
+    api-per-minute: 300
+    # Kart/yüz görselleri ayrı kova: sayfa başına ~48 görsel.
+    image-per-minute: 1200
 fcareer.billing:
   # PROD-PREP 2: günlük kredi limiti (tek yer) ve ücretsiz beta (kodda kapalı; prod env'de FCAREER_FREE_BETA=true)
   daily-credits: ${FCAREER_DAILY_CREDITS:30}

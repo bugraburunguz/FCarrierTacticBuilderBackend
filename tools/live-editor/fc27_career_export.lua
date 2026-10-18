@@ -9,7 +9,7 @@ require 'imports/other/helpers'
 local UserMgr = require 'imports/career_mode/FCECareerModeUserManager'
 local SYNC_URL, SYNC_TOKEN = nil, nil          -- site kişisel script üretirken doldurur (opsiyonel)
 local PROBE = false                            -- true = yalnız tüm tabloların şemasını dök
-local MARK, VER, SCHEMA_V, MAX_CHUNK = "FCX2", "2.0.0", 2, 16000
+local MARK, VER, SCHEMA_V, MAX_CHUNK = "FCX2", "2.0.1", 2, 16000   -- 2.0.1: boolean'lar JSON'da (inCareer artık null değil)
 
 local function safe(f, ...) if type(f) ~= "function" then return nil end local ok, v = pcall(f, ...) if ok then return v end end
 local function nrec(t) local n = t.written_records if n < 0 then n = n + 65536 end return n end
@@ -21,7 +21,8 @@ local function jstr(s) return '"' .. (s:gsub('[%c"\\]', function(c)
 local function jval(v) local t = type(v)
   if t == "number" then if math.type(v) == "integer" then return tostring(v) end
     if v ~= v or v == math.huge or v == -math.huge then return "null" end return string.format("%.6g", v)
-  elseif t == "string" then return jstr(v) end return "null" end
+  elseif t == "string" then return jstr(v)
+  elseif t == "boolean" then return v and "true" or "false" end return "null" end
 local function reader(f)
   if f.type == 0 then local len = math.floor(f.fld_desc.depth / 8)
     return function(r) local s = MEMORY:ReadString(r + f.offset, len) return s and s:match("^([^\0]*)") end

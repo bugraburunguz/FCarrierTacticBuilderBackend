@@ -82,6 +82,10 @@ services:
       FCAREER_DAILY_CREDITS: ${FCAREER_DAILY_CREDITS:-30}
       # Backend yalnız web nginx üzerinden erişilir (port yayınlanmaz). nginx gelen X-Real-IP'yi (Railway edge) iletir, yoksa bağlantı adresini yazar.
       FCAREER_TRUST_PROXY: ${FCAREER_TRUST_PROXY:-true}
+      # Kart görseli kaynağı (sunucu üzerinden EA reyting görselleri). Yerelde varsayılan KAPALI (geliştirme/testte EA'ya istek gitmesin);
+      # açmak için: CARD_IMAGE_URL_TEMPLATE='https://ratings-images-prod.pulse.ea.com/FC27/components/items/{id}_tr-TR.webp' docker compose up -d backend
+      # Railway'de bu değişken verilmez: koddaki varsayılan (EA şablonu) geçerlidir.
+      FCAREER_CATALOG_CARD_IMAGE_URL_TEMPLATE: ${CARD_IMAGE_URL_TEMPLATE:-}
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
       interval: 10s

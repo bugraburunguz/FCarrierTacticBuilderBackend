@@ -31,7 +31,8 @@ import static com.fcareer.common.constants.ErrorCodes.IMPORT_PARSE_ERROR;
 /**
  * Live Editor export v2 (07 §4): log satırları `FCX2` önekli ve sekme ayraçlıdır:
  * `META <json>` · `HEADER <tablo> <json kolonlar>` · `CHUNK <tablo> <sıra> <json satırlar>` · `END <tablo> <satır> <fnv1a32:…> <chunk>` · `ERROR <tablo> <mesaj>` · `DONE <json uyarılar>`.
- * Aynı logda birden çok çalıştırma varsa son META'dan başlayan blok geçerlidir. Her tablo END satırındaki satır sayısı ve FNV-1a checksum'ıyla doğrulanır;
+ * Aynı logda birden çok çalıştırma olabilir (LE oturum boyunca biriktirir): kariyer içe aktarımı en son kariyer dışa aktarımını, temel katalog
+ * yüklemesi en son ana menü (BASE) dışa aktarımını seçer ({@link Prefer}). Her tablo END satırındaki satır sayısı ve FNV-1a checksum'ıyla doğrulanır;
  * zorunlu bir tablo eksik/bozuksa import reddedilir ve hangi tablo olduğu söylenir.
  */
 @Slf4j
@@ -97,11 +98,27 @@ public final class LeExportV2Parser {
         }
     }
 
+    /** Logda birden çok dışa aktarım varken hangisi: kariyer içe aktarımı kariyerdekini, temel katalog yüklemesi ana menüdekini (BASE) ister. */
+    public enum Prefer { CAREER, BASE }
+
+    /** Bir META'dan başlayan tek dışa aktarım. */
+    private static final class Block {
+        private final Map<String, Table> tables = new LinkedHashMap<>();
+        private final List<String> warnings = new ArrayList<>();
+        private JsonNode context;
+        private String metaLine;
+        private int index;
+    }
+
     public static LeExport parse(InputStream in) {
-        Map<String, Table> tables = new LinkedHashMap<>();
-        List<String> warnings = new ArrayList<>();
-        JsonNode context = null;
-        String metaLine = null;
+        return parse(in, Prefer.CAREER);
+    }
+
+    public static LeExport parse(InputStream in, Prefer prefer) {
+        // Bellekte en çok iki dışa aktarım: işlenen (block) ve şu ana kadarki en iyi aday (best). Birikmiş logda tümünü tutmak her biri
+        // ~22 bin oyuncu satırıyla belleği tüketebilirdi.
+        Selection selection = new Selection(prefer);
+        Block block = null;
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8), 1 << 16)) {
             String line;
             while (Objects.nonNull(line = reader.readLine())) {
@@ -112,23 +129,30 @@ public final class LeExportV2Parser {
                 if (parts.length <= KIND || !parts[2].contains(MARK)) {
                     continue;
                 }
-                switch (parts[KIND]) {
-                    case "META" -> {
-                        tables.clear();
-                        warnings.clear();
-                        metaLine = parts.length > TABLE ? parts[TABLE] : "";
-                        JsonNode meta = readJson(metaLine, "META");
-                        int version = meta.path("schemaVersion").asInt(-1);
-                        if (version != SCHEMA_VERSION) {
-                            throw new UnsupportedExportVersionException(version);
-                        }
-                        context = meta.path("context");
+                if ("META".equals(parts[KIND])) {
+                    if (Objects.nonNull(block)) {
+                        selection.offer(block);
                     }
+                    block = new Block();
+                    block.metaLine = parts.length > TABLE ? parts[TABLE] : "";
+                    JsonNode meta = readJson(block.metaLine, "META");
+                    int version = meta.path("schemaVersion").asInt(-1);
+                    if (version != SCHEMA_VERSION) {
+                        throw new UnsupportedExportVersionException(version);
+                    }
+                    block.context = meta.path("context");
+                    continue;
+                }
+                if (Objects.isNull(block)) {
+                    continue;
+                }
+                Map<String, Table> tables = block.tables;
+                switch (parts[KIND]) {
                     case "HEADER" -> table(tables, parts).columns = stringList(readJson(parts[5], "HEADER"));
                     case "CHUNK" -> chunk(table(tables, parts), parts);
                     case "END" -> end(table(tables, parts), parts);
                     case "ERROR" -> table(tables, parts).error = parts.length > 5 ? parts[5] : "error";
-                    case "DONE" -> warnings.addAll(stringList(readJson(parts.length > TABLE ? parts[TABLE] : "[]", "DONE")));
+                    case "DONE" -> block.warnings.addAll(stringList(readJson(parts.length > TABLE ? parts[TABLE] : "[]", "DONE")));
                     default -> {
                         // SCHEMA vb. veri taşımayan satırlar
                     }
@@ -138,13 +162,76 @@ public final class LeExportV2Parser {
             log.error("FCX2 log unreadable", e);
             throw new ImportParseException("log unreadable");
         }
-        if (Objects.isNull(context)) {
+        if (Objects.isNull(block)) {
             throw new ImportParseException("no FCX2 export found in the log");
         }
-        return finish(tables, warnings, context, metaLine);
+        selection.offer(block);
+        Block chosen = selection.chosen();
+        if (selection.seen > 1) {
+            log.info("FCX2 log has exports : {} prefer : {} chosen : {}", selection.seen, prefer, chosen.index);
+        }
+        return finish(chosen.tables, chosen.warnings, chosen.context, chosen.metaLine, isCareer(chosen));
     }
 
-    private static LeExport finish(Map<String, Table> tables, List<String> warnings, JsonNode context, String metaLine) {
+    /**
+     * Akan seçim: istenen türde en son tam (zorunlu tabloları sağlam) dışa aktarım; tamı yoksa istenen türün sonuncusu (finish eksik tabloyu
+     * söyler). CAREER istenip hiç kariyer dışa aktarımı yoksa en son dışa aktarım (NOT_IN_CAREER uyarısıyla). BASE istenip hiç ana menü dışa
+     * aktarımı yoksa reddedilir: kariyer verisi temel kataloğa asla yazılmaz.
+     */
+    private static final class Selection {
+        private final boolean wantCareer;
+        private Block best;
+        private Block last;
+        private int seen;
+
+        private Selection(Prefer prefer) {
+            this.wantCareer = prefer == Prefer.CAREER;
+        }
+
+        private void offer(Block block) {
+            block.index = ++seen;
+            if (isCareer(block) == wantCareer) {
+                if (Objects.isNull(best) || complete(block) || !complete(best)) {
+                    best = block;
+                }
+                last = null;
+            } else if (Objects.isNull(best)) {
+                last = block;
+            }
+        }
+
+        private Block chosen() {
+            if (Objects.nonNull(best)) {
+                return best;
+            }
+            if (!wantCareer) {
+                throw new ImportParseException("no main-menu (BASE) export in the log; career data is never imported into the base catalog");
+            }
+            return last;
+        }
+    }
+
+    private static boolean complete(Block block) {
+        return REQUIRED.stream().map(block.tables::get)
+                .allMatch(t -> Objects.nonNull(t) && t.ended && t.valid && Objects.isNull(t.error));
+    }
+
+    /**
+     * Kariyer içinden mi: inCareer boolean ise o. Script 2.0.0 boolean'ı null yazıyordu (jval); o zaman mode BASE değilse ve oyun tarihi ya da
+     * kariyer tablosu varsa kariyer sayılır.
+     */
+    private static boolean isCareer(Block block) {
+        JsonNode flag = block.context.path("inCareer");
+        if (flag.isBoolean()) {
+            return flag.asBoolean();
+        }
+        if ("BASE".equals(block.context.path("mode").asText(null))) {
+            return false;
+        }
+        return block.context.hasNonNull("gameDate") || block.tables.containsKey("career_calendar") || block.tables.containsKey("career_users");
+    }
+
+    private static LeExport finish(Map<String, Table> tables, List<String> warnings, JsonNode context, String metaLine, boolean inCareer) {
         List<String> missing = new ArrayList<>();
         Map<String, List<Map<String, String>>> result = new HashMap<>();
         Map<String, String> checksums = new TreeMap<>();
@@ -165,7 +252,7 @@ public final class LeExportV2Parser {
             result.put(name, table.rows);
             checksums.put(name, table.checksum);
         });
-        return new LeExport(exportId(metaLine, checksums), context(context), result, List.copyOf(warnings));
+        return new LeExport(exportId(metaLine, checksums), context(context, inCareer), result, List.copyOf(warnings));
     }
 
     private static Table table(Map<String, Table> tables, String[] parts) {
@@ -273,7 +360,7 @@ public final class LeExportV2Parser {
         return values;
     }
 
-    private static LeContext context(JsonNode node) {
+    private static LeContext context(JsonNode node, boolean inCareer) {
         LocalDate date = null;
         String text = node.path("gameDate").asText(null);
         if (Objects.nonNull(text)) {
@@ -285,7 +372,7 @@ public final class LeExportV2Parser {
         }
         JsonNode team = node.hasNonNull("userTeamId") ? node.get("userTeamId") : node.path("userTeamIdMem");
         Integer userTeam = team.isNumber() && team.asInt() > 0 ? team.asInt() : null;
-        return new LeContext(node.path("inCareer").asBoolean(false), node.path("mode").asText(null), date, userTeam, node.path("saveUid").asText(null));
+        return new LeContext(inCareer, node.path("mode").asText(null), date, userTeam, node.path("saveUid").asText(null));
     }
 
     /** Aynı veriden aynı kimlik: META + tablo checksum'larının SHA-1 özeti (aynı dosyanın tekrar yüklenmesi tanınır). */

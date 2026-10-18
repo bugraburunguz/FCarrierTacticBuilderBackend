@@ -120,6 +120,7 @@ public class CareerPlayerList {
                 .contractUntil(contractUntil).gameDate(context.gameDate())
                 .monthsLeft(FeasibilityInputs.monthsLeft(context.gameDate(), contractUntil))
                 .onLoan(Objects.nonNull(contract) && contract.onLoan())
+                .loanedOut(Objects.nonNull(contract) && contract.loanedOut())
                 .feasibility(feasibility)
                 .budgetEur(squad.budgetEur()).budgetAfterPurchaseEur(afterPurchase)
                 .build();

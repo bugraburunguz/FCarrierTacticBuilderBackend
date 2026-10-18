@@ -24,6 +24,8 @@ public class CareerPlayerContractResponse {
     /** Oyun tarihine göre kalan tam ay (30 günlük ay, öneri hattıyla aynı). */
     Integer monthsLeft;
     boolean onLoan;
+    /** Oyuncu bizden kiralık gitti (kadromuzda sayılır ama şu an başka takımda). */
+    boolean loanedOut;
     String feasibility;
     Long budgetEur;
     Long budgetAfterPurchaseEur;

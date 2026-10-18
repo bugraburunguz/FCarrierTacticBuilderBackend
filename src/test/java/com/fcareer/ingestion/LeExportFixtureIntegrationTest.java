@@ -94,6 +94,36 @@ class LeExportFixtureIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT count(*) FROM league WHERE name IN ('Erkekler - Diğer', 'Erkek Milli', 'Kadın Milli Kup.', 'DÜNYA LİGİ') OR name LIKE '*LeagueName%'", Integer.class)).isZero();
     }
 
+    /** Ana menü dışa aktarımında 2255 "Klasik Lig" (Classic XI, Soccer Aid, … XI): efsane takımları transfer edilemez, kataloğa girmez. */
+    @Test
+    void classicXiTeamsAndTheirLegendsStayOutOfTheCatalog() throws Exception {
+        Map<String, List<Map<String, String>>> tables = tables();
+        int legendTeam = 132_999;
+        long legend = 199_999L;
+        Map<String, String> template = tables.get("players").stream().filter(r -> Integer.parseInt(r.get("overallrating")) > 60).findFirst().orElseThrow();
+        Map<String, String> legendRow = new HashMap<>(template);
+        legendRow.put("playerid", String.valueOf(legend));
+        legendRow.put("overallrating", "95");
+        tables = new HashMap<>(tables);
+        tables.put("players", append(tables.get("players"), legendRow));
+        tables.put("teams", append(tables.get("teams"), Map.of("teamid", String.valueOf(legendTeam), "teamname", "Classic XI")));
+        tables.put("leagues", append(tables.get("leagues"), Map.of("leagueid", "2255", "leaguename", "Klasik Lig")));
+        tables.put("leagueteamlinks", append(tables.get("leagueteamlinks"), Map.of("teamid", String.valueOf(legendTeam), "leagueid", "2255")));
+        tables.put("teamplayerlinks", append(tables.get("teamplayerlinks"), Map.of("playerid", String.valueOf(legend), "teamid", String.valueOf(legendTeam))));
+
+        importer.importMissing(tables, GAME_VERSION, false, true);
+
+        assertThat(clubsWithEaTeam(Set.of(legendTeam))).as("Klasik Lig takımı kulüp olmaz").isZero();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM base_player WHERE ea_resource_id = ?", Integer.class, legend)).as("efsane kataloğa girmez").isZero();
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM league WHERE name = 'Klasik Lig' AND ea_league_id = 2255", Integer.class)).isZero();
+    }
+
+    private static List<Map<String, String>> append(List<Map<String, String>> rows, Map<String, String> row) {
+        List<Map<String, String>> copy = new java.util.ArrayList<>(rows);
+        copy.add(row);
+        return copy;
+    }
+
     @Test
     void freeAgentsAndRealClubsCarryEaIds() throws Exception {
         importer.importMissing(tables(), GAME_VERSION, false, true);

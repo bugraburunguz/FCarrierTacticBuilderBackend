@@ -7,6 +7,7 @@ import com.fcareer.career.model.request.UpdateCareerRequest;
 import com.fcareer.career.model.response.CareerPlayerResponse;
 import com.fcareer.career.model.response.CareerResponse;
 import com.fcareer.career.model.response.RosterEventResponse;
+import com.fcareer.career.service.CareerMovesService;
 import com.fcareer.career.service.CareerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +31,7 @@ import static com.fcareer.common.constants.ApiConstants.API_V1;
 public class CareerController {
 
     private final CareerService careerService;
+    private final CareerMovesService careerMovesService;
 
     @PostMapping
     public CareerResponse create(@AuthenticationPrincipal AuthUser user, @Valid @RequestBody CreateCareerRequest request) {
@@ -66,6 +68,12 @@ public class CareerController {
     public RosterEventResponse applyEvent(@AuthenticationPrincipal AuthUser user, @PathVariable Long id,
                                           @Valid @RequestBody RosterEventRequest request) {
         return careerService.applyEvent(user.id(), id, request);
+    }
+
+    /** Kadro hareketleri: son içe aktarılan kariyer kaydının oyunun ana kaydına göre farkı (gelen/giden transfer ve kiralık; bedel yok). */
+    @GetMapping("/{id}/moves")
+    public List<CareerMovesService.Move> moves(@AuthenticationPrincipal AuthUser user, @PathVariable Long id) {
+        return careerMovesService.moves(user.id(), id);
     }
 
     @GetMapping("/{id}/events")

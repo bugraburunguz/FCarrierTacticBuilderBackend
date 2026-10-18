@@ -59,7 +59,8 @@ class ReplicaApplyIntegrationTest {
     }
 
     private List<Long> catalogPool(int n) {
-        return jdbc.queryForList("SELECT id FROM base_player WHERE full_name ~ '^Mock Player [0-9]+$' AND substring(full_name from 13)::int >= 1 ORDER BY substring(full_name from 13)::int LIMIT " + n, Long.class);
+        // Yalnız katalog oyuncusu: kariyerde üretilen oyuncular (owner_career_id) aynı adı taşıyabilir (ör. isim sözlüğü testi "Mock Player 1").
+        return jdbc.queryForList("SELECT id FROM base_player WHERE owner_career_id IS NULL AND full_name ~ '^Mock Player [0-9]+$' AND substring(full_name from 13)::int >= 1 ORDER BY substring(full_name from 13)::int LIMIT " + n, Long.class);
     }
 
     /** Kadrosu en kalabalık kulüp: diğer testler katalogu değiştirebilir. */

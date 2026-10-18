@@ -1,5 +1,6 @@
 package com.fcareer.catalog.controller;
 
+import com.fcareer.catalog.service.CardImageService;
 import com.fcareer.catalog.service.FaceImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.CacheControl;
@@ -24,6 +25,22 @@ public class FaceImageController {
     private static final Duration FOUND_TTL = Duration.ofHours(24);
 
     private final FaceImageService faceImageService;
+    private final CardImageService cardImageService;
+
+    /** 1×1 saydam GIF: kartı olmayan oyuncu için (404 tarayıcı konsoluna her kart için hata düşürüyordu). */
+    private static final byte[] TRANSPARENT_PIXEL = java.util.Base64.getDecoder().decode("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
+
+    /**
+     * Oyuncu kartı görseli (EA reyting görseli, sunucu üzerinden). Yoksa 200 + 1×1 saydam GIF ve `X-Card-Image: missing`: web görselin doğal
+     * genişliği 1 px ise kendi kart tasarımını gösterir.
+     */
+    @GetMapping("/card/{id:\\d+}")
+    public ResponseEntity<byte[]> card(@PathVariable long id) {
+        return cardImageService.card(id)
+                .map(image -> ResponseEntity.ok().contentType(MediaType.parseMediaType(image.contentType())).cacheControl(CacheControl.maxAge(FOUND_TTL).cachePublic()).body(image.bytes()))
+                .orElseGet(() -> ResponseEntity.ok().contentType(MediaType.IMAGE_GIF).header("X-Card-Image", "missing")
+                        .cacheControl(CacheControl.maxAge(FOUND_TTL).cachePublic()).body(TRANSPARENT_PIXEL));
+    }
 
     @GetMapping("/face/{id:\\d+}")
     public ResponseEntity<byte[]> face(@PathVariable long id) {

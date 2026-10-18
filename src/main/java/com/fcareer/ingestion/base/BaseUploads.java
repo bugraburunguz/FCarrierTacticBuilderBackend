@@ -27,11 +27,17 @@ public final class BaseUploads {
     }
 
     /** Ya tek bir Live Editor log dosyası (v2 FCX2 ya da eski FCDUMP) ya da tablo başına bir CSV dosyası kabul edilir. */
+    /** Temel katalog yüklemesi: logdaki ana menü (BASE) dışa aktarımı; yalnız kariyer dışa aktarımı varsa reddedilir. */
     public static Map<String, List<Map<String, String>>> toTables(MultipartFile log, Map<String, MultipartFile> csvFiles) {
-        return toUpload(log, csvFiles).tables();
+        return toUpload(log, csvFiles, LeExportV2Parser.Prefer.BASE).tables();
     }
 
+    /** Kariyer içe aktarımı: logdaki en son kariyer dışa aktarımı. */
     public static Upload toUpload(MultipartFile log, Map<String, MultipartFile> csvFiles) {
+        return toUpload(log, csvFiles, LeExportV2Parser.Prefer.CAREER);
+    }
+
+    public static Upload toUpload(MultipartFile log, Map<String, MultipartFile> csvFiles, LeExportV2Parser.Prefer prefer) {
         if (Objects.nonNull(log) && !log.isEmpty()) {
             try {
                 boolean v2;
@@ -40,7 +46,7 @@ public final class BaseUploads {
                 }
                 try (InputStream in = log.getInputStream()) {
                     if (v2) {
-                        LeExportV2Parser.LeExport export = LeExportV2Parser.parse(in);
+                        LeExportV2Parser.LeExport export = LeExportV2Parser.parse(in, prefer);
                         return new Upload(export.tables(), export.context(), export.exportId(), export.warnings());
                     }
                     return new Upload(FcDumpLogParser.parse(in), null, null, List.of());

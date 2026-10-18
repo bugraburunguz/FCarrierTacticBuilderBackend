@@ -136,6 +136,73 @@ class LeExportV2ParserTest {
                 .satisfies(e -> assertThat(((LeExportV2Parser.UnsupportedExportVersionException) e).httpStatus().value()).isEqualTo(422));
     }
 
+    /** Bir LE log'u birden çok dışa aktarım içerebilir (oturum boyunca birikir): kariyer içinden ve ana menüden. */
+    private static List<String> careerThenBaseLog(String careerContext) {
+        List<String> log = new ArrayList<>();
+        log.add(PREFIX + "META\t{\"schema\":\"fccareer.le-export\",\"schemaVersion\":2,\"script\":\"2.0.0\",\"context\":" + careerContext + "}");
+        table(log, "players", "[\"playerid\",\"overallrating\"]", List.of("[82789,70]"), 10);
+        table(log, "teams", "[\"teamid\",\"teamname\"]", List.of("[1928,\"Port Vale\"]"), 10);
+        table(log, "teamplayerlinks", "[\"playerid\",\"teamid\"]", List.of("[82789,1928]"), 10);
+        table(log, "career_calendar", "[\"currdate\"]", List.of("[20260912]"), 10);
+        log.add(PREFIX + "DONE\t[]");
+        log.add(PREFIX + "META\t{\"schema\":\"fccareer.le-export\",\"schemaVersion\":2,\"script\":\"2.0.0\",\"context\":{\"mode\":\"BASE\",\"inCareer\":false}}");
+        table(log, "players", "[\"playerid\",\"overallrating\"]", List.of("[82789,66]"), 10);
+        table(log, "teams", "[\"teamid\",\"teamname\"]", List.of("[245,\"Ajax\"]"), 10);
+        table(log, "teamplayerlinks", "[\"playerid\",\"teamid\"]", List.of("[82789,245]"), 10);
+        log.add(PREFIX + "DONE\t[]");
+        return log;
+    }
+
+    private static LeExport parse(List<String> lines, LeExportV2Parser.Prefer prefer) {
+        return LeExportV2Parser.parse(new ByteArrayInputStream(String.join("\n", lines).getBytes(StandardCharsets.UTF_8)), prefer);
+    }
+
+    @Test
+    void careerImportPicksTheCareerExportEvenWhenAMainMenuExportComesLater() {
+        LeExport export = parse(careerThenBaseLog("{\"inCareer\":true,\"mode\":\"MANAGER\",\"gameDate\":\"2026-09-12\",\"userTeamIdMem\":1928}"), LeExportV2Parser.Prefer.CAREER);
+
+        assertThat(export.context().inCareer()).isTrue();
+        assertThat(export.tables().get("players").get(0)).containsEntry("overallrating", "70");
+        assertThat(export.tables()).containsKey("career_calendar");
+    }
+
+    @Test
+    void baseImportPicksTheMainMenuExport() {
+        LeExport export = parse(careerThenBaseLog("{\"inCareer\":true,\"mode\":\"MANAGER\",\"gameDate\":\"2026-09-12\"}"), LeExportV2Parser.Prefer.BASE);
+
+        assertThat(export.context().inCareer()).isFalse();
+        assertThat(export.tables().get("players").get(0)).containsEntry("overallrating", "66");
+    }
+
+    /** Script 2.0.0 boolean'ı null yazıyordu (jval): oyun tarihi ya da kariyer tabloları olan dışa aktarım kariyer sayılır. */
+    @Test
+    void aNullInCareerFlagWithCareerDataCountsAsCareer() {
+        LeExport export = parse(careerThenBaseLog("{\"inCareer\":null,\"mode\":\"UNKNOWN\",\"gameDate\":\"2026-09-12\",\"userTeamIdMem\":1928}"), LeExportV2Parser.Prefer.CAREER);
+
+        assertThat(export.context().inCareer()).isTrue();
+        assertThat(export.context().gameDate()).isEqualTo(LocalDate.of(2026, 9, 12));
+        assertThat(export.context().userTeamId()).isEqualTo(1928);
+    }
+
+    @Test
+    void aBaseImportNeverUsesACareerExport() {
+        List<String> careerOnly = careerThenBaseLog("{\"inCareer\":null,\"mode\":\"UNKNOWN\",\"gameDate\":\"2026-09-12\"}");
+        careerOnly.subList(careerOnly.indexOf(careerOnly.stream().filter(l -> l.contains("\"mode\":\"BASE\"")).findFirst().orElseThrow()), careerOnly.size()).clear();
+
+        assertThatThrownBy(() -> parse(careerOnly, LeExportV2Parser.Prefer.BASE)).isInstanceOf(ImportParseException.class)
+                .satisfies(e -> assertThat(((ImportParseException) e).getArgs()[0].toString()).contains("BASE"));
+    }
+
+    @Test
+    void aCareerImportOfAMainMenuOnlyLogStillWorksButIsNotInCareer() {
+        List<String> baseOnly = careerThenBaseLog("{\"inCareer\":true}");
+        baseOnly.subList(0, baseOnly.indexOf(baseOnly.stream().filter(l -> l.contains("\"mode\":\"BASE\"")).findFirst().orElseThrow())).clear();
+
+        LeExport export = parse(baseOnly, LeExportV2Parser.Prefer.CAREER);
+        assertThat(export.context().inCareer()).isFalse();
+        assertThat(export.tables().get("players").get(0)).containsEntry("overallrating", "66");
+    }
+
     @Test
     void aLogWithoutAnyFcx2MetaIsNotAV2Export() {
         assertThat(LeExportV2Parser.isV2(new ByteArrayInputStream("10:00\tINFO\t[LUA API] FCDUMP\tBEGIN\tplayers\tfields=3".getBytes(StandardCharsets.UTF_8)))).isFalse();

@@ -40,7 +40,8 @@ public class BaseCatalogImporter {
 
     public static final Set<Integer> FREE_AGENT_TEAM_IDS = Set.of(111592, 131368);
     /** LE-01: lig türleri ADLA (dil değişir) değil EA lig id'siyle tanınır. 76 Erkekler - Diğer, 2000/2028 yer tutucu: katalogdan dışlanır. */
-    private static final Set<Integer> NON_CATALOG_LEAGUE_IDS = Set.of(76, 2000, 2028);
+    /** 76 Erkekler - Diğer, 2000/2028 yer tutucu, 2255 Klasik Lig (Classic XI, Soccer Aid, … XI: transfer edilemeyen efsane takımları). */
+    private static final Set<Integer> NON_CATALOG_LEAGUE_IDS = Set.of(76, 2000, 2028, 2255);
     /** 78 Erkek Milli, 2136 Kadın Milli: milli takımlar kulüp değildir. */
     public static final Set<Integer> NATIONAL_LEAGUE_IDS = Set.of(78, 2136);
     public static final int FREE_AGENT_LEAGUE_ID = 382;
@@ -51,6 +52,8 @@ public class BaseCatalogImporter {
     private static final String FREE_AGENTS_WOMEN = "Free Agents (Women)";
     private static final long CAREER_CREATED_MIN_ID = 400_000L;
     private static final String PLACEHOLDER_TEAM_PREFIX = "*TeamName";
+    /** Adı çözülemeyen oyuncu: "Oyuncu #<EA kimliği>" (web bunu "Adı bilinmiyor" diye gösterir). */
+    public static final String PLACEHOLDER_PLAYER_PREFIX = "Oyuncu #";
     private static final List<String> NON_CATALOG_LEAGUES = List.of("Custom", "FIFA Twist", "5v5", "Rest of World Men");
     private static final int BATCH = 1000;
     private static final int MIN_OVERALL = 1;
@@ -296,8 +299,8 @@ public class BaseCatalogImporter {
 
         List<Map<String, String>> nameRows = new ArrayList<>(tables.getOrDefault("playernames", List.of()));
         nameRows.addAll(tables.getOrDefault("dcplayernames", List.of()));
-        Map<Integer, String> names = playerNames(nameRows);
         Map<Long, Long> existing = existingPlayers();
+        Map<Integer, String> names = withCatalogNames(playerNames(nameRows), players, existing);
         NationalityResolver nationalities = new NationalityResolver(players, existing);
         ClubResolver clubs = new ClubResolver(teamRows, teamLeague, leagueNames, freeAgentTeams);
         Set<Integer> excludedTeams = new HashSet<>();
@@ -309,6 +312,49 @@ public class BaseCatalogImporter {
         });
         return new Context(players, playerTeam, names, existing, nationalities, clubs, excludedTeams,
                 editedNames(tables.getOrDefault("editedplayernames", List.of())), freeAgentTeams);
+    }
+
+    /**
+     * FC27 dışa aktarımında isim tablosu (playernames) yok. Oyunda ilk ad, soyad ve lakap kimlikleri tek isim tablosuna işaret eder; katalogda adını
+     * bildiğimiz oyuncuların kimliklerinden "kimlik → isim" sözlüğü çıkarılır (tek kelimelik ad + lakap kimliği → lakap; çok kelimede ilk kelime ilk
+     * ada, kalanı soyada). Aynı kimliğe çelişen adaylar düşerse en çok oy alan kazanır. Dosyadaki isim tablosu her zaman önceliklidir.
+     */
+    private Map<Integer, String> withCatalogNames(Map<Integer, String> fromFile, List<Map<String, String>> players, Map<Long, Long> existing) {
+        List<Long> baseIds = players.stream().map(r -> existing.get(toLong(r.get("playerid")))).filter(Objects::nonNull).toList();
+        if (baseIds.isEmpty()) {
+            return fromFile;
+        }
+        Map<Long, String> catalogNames = new HashMap<>();
+        jdbc.query("SELECT id, full_name FROM base_player WHERE id IN (:ids) AND full_name NOT LIKE 'Oyuncu #%'", Map.of("ids", baseIds),
+                rs -> {
+                    catalogNames.put(rs.getLong("id"), rs.getString("full_name"));
+                });
+        Map<Integer, Map<String, Integer>> votes = new HashMap<>();
+        for (Map<String, String> row : players) {
+            String full = catalogNames.get(existing.get(toLong(row.get("playerid"))));
+            if (Objects.isNull(full) || full.isBlank()) {
+                continue;
+            }
+            String[] tokens = full.trim().split("\\s+");
+            Integer common = positiveOrNull(toInt(row.get("commonnameid")));
+            if (tokens.length == 1) {
+                vote(votes, Objects.nonNull(common) ? common : positiveOrNull(toInt(row.get("lastnameid"))), tokens[0]);
+                continue;
+            }
+            vote(votes, positiveOrNull(toInt(row.get("firstnameid"))), tokens[0]);
+            vote(votes, positiveOrNull(toInt(row.get("lastnameid"))), String.join(" ", java.util.Arrays.copyOfRange(tokens, 1, tokens.length)));
+        }
+        Map<Integer, String> names = new HashMap<>();
+        votes.forEach((id, candidates) -> candidates.entrySet().stream().max(Map.Entry.comparingByValue()).ifPresent(best -> names.put(id, best.getKey())));
+        names.putAll(fromFile);
+        log.info("Name dictionary fromFile : {} fromCatalog : {}", fromFile.size(), names.size() - fromFile.size());
+        return names;
+    }
+
+    private static void vote(Map<Integer, Map<String, Integer>> votes, Integer nameId, String value) {
+        if (Objects.nonNull(nameId)) {
+            votes.computeIfAbsent(nameId, k -> new HashMap<>()).merge(value, 1, Integer::sum);
+        }
     }
 
     /** LE-02: pozisyon kolonu olmayan (örn. 3 kolonlu players.csv) kariyer-üretimi oyuncuların sayısı; bunlar katalog/kariyer oyuncusu olarak oluşturulamaz. */
@@ -335,6 +381,7 @@ public class BaseCatalogImporter {
         List<SqlParameterSource> inserts = new ArrayList<>();
         List<SqlParameterSource> baseUpdates = new ArrayList<>();
         List<SqlParameterSource> ratingUpdates = new ArrayList<>();
+        List<SqlParameterSource> renames = new ArrayList<>();
         Map<Long, Map<String, String>> fresh = new LinkedHashMap<>();
         for (Map<String, String> row : ctx.players()) {
             Long sourceId = toLong(row.get("playerid"));
@@ -344,6 +391,10 @@ public class BaseCatalogImporter {
                 continue;
             }
             if (known.containsKey(sourceId)) {
+                String name = nameOf(row, sourceId, ctx.names(), ctx.edited());
+                if (!name.startsWith(PLACEHOLDER_PLAYER_PREFIX)) {
+                    renames.add(new MapSqlParameterSource().addValue("id", known.get(sourceId)).addValue("name", name));
+                }
                 baseUpdates.add(baseUpdateParams(known.get(sourceId), row));
                 ratingUpdates.add(ratingParams(known.get(sourceId), row, gameVersionId, ctx.clubs().idFor(ctx.playerTeam().get(sourceId))));
                 continue;
@@ -363,6 +414,8 @@ public class BaseCatalogImporter {
                 INSERT INTO base_player (owner_career_id, career_source_id, full_name, dob, nationality_id, height_cm, weight_kg, preferred_foot, gender)
                 VALUES (:career, :source, :name, :dob, :nat, :height, :weight, :foot, :gender)""", inserts);
         batch(BASE_UPDATE_SQL, baseUpdates);
+        // Önceki içe aktarmada adı çözülemeyip "Oyuncu #…" kalan kariyer oyuncusu: şimdi çözülebiliyorsa adlanır (elle verilmiş ad korunur).
+        batch("UPDATE base_player SET full_name = :name WHERE id = :id AND full_name LIKE 'Oyuncu #%'", renames);
         batch(RATING_UPDATE_SQL_WITH_CLUB, ratingUpdates);
         Map<Long, Long> all = careerPlayers(careerId);
         List<SqlParameterSource> ratings = new ArrayList<>();
