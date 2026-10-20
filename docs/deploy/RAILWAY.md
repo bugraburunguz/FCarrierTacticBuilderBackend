@@ -248,6 +248,15 @@ oyuncudan yalnız 3'ü kariyer değeriyle aynı).
    anında kopyalanır: kariyer log'unu **yeniden içe aktar**, sonra Kadro → Hareketler'de Iván Román "Serbest → Port Vale" (önceden "Crewe Alexandra →").
 5. **Geri dönüş:** 1. adımdaki yedeği geri yükle (11. adım).
 
+## 14. Backend bellek (maliyet)
+Railway belleği GB-dakika faturalar; backend maliyetinin neredeyse tamamı RAM. Dockerfile `JAVA_TOOL_OPTIONS` ile heap'i 768 MB'ta
+sınırlar ve boşta periyodik GC ile kullanılmayan heap'i işletim sistemine geri verir (G1PeriodicGCInterval, MaxHeapFreeRatio).
+Yerel ölçüm (21,7 bin oyunculu kariyer log'u): ayarsız 0,6 → 1,35 GB ve orada kalıyordu; ayarlı tepe ~1,1 GB, 90 sn içinde ~0,5–0,6 GB.
+İki eşzamanlı içe aktarma OOM'suz. 384 MB tavan içe aktarmada `OutOfMemoryError` verir.
+- **Görmelisin:** deploy sonrası Metrics → Memory, içe aktarma tepelerinden sonra ~0,5–0,6 GB'a iner.
+- Daha büyük tavan gerekirse servis değişkeni `JAVA_TOOL_OPTIONS` (Dockerfile'dakini tümüyle ezer; tüm bayrakları yaz).
+- Loglarda `OutOfMemoryError` görülürse `-Xmx` artır.
+
 ## Geri dönüş
 
 - **Önceki dağıtıma dön:** servis → Deployments → önceki dağıtımın üç noktası → Rollback; "Both the Docker image and custom variables are restored" ([deployment actions](https://docs.railway.com/deployments/deployment-actions)). İmaj saklama planla sınırlı: Hobby 72 saat, Pro 120 saat ([plans](https://docs.railway.com/pricing/plans)).

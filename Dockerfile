@@ -14,6 +14,10 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 RUN groupadd --system app && useradd --system --gid app --no-create-home app
 COPY --from=build /build/target/fcareer-backend-*.jar app.jar
+# Railway belleği GB-dakika faturalar. Ayarsız JVM heap'i konteyner belleğinin %25'ine kadar büyütür ve içe aktarma sonrası geri vermez
+# (yerelde tek kariyer içe aktarması 0,6 → 1,35 GB, kalıcı). Heap tavanı + boşta periyodik GC ile kullanılmayan heap işletim sistemine döner.
+# Railway servis değişkeni JAVA_TOOL_OPTIONS ile ezilebilir.
+ENV JAVA_TOOL_OPTIONS="-Xmx768m -XX:+UseG1GC -XX:G1PeriodicGCInterval=15000 -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=30 -Xss512k -XX:ReservedCodeCacheSize=64m -XX:MaxMetaspaceSize=192m"
 USER app
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
