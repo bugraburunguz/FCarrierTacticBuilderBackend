@@ -16,10 +16,13 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -48,6 +51,8 @@ public final class LeExportV2Parser {
     private static final long FNV_OFFSET = 2166136261L;
     private static final long FNV_PRIME = 16777619L;
     private static final long MASK_32 = 0xFFFFFFFFL;
+    /** Bu uzunluğa kadar değerler (sayılar, kısa kodlar) tablo içinde tek kopya tutulur. */
+    private static final int SHORT_VALUE = 8;
     private static final ObjectMapper JSON = new ObjectMapper();
 
     private LeExportV2Parser() {
@@ -75,6 +80,9 @@ public final class LeExportV2Parser {
 
     private static final class Table {
         private List<String> columns = List.of();
+        private Map<String, Integer> index = Map.of();
+        /** Kısa tekrar eden değerlerin ("0", "65", "1928") tek kopyası; yalnız bu tablonun ayrıştırması boyunca. */
+        private final Map<String, String> shortValues = new HashMap<>();
         private final List<Map<String, String>> rows = new ArrayList<>();
         private long hash = FNV_OFFSET;
         private int chunks;
@@ -155,7 +163,7 @@ public final class LeExportV2Parser {
                 }
                 Map<String, Table> tables = block.tables;
                 switch (parts[KIND]) {
-                    case "HEADER" -> table(tables, parts).columns = stringList(readJson(parts[5], "HEADER"));
+                    case "HEADER" -> header(table(tables, parts), stringList(readJson(parts[5], "HEADER")));
                     case "CHUNK" -> chunk(table(tables, parts), rawParts);
                     case "END" -> end(table(tables, parts), parts);
                     case "ERROR" -> table(tables, parts).error = parts.length > 5 ? parts[5] : "error";
@@ -266,13 +274,22 @@ public final class LeExportV2Parser {
         return tables.computeIfAbsent(parts[TABLE], k -> new Table());
     }
 
+    private static void header(Table table, List<String> columns) {
+        Map<String, Integer> index = new HashMap<>();
+        for (int i = 0; i < columns.size(); i++) {
+            index.putIfAbsent(columns.get(i), i);
+        }
+        table.columns = columns;
+        table.index = index;
+    }
+
     /** rawParts: Latin-1 okunmuş (ham bayt) alanlar; özet ham baytla, satır UTF-8 metinle. */
     private static void chunk(Table table, String[] rawParts) {
         table.chunks++;
         String body = rawParts.length > 6 ? rawParts[6] : "[]";
         for (String raw : splitRows(body)) {
             table.hash = fnv(table.hash, raw.getBytes(StandardCharsets.ISO_8859_1));
-            table.rows.add(toRow(table.columns, utf8(raw)));
+            table.rows.add(toRow(table, utf8(raw)));
         }
     }
 
@@ -351,16 +368,55 @@ public final class LeExportV2Parser {
         return rows;
     }
 
-    private static Map<String, String> toRow(List<String> columns, String raw) {
+    private static Map<String, String> toRow(Table table, String raw) {
         JsonNode cells = readJson(raw, "row");
-        Map<String, String> row = new HashMap<>();
-        for (int i = 0; i < columns.size() && i < cells.size(); i++) {
+        String[] values = new String[Math.min(table.columns.size(), cells.size())];
+        for (int i = 0; i < values.length; i++) {
             JsonNode cell = cells.get(i);
             if (!cell.isNull()) {
-                row.put(columns.get(i), cell.asText());
+                String text = cell.asText();
+                values[i] = text.length() <= SHORT_VALUE ? table.shortValues.computeIfAbsent(text, v -> v) : text;
             }
         }
-        return row;
+        return new Row(table.columns, table.index, values);
+    }
+
+    /**
+     * Salt okunur satır (OPS-03): sütun dizini tabloda bir kez tutulur, değerler dizide. 21,7 bin oyuncu × ~110 sütunda HashMap satırları
+     * içe aktarmada heap'i yüzlerce MB büyütüyordu. Null hücre anahtar değildir (eski HashMap satırıyla aynı).
+     */
+    private static final class Row extends AbstractMap<String, String> {
+        private final List<String> columns;
+        private final Map<String, Integer> index;
+        private final String[] values;
+
+        private Row(List<String> columns, Map<String, Integer> index, String[] values) {
+            this.columns = columns;
+            this.index = index;
+            this.values = values;
+        }
+
+        @Override
+        public String get(Object key) {
+            Integer i = index.get(key);
+            return Objects.isNull(i) || i >= values.length ? null : values[i];
+        }
+
+        @Override
+        public boolean containsKey(Object key) {
+            return Objects.nonNull(get(key));
+        }
+
+        @Override
+        public Set<Entry<String, String>> entrySet() {
+            Set<Entry<String, String>> entries = new LinkedHashSet<>();
+            for (int i = 0; i < values.length; i++) {
+                if (Objects.nonNull(values[i]) && index.get(columns.get(i)) == i) {
+                    entries.add(new SimpleImmutableEntry<>(columns.get(i), values[i]));
+                }
+            }
+            return Collections.unmodifiableSet(entries);
+        }
     }
 
     private static JsonNode readJson(String text, String what) {

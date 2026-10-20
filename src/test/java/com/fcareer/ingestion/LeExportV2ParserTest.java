@@ -71,6 +71,30 @@ class LeExportV2ParserTest {
         assertThat(export.exportId()).isNotBlank();
     }
 
+    /**
+     * OPS-03: 21,7 bin oyuncu × ~110 sütun HashMap satırları içe aktarmada heap'i yüzlerce MB büyütüyordu. Satırlar salt okunur, sütun
+     * dizini tabloda paylaşılır, kısa tekrar eden değerler tek kopyadır. Map davranışı aynı kalır (null hücre anahtar değildir).
+     */
+    @Test
+    void rowsAreCompactReadOnlyMapsThatShareRepeatedShortValues() {
+        List<String> log = new ArrayList<>();
+        log.add(PREFIX + "META\t" + META);
+        table(log, "players", "[\"playerid\",\"overallrating\",\"firstname\"]", List.of("[1,84,\"Ada\"]", "[2,84,null]"), 10);
+        table(log, "teams", "[\"teamid\",\"teamname\"]", List.of("[121,\"Crewe Alexandra\"]"), 10);
+        table(log, "teamplayerlinks", "[\"playerid\",\"teamid\"]", List.of("[1,121]"), 10);
+        log.add(PREFIX + "DONE\t[]");
+
+        List<java.util.Map<String, String>> players = parse(log).tables().get("players");
+        java.util.Map<String, String> first = players.get(0);
+        java.util.Map<String, String> second = players.get(1);
+
+        assertThat(first).isEqualTo(java.util.Map.of("playerid", "1", "overallrating", "84", "firstname", "Ada"));
+        assertThat(second).hasSize(2).doesNotContainKey("firstname").containsEntry("overallrating", "84");
+        assertThat(second.get("missing-column")).isNull();
+        assertThat(second.get("overallrating")).as("kısa değer tek kopya").isSameAs(first.get("overallrating"));
+        assertThatThrownBy(() -> first.put("x", "y")).isInstanceOf(UnsupportedOperationException.class);
+    }
+
     @Test
     void theExportIdIsStableForTheSameDataAndChangesWhenDataChanges() {
         // checksum da yeniden hesaplanır: bütünlük hatası değil veri farkı test edilir

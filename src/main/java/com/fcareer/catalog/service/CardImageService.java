@@ -13,13 +13,14 @@ import java.util.Optional;
 /**
  * Oyuncu kartı görseli vekili: varsayılan kaynak EA reyting görselleri (`fcareer.catalog.card-image-url-template`, {id} = EA oyuncu kimliği).
  * Tarayıcı yalnız bizim adresimize (/api/v1/img/card/{id}) gider: kullanıcı IP'si EA'ya gitmez, CSP img-src 'self' kalır.
- * Önbellek: bellek (128 MB) → DB (card_image, kalıcı; kartlar değişmez) → kaynak. Kartı olmayan oyuncu 7 gün hatırlanır; web o zaman kendi kart
+ * Önbellek: bellek (32 MB, sıcak kartlar; OPS-03: kalıcı kopya DB'de olduğu için büyük bellek gereksiz) → DB (card_image, kalıcı; kartlar
+ * değişmez) → kaynak. Kartı olmayan oyuncu 7 gün hatırlanır; web o zaman kendi kart
  * tasarımını çizer. Şablon boşsa vekil kapalıdır.
  */
 @Service
 public class CardImageService {
 
-    private static final long MAX_CACHED_BYTES = 128L * 1024 * 1024;
+    private static final long MAX_CACHED_BYTES = 32L * 1024 * 1024;
     private static final Duration MISS_TTL = Duration.ofDays(7);
 
     private final UpstreamImageCache cache;
