@@ -1,6 +1,6 @@
 # FC Assist — Backend
 
-Java 17 / Spring Boot 3 / PostgreSQL / Redis + Python ML servisi (`ml-service/`). Mimari ve kurallar: `docs/fcareer-standard.md`, spesifikasyon: `docs/spec/`.
+Java 17 / Spring Boot 3 / PostgreSQL + Python ML servisi (`ml-service/`). Mimari ve kurallar: `docs/fcareer-standard.md`, spesifikasyon: `docs/spec/`.
 
 ## Çalıştırma
 
@@ -8,7 +8,7 @@ Java 17 / Spring Boot 3 / PostgreSQL / Redis + Python ML servisi (`ml-service/`)
 # Tam yığın (Docker): kök dizindeki docker-compose.yml + .env
 docker compose up --build
 
-# Docker olmadan geliştirme (kalıcı embedded Postgres + mock veri, Redis yerine bellek içi refresh store)
+# Docker olmadan geliştirme (kalıcı embedded Postgres + mock veri)
 mvn test-compile dependency:build-classpath -Dmdep.outputFile=target/cp.txt -Dmdep.includeScope=test
 INGESTION_RUN_ON_STARTUP=true java -cp "target/classes;target/test-classes;$(cat target/cp.txt)" com.fcareer.DevApplication
 ```
@@ -22,7 +22,6 @@ INGESTION_RUN_ON_STARTUP=true java -cp "target/classes;target/test-classes;$(cat
 | `JWT_SECRET` | **Zorunlu**, ≥ 32 byte. Varsayılanı yok. |
 | `ADMIN_KEY` | `/api/v1/admin/**` için `X-Admin-Key`. Boşsa admin uçları kapalı. |
 | `DB_URL` `DB_USERNAME` `DB_PASSWORD` | PostgreSQL |
-| `REDIS_HOST` `REDIS_PORT` | Redis (refresh token, rate limit, referans cache) |
 | `INGESTION_PROVIDER` | `mock` (varsayılan) veya `ea-site` (EA ratings sayfası, FC27) |
 | `INGESTION_GAME_VERSION` | Yalnızca `27` (FC27). Eski sürüm desteklenmez. |
 | `ML_BASE_URL` | ML servisi |

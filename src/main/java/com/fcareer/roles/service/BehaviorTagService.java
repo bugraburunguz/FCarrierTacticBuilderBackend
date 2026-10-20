@@ -2,7 +2,7 @@ package com.fcareer.roles.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fcareer.common.configuration.CacheProperties;
-import com.fcareer.common.redis.RedisJsonCache;
+import com.fcareer.common.cache.ReferenceCache;
 import com.fcareer.fitengine.model.FitTag;
 import com.fcareer.roles.mapper.BehaviorTagMapper;
 import com.fcareer.roles.model.response.BehaviorTagResponse;
@@ -17,7 +17,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.fcareer.common.constants.RedisConstants.CACHE_BEHAVIOR_TAGS;
+import static com.fcareer.common.constants.KeyConstants.CACHE_BEHAVIOR_TAGS;
 
 @Service
 @RequiredArgsConstructor
@@ -26,11 +26,11 @@ public class BehaviorTagService {
 
     private final BehaviorTagRepository behaviorTagRepository;
     private final BehaviorTagMapper behaviorTagMapper;
-    private final RedisJsonCache redisJsonCache;
+    private final ReferenceCache referenceCache;
     private final CacheProperties cacheProperties;
 
     public List<BehaviorTagResponse> findByPosition(String position) {
-        List<BehaviorTagResponse> all = redisJsonCache.getOrLoad(CACHE_BEHAVIOR_TAGS, new TypeReference<>() {
+        List<BehaviorTagResponse> all = referenceCache.getOrLoad(CACHE_BEHAVIOR_TAGS, new TypeReference<>() {
                 }, cacheProperties.getReferenceTtl(),
                 () -> behaviorTagRepository.findAllByOrderBySortOrderAsc().stream().map(behaviorTagMapper::toResponse).toList());
         if (Objects.isNull(position) || position.isBlank()) {

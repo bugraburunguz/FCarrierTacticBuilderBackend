@@ -3,7 +3,7 @@ package com.fcareer.tactics.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fcareer.common.configuration.CacheProperties;
 import com.fcareer.common.exception.NotFoundException;
-import com.fcareer.common.redis.RedisJsonCache;
+import com.fcareer.common.cache.ReferenceCache;
 import com.fcareer.tactics.entity.PresetEntity;
 import com.fcareer.tactics.mapper.TacticMapper;
 import com.fcareer.tactics.model.response.PresetResponse;
@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Objects;
 
-import static com.fcareer.common.constants.RedisConstants.CACHE_PRESETS;
+import static com.fcareer.common.constants.KeyConstants.CACHE_PRESETS;
 
 @Service
 @RequiredArgsConstructor
@@ -26,11 +26,11 @@ public class PresetService {
 
     private final PresetRepository presetRepository;
     private final TacticMapper tacticMapper;
-    private final RedisJsonCache redisJsonCache;
+    private final ReferenceCache referenceCache;
     private final CacheProperties cacheProperties;
 
     public List<PresetResponse> findByKind(String kind) {
-        List<PresetResponse> all = redisJsonCache.getOrLoad(CACHE_PRESETS, new TypeReference<>() {
+        List<PresetResponse> all = referenceCache.getOrLoad(CACHE_PRESETS, new TypeReference<>() {
                 }, cacheProperties.getReferenceTtl(),
                 () -> presetRepository.findAllByOrderByKindDescIdAsc().stream().map(tacticMapper::toPresetResponse).toList());
         if (Objects.isNull(kind) || kind.isBlank()) {

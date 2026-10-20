@@ -8,7 +8,7 @@ import java.util.Map;
 
 /**
  * Yerel geliştirme başlatıcısı (Docker olmadan): kalıcı embedded Postgres + uygulama.
- * Redis yerine bellek-içi refresh store kullanılır (TestSupportConfiguration). Üretimde KULLANILMAZ.
+ * Token'lar ve sayaçlar üretimdekiyle aynı (Postgres + bellek içi). Üretimde KULLANILMAZ.
  */
 public final class DevApplication {
 

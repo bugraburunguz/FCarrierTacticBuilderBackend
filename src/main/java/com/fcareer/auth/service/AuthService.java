@@ -105,7 +105,8 @@ public class AuthService {
         return issueTokens(user);
     }
 
-    @Transactional(readOnly = true)
+    // OPS-02: yenileme token'ı Postgres'e yazılır (eskiden Redis; salt okunur işlem yetiyordu).
+    @Transactional
     public TokenResponse login(LoginRequest request) {
         java.util.Optional<AppUserEntity> found = appUserRepository.findByEmail(normalize(request.getEmail()));
         // Kullanıcı yoksa da bcrypt çalışır: yanıt süresi e-posta varlığını sızdırmaz (SEC-08).
@@ -118,7 +119,11 @@ public class AuthService {
         return issueTokens(user);
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * OPS-02: token'lar Postgres'te ve bu işleme katılır. Reddedilen yenilemede geri alma yok: tüketim ve yeniden kullanımda aile iptali
+     * hatayla birlikte kalıcı olmalı (Redis'teki gibi); yoksa çalınmış token tespiti sessizce geri alınırdı.
+     */
+    @Transactional(noRollbackFor = InvalidRefreshTokenException.class)
     public TokenResponse refresh(RefreshRequest request) {
         String tokenHash = hash(request.getRefreshToken());
         Long userId = refreshTokenStore.consume(tokenHash)

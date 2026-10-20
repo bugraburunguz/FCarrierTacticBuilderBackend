@@ -6,7 +6,8 @@ EA SPORTS FC 27 için offline Kariyer + Ultimate Team companion uygulamasının 
 
 ## Stack (gerçek olan)
 - Java 17, Spring Boot 3, Jakarta, Maven, Lombok
-- PostgreSQL 16 + Flyway (`src/main/resources/db/migration`), Redis (refresh token, rate limit, referans cache)
+- PostgreSQL 16 + Flyway (`src/main/resources/db/migration`). Redis yok (OPS-02): refresh/link token'ları Postgres'te,
+  rate limit ve referans cache bellek içi (backend tek örnek)
 - Python 3.11 FastAPI ML servisi: `ml-service/` (potential/value), backend → REST
 - Base package: `com.fcareer` — feature paketleri: advisor, auth, billing, career, catalog, common, development,
   fitengine, gameconfig, ingestion, mlclient, recommendation, roles, tacticcode, tactics, ut, versioning
@@ -27,7 +28,7 @@ Eski Azerlottery standardı `docs/archive/backend-standard.md` altında, referan
 - Ücretli (kredi) iş üreten her uç `CreditGuard` arkasında; bedava önizleme uçları ücretli alanı döndürmez.
 
 ## Çalıştırma / test
-- `mvn test`: entegrasyon testleri zonky gömülü Postgres ile (Docker gerekmez, Testcontainers yok); Redis yerine bellek içi bean'ler (`TestSupportConfiguration`). Opt-in: `-Dea.live=true`, `-Dml.live=true`. ML: `cd ml-service && python -m pytest`.
+- `mvn test`: entegrasyon testleri zonky gömülü Postgres ile (Docker gerekmez, Testcontainers yok); token depoları, sayaç ve önbellek üretimdekiyle aynı. Opt-in: `-Dea.live=true`, `-Dml.live=true`. ML: `cd ml-service && python -m pytest`.
 - Dev: README'deki `DevApplication` akışı.
 
 ## Çalışma biçimi

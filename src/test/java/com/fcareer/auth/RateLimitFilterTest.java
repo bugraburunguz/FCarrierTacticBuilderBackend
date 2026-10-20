@@ -3,12 +3,11 @@ package com.fcareer.auth;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.auth.configuration.SecurityProperties;
 import com.fcareer.auth.security.RateLimitFilter;
-import com.fcareer.common.redis.RedisCounter;
+import com.fcareer.common.limit.WindowCounter;
 import com.fcareer.common.service.MessageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.support.ResourceBundleMessageSource;
-import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -27,12 +26,12 @@ import static org.mockito.Mockito.when;
 
 class RateLimitFilterTest {
 
-    private RedisCounter counter;
+    private WindowCounter counter;
     private RateLimitFilter filter;
 
     @BeforeEach
     void setUp() {
-        counter = mock(RedisCounter.class);
+        counter = mock(WindowCounter.class);
         ResourceBundleMessageSource messages = new ResourceBundleMessageSource();
         messages.setBasename("messages");
         messages.setDefaultEncoding("UTF-8");
@@ -65,32 +64,18 @@ class RateLimitFilterTest {
         verify(counter).increment(org.mockito.ArgumentMatchers.contains("ip10.0.0.2"), eq(Duration.ofMinutes(1)));
     }
 
+    /** V3-07a: şifre değiştir de şifre deneme yüzeyi — auth kovası. */
     @Test
-    void authPathsFailClosedWhenRedisIsDown() throws Exception {
-        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenThrow(new RedisConnectionFailureException("down"));
-
-        assertThat(run("/api/v1/auth/login", "10.0.0.1").getStatus()).isEqualTo(429);
-    }
-
-    /** V3-07a: şifre değiştir de şifre deneme yüzeyi — auth kovası ve Redis yokken fail-closed. */
-    @Test
-    void passwordChangeUsesTheAuthBucketAndFailsClosed() throws Exception {
+    void passwordChangeUsesTheAuthBucket() throws Exception {
         when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(1L);
         run("/api/v1/me/password", "10.0.0.9");
         verify(counter).increment(org.mockito.ArgumentMatchers.contains("auth:"), eq(Duration.ofMinutes(1)));
 
-        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenThrow(new RedisConnectionFailureException("down"));
+        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(4L);
         assertThat(run("/api/v1/me/password", "10.0.0.9").getStatus()).isEqualTo(429);
     }
 
-    @Test
-    void generalApiFailsOpenWhenRedisIsDown() throws Exception {
-        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenThrow(new RedisConnectionFailureException("down"));
-
-        assertThat(run("/api/v1/players", "10.0.0.1").getStatus()).isEqualTo(200);
-    }
-
-    /** E3-7b: /tactics/analysis ücretsiz ama sınırlıdır: kendi kovası (analysis:) ve dakikada analysisPerMinute; Redis yoksa açık geçer (pahalı değil, kimlik değil). */
+    /** E3-7b: /tactics/analysis ücretsiz ama sınırlıdır: kendi kovası (analysis:) ve dakikada analysisPerMinute. */
     @Test
     void theFreeTacticAnalysisHasItsOwnBucketAndIsLimited() throws Exception {
         when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(5L);
@@ -99,20 +84,14 @@ class RateLimitFilterTest {
 
         when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(6L);
         assertThat(run("/api/v1/tactics/analysis", "10.0.0.1").getStatus()).isEqualTo(429);
-
-        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenThrow(new RedisConnectionFailureException("down"));
-        assertThat(run("/api/v1/tactics/analysis", "10.0.0.1").getStatus()).isEqualTo(200);
     }
 
     @Test
-    void solverHasItsOwnBucketAndFailsClosed() throws Exception {
+    void solverHasItsOwnBucket() throws Exception {
         when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(3L);
         assertThat(run("/api/v1/ut/sbc/streamlined", "10.0.0.1").getStatus()).isEqualTo(429);
         verify(counter).increment(org.mockito.ArgumentMatchers.contains("solver:"), eq(Duration.ofMinutes(1)));
         assertThat(run("/api/v1/players", "10.0.0.1").getStatus()).isEqualTo(200);
-
-        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenThrow(new RedisConnectionFailureException("down"));
-        assertThat(run("/api/v1/ut/sbc/streamlined", "10.0.0.1").getStatus()).isEqualTo(429);
     }
 
     /** PROD-PREP 6a: sahte X-Forwarded-For (güven açık ya da kapalı) ve güven kapalıyken sahte X-Real-IP ile auth sınırı aşılamaz. */

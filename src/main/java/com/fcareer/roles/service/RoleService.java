@@ -3,7 +3,7 @@ package com.fcareer.roles.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fcareer.common.configuration.CacheProperties;
 import com.fcareer.common.exception.NotFoundException;
-import com.fcareer.common.redis.RedisJsonCache;
+import com.fcareer.common.cache.ReferenceCache;
 import com.fcareer.fitengine.model.FitRole;
 import com.fcareer.roles.mapper.RoleMapper;
 import com.fcareer.roles.model.response.RoleResponse;
@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.fcareer.common.constants.RedisConstants.CACHE_ROLES;
+import static com.fcareer.common.constants.KeyConstants.CACHE_ROLES;
 
 @Service
 @RequiredArgsConstructor
@@ -28,11 +28,11 @@ public class RoleService {
 
     private final RoleRepository roleRepository;
     private final RoleMapper roleMapper;
-    private final RedisJsonCache redisJsonCache;
+    private final ReferenceCache referenceCache;
     private final CacheProperties cacheProperties;
 
     public List<RoleResponse> findAll() {
-        return redisJsonCache.getOrLoad(CACHE_ROLES, new TypeReference<>() {
+        return referenceCache.getOrLoad(CACHE_ROLES, new TypeReference<>() {
                 }, cacheProperties.getReferenceTtl(),
                 () -> roleRepository.findAllByOrderByIdAsc().stream().map(roleMapper::toResponse).toList());
     }

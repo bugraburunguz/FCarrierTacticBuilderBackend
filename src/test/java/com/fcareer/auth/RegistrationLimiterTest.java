@@ -3,9 +3,8 @@ package com.fcareer.auth;
 import com.fcareer.auth.configuration.RateLimitProperties;
 import com.fcareer.auth.service.RegistrationLimiter;
 import com.fcareer.common.exception.RateLimitExceededException;
-import com.fcareer.common.redis.RedisCounter;
+import com.fcareer.common.limit.WindowCounter;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.redis.RedisConnectionFailureException;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -22,7 +21,7 @@ import static org.mockito.Mockito.when;
 
 class RegistrationLimiterTest {
 
-    private final RedisCounter counter = mock(RedisCounter.class);
+    private final WindowCounter counter = mock(WindowCounter.class);
     private final RateLimitProperties properties = new RateLimitProperties();
     private final Clock clock = Clock.fixed(Instant.parse("2026-10-13T12:00:00Z"), ZoneOffset.UTC);
 
@@ -38,13 +37,21 @@ class RegistrationLimiterTest {
     }
 
     @Test
-    void zeroDisablesTheLimitAndAnUnreachableStoreFailsClosed() {
+    void zeroDisablesTheLimit() {
         properties.getRegister().setDailyPerIp(0);
         new RegistrationLimiter(properties, counter, clock).check("10.0.0.1");
         verifyNoInteractions(counter);
+    }
 
+    /** OPS-02: gerçek bellek içi sayaçla altıncı kayıt reddedilir. */
+    @Test
+    void theRealCounterRejectsTheSixthRegistrationOfTheDay() {
         properties.getRegister().setDailyPerIp(5);
-        when(counter.increment(anyString(), eq(Duration.ofHours(24)))).thenThrow(new RedisConnectionFailureException("down"));
-        assertThatThrownBy(() -> new RegistrationLimiter(properties, counter, clock).check("10.0.0.1")).isInstanceOf(RateLimitExceededException.class);
+        RegistrationLimiter limiter = new RegistrationLimiter(properties, new WindowCounter(clock), clock);
+        for (int i = 0; i < 5; i++) {
+            limiter.check("10.0.0.7");
+        }
+        assertThatThrownBy(() -> limiter.check("10.0.0.7")).isInstanceOf(RateLimitExceededException.class);
+        assertThatCode(() -> limiter.check("10.0.0.8")).doesNotThrowAnyException();
     }
 }

@@ -19,10 +19,6 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
-  data:
-    redis:
-      # DEPLOY-01: Railway Redis REDIS_URL (parola dahil); yerel compose REDIS_HOST.
-      url: ${REDIS_URL:redis://${REDIS_HOST:localhost}:${REDIS_PORT:6379}}
   mail:
     host: ${MAIL_HOST:}
     port: ${MAIL_PORT:587}

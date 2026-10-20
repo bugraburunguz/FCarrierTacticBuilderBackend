@@ -16,7 +16,6 @@ Railway'in `railway.json` / `railway.toml` dosyası (Config as Code) **kullanım
                                       │  /api/*  → http://backend.railway.internal:8080  (private)
                                       ▼
                                    backend (Spring, private) ──▶ Postgres (Railway, private)
-                                      │                       └─▶ Redis (Railway, private)
                                       └──▶ ml (FastAPI, private; yalnız yönetici değerleme ucu)
 ```
 
@@ -48,8 +47,9 @@ Railway'in `railway.json` / `railway.toml` dosyası (Config as Code) **kullanım
 ## 2. Veritabanları
 
 1. `+ New` → Database → **PostgreSQL**. Servis adı `Postgres` (referanslar bu adı kullanır). Bölge: EU West.
-2. `+ New` → Database → **Redis**. Servis adı `Redis`. Bölge: EU West.
-- **Görmelisin:** Postgres değişkenleri `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`, `DATABASE_URL` ([Postgres](https://docs.railway.com/databases/postgresql)); Redis `REDISHOST`, `REDISPORT`, `REDISUSER`, `REDISPASSWORD`, `REDIS_URL` ([Redis](https://docs.railway.com/databases/redis)).
+- Redis **gerekmez** (OPS-02): token'lar Postgres'te, hız sınırı ve önbellek backend belleğinde. Eski kurulumda Redis servisi varsa
+  yeni backend dağıtıldıktan sonra silinebilir; backend'in `REDIS_URL` değişkeni de kaldırılır (kullanılmaz).
+- **Görmelisin:** Postgres değişkenleri `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`, `DATABASE_URL` ([Postgres](https://docs.railway.com/databases/postgresql)).
 - Postgres sürümü dokümanda yazmıyor **[doğrulanmadı]**; taşıma betiği hedef sürümü yazdırır. Yerel döküm 16'dan; hedef ≥ 16 olmalı.
 - Backend JDBC'yi `PG*` değişkenlerinden kurar (`DATABASE_URL` JDBC biçiminde değil). Hangisinin "önerilen" olduğu dokümanda açıkça yazmıyor **[doğrulanmadı]**; ikisi de aynı private bağlantıyı tarif ediyor.
 
@@ -110,7 +110,6 @@ Referans sözdizimi `${{SERVİS.DEĞİŞKEN}}`, `${{shared.X}}` ([variables](htt
 | `SPRING_PROFILES_ACTIVE` | sabit `prod` (application-prod.yml + ProdConfigGuard) |
 | `PORT` | sabit `8080` |
 | `PGHOST` `PGPORT` `PGDATABASE` `PGUSER` `PGPASSWORD` | referans `${{Postgres.PGHOST}}` … (beşi de) |
-| `REDIS_URL` | referans `${{Redis.REDIS_URL}}` |
 | `JWT_SECRET` | openssl, sealed |
 | `ADMIN_KEY` | openssl, sealed |
 | `ML_SHARED_SECRET` | `${{shared.ML_SHARED_SECRET}}` |
@@ -151,7 +150,7 @@ Referans sözdizimi `${{SERVİS.DEĞİŞKEN}}`, `${{shared.X}}` ([variables](htt
 
 ## 6. İlk dağıtım
 
-Sıra: Postgres + Redis (hazır) → ml → backend → web.
+Sıra: Postgres (hazır) → ml → backend → web.
 
 1. ml: Deploy. **Görmelisin:** healthcheck `/health` 200 (`model_loaded:false` modelsizken normal).
 2. backend: 8. adımdaki taşıma bitmiş olmalı (3. adımdaki not). Deploy. **Görmelisin:** loglarda Flyway `Successfully validated 39 migrations` / "Schema … is up to date" (taşınan `flyway_schema_history` doğrulanır, yeni migration yok), `Started FcareerApplication`, healthcheck 200. ProdConfigGuard eksik değişkeni adıyla söyler ve açılmaz.
@@ -161,7 +160,7 @@ Sıra: Postgres + Redis (hazır) → ml → backend → web.
 
 1. Yalnız **web** → Settings → Networking → Public Networking → **Generate Domain** ([domains](https://docs.railway.com/networking/domains/working-with-domains)). Hedef port otomatik algılanır.
 2. Domain'i backend'in `WEB_BASE_URL` değişkenine yaz (`https://…up.railway.app`) → backend yeniden dağıtılır.
-3. **Görmelisin:** backend, ml, Postgres, Redis servislerinde public domain **yok**; Postgres/Redis'te Public Access (TCP proxy) kapalı (8. adım hariç).
+3. **Görmelisin:** backend, ml, Postgres servislerinde public domain **yok**; Postgres'te Public Access (TCP proxy) kapalı (8. adım hariç).
 
 ## 8. Veri taşıma (yerel → Railway Postgres)
 

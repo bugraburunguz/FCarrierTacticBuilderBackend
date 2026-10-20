@@ -1,11 +1,10 @@
 package com.fcareer.hardening;
 
-import com.fcareer.common.redis.RedisCounter;
+import com.fcareer.common.limit.WindowCounter;
 import com.fcareer.ingestion.configuration.IngestionProperties;
 import com.fcareer.ingestion.security.AdminKeyFilter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -17,7 +16,7 @@ import static org.mockito.Mockito.when;
 
 class AdminKeyFilterTest {
 
-    private final RedisCounter counter = mock(RedisCounter.class);
+    private final WindowCounter counter = mock(WindowCounter.class);
     private final IngestionProperties properties = new IngestionProperties();
     private final AdminKeyFilter filter;
 
@@ -58,10 +57,10 @@ class AdminKeyFilterTest {
     }
 
     @Test
-    void lockoutStoreOutageFailsClosedAndWrongKeysAreRejected() throws Exception {
+    void lockedOutKeysAreRejectedEvenWhenCorrectAndWrongKeysAreRejected() throws Exception {
         assertThat(run("/api/v1/admin/ingestion/run", "wrong").getStatus()).isEqualTo(403);
 
-        when(counter.current(org.mockito.ArgumentMatchers.anyString())).thenThrow(new RedisConnectionFailureException("down"));
+        when(counter.current(org.mockito.ArgumentMatchers.anyString())).thenReturn(10L);
         assertThat(run("/api/v1/admin/ingestion/run", "secret-key").getStatus()).isEqualTo(429);
     }
 }

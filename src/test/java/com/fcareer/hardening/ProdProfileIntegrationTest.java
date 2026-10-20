@@ -34,9 +34,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @ActiveProfiles("prod")
 @TestPropertySource(properties = {"WEB_BASE_URL=https://fc-assist.example.test", "fcareer.billing.stub-enabled=false",
         // Sahte SMTP: JavaMailSender mock'lanır, ağa hiçbir şey gitmez (6c: yerelde gerçek gönderim yok).
-        "MAIL_HOST=smtp.fake.test", "MAIL_USERNAME=fake", "MAIL_PASSWORD=fake", "MAIL_FROM=noreply@fc-assist.example.test",
-        // Testte Redis yok (bellek içi sayaçlar); health göstergesi DOWN sayılmasın.
-        "management.health.redis.enabled=false"})
+        "MAIL_HOST=smtp.fake.test", "MAIL_USERNAME=fake", "MAIL_PASSWORD=fake", "MAIL_FROM=noreply@fc-assist.example.test"})
 @ExtendWith(OutputCaptureExtension.class)
 class ProdProfileIntegrationTest {
 

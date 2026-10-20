@@ -1,6 +1,6 @@
 # FC Assist — Backend standardı
 
-Java 17, Spring Boot 3, Jakarta, PostgreSQL + Flyway, Redis, Maven. Base package `com.fcareer`, tek kanal `/api/v1`.
+Java 17, Spring Boot 3, Jakarta, PostgreSQL + Flyway, Maven (Redis yok, OPS-02). Base package `com.fcareer`, tek kanal `/api/v1`.
 Karar kaydı `docs/review/08_DECISIONS_LOG.md`; çelişkide o geçerlidir.
 
 ## Kod
@@ -24,12 +24,12 @@ Karar kaydı `docs/review/08_DECISIONS_LOG.md`; çelişkide o geçerlidir.
 ## Güvenlik
 - Bedava uçlar ücretli içgörü döndürmez (D-01): `withoutPaidInsights`, slot-view 3 aday.
 - `careerId` alan her uç sahipliği doğrular. Admin uçları ADMIN rolü (geçişte `X-Admin-Key`).
-- Rate limit Redis Lua sayacıyla, kimlik doğrulama uçlarında fail-closed.
+- Rate limit bellek içi sabit pencereli sayaçla (`WindowCounter`; backend tek örnek, yeniden başlatmada sıfırlanır).
 - EA hesap kimlik bilgisi istenmez, saklanmaz, loglanmaz. Sunucu EA'nın oturum gerektiren uçlarını çağırmaz.
 
 ## Test
 - Testler zorunludur: kabul kriteri önce kırmızı test olarak yazılır.
-- `mvn test` (gömülü Postgres: zonky `@AutoConfigureEmbeddedDatabase`, Docker gerekmez; Testcontainers kullanılmaz). Redis testte yok: `TestSupportConfiguration` sayaç/token deposunu bellek içi verir; ortak oyun kuralı vektörleri `seed/ut-rules.fc27.json` içinde, web ile paylaşılır.
+- `mvn test` (gömülü Postgres: zonky `@AutoConfigureEmbeddedDatabase`, Docker gerekmez; Testcontainers kullanılmaz). Token depoları (Postgres), sayaç ve önbellek (bellek içi) testte de üretimdekiyle aynı; ortak oyun kuralı vektörleri `seed/ut-rules.fc27.json` içinde, web ile paylaşılır.
 - Fit engine katsayı değişikliği senaryo testleri (T1–T6) yeşil olmadan commit edilmez.
 
 ## Commit

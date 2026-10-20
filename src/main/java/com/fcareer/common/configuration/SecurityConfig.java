@@ -15,7 +15,7 @@ import com.fcareer.ingestion.security.AdminKeyFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import com.fcareer.common.redis.RedisCounter;
+import com.fcareer.common.limit.WindowCounter;
 import com.fcareer.ut.kb.LinkTokenFilter;
 import com.fcareer.ut.kb.LinkTokenStore;
 import org.springframework.http.HttpMethod;
@@ -48,7 +48,7 @@ public class SecurityConfig {
     private final JwtService jwtService;
     private final SecurityProperties securityProperties;
     private final IngestionProperties ingestionProperties;
-    private final RedisCounter redisCounter;
+    private final WindowCounter windowCounter;
     private final LinkTokenStore linkTokenStore;
     private final MessageService messageService;
     private final ObjectMapper objectMapper;
@@ -59,9 +59,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtService, appUserRepository::existsById);
-        RateLimitFilter rateLimitFilter = new RateLimitFilter(securityProperties, redisCounter, messageService,
+        RateLimitFilter rateLimitFilter = new RateLimitFilter(securityProperties, windowCounter, messageService,
                 objectMapper, clock);
-        AdminKeyFilter adminKeyFilter = new AdminKeyFilter(ingestionProperties, redisCounter, securityProperties.isTrustProxy());
+        AdminKeyFilter adminKeyFilter = new AdminKeyFilter(ingestionProperties, windowCounter, securityProperties.isTrustProxy());
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())

@@ -1,7 +1,7 @@
 package com.fcareer.ingestion.security;
 
 import com.fcareer.auth.security.ClientIp;
-import com.fcareer.common.redis.RedisCounter;
+import com.fcareer.common.limit.WindowCounter;
 import com.fcareer.ingestion.configuration.IngestionProperties;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -9,7 +9,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.AuthorityUtils;
@@ -27,7 +26,7 @@ import static com.fcareer.common.constants.ApiConstants.ADMIN_PATH;
 
 /**
  * /admin altında kimlik: ADMIN rolü JWT'den gelir (BE-SEC-07). `X-Admin-Key` yalnız makineden makineye uçlarda (ingestion, ml) kabul edilir;
- * kilit deposu erişilemezse reddedilir (fail-closed). Anahtar yoksa istek rol denetimine devredilir (anonim 401, USER 403).
+ * 15 dakikada 10 hatalı denemede kilitlenir (bellek içi sayaç). Anahtar yoksa istek rol denetimine devredilir (anonim 401, USER 403).
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -42,7 +41,7 @@ public class AdminKeyFilter extends OncePerRequestFilter {
     private static final List<String> MACHINE_PATHS = List.of(ADMIN_PATH + "/ingestion", ADMIN_PATH + "/ml");
 
     private final IngestionProperties properties;
-    private final RedisCounter counter;
+    private final WindowCounter counter;
     /** PROD-PREP 6a: deneme sayacı anahtarı için istemci IP'si (ClientIp). */
     private final boolean trustProxy;
 
@@ -91,22 +90,12 @@ public class AdminKeyFilter extends OncePerRequestFilter {
         return Objects.nonNull(authentication) && authentication.getAuthorities().stream().anyMatch(a -> ROLE_ADMIN.equals(a.getAuthority()));
     }
 
-    /** Kilit deposu erişilemezse anahtar denemesi reddedilir: brute-force sınırı atlanamaz. */
     private boolean lockedOut(String failKey) {
-        try {
-            return counter.current(failKey) >= MAX_FAILURES;
-        } catch (DataAccessException e) {
-            log.warn("Admin lockout store unavailable, rejecting key reason : {}", e.getMessage());
-            return true;
-        }
+        return counter.current(failKey) >= MAX_FAILURES;
     }
 
     private void registerFailure(String failKey) {
-        try {
-            counter.increment(failKey, LOCKOUT);
-        } catch (DataAccessException e) {
-            log.warn("Admin failure not recorded reason : {}", e.getMessage());
-        }
+        counter.increment(failKey, LOCKOUT);
     }
 
     private boolean constantTimeEquals(String a, String b) {

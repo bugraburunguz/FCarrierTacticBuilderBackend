@@ -1,7 +1,7 @@
 package com.fcareer.roles.seed;
 
 import com.fcareer.fitengine.configuration.FitEngineProperties;
-import com.fcareer.common.redis.RedisJsonCache;
+import com.fcareer.common.cache.ReferenceCache;
 import com.fcareer.roles.entity.BehaviorTagEntity;
 import com.fcareer.roles.entity.RoleEntity;
 import com.fcareer.roles.repository.BehaviorTagRepository;
@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import static com.fcareer.common.constants.RedisConstants.CACHE_BEHAVIOR_TAGS;
-import static com.fcareer.common.constants.RedisConstants.CACHE_PRESETS;
-import static com.fcareer.common.constants.RedisConstants.CACHE_ROLES;
+import static com.fcareer.common.constants.KeyConstants.CACHE_BEHAVIOR_TAGS;
+import static com.fcareer.common.constants.KeyConstants.CACHE_PRESETS;
+import static com.fcareer.common.constants.KeyConstants.CACHE_ROLES;
 
 @Slf4j
 @Component
@@ -39,7 +39,7 @@ public class ReferenceDataSeeder implements ApplicationRunner {
     private final RoleRepository roleRepository;
     private final BehaviorTagRepository behaviorTagRepository;
     private final PresetRepository presetRepository;
-    private final RedisJsonCache redisJsonCache;
+    private final ReferenceCache referenceCache;
     private final FitEngineProperties fitEngineProperties;
 
     @Override
@@ -59,7 +59,7 @@ public class ReferenceDataSeeder implements ApplicationRunner {
         roleRepository.saveAll(roles);
         behaviorTagRepository.saveAll(toTags(bundle.tags(), conflicts));
         presetRepository.saveAll(bundle.presets().stream().map(this::toPreset).toList());
-        redisJsonCache.evict(CACHE_ROLES, CACHE_BEHAVIOR_TAGS, CACHE_PRESETS);
+        referenceCache.evict(CACHE_ROLES, CACHE_BEHAVIOR_TAGS, CACHE_PRESETS);
 
         log.info("Reference data seeded roles : {} tags : {} presets : {}",
                 roles.size(), bundle.tags().size(), bundle.presets().size());
