@@ -164,19 +164,23 @@ public class CareerService {
         List<UserPlayerStateEntity> states = userPlayerStateRepository.findByCareerIdOrderByIdAsc(careerId);
         Map<Long, PlayerSummaryResponse> summaries = playerService.summaries(
                 states.stream().map(UserPlayerStateEntity::getBasePlayerId).toList(), career.getGameVersionId(), careerId);
-        Map<Long, int[]> overlay = importedRatings(careerId, states);
+        Map<Long, Imported> overlay = importedRatings(careerId, states);
         return states.stream()
                 .filter(s -> summaries.containsKey(s.getBasePlayerId()))
                 .map(s -> {
                     PlayerSummaryResponse summary = summaries.get(s.getBasePlayerId());
-                    int[] imported = overlay.get(s.getBasePlayerId());
+                    Imported imported = overlay.get(s.getBasePlayerId());
                     if (Objects.nonNull(imported)) {
-                        summary.setOverall(imported[0]);
-                        summary.setPotential(imported[1]);
+                        summary.setOverall(imported.overall());
+                        summary.setPotential(imported.potential());
                         summary.setValuationEstimated(false);
                     }
                     spoilerPolicy.mask(careerId, summary);
                     CareerPlayerResponse row = careerMapper.toPlayer(s, summary);
+                    if (Objects.nonNull(imported)) {
+                        row.setLoanUntil(imported.loanUntil());
+                        row.setWageEur(imported.wageEur());
+                    }
                     if (spoilerPolicy.ranged(careerId)) {
                         row.setDynamicPotential(null);
                     }
@@ -185,17 +189,22 @@ public class CareerService {
                 .toList();
     }
 
-    private Map<Long, int[]> importedRatings(Long careerId, List<UserPlayerStateEntity> states) {
-        Map<Long, int[]> overlay = new java.util.HashMap<>();
+    /** İçe aktarılan kayıt satırı: reyting + kiralık bitişi + maaş (KARIYER-UX FAZ 2; null = bilinmiyor). */
+    private record Imported(int overall, int potential, java.time.LocalDate loanUntil, Long wageEur) {
+    }
+
+    private Map<Long, Imported> importedRatings(Long careerId, List<UserPlayerStateEntity> states) {
+        Map<Long, Imported> overlay = new java.util.HashMap<>();
         if (states.isEmpty()) {
             return overlay;
         }
-        jdbc.query("SELECT player_id AS base_player_id, ovr AS overall, pot AS potential FROM career_player WHERE career_id = :c AND live AND player_id IN (:ids)",
+        jdbc.query("SELECT player_id AS base_player_id, ovr AS overall, pot AS potential, loan_until, wage_eur FROM career_player WHERE career_id = :c AND live AND player_id IN (:ids)",
                 new org.springframework.jdbc.core.namedparam.MapSqlParameterSource()
                         .addValue("c", careerId)
                         .addValue("ids", states.stream().map(UserPlayerStateEntity::getBasePlayerId).toList()),
                 rs -> {
-                    overlay.put(rs.getLong("base_player_id"), new int[]{rs.getInt("overall"), rs.getInt("potential")});
+                    overlay.put(rs.getLong("base_player_id"), new Imported(rs.getInt("overall"), rs.getInt("potential"),
+                            rs.getObject("loan_until", java.time.LocalDate.class), rs.getObject("wage_eur", Long.class)));
                 });
         return overlay;
     }

@@ -26,7 +26,9 @@ public final class CareerDeskModels {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     /** gameDate (V3-06e): kayıt anındaki oyun tarihi (career_snapshot.game_date); bilinmiyorsa alan yok. */
     public record SnapshotDto(long id, Instant takenAt, Integer season, String transferWindow, String source, int playerCount, String note,
-                              @JsonInclude(JsonInclude.Include.NON_NULL) java.time.LocalDate gameDate) {
+                              @JsonInclude(JsonInclude.Include.NON_NULL) java.time.LocalDate gameDate,
+                              /* KARIYER-UX FAZ 2 (V44): snapshot anındaki transfer bütçesi ve kadro maaş toplamı; bilinmiyorsa alan yok. */
+                              Long budgetEur, Long squadWageEur) {
     }
 
     /** kind: CHANGED (overall/potansiyel), TRANSFER (takım değişti), NEW (yeni oyuncu), REMOVED (dosyada yok). */
