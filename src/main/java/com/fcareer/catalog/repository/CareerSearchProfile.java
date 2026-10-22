@@ -139,6 +139,12 @@ final class CareerSearchProfile implements SearchProfile {
         return "cp.contract_until";
     }
 
+    /**
+     * Pazar / scouting filtresi: "kiralıkta olan satın alınamaz". {@code career_player.available} = {@code loan_from_team_id IS NULL}
+     * (V31). Kolon yalnız oyuncu aramasında ({@code PlayerSearchRequest.availableOnly}) kullanılır; ilk 11, diziliş ve ana taktik süzmesi
+     * için KULLANILMAZ (bize kiralık gelen oyuncu oynar). Dizilişte müsaitlik: {@code CareerService.squadPlayerIds} (kadroda ve bizden kiralıkta
+     * olmayan). V31'deki "ilk kadroya alınamaz" yorumu yanıltıcıdır; migration'a dokunulmadı (KARIYER-UX FAZ 1 düzeltme 9).
+     */
     @Override
     public String availableFilter() {
         return "cp.available";
