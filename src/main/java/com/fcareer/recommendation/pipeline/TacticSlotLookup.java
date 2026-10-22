@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Kayıtlı taktikten (user_tactic) bir slotun rolü/focus'u. Etkin taktik: kariyere bağlı en düşük slot numaralı kayıt (E3-9'da kullanıcı seçimine bağlanacak). */
+/** Kayıtlı taktikten (user_tactic) bir slotun rolü/focus'u. Etkin taktik: kariyerin ana taktiği (D-30); yoksa en düşük slot numaralı kayıt (geri uyum). */
 @Component
 @RequiredArgsConstructor
 public class TacticSlotLookup {
@@ -24,7 +24,7 @@ public class TacticSlotLookup {
     private final ObjectMapper objectMapper;
 
     public Optional<SlotRole> find(long careerId, String slotId, String position) {
-        List<String> tactics = jdbc.queryForList("SELECT slots::text FROM user_tactic WHERE career_id = ? ORDER BY slot LIMIT 1", String.class, careerId);
+        List<String> tactics = jdbc.queryForList("SELECT slots::text FROM user_tactic WHERE career_id = ? ORDER BY is_main DESC, slot LIMIT 1", String.class, careerId);
         if (tactics.isEmpty()) {
             return Optional.empty();
         }

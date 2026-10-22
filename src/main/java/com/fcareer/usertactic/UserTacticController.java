@@ -36,6 +36,17 @@ public class UserTacticController {
         return service.save(user.id(), slot, request);
     }
 
+    /** Kariyerin ana taktiği (D-30); yoksa data null. careerId zorunlu. */
+    @GetMapping("/main")
+    public UserTactic main(@AuthenticationPrincipal AuthUser user, @RequestParam(required = false) Long careerId) {
+        return service.main(user.id(), careerId);
+    }
+
+    @PutMapping("/{slot}/main")
+    public UserTactic setMain(@AuthenticationPrincipal AuthUser user, @PathVariable int slot, @RequestParam(required = false) Long careerId) {
+        return service.setMain(user.id(), careerId, slot);
+    }
+
     @DeleteMapping("/{slot}")
     public void delete(@AuthenticationPrincipal AuthUser user, @PathVariable int slot, @RequestParam(required = false) Long careerId) {
         service.delete(user.id(), careerId, slot);
