@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalDouble;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Slf4j
@@ -38,6 +40,8 @@ public class SquadFitService {
     private static final int NOT_ASSIGNED = -1;
     /** Skorlar 0–100 aralığındadır; bu sabit herhangi bir uyum farkından büyüktür (doğal atama sayısı önce gelir). */
     private static final double NATURAL_BONUS = 1000;
+    /** Kilitli (slot, oyuncu) çifti (KARIYER-UX FAZ 2): doğal bonusun da üstünde; çözücü bu çifti her zaman seçer. Raporlanan değerler değişmez. */
+    private static final double LOCK_BONUS = 1_000_000;
     private static final double MIRROR_MARGIN = 0.5;
 
     private final RoleFitService roleFitService;
@@ -61,6 +65,11 @@ public class SquadFitService {
      * raporlanan `combined` ve uyum değerleri değişmez.
      */
     public SquadFitResponse solve(List<FitPlayer> squad, List<IntentProfile> slots, String engineVersion, boolean naturalFirst) {
+        return solve(squad, slots, engineVersion, naturalFirst, Map.of());
+    }
+
+    /** locked: slotId → oyuncu kimliği sabit kalır (yalnız çözücü matrisinde büyük bonus; raporlanan combined ve uyum değişmez). */
+    public SquadFitResponse solve(List<FitPlayer> squad, List<IntentProfile> slots, String engineVersion, boolean naturalFirst, Map<String, Long> locked) {
         int playerCount = squad.size();
         int slotCount = slots.size();
         RoleFitResponse[][] roleFits = new RoleFitResponse[playerCount][slotCount];
@@ -81,11 +90,12 @@ public class SquadFitService {
         }
 
         double[][] assignable = combined;
-        if (naturalFirst) {
+        if (naturalFirst || !locked.isEmpty()) {
             assignable = new double[playerCount][slotCount];
             for (int p = 0; p < playerCount; p++) {
                 for (int s = 0; s < slotCount; s++) {
-                    assignable[p][s] = combined[p][s] + (roleFits[p][s].isOutOfPosition() ? 0 : NATURAL_BONUS);
+                    boolean isLocked = squad.get(p).getId().equals(locked.get(slots.get(s).getSlotId()));
+                    assignable[p][s] = combined[p][s] + (naturalFirst && !roleFits[p][s].isOutOfPosition() ? NATURAL_BONUS : 0) + (isLocked ? LOCK_BONUS : 0);
                 }
             }
         }
@@ -163,6 +173,23 @@ public class SquadFitService {
     /** Taktiği olduğu gibi ve sağ-sol aynalanmış haliyle çözer; kadroya daha uygun olanı döner. */
     public SquadFitResponse solveBest(List<FitPlayer> squad, List<IntentProfile> slots) {
         return solveBest(squad, slots, "v1");
+    }
+
+    /**
+     * Kilitli diziliş (KARIYER-UX FAZ 2): kadroda olan oyuncu ve formasyonda olan slot için geçerli kilit varsa aynalanmadan çözülür; yoksa solveBest.
+     */
+    public SquadFitResponse solveBest(List<FitPlayer> squad, List<IntentProfile> slots, String engineVersion, Map<String, Long> locked) {
+        Set<Long> squadIds = squad.stream().map(FitPlayer::getId).collect(Collectors.toSet());
+        Set<String> slotIds = slots.stream().map(IntentProfile::getSlotId).collect(Collectors.toSet());
+        Map<String, Long> valid = new HashMap<>();
+        if (Objects.nonNull(locked)) {
+            locked.forEach((slotId, playerId) -> {
+                if (slotIds.contains(slotId) && squadIds.contains(playerId) && !valid.containsValue(playerId)) {
+                    valid.put(slotId, playerId);
+                }
+            });
+        }
+        return valid.isEmpty() ? solveBest(squad, slots, engineVersion) : solve(squad, slots, engineVersion, false, valid);
     }
 
     public SquadFitResponse solveBest(List<FitPlayer> squad, List<IntentProfile> slots, String engineVersion) {

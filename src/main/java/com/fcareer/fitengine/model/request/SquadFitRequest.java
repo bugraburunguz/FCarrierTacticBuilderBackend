@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -29,4 +30,11 @@ public class SquadFitRequest {
     @Valid
     @NotNull
     private TacticRequest tactic;
+
+    /**
+     * KARIYER-UX FAZ 2 (Q2), opsiyonel: slotId → oyuncu (base_player.id) sabit kalır, kalan slotları çözücü doldurur. Kadroda olmayan oyuncu ya da
+     * formasyonda olmayan slot yok sayılır. Kilit varken sağ-sol aynalama yapılmaz (kilitli oyuncu kanat değiştirmesin).
+     */
+    @Size(max = 11)
+    private Map<String, Long> locked;
 }

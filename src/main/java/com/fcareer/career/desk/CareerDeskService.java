@@ -45,6 +45,7 @@ public class CareerDeskService {
     private final PlayerService playerService;
     private final CareerDeskProperties properties;
     private final com.fcareer.ingestion.base.CareerPlayerWriter careerPlayerWriter;
+    private static final String SNAPSHOT_COLUMNS = "id, taken_at, season, transfer_window, source, player_count, note, game_date, budget_eur, squad_wage_eur";
     private static final String SNAPSHOT_ATTRS = java.util.stream.IntStream.range(0, com.fcareer.fitengine.model.Attr.values().length)
             .mapToObj((i) -> "'" + com.fcareer.fitengine.model.Attr.values()[i].getColumn() + "', cp.attrs[" + (i + 1) + "],").collect(java.util.stream.Collectors.joining(" "));
 
@@ -70,7 +71,14 @@ public class CareerDeskService {
                 JOIN base_player b ON b.id = cp.player_id
                 LEFT JOIN player_valuation v ON v.base_player_id = cp.player_id AND v.game_version_id = k.game_version_id AND v.source = 'IMPORT' AND v.owner_user_id = k.user_id
                 WHERE cp.career_id = :c AND cp.live""", Map.of("id", id, "c", careerId));
-        jdbc.update("UPDATE career_snapshot SET player_count = :n WHERE id = :id", Map.of("n", count, "id", id));
+        // Finans Δ (15 §7.2): kadro maaş toplamı yalnız her kadro oyuncusunun maaşı biliniyorsa yazılır (careerFacets.squad_wage ile aynı kural).
+        jdbc.update("""
+                UPDATE career_snapshot SET player_count = :n,
+                       budget_eur = (SELECT budget_eur FROM career WHERE id = :c),
+                       squad_wage_eur = (SELECT CASE WHEN count(*) > 0 AND count(cp.wage_eur) = count(*) THEN sum(cp.wage_eur) END
+                                           FROM user_player_state s LEFT JOIN career_player cp ON cp.career_id = s.career_id AND cp.player_id = s.base_player_id
+                                          WHERE s.career_id = :c)
+                 WHERE id = :id""", Map.of("n", count, "id", id, "c", careerId));
         Integer keep = properties.getSnapshotRetention();
         if (Objects.nonNull(keep) && keep > 0) {
             jdbc.update("DELETE FROM career_snapshot WHERE career_id = :c AND id NOT IN (SELECT id FROM career_snapshot WHERE career_id = :c ORDER BY id DESC LIMIT :k)",
@@ -83,7 +91,7 @@ public class CareerDeskService {
     @Transactional(readOnly = true)
     public List<SnapshotDto> snapshots(Long userId, Long careerId) {
         careerService.requireOwned(userId, careerId);
-        return jdbc.query("SELECT id, taken_at, season, transfer_window, source, player_count, note, game_date FROM career_snapshot WHERE career_id = :c ORDER BY id DESC",
+        return jdbc.query("SELECT " + SNAPSHOT_COLUMNS + " FROM career_snapshot WHERE career_id = :c ORDER BY id DESC",
                 Map.of("c", careerId), (rs, i) -> snapshotOf(rs));
     }
 
@@ -165,13 +173,14 @@ public class CareerDeskService {
         careerPlayerWriter.ensureSeeded(careerId);
         careerPlayerWriter.syncPlayers(careerId, batch.updates().stream().map(OvrUpdate::playerId).toList());
         long id = takeSnapshot(careerId, "MANUAL", batch.note());
-        return jdbc.queryForObject("SELECT id, taken_at, season, transfer_window, source, player_count, note, game_date FROM career_snapshot WHERE id = :id", Map.of("id", id),
+        return jdbc.queryForObject("SELECT " + SNAPSHOT_COLUMNS + " FROM career_snapshot WHERE id = :id", Map.of("id", id),
                 (rs, i) -> snapshotOf(rs));
     }
 
     private static SnapshotDto snapshotOf(java.sql.ResultSet rs) throws java.sql.SQLException {
         return new SnapshotDto(rs.getLong("id"), rs.getTimestamp("taken_at").toInstant(), (Integer) rs.getObject("season"), rs.getString("transfer_window"),
-                rs.getString("source"), rs.getInt("player_count"), rs.getString("note"), gameDateOf(rs));
+                rs.getString("source"), rs.getInt("player_count"), rs.getString("note"), gameDateOf(rs),
+                (Long) rs.getObject("budget_eur"), (Long) rs.getObject("squad_wage_eur"));
     }
 
     private static java.time.LocalDate gameDateOf(java.sql.ResultSet rs) throws java.sql.SQLException {

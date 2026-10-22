@@ -22,4 +22,8 @@ public class CareerPlayerResponse {
     private Long valueEur;
     private Integer form;
     private Instant acquiredAt;
+    /** KARIYER-UX FAZ 2 (15 §7.3): kayıttaki kiralık bitişi (career_player.loan_until); bilinmiyorsa yok. */
+    private java.time.LocalDate loanUntil;
+    /** Kayıttaki haftalık maaş (career_player.wage_eur); bilinmiyorsa yok ("N oyuncunun maaşı bilinmiyor"). */
+    private Long wageEur;
 }

@@ -140,7 +140,7 @@ public class FitService {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, request.getCareerId());
         List<FitPlayer> players = playerService.fitPlayers(squad.playerIds(), squad.gameVersionId(), request.getCareerId());
         List<IntentProfile> slots = tacticResolver.resolve(request.getTactic()).slots();
-        return withoutPaidInsights(squadFitService.solveBest(players, slots, fitProperties.getCareerEngineVersion()));
+        return withoutPaidInsights(squadFitService.solveBest(players, slots, fitProperties.getCareerEngineVersion(), request.getLocked()));
     }
 
     private static SquadFitResponse withoutPaidInsights(SquadFitResponse full) {
