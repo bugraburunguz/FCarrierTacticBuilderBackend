@@ -15,6 +15,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
     private boolean success;
+    /** KARIYER-UX: "yok" yanıtı (ör. ana taktik yok) gövdede `data: null` olarak görünür; alan hiç düşmez. */
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private T data;
     private String message;
     private List<ApiError> error;

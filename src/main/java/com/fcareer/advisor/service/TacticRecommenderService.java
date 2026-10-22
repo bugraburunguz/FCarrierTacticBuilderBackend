@@ -32,7 +32,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -63,6 +62,7 @@ public class TacticRecommenderService {
     private final AdvisorService advisorService;
     private final PositionAdviceService positionAdviceService;
     private final FeasibilityService feasibilityService;
+    private final FormationRanker formationRanker;
     private final SquadFitService squadFitService;
     private final com.fcareer.fitengine.service.RoleFitRouter roleFitRouter;
     private final RecommenderProperties properties;
@@ -126,13 +126,8 @@ public class TacticRecommenderService {
         if (Objects.nonNull(request.getLockPreset())) {
             return formations;
         }
-        Map<String, Double> base = new HashMap<>();
-        for (FormationDefinition formation : formations) {
-            Eval eval = advisorService.evaluate(players, advisorService.resolve(formation.id(), null, Map.of()));
-            base.put(formation.id(), eval.squadFit() * feasibilityService.formationOnly(players, profile, formation).multiplier());
-        }
-        return formations.stream().sorted(Comparator.comparingDouble((FormationDefinition f) -> base.get(f.id())).reversed())
-                .limit(properties.getTopFormations()).toList();
+        return formationRanker.rank(players, profile, formations).stream()
+                .limit(properties.getTopFormations()).map(FormationRanker.RankedFormation::formation).toList();
     }
 
     private List<RankedItem> marginal(List<Ranked> ranked, boolean byFormation, TacticRecommendRequest request, SquadProfile profile,

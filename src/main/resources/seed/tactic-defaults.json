@@ -1,0 +1,7 @@
+{
+  "note": "Varsayılan takım kurulumu (KARIYER-UX FAZ 1). Backend TacticDefaults ve web src/lib/tacticDefaults.json (DEFAULT_SETUP) birebir aynı tutulur; TacticDefaultsParityTest ve web tacticDefaults.test denetler.",
+  "setup": {
+    "buildUp": "Balanced",
+    "depth": 50
+  }
+}
