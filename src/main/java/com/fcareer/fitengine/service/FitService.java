@@ -152,7 +152,9 @@ public class FitService {
                         .score(s.getRoleFit().getScore()).projectedRating(s.getRoleFit().getProjectedRating()).badge(s.getRoleFit().getBadge())
                         .engineVersion(s.getRoleFit().getEngineVersion()).fitLabel(s.getRoleFit().getFitLabel()).badgeText("v3".equals(s.getRoleFit().getEngineVersion()) ? s.getRoleFit().getBadgeText() : null).currentFit(s.getRoleFit().getCurrentFit()).levelFit(s.getRoleFit().getLevelFit())
                         .levelBandLo(s.getRoleFit().getLevelBandLo()).levelBandHi(s.getRoleFit().getLevelBandHi()).levelSample(s.getRoleFit().getLevelSample())
-                        .outOfPosition(s.getRoleFit().isOutOfPosition()).build())
+                        .outOfPosition(s.getRoleFit().isOutOfPosition())
+                        // KARIYER-UX FAZ 4b (toplu uyum): nedenler /fit/role'de zaten ücretsiz (D-01'e uygun); aynı biçim ve sıra.
+                        .reasons(s.getRoleFit().getReasons()).build())
                 .build()).toList();
         return SquadFitResponse.builder().squadFit(full.getSquadFit()).slots(slots).bench(full.getBench()).mirrored(full.isMirrored()).build();
     }

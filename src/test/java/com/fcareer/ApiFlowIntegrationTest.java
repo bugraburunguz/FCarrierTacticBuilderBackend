@@ -380,7 +380,9 @@ class ApiFlowIntegrationTest {
         assertThat(lineup.at("/data/weakLinks").isMissingNode()).isTrue();
         assertThat(lineup.at("/data/rules").isMissingNode()).isTrue();
         assertThat(lineup.at("/data/attackPattern").isMissingNode()).isTrue();
-        assertThat(lineup.at("/data/slots/0/roleFit/reasons").isMissingNode()).isTrue();
+        // KARIYER-UX FAZ 4b (API CONTRACT CHANGE): nedenler /fit/role'de zaten ücretsiz olduğu için /fit/lineup da döner (D-01'e uygun, Buğra kararı);
+        // ücretli içgörüler (depth, zayıf halka, kurallar, atak paterni) yukarıda hâlâ yok. Ayrıntı: LineupReasonsIntegrationTest.
+        assertThat(lineup.at("/data/slots/0/roleFit/reasons").isArray()).isTrue();
         // Kariyer yolu v3 motoru; seviye normları yoksa v1'e düşer (badge), varsa v3 (fitLabel). Normlar paylaşılan DB'de başka testten
         // dolabildiği için (CI sırası) ikisi de kabul: bedava dizilişte rozet etiketi her zaman var.
         JsonNode roleFit = lineup.at("/data/slots/0/roleFit");
