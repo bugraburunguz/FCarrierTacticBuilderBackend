@@ -85,10 +85,27 @@ class UserTacticIntegrationTest {
         String token = register();
         long careerId = career(token);
         call(put("/api/v1/user-tactics/1"), Map.of("careerId", careerId, "replicaId", REPLICA), token, 200);
-        call(put("/api/v1/user-tactics/1"), Map.of("careerId", careerId, "replicaId", "sacchi_milan_1989"), token, 200);
+        call(put("/api/v1/user-tactics/1"), Map.of("careerId", careerId, "replicaId", "ancelotti_milan_2003"), token, 200);
+        JsonNode list = call(get("/api/v1/user-tactics").param("careerId", String.valueOf(careerId)), null, token, 200).path("data");
+        assertThat(list).hasSize(1);
+        assertThat(list.get(0).path("sourceReplicaId").asText()).isEqualTo("ancelotti_milan_2003");
+    }
+
+    /** REP-c: seed'den çıkan replikaya bağlı kayıtlı taktik bozulmaz; replika ucu 404, taktik kodu ve ayarları kullanıcıda kalır. */
+    @Test
+    void aSavedTacticWhoseReplicaWasRemovedStaysIntact() throws Exception {
+        String token = register();
+        long careerId = career(token);
+        JsonNode saved = call(put("/api/v1/user-tactics/3"), Map.of("careerId", careerId, "replicaId", REPLICA), token, 200).path("data");
+        // Kaldırılmadan önce kaydedilmiş satırı taklit et (sacchi_milan_1989 REP-c ile seed'den çıktı).
+        jdbc.update("UPDATE user_tactic SET source_replica_id = 'sacchi_milan_1989' WHERE career_id = ? AND slot = 3", careerId);
+        assertThat(call(get("/api/v1/replicas/sacchi_milan_1989"), null, token, 404)).isNotNull();
         JsonNode list = call(get("/api/v1/user-tactics").param("careerId", String.valueOf(careerId)), null, token, 200).path("data");
         assertThat(list).hasSize(1);
         assertThat(list.get(0).path("sourceReplicaId").asText()).isEqualTo("sacchi_milan_1989");
+        assertThat(list.get(0).path("eaCode").asText()).isEqualTo(saved.path("eaCode").asText());
+        assertThat(list.get(0).path("formation").asText()).isEqualTo(saved.path("formation").asText());
+        assertThat(list.get(0).path("slots")).hasSize(11);
     }
 
     @Test

@@ -49,11 +49,13 @@
  },
  {
   "from": "sacchi_milan_1989",
-  "to": "sacchi_milan_1989"
+  "to": null,
+  "reason": "REP-c: hedef replika (sacchi_milan_1989) 2000 öncesi sezon olduğu için seed'den çıkarıldı; kayıt docs/archive/replicas-removed.fc27.json"
  },
  {
   "from": "capello_milan_1994",
-  "to": "capello_milan_1994"
+  "to": null,
+  "reason": "REP-c: hedef replika (capello_milan_1994) 2000 öncesi sezon olduğu için seed'den çıkarıldı; kayıt docs/archive/replicas-removed.fc27.json"
  },
  {
   "from": "mourinho_chelsea_2005",
@@ -65,7 +67,8 @@
  },
  {
   "from": "cruyff_ajax_1972",
-  "to": "kovacs_ajax_1972"
+  "to": null,
+  "reason": "REP-c: hedef replika (kovacs_ajax_1972) 2000 öncesi sezon olduğu için seed'den çıkarıldı; kayıt docs/archive/replicas-removed.fc27.json"
  },
  {
   "from": "ferguson_united_2008",
@@ -86,11 +89,13 @@
  },
  {
   "from": "vangaal_ajax_1995",
-  "to": "vangaal_ajax_1995"
+  "to": null,
+  "reason": "REP-c: hedef replika (vangaal_ajax_1995) 2000 öncesi sezon olduğu için seed'den çıkarıldı; kayıt docs/archive/replicas-removed.fc27.json"
  },
  {
   "from": "herrera_inter_1964",
-  "to": "herrera_inter_1965"
+  "to": null,
+  "reason": "REP-c: hedef replika (herrera_inter_1965) 2000 öncesi sezon olduğu için seed'den çıkarıldı; kayıt docs/archive/replicas-removed.fc27.json"
  },
  {
   "from": "buruk_galatasaray_2024",
@@ -135,5 +140,9 @@
  {
   "from": "italiano_bologna_2025",
   "to": "italiano_bologna_2025"
+ },
+ {
+  "from": "dogan_trabzonspor_2005",
+  "to": "gunes_trabzonspor_2005"
  }
 ]
