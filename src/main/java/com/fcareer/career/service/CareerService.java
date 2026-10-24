@@ -74,8 +74,10 @@ public class CareerService {
     private final org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate jdbc;
     private final com.fcareer.career.desk.SpoilerPolicy spoilerPolicy;
     private final com.fcareer.ingestion.base.CareerPlayerWriter careerPlayerWriter;
+    private final CareerLimiter careerLimiter;
 
     public CareerResponse create(Long userId, CreateCareerRequest request) {
+        careerLimiter.checkCreate(userId);
         short gameVersion = Objects.isNull(request.getGameVersionId())
                 ? catalogProperties.getDefaultGameVersion() : request.getGameVersionId();
         if (!gameVersionRepository.existsById(gameVersion)) {

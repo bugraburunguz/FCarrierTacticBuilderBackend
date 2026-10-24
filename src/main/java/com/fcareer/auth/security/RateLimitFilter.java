@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import static com.fcareer.common.constants.ApiConstants.API_V1;
 import static com.fcareer.common.constants.ErrorCodes.RATE_LIMIT_EXCEEDED;
@@ -34,9 +35,13 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final String PASSWORD_PATH = API_V1 + "/me/password";
     private static final String DELETE_PATH = API_V1 + "/me/delete";
     private static final String SOLVER_PATH = API_V1 + "/ut/sbc/streamlined";
-    private static final String ANALYSIS_PATH = API_V1 + "/tactics/analysis";
     private static final String IMAGE_PATH = API_V1 + "/img/";
+    /** GUV-2 (F8): pahalı ama ücretsiz uçlar analiz kovasında. */
+    private static final Pattern ANALYSIS_PATHS = Pattern.compile(Pattern.quote(API_V1)
+            + "/(tactics/analysis|fit/lineup|replicas/[^/]+/apply|recommend/preview|recommend/slot-view|careers/\\d+/starter-tactic)/?$");
+    private static final Pattern IMPORT_PATH = Pattern.compile(Pattern.quote(API_V1) + "/careers/\\d+/import/?$");
     private static final Duration WINDOW = Duration.ofMinutes(1);
+    private static final Duration IMPORT_WINDOW = Duration.ofHours(1);
 
     private final SecurityProperties properties;
     private final WindowCounter counter;
@@ -56,15 +61,17 @@ public class RateLimitFilter extends OncePerRequestFilter {
         boolean authPath = request.getRequestURI().startsWith(AUTH_PATH) || request.getRequestURI().equals(PASSWORD_PATH)
                 || request.getRequestURI().equals(DELETE_PATH);
         boolean solverPath = request.getRequestURI().startsWith(SOLVER_PATH);
-        boolean analysisPath = request.getRequestURI().startsWith(ANALYSIS_PATH);
+        boolean analysisPath = ANALYSIS_PATHS.matcher(request.getRequestURI()).matches();
+        boolean importPath = IMPORT_PATH.matcher(request.getRequestURI()).matches();
         // Kart/yüz görselleri sayfa başına onlarca istek: genel API kovasını doldurmasın diye kendi (geniş) kovası.
         boolean imagePath = request.getRequestURI().startsWith(IMAGE_PATH);
-        String bucket = authPath ? "auth:" : solverPath ? "solver:" : analysisPath ? "analysis:" : imagePath ? "img:" : "api:";
+        String bucket = authPath ? "auth:" : solverPath ? "solver:" : analysisPath ? "analysis:" : importPath ? "import:" : imagePath ? "img:" : "api:";
         int limit = authPath ? properties.getRateLimit().getAuthPerMinute() : solverPath ? properties.getRateLimit().getSolverPerMinute()
-                : analysisPath ? properties.getRateLimit().getAnalysisPerMinute() : imagePath ? properties.getRateLimit().getImagePerMinute()
-                : properties.getRateLimit().getApiPerMinute();
-        String key = RATE_LIMIT_PREFIX + bucket + subject(request) + ":" + minuteBucket();
-        if (counter.increment(key, WINDOW) > limit) {
+                : analysisPath ? properties.getRateLimit().getAnalysisPerMinute() : importPath ? properties.getRateLimit().getImportPerHour()
+                : imagePath ? properties.getRateLimit().getImagePerMinute() : properties.getRateLimit().getApiPerMinute();
+        Duration window = importPath ? IMPORT_WINDOW : WINDOW;
+        String key = RATE_LIMIT_PREFIX + bucket + subject(request) + ":" + clock.millis() / window.toMillis();
+        if (counter.increment(key, window) > limit) {
             log.warn("Rate limit exceeded path : {}", request.getRequestURI());
             response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
@@ -82,9 +89,5 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return "u" + user.id();
         }
         return "ip" + ClientIp.of(request, properties.isTrustProxy());
-    }
-
-    private long minuteBucket() {
-        return clock.millis() / WINDOW.toMillis();
     }
 }

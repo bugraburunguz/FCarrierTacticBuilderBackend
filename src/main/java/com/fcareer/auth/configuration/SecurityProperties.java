@@ -38,7 +38,12 @@ public class SecurityProperties {
         /** Kart/yüz görselleri (/img/**): sayfa başına onlarca istek; kendi kovası. */
         private int imagePerMinute = 1200;
         private int solverPerMinute = 10;
-        /** Ücretsiz taktik analizi (/tactics/analysis): dakikada istek sayısı. */
-        private int analysisPerMinute = 30;
+        /**
+         * Pahalı ama ücretsiz uçlar (GUV-2): taktik analizi, diziliş (/fit/lineup), replika uygula, öneri önizlemesi, başlangıç önerisi.
+         * Lab'da her değişiklik bir istek; dakikada 60 saniyede bir değişikliğe yeter.
+         */
+        private int analysisPerMinute = 60;
+        /** LE içe aktarma (/careers/{id}/import): her biri katalog kopyalar; kullanıcı başına saatte. */
+        private int importPerHour = 10;
     }
 }

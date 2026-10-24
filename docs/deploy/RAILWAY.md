@@ -120,7 +120,7 @@ Referans sözdizimi `${{SERVİS.DEĞİŞKEN}}`, `${{shared.X}}` ([variables](htt
 | `MAIL_FROM` | Brevo'da doğrulanmış gönderici; **zorunlu** (ProdConfigGuard) |
 | `FCAREER_FREE_BETA` | sabit `true` |
 | `FCAREER_DAILY_CREDITS` | sabit `30` |
-| `FCAREER_TRUST_PROXY` | sabit `true` |
+| `FCAREER_TRUST_PROXY` | sabit `true`; **zorunlu** (ProdConfigGuard, GUV-2). Web'de `TRUST_EDGE_REAL_IP=1` ile birlikte anlamlı; yoksa nginx edge adresini iletir ve herkes tek hız kovasına düşer |
 | `BILLING_STUB_ENABLED` | sabit `false` |
 | `FCAREER_BOOTSTRAP_ADMIN_EMAIL` | senin hesabının e-postası (yönetici rolü) |
 | `INGESTION_PROVIDER` | sabit `ea-site` (yml varsayılanı `mock`; compose ile aynı olsun diye) |
@@ -153,7 +153,7 @@ Referans sözdizimi `${{SERVİS.DEĞİŞKEN}}`, `${{shared.X}}` ([variables](htt
 Sıra: Postgres (hazır) → ml → backend → web.
 
 1. ml: Deploy. **Görmelisin:** healthcheck `/health` 200 (`model_loaded:false` modelsizken normal).
-2. backend: 8. adımdaki taşıma bitmiş olmalı (3. adımdaki not). Deploy. **Görmelisin:** loglarda Flyway `Successfully validated N migrations` (N = `src/main/resources/db/migration` altındaki dosya sayısı; 2026-10-24'te 45) / "Schema … is up to date" (taşınan `flyway_schema_history` doğrulanır, yeni migration yok), `Started FcareerApplication`, healthcheck 200. ProdConfigGuard eksik değişkeni adıyla söyler ve açılmaz (MAIL_HOST, MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM, `https://` WEB_BASE_URL, BILLING_STUB kapalı); kısa ya da boş JWT_SECRET'ı `JwtService` ayrıca reddeder.
+2. backend: 8. adımdaki taşıma bitmiş olmalı (3. adımdaki not). Deploy. **Görmelisin:** loglarda Flyway `Successfully validated N migrations` (N = `src/main/resources/db/migration` altındaki dosya sayısı; 2026-10-24'te 45) / "Schema … is up to date" (taşınan `flyway_schema_history` doğrulanır, yeni migration yok), `Started FcareerApplication`, healthcheck 200. ProdConfigGuard eksik değişkeni adıyla söyler ve açılmaz (MAIL_HOST, MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM, `https://` WEB_BASE_URL, BILLING_STUB kapalı, `FCAREER_TRUST_PROXY=true`); kısa ya da boş JWT_SECRET'ı `JwtService` ayrıca reddeder.
 3. web: Deploy. **Görmelisin:** healthcheck `/` 200; log satırları IP'nin son bölümü 0 / `::` ile.
 
 ## 7. Domain

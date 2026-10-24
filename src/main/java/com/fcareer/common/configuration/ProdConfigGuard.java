@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  * PROD-PREP 6c/6e: prod profili eksik ya da tehlikeli ayarla açılmaz. E-posta doğrulaması prod'da zorunlu olduğundan SMTP (Brevo) değerleri,
- * doğrulama bağlantısı için https WEB_BASE_URL ve kapalı sahte ödeme şarttır. Hata mesajı yalnız değişken adlarını içerir (değer yok).
+ * doğrulama bağlantısı için https WEB_BASE_URL, kapalı sahte ödeme ve vekile güven (istemci IP'si) şarttır. Hata mesajı yalnız değişken adlarını içerir (değer yok).
  */
 @Component
 @Profile("prod")
@@ -35,6 +35,11 @@ public class ProdConfigGuard {
         }
         if (environment.getProperty("fcareer.billing.stub-enabled", Boolean.class, false)) {
             problems.add("BILLING_STUB_ENABLED=false");
+        }
+        // GUV-2 (F6): prod nginx arkasında; güven kapalıyken her istemci vekilin adresiyle tek hız kovasına düşer.
+        // Zincirin tamamı için web servisinde TRUST_EDGE_REAL_IP=1 de gerekir (docs/deploy/RAILWAY.md).
+        if (!environment.getProperty("fcareer.security.trust-proxy", Boolean.class, false)) {
+            problems.add("FCAREER_TRUST_PROXY=true");
         }
         if (!problems.isEmpty()) {
             throw new IllegalStateException("Prod yapılandırması eksik/hatalı: " + String.join(", ", problems));

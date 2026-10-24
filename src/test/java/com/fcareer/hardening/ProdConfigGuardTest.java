@@ -17,7 +17,8 @@ class ProdConfigGuardTest {
                 .withProperty("spring.mail.password", "secret")
                 .withProperty("fcareer.mail.from", "noreply@example.test")
                 .withProperty("fcareer.auth.email-verification.web-base-url", "https://fc.example.test")
-                .withProperty("fcareer.billing.stub-enabled", "false");
+                .withProperty("fcareer.billing.stub-enabled", "false")
+                .withProperty("fcareer.security.trust-proxy", "true");
     }
 
     @Test
@@ -33,5 +34,12 @@ class ProdConfigGuardTest {
         assertThatThrownBy(() -> new ProdConfigGuard(valid().withProperty("fcareer.auth.email-verification.web-base-url", "http://localhost:8081")).validate())
                 .hasMessageContaining("WEB_BASE_URL");
         assertThatThrownBy(() -> new ProdConfigGuard(valid().withProperty("fcareer.billing.stub-enabled", "true")).validate()).hasMessageContaining("BILLING_STUB_ENABLED");
+    }
+
+    /** GUV-2 (F6): prod nginx arkasında; güven kapalıysa tüm istemciler vekilin adresiyle tek hız kovasına düşer. */
+    @Test
+    void prodRequiresTrustingTheProxy() {
+        assertThatThrownBy(() -> new ProdConfigGuard(valid().withProperty("fcareer.security.trust-proxy", "false")).validate())
+                .hasMessageContaining("FCAREER_TRUST_PROXY=true");
     }
 }

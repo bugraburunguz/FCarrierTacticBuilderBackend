@@ -15,6 +15,8 @@ public interface CareerRepository extends JpaRepository<CareerEntity, Long> {
 
     List<CareerEntity> findByUserIdOrderByIdDesc(Long userId);
 
+    long countByUserId(Long userId);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT c FROM CareerEntity c WHERE c.id = :id")
     Optional<CareerEntity> findByIdForUpdate(@Param("id") Long id);

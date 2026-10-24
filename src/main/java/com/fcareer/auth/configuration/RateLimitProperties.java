@@ -11,11 +11,20 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class RateLimitProperties {
 
     private Register register = new Register();
+    private Career career = new Career();
 
     /** IP başına günlük kayıt sınırı; 0 kapatır. */
     @Getter
     @Setter
     public static class Register {
         private int dailyPerIp = 5;
+    }
+
+    /** GUV-2 (F4): her kariyer katalog kopyalar. Açık kariyer üst sınırı ve sil-aç döngüsünü kesen günlük açma sınırı; 0 kapatır. */
+    @Getter
+    @Setter
+    public static class Career {
+        private int maxPerUser = 10;
+        private int dailyCreatePerUser = 20;
     }
 }
