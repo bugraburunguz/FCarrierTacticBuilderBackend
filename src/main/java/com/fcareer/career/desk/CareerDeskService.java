@@ -70,7 +70,10 @@ public class CareerDeskService {
                 JOIN career k ON k.id = cp.career_id
                 JOIN base_player b ON b.id = cp.player_id
                 LEFT JOIN player_valuation v ON v.base_player_id = cp.player_id AND v.game_version_id = k.game_version_id AND v.source = 'IMPORT' AND v.owner_user_id = k.user_id
-                WHERE cp.career_id = :c AND cp.live""", Map.of("id", id, "c", careerId));
+                WHERE cp.career_id = :c
+                  AND (cp.live OR EXISTS (SELECT 1 FROM career_player_data d WHERE d.career_id = cp.career_id AND d.base_player_id = cp.player_id))""",
+                Map.of("id", id, "c", careerId));
+        // REVIEW K1: içe aktarılan (canlı) ve Masa'da elle güncellenen oyuncular; elle güncelleme oyuncuyu canlı yapmaz ama anlık görüntüye girer.
         // Finans Δ (15 §7.2): kadro maaş toplamı yalnız her kadro oyuncusunun maaşı biliniyorsa yazılır (careerFacets.squad_wage ile aynı kural).
         jdbc.update("""
                 UPDATE career_snapshot SET player_count = :n,
