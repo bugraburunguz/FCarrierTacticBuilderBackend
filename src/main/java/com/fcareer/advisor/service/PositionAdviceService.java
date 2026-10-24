@@ -1,5 +1,6 @@
 package com.fcareer.advisor.service;
 
+import com.fcareer.advisor.configuration.PositionProperties;
 import com.fcareer.advisor.model.response.AdvisorResponses.PlayerPositionAdvice;
 import com.fcareer.advisor.model.response.AdvisorResponses.PositionOption;
 import com.fcareer.career.service.CareerService;
@@ -37,6 +38,7 @@ public class PositionAdviceService {
     private final CareerService careerService;
     private final PlayerService playerService;
     private final PositionOverallService positionOverallService;
+    private final PositionProperties positionProperties;
 
     public List<PlayerPositionAdvice> forCareer(Long userId, Long careerId) {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
@@ -76,10 +78,12 @@ public class PositionAdviceService {
                 }
             }
             options.sort(Comparator.comparingDouble(PositionOption::getScore).reversed());
+            options = sideFirst(options, player);
+            Map.Entry<String, Integer> bestOverall = bestOverall(player);
             advice.add(PlayerPositionAdvice.builder().playerId(player.getId()).playerName(player.getName())
                     .listedPositions(player.getPositions()).best(options.stream().limit(POSITIONS_SHOWN).toList())
                     .note(note(options)).ownPositionBest(isOwnBest(options))
-                    .bestOverallPosition(bestOverall(player).getKey()).bestOverall(bestOverall(player).getValue()).build());
+                    .bestOverallPosition(bestOverall.getKey()).bestOverall(bestOverall.getValue()).build());
         }
         return advice;
     }
@@ -119,10 +123,21 @@ public class PositionAdviceService {
         return fit.getBadge() != WeaponState.RED && Objects.nonNull(atPosition) && atPosition >= player.getOverall() - MAX_POSITION_DROP;
     }
 
+    /**
+     * KARIYER-UX FAZ 3.1 (BEHAVIOR CHANGE): simetrik eşitlikte (LB/RB, LM/RM, LW/RW) taraf listelenen mevkiden, sonra ayaktan seçilir;
+     * listelenen mevki en iyiye {@code fcareer.position.listed-preference} kadar yakınsa o gösterilir (BestPositionRule). Eskiden ilk gelen sol seçiliyordu.
+     */
     private Map.Entry<String, Integer> bestOverall(FitPlayer player) {
-        return positionOverallService.byPosition(player.getAttrs(), player.getPositions().contains(GOALKEEPER),
-                player.getPositions().get(0), player.getOverall()).entrySet().stream()
-                .max(Map.Entry.comparingByValue()).orElse(Map.entry(player.getPositions().get(0), player.getOverall()));
+        Map.Entry<String, Integer> picked = BestPositionRule.pick(positionOveralls(player), player.getPositions(), player.getPreferredFoot(),
+                positionProperties.getListedPreference());
+        return Objects.nonNull(picked) ? picked : Map.entry(player.getPositions().get(0), player.getOverall());
+    }
+
+    /** Öneri listesinde eşit puanlı simetrik mevkilerin sırası aynı kurala göre (aday listesi soldan başladığı için sol öne geçiyordu). */
+    private List<PositionOption> sideFirst(List<PositionOption> sorted, FitPlayer player) {
+        Map<String, PositionOption> byPosition = sorted.stream().collect(java.util.stream.Collectors.toMap(PositionOption::getPosition, o -> o, (a, b) -> a, java.util.LinkedHashMap::new));
+        return BestPositionRule.sideFirst(sorted.stream().map(PositionOption::getPosition).toList(), p -> byPosition.get(p).getScore(),
+                player.getPositions(), player.getPreferredFoot()).stream().map(byPosition::get).collect(java.util.stream.Collectors.toCollection(ArrayList::new));
     }
 
     private boolean isOwnBest(List<PositionOption> sorted) {
