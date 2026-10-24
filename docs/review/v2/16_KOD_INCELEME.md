@@ -50,7 +50,7 @@ Durum: **düzeltildi (dal)** · **açık** · **karar** (kullanıcıya soru) · 
 
 | ID | Alan | Dosya:satır | Önem | Tetikleyen senaryo | Öneri | Durum |
 |---|---|---|---|---|---|---|
-| K1 | kariyer havuzu | `ingestion/base/CareerPlayerWriter.java:50-52`, `CareerDeskService.java:73` | Kritik | Konsol kariyerinde 3 oyuncunun OVR'si elle güncellenir; bu satırlar "live" olur, havuz 3 oyuncuya iner, öneriler ve kulüp gücü boş, oyuncular kulübünü kaybeder | `live` yalnız import satırı (`team_id NOT NULL`); anlık görüntü filtresi cpd varlığına göre | düzeltildi (review/dogruluk) |
+| K1 | kariyer havuzu | `ingestion/base/CareerPlayerWriter.java:50-52`, `CareerDeskService.java:73` | Kritik | Konsol kariyerinde 3 oyuncunun OVR'si elle güncellenir; bu satırlar "live" olur, havuz 3 oyuncuya iner, öneriler ve kulüp gücü boş, oyuncular kulübünü kaybeder | `live` yalnız import satırı (`team_id NOT NULL`); anlık görüntü filtresi cpd varlığına göre | düzeltildi (review/dogruluk). Not: daha önce bozulmuş prod satırları yeni tanımı yalnız yeniden senkronda alır; tek seferlik backfill/betik prod verisi demek → karar |
 | K2 | kredi | `billing/service/CreditGuard.java:18-36` | Yüksek | İade sırasında DB hatası asıl hatayı gizler ve kredi kaybolur; zaman aşımında tekrar deneme iki kez ücretler | İadeyi try/log ile sar (yapıldı); idempotency anahtarı API değişikliği | kısmen düzeltildi (review/dogruluk); idempotency: karar |
 | K3 | eşzamanlılık | `usertactic/UserTacticRepository.java:60-63` | Orta | Çift tıklama / iki eşzamanlı `setMain` → sahte 409 | `pg_advisory_xact_lock` | düzeltildi (review/dogruluk) |
 | K4 | para | `RosterEventRequest.feeEur` | Orta | SELL `feeEur=Long.MAX_VALUE` → `budget+fee` taşar | `@Max(10 Mrd)` | düzeltildi (review/dogruluk) |
@@ -110,6 +110,7 @@ Durum: **düzeltildi (dal)** · **açık** · **karar** (kullanıcıya soru) · 
 | W6 | ana taktik | `career/activeTactic.ts:94-105` | Düşük | setMain hatasında slot yazılmış ama tazelenmemiş | Tek uç ya da tazeleme | açık |
 | W7 | başlangıç taktiği | `StarterTacticPanel.tsx:61-66` | Düşük | 11'den az oyuncuda genel hata metni | 422'ye özel metin | açık |
 | W8 | erişilebilirlik | `ShortlistButton.tsx:19-22`, `CompareButton.tsx:13`, `Pitch.tsx:274-279`, `NewCareerPage.tsx:59-69` | Düşük | Aynı adlı düzinelerce düğme, `aria-pressed` eksik/yanlış, combobox klavyesiz | Adlara oyuncu adı, doğru roller | açık |
+| W10 | yerleşim | Kadro › Liste › Kartlar (`careerSquad` kart bölümleri) | Düşük | 375 px'te kart bölümleri 388 px'e taşar (yatay kaydırma); REVIEW ekran çekiminde bulundu, diyalogla ilgisiz | `min-w-0` / sarma | açık |
 | W9 | v2 | `useAutoLineup.ts:16-19` | Düşük | İptalsiz async patch (yalnız v2) | v2 ile birlikte gider | açık |
 
 ### Sadeleştirme
@@ -192,8 +193,10 @@ Durum: **düzeltildi (dal)** · **açık** · **karar** (kullanıcıya soru) · 
 
 | | Önce | Sonra (dal bazında) |
 |---|---|---|
-| Web | 1531 | dogruluk 1537 · dogruluk-2 1539 · testler 1531 · sadelestirme 1531 |
+| Web | 1531 | dogruluk 1538 · dogruluk-2 1540 · testler 1531 · sadelestirme 1531 |
 | Backend | 673 (5 atlama) | guvenlik 677 · dogruluk 676 · performans 676 · testler 674 (CI benzeri ağaçta 6 atlama) |
+
+PR öncesi bağımsız inceleme (fc-reviewer) iki Orta bulgu verdi, ikisi de aynı dallarda düzeltildi: kariyer önbellek kapsamı kimliği her konumda arıyordu (ilgisiz önbellekleri siliyordu), ve verisi olan sorgunun başarısız yenilemesi sayfayı tam hata ekranına düşürüyordu.
 
 Not: bazı kırmızı adımlar yalnız derleme/eksik modül hatası olarak görüldü (performans testleri, `careerQueries`); bu dürüstçe kayıtlı.
 
@@ -208,3 +211,4 @@ Not: bazı kırmızı adımlar yalnız derleme/eksik modül hatası olarak gör�
 7. Saat: UTC mi, sistem dilimi mi (K12, M6); "serviste ham SQL yok" kuralı (M7); fit katsayıları iddiası (M3); CI kapıları (M17).
 8. Eski öneri kümesi ve `/advisor/squad` kaldırma (S3, API değişikliği).
 9. `CareerPlayerList` ölçümlü refactor (P3) ve anlık görüntü saklama sınırı (P6, veri silme).
+10. K1 sonrası prod'daki eski "live" satırları için tek seferlik yeniden senkron (backfill bayrağı bir açılışlık ya da dry-run'lı betik); ayrıca prod'da `role='ADMIN' AND NOT email_verified` salt-okunur kontrolü (F7 öncesi kayıt olasılığı).
