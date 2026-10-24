@@ -51,10 +51,11 @@ public final class CareerDeskModels {
     public record OvrBatch(@NotEmpty @Size(max = MAX_OVR_UPDATES) List<@Valid OvrUpdate> updates, @Size(max = 200) String note) {
     }
 
-    public record TagRequest(@NotNull @Pattern(regexp = "LOCKED|ROTATION|DEVELOPING|FOR_SALE|LOAN_OK") String tag) {
+    /** KARIYER-UX FAZ 5: `askingPriceEur` opsiyonel (satış planı istenen bedeli, euro); gövdede yoksa bedel temizlenir. */
+    public record TagRequest(@NotNull @Pattern(regexp = "LOCKED|ROTATION|DEVELOPING|FOR_SALE|LOAN_OK") String tag, @Min(0) Long askingPriceEur) {
     }
 
-    public record TagDto(long playerId, @NotNull @Pattern(regexp = "LOCKED|ROTATION|DEVELOPING|FOR_SALE|LOAN_OK") String tag) {
+    public record TagDto(long playerId, @NotNull @Pattern(regexp = "LOCKED|ROTATION|DEVELOPING|FOR_SALE|LOAN_OK") String tag, @Min(0) Long askingPriceEur) {
     }
 
     public record ShortlistRequest(@Size(max = 300) String note, @Min(0) Long maxFeeEur) {
