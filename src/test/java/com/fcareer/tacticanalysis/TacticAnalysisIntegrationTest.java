@@ -100,5 +100,7 @@ class TacticAnalysisIntegrationTest {
         String other = support.register();
         JsonNode r = analyse(other, Map.of("formation", "4-3-3", "careerId", careerId, "assigned", Map.of("ST", 1)));
         assertThat(r.at("/success").asBoolean()).isFalse();
+        // REVIEW: yalnız başarısızlık değil, "bulunamadı" (404) olmalı; 400/500 de success=false verir.
+        assertThat(r.at("/error/0/code").asText()).isEqualTo("fc.exception.0001");
     }
 }
