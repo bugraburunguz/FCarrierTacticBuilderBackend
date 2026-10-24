@@ -40,6 +40,8 @@ public class CareerImportService {
             "defenserating", "buildupplay", "defensivedepth", "youthdevelopment", "domesticprestige",
             "internationalprestige", "popularity", "clubworth", "profitability", "rivalteam", "gender");
     private static final int BATCH = 1000;
+    /** LE betiğinin DONE satırındaki "bu tablo oyunda yok" notu (ör. career_users); veri eksikliği değil, kullanıcıya gösterilmez. */
+    private static final String MISSING_TABLE_NOTE = "MISSINGTABLE ";
 
     private final NamedParameterJdbcTemplate jdbc;
     private final CareerService careerService;
@@ -189,7 +191,7 @@ public class CareerImportService {
                 rows.stream().filter(row -> !returnedFromLoan.contains(toLong(row.get("playerid")))).forEach(allLoans::add);
             }
         });
-        careerPlayerWriter.applyContracts(careerId, tables.get("players"), allLoans, eaToBase);
+        int contracts = careerPlayerWriter.applyContracts(careerId, tables.get("players"), allLoans, eaToBase);
         careerDeskService.takeSnapshot(careerId, "IMPORT", Objects.nonNull(upload.exportId()) ? "export " + upload.exportId() : null);
         log.info("Career import done careerId : {} players : {} teams : {} freeAgents : {} unmatched : {}",
                 careerId, playerRows.size(), teamParams.size(), freeAgents, unmatched);
@@ -200,12 +202,25 @@ public class CareerImportService {
         if (skippedNoPosition > 0) {
             warnings.add("CAREER_PLAYERS_SKIPPED_NO_POSITIONS");
         }
-        if (Objects.nonNull(context) && !context.inCareer()) {
+        boolean inCareer = Objects.isNull(context) || context.inCareer();
+        if (!inCareer) {
             warnings.add("NOT_IN_CAREER");
         }
-        warnings.addAll(upload.warnings());
+        // FAZ 6a-A: kariyer export'u ama maaş/sözleşme yok (eski betik ya da eksik tablo): Masa'nın finans ve sözleşme alanları boş kalır.
+        if (inCareer && contracts == 0) {
+            warnings.add("CONTRACTS_MISSING");
+        }
+        // Betiğin ham tablo notları (MISSINGTABLE …) loga gider; kullanıcıya yalnız anlamlı kodlar.
+        for (String warning : upload.warnings()) {
+            if (warning.startsWith(MISSING_TABLE_NOTE)) {
+                log.info("Career import export note careerId : {} note : {}", careerId, warning);
+            } else {
+                warnings.add(warning);
+            }
+        }
         return ImportSummaryResponse.builder()
                 .skippedNoPosition(skippedNoPosition).warnings(warnings)
+                .gameDate(Objects.isNull(context) ? null : context.gameDate()).contracts(contracts)
                 .squadSynced(synced)
                 .players(playerRows.size()).generatedPlayers(generated.size()).unmatchedPlayers(unmatched).teams(teamParams.size()).freeAgents(freeAgents)
                 .guessedTeamId(guess.isEmpty() ? null : ((Number) guess.get(0).get("team_id")).intValue())
