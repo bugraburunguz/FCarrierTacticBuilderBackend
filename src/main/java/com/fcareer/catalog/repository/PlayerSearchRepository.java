@@ -30,6 +30,8 @@ public class PlayerSearchRepository {
 
     private static final String AGE_SORT = "age";
     private static final String PRESCORE_SORT = "prescore";
+    /** PlayStyle+ seviyesi (oyunun PlayStyle haritasında 1 = PlayStyle, 2 = PlayStyle+). */
+    private static final int PLAYSTYLE_PLUS_LEVEL = 2;
 
     private final NamedParameterJdbcTemplate jdbc;
     private final com.fcareer.ut.service.FaceStatsService faceStatsService;
@@ -203,6 +205,10 @@ public class PlayerSearchRepository {
         for (int i = 0; i < request.getPlaystyles().size(); i++) {
             clauses.add("jsonb_exists(" + p.playstyles() + ", :ps" + i + ")");
             params.addValue("ps" + i, request.getPlaystyles().get(i));
+        }
+        for (int i = 0; i < request.getPlaystylesPlus().size(); i++) {
+            clauses.add("COALESCE((" + p.playstyles() + " ->> :psPlus" + i + ")::int, 0) >= " + PLAYSTYLE_PLUS_LEVEL);
+            params.addValue("psPlus" + i, request.getPlaystylesPlus().get(i));
         }
     }
 
