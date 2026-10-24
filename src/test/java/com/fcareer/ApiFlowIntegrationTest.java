@@ -365,6 +365,13 @@ class ApiFlowIntegrationTest {
         assertThat(lockedCombos.get(0).at("/presetId").asText()).isNotEqualTo(lockedCombos.get(1).at("/presetId").asText());
     }
 
+    /** REVIEW F9: kariyersiz /fit/lineup 500 değil 400 (doğrulama hatası). */
+    @Test
+    void lineupWithoutACareerIsABadRequestNotAServerError() throws Exception {
+        String token = registerAndGetToken();
+        call(post("/api/v1/fit/lineup"), Map.of("tactic", Map.of("formation", "4-4-2")), token, 400);
+    }
+
     @Test
     void lineupIsFreeAndReturnsStartersWithBackups() throws Exception {
         String token = registerAndGetToken();

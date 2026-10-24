@@ -66,6 +66,24 @@ class CareerSquadIsolationIntegrationTest {
         assertThat(squad.size()).isEqualTo(jdbc.queryForObject("SELECT count(*) FROM user_player_state WHERE career_id = ?", Integer.class, otherCareer));
     }
 
+    /** REVIEW F1: kadro olayı başka kariyerin ürettiği oyuncuyu kabul etmez (404) ve adını sızdırmaz. */
+    @Test
+    void rosterEventsRejectAnotherCareersGeneratedPlayer() throws Exception {
+        int clubId = clubRepository.findAll().get(0).getId();
+        String owner = register();
+        long ownerCareer = call(post("/api/v1/careers"), Map.of("clubId", clubId, "budgetEur", 1_000_000), owner, 200).at("/data/id").asLong();
+        long generated = jdbc.queryForObject("INSERT INTO base_player (full_name, gender, owner_career_id) VALUES ('Gizli Genç', 0, ?) RETURNING id", Long.class, ownerCareer);
+        jdbc.update("INSERT INTO player_rating (base_player_id, game_version_id, club_id, overall, positions) VALUES (?, 27, ?, 61, ARRAY['ST'])", generated, clubId);
+
+        String other = register();
+        long otherCareer = call(post("/api/v1/careers"), Map.of("clubId", clubId, "budgetEur", 1_000_000), other, 200).at("/data/id").asLong();
+        String body = call(post("/api/v1/careers/" + otherCareer + "/events"), Map.of("type", "PROMOTE", "playerId", generated), other, 404).toString();
+        assertThat(body).doesNotContain("Gizli Genç");
+        call(post("/api/v1/careers/" + otherCareer + "/events"), Map.of("type", "LOAN_IN", "playerId", generated), other, 404);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM user_player_state WHERE career_id = ? AND base_player_id = ?", Integer.class, otherCareer, generated)).isZero();
+        call(post("/api/v1/careers/" + ownerCareer + "/events"), Map.of("type", "PROMOTE", "playerId", generated), owner, 200);
+    }
+
     private JsonNode call(MockHttpServletRequestBuilder builder, Object body, String token, int expectedStatus) throws Exception {
         builder.accept(MediaType.APPLICATION_JSON);
         if (body != null) {

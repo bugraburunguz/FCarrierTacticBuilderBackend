@@ -87,7 +87,8 @@ public class AuthService {
         user.setEmailVerified(!emailVerification.required());
         user.setPrivacyAckVersion(request.getPrivacyVersion());
         user.setPrivacyAckAt(clock.instant());
-        if (bootstrapAdmin.matches(email)) {
+        // REVIEW F7: doğrulama gerekiyorsa rol e-posta doğrulanınca verilir (EmailVerificationService.verify); adresi önce alan yönetici olamaz.
+        if (user.isEmailVerified() && bootstrapAdmin.matches(email)) {
             user.setRole(AuthUser.ROLE_ADMIN);
             log.info("bootstrap admin atandı");
         }

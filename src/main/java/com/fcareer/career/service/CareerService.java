@@ -366,7 +366,11 @@ public class CareerService {
         career.setBudgetEur(budget(career) - fee);
     }
 
+    /** REVIEW F1: başka kariyerin ürettiği oyuncu (owner_career_id başka) yokmuş gibi 404; adı ve verisi sızmaz. */
     private PlayerRatingEntity requirePlayerInCatalog(CareerEntity career, Long playerId) {
+        if (!basePlayerRepository.findForeignOwnedIds(List.of(playerId), career.getId()).isEmpty()) {
+            throw new NotFoundException(PLAYER, playerId);
+        }
         return playerRatingRepository.findByBasePlayerIdAndGameVersionId(playerId, career.getGameVersionId())
                 .orElseThrow(() -> new NotFoundException(PLAYER, playerId));
     }

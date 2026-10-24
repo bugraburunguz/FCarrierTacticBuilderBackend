@@ -61,6 +61,7 @@ public class ReplicaApplyService {
     private final PlayerService playerService;
     private final CareerService careerService;
     private final TacticAnalysisService analysisService;
+    private final com.fcareer.career.desk.SpoilerPolicy spoilerPolicy;
 
     public ReplicaApplyResponse apply(Long userId, String replicaId, ReplicaApplyRequest request) {
         Replica replica = replicas.find(replicaId).orElseThrow(() -> new NotFoundException("replica", replicaId));
@@ -96,6 +97,10 @@ public class ReplicaApplyService {
         SquadFitResponse solved = squadFitService.solve(players, intents, FitEngineV3.VERSION, true);
 
         Map<Long, PlayerSummaryResponse> summaries = playerService.summaries(solved.getSlots().stream().map(SlotAssignment::getPlayerId).filter(Objects::nonNull).toList(), gameVersion, request.getCareerId());
+        // REVIEW F2: kariyer kadrosuyla uygulamada spoiler politikası (SCOUT_RANGE: kesin POT yerine bant), diğer uçlarla aynı.
+        if (career) {
+            spoilerPolicy.maskAll(request.getCareerId(), summaries.values());
+        }
         List<ReplicaApplyResponse.Slot> slots = new ArrayList<>();
         Map<String, Long> assigned = new LinkedHashMap<>();
         for (SlotAssignment a : solved.getSlots()) {

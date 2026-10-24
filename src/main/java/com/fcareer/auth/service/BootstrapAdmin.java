@@ -25,7 +25,8 @@ public class BootstrapAdmin implements ApplicationRunner {
         if (email == null || email.isBlank()) {
             return;
         }
-        if (jdbc.update("UPDATE app_user SET role = 'ADMIN' WHERE email = ? AND role <> 'ADMIN'", email.trim().toLowerCase(Locale.ROOT)) > 0) {
+        // REVIEW F7: yalnız doğrulanmış hesap (doğrulanmamış biri adresi önce aldıysa açılışta yükseltilmez).
+        if (jdbc.update("UPDATE app_user SET role = 'ADMIN' WHERE email = ? AND role <> 'ADMIN' AND email_verified", email.trim().toLowerCase(Locale.ROOT)) > 0) {
             log.info("bootstrap admin atandı");
         }
     }
