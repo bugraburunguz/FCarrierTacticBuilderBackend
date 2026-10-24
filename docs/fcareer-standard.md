@@ -23,7 +23,8 @@ Karar kaydı `docs/review/08_DECISIONS_LOG.md`; çelişkide o geçerlidir.
 
 ## Güvenlik
 - Bedava uçlar ücretli içgörü döndürmez (D-01): `withoutPaidInsights`, slot-view 3 aday.
-- `careerId` alan her uç sahipliği doğrular. Admin uçları ADMIN rolü (geçişte `X-Admin-Key`).
+- `careerId` alan her uç sahipliği servis katmanında doğrular (`CareerService.requireOwned`); kapsam `OwnershipMatrixIntegrationTest`'te.
+  Admin uçları ADMIN rolü; `X-Admin-Key` yalnız `/admin/ingestion` ve `/admin/ml` (makine-makine).
 - Rate limit bellek içi sabit pencereli sayaçla (`WindowCounter`; backend tek örnek, yeniden başlatmada sıfırlanır).
 - EA hesap kimlik bilgisi istenmez, saklanmaz, loglanmaz. Sunucu EA'nın oturum gerektiren uçlarını çağırmaz.
 

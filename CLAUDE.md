@@ -10,7 +10,7 @@ EA SPORTS FC 27 için offline Kariyer + Ultimate Team companion uygulamasının 
   rate limit ve referans cache bellek içi (backend tek örnek)
 - Python 3.11 FastAPI ML servisi: `ml-service/` (potential/value), backend → REST
 - Base package: `com.fcareer` — feature paketleri: advisor, auth, billing, career, catalog, common, development,
-  fitengine, gameconfig, ingestion, mlclient, recommendation, roles, tacticcode, tactics, ut, versioning
+  fitengine, gameconfig, ingestion, mlclient, recommendation, replica, roles, tacticanalysis, tacticcode, tactics, usertactic, ut, versioning
 - Tek kanal: `/api/v1`. **Kafka, OpenFeign, aggregator, mobile/web kanal ayrımı YOK.**
 
 ## House style
@@ -22,13 +22,16 @@ Eski Azerlottery standardı `docs/archive/backend-standard.md` altında, referan
   `seed/ut-rules.*.json` / `ut_rules` tablosu. Değer FC27 için doğrulanmadıysa `verified:false`.
 - Fit engine katsayıları config'te (`fcareer.fit.*`); değişiklik = `BEHAVIOR CHANGE` + senaryo testleri (T1–T6) yeşil.
 - Public sorgular yalnız `player_valuation.source='MODELED'` okur; `IMPORT` verisi yalnız sahibine.
-- Kullanıcının kariyer/UT kulüp verisi başka kullanıcıya sızmaz: careerId alan her uçta `requireOwned`.
+- Kullanıcının kariyer/UT kulüp verisi başka kullanıcıya sızmaz: careerId alan her uç servis katmanında `CareerService.requireOwned`
+  (ya da `squadPlayerIds`) çağırır; başkasının kariyeri 404. `OwnershipMatrixIntegrationTest` her kariyer kapsamlı uca yabancı 404'ü doğrular; yeni uç oraya eklenir.
 - EA hesap kimlik bilgisi asla istenmez, saklanmaz, loglanmaz. Capture gövdeleri loglanmaz.
 - Veri kaynakları `docs/DATA_POLICY.md`'ye uymak zorunda; yeni dış kaynak = Buğra onayı.
-- Ücretli (kredi) iş üreten her uç `CreditGuard` arkasında; bedava önizleme uçları ücretli alanı döndürmez.
+- Ücretli (kredi) iş üreten her uç `CreditGuard` arkasında; bedava önizleme uçları ücretli alanı döndürmez. Bugün ücretli: `/fit/squad`,
+  `/careers/{id}/recommendations`, `/recommend/slot`, `/advisor/squad`, `/advisor/tactic` (maliyetler `fcareer.billing.*-cost`).
 
 ## Çalıştırma / test
-- `mvn test`: entegrasyon testleri zonky gömülü Postgres ile (Docker gerekmez, Testcontainers yok); token depoları, sayaç ve önbellek üretimdekiyle aynı. Opt-in: `-Dea.live=true`, `-Dml.live=true`. ML: `cd ml-service && python -m pytest`.
+- `mvn test`: entegrasyon testleri zonky gömülü Postgres ile (Docker gerekmez, Testcontainers yok); token depoları, sayaç ve önbellek üretimdekiyle aynı. Opt-in (varsayılan atlanır): `-Dea.live=true`, `-Dml.live=true`, `-Drole.validation=true` (`.ps`), `-Drole.candidates=…`, `-Dacceptance.report=true`.
+  `RoleSignalRegressionTest` git dışı LE dökümü (`ml-service/data/fc27-dump`) yoksa atlanır; CI'da her zaman atlanır. ML: `cd ml-service && python -m pytest`.
 - Dev: README'deki `DevApplication` akışı.
 
 ## Çalışma biçimi

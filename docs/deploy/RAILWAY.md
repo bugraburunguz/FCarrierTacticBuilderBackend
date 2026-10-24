@@ -110,14 +110,14 @@ Referans sözdizimi `${{SERVİS.DEĞİŞKEN}}`, `${{shared.X}}` ([variables](htt
 | `SPRING_PROFILES_ACTIVE` | sabit `prod` (application-prod.yml + ProdConfigGuard) |
 | `PORT` | sabit `8080` |
 | `PGHOST` `PGPORT` `PGDATABASE` `PGUSER` `PGPASSWORD` | referans `${{Postgres.PGHOST}}` … (beşi de) |
-| `JWT_SECRET` | openssl, sealed |
-| `ADMIN_KEY` | openssl, sealed |
-| `ML_SHARED_SECRET` | `${{shared.ML_SHARED_SECRET}}` |
-| `ML_BASE_URL` | `http://${{ml.RAILWAY_PRIVATE_DOMAIN}}:${{ml.PORT}}` |
-| `WEB_BASE_URL` | 7. adımdan sonra `https://<web domain>` (sabit; CORS ve doğrulama bağlantısı) |
-| `MAIL_HOST` `MAIL_PORT` | Brevo SMTP (port 587, STARTTLS) |
-| `MAIL_USERNAME` `MAIL_PASSWORD` | Brevo SMTP kullanıcısı / anahtarı (sealed) |
-| `MAIL_FROM` | Brevo'da doğrulanmış gönderici |
+| `JWT_SECRET` | openssl, sealed; **zorunlu**, ≥ 32 bayt (`JwtService` açılışta durur) |
+| `ADMIN_KEY` | openssl, sealed; opsiyonel (boşsa `X-Admin-Key` hep reddedilir; yönetici uçları ADMIN rolüyle çalışır) |
+| `ML_SHARED_SECRET` | opsiyonel: yalnız ml servisi kuruluysa `${{shared.ML_SHARED_SECRET}}` (yoksa yalnız yönetici "ML değerleme" ucu 503) |
+| `ML_BASE_URL` | opsiyonel: yalnız ml servisi kuruluysa `http://${{ml.RAILWAY_PRIVATE_DOMAIN}}:${{ml.PORT}}` |
+| `WEB_BASE_URL` | 7. adımdan sonra `https://<web domain>`; **zorunlu**, `https://` ile başlamalı (ProdConfigGuard; CORS ve doğrulama bağlantısı) |
+| `MAIL_HOST` `MAIL_PORT` | Brevo SMTP (port 587, STARTTLS); `MAIL_HOST` **zorunlu** (ProdConfigGuard), `MAIL_PORT` varsayılan 587 |
+| `MAIL_USERNAME` `MAIL_PASSWORD` | Brevo SMTP kullanıcısı / anahtarı (sealed); **zorunlu** (ProdConfigGuard) |
+| `MAIL_FROM` | Brevo'da doğrulanmış gönderici; **zorunlu** (ProdConfigGuard) |
 | `FCAREER_FREE_BETA` | sabit `true` |
 | `FCAREER_DAILY_CREDITS` | sabit `30` |
 | `FCAREER_TRUST_PROXY` | sabit `true` |
@@ -153,7 +153,7 @@ Referans sözdizimi `${{SERVİS.DEĞİŞKEN}}`, `${{shared.X}}` ([variables](htt
 Sıra: Postgres (hazır) → ml → backend → web.
 
 1. ml: Deploy. **Görmelisin:** healthcheck `/health` 200 (`model_loaded:false` modelsizken normal).
-2. backend: 8. adımdaki taşıma bitmiş olmalı (3. adımdaki not). Deploy. **Görmelisin:** loglarda Flyway `Successfully validated 39 migrations` / "Schema … is up to date" (taşınan `flyway_schema_history` doğrulanır, yeni migration yok), `Started FcareerApplication`, healthcheck 200. ProdConfigGuard eksik değişkeni adıyla söyler ve açılmaz.
+2. backend: 8. adımdaki taşıma bitmiş olmalı (3. adımdaki not). Deploy. **Görmelisin:** loglarda Flyway `Successfully validated N migrations` (N = `src/main/resources/db/migration` altındaki dosya sayısı; 2026-10-24'te 45) / "Schema … is up to date" (taşınan `flyway_schema_history` doğrulanır, yeni migration yok), `Started FcareerApplication`, healthcheck 200. ProdConfigGuard eksik değişkeni adıyla söyler ve açılmaz (MAIL_HOST, MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM, `https://` WEB_BASE_URL, BILLING_STUB kapalı); kısa ya da boş JWT_SECRET'ı `JwtService` ayrıca reddeder.
 3. web: Deploy. **Görmelisin:** healthcheck `/` 200; log satırları IP'nin son bölümü 0 / `::` ile.
 
 ## 7. Domain
