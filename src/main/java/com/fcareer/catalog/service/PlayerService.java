@@ -119,20 +119,27 @@ public class PlayerService {
                 .collect(Collectors.toMap(BasePlayerEntity::getId, Function.identity()));
         Map<Long, RatingColumns> ratings = new HashMap<>();
         Map<Long, CareerPlayerRepository.Row> careerRows = Objects.nonNull(careerId) ? careerPlayerRepository.byIds(careerId, playerIds) : Map.of();
-        if (Objects.isNull(careerId)) {
-            playerRatingRepository.findByBasePlayerIdInAndGameVersionId(playerIds, gv).forEach(r -> ratings.put(r.getBasePlayerId(), r));
+        // KARIYER-UX FAZ 5 (4b-1): kariyerde kayıt esastır; kayıtta satırı ya da özniteliği olmayan oyuncu katalogdan okunur.
+        List<Long> fromCatalog = Objects.isNull(careerId) ? playerIds
+                : playerIds.stream().filter(id -> !careerRows.containsKey(id) || careerRows.get(id).attrs().isEmpty()).toList();
+        if (!fromCatalog.isEmpty()) {
+            playerRatingRepository.findByBasePlayerIdInAndGameVersionId(fromCatalog, gv).forEach(r -> ratings.put(r.getBasePlayerId(), r));
         }
         Map<Long, PlayerValuationEntity> valuations = playerValuationRepository
                 .findByBasePlayerIdInAndGameVersionIdAndSourceAndOwnerUserIdIsNull(playerIds, gv, ValuationSource.MODELED)
                 .stream().collect(Collectors.toMap(PlayerValuationEntity::getBasePlayerId, Function.identity()));
         java.time.LocalDate gameDate = playerSearchRepository.careerGameDate(careerId).orElse(null);
         return playerIds.stream().map(id -> {
-            boolean hasRating = Objects.nonNull(careerId) ? careerRows.containsKey(id) : ratings.containsKey(id);
-            if (!bases.containsKey(id) || !hasRating) {
+            CareerPlayerRepository.Row row = careerRows.get(id);
+            RatingColumns rating = ratings.get(id);
+            if (!bases.containsKey(id) || (Objects.isNull(row) && Objects.isNull(rating))) {
                 throw new NotFoundException(PLAYER, id);
             }
-            return Objects.nonNull(careerId) ? playerMapper.toFitPlayer(bases.get(id), careerRows.get(id), valuations.get(id), gameDate)
-                    : playerMapper.toFitPlayer(bases.get(id), ratings.get(id), valuations.get(id), gameDate);
+            if (Objects.isNull(row)) {
+                return playerMapper.toFitPlayer(bases.get(id), rating, valuations.get(id), gameDate);
+            }
+            FitPlayer fromRecord = playerMapper.toFitPlayer(bases.get(id), row, valuations.get(id), gameDate);
+            return Objects.isNull(rating) ? fromRecord : fromRecord.toBuilder().attrs(playerMapper.attrs(rating)).build();
         }).toList();
     }
 

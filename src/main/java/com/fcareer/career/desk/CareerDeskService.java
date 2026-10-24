@@ -198,16 +198,18 @@ public class CareerDeskService {
     @Transactional(readOnly = true)
     public List<TagDto> tags(Long userId, Long careerId) {
         careerService.requireOwned(userId, careerId);
-        return jdbc.query("SELECT base_player_id, tag FROM career_player_tag WHERE career_id = :c ORDER BY base_player_id", Map.of("c", careerId),
-                (rs, i) -> new TagDto(rs.getLong("base_player_id"), rs.getString("tag")));
+        return jdbc.query("SELECT base_player_id, tag, asking_price_eur FROM career_player_tag WHERE career_id = :c ORDER BY base_player_id", Map.of("c", careerId),
+                (rs, i) -> new TagDto(rs.getLong("base_player_id"), rs.getString("tag"), (Long) rs.getObject("asking_price_eur", Long.class)));
     }
 
     @Transactional
-    public TagDto setTag(Long userId, Long careerId, Long playerId, String tag) {
+    public TagDto setTag(Long userId, Long careerId, Long playerId, String tag, Long askingPriceEur) {
         careerService.requireOwned(userId, careerId);
-        jdbc.update("INSERT INTO career_player_tag (career_id, base_player_id, tag) VALUES (:c, :p, :t) ON CONFLICT (career_id, base_player_id) DO UPDATE SET tag = EXCLUDED.tag",
-                new MapSqlParameterSource().addValue("c", careerId).addValue("p", playerId).addValue("t", tag));
-        return new TagDto(playerId, tag);
+        jdbc.update("""
+                INSERT INTO career_player_tag (career_id, base_player_id, tag, asking_price_eur) VALUES (:c, :p, :t, :a)
+                ON CONFLICT (career_id, base_player_id) DO UPDATE SET tag = EXCLUDED.tag, asking_price_eur = EXCLUDED.asking_price_eur""",
+                new MapSqlParameterSource().addValue("c", careerId).addValue("p", playerId).addValue("t", tag).addValue("a", askingPriceEur));
+        return new TagDto(playerId, tag, askingPriceEur);
     }
 
     @Transactional
@@ -292,7 +294,7 @@ public class CareerDeskService {
                 new MapSqlParameterSource().addValue("c", careerId).addValue("s", backup.spoilerMode()).addValue("w", backup.wageBudgetEur()).addValue("ch", backup.challengeId()));
         List<TagDto> tags = Objects.isNull(backup.tags()) ? new ArrayList<>() : backup.tags();
         for (TagDto tag : tags) {
-            setTag(userId, careerId, tag.playerId(), tag.tag());
+            setTag(userId, careerId, tag.playerId(), tag.tag(), tag.askingPriceEur());
         }
         for (ShortlistDto item : Objects.isNull(backup.shortlist()) ? List.<ShortlistDto>of() : backup.shortlist()) {
             shortlistAdd(userId, careerId, item.playerId(), new ShortlistRequest(item.note(), item.maxFeeEur()));

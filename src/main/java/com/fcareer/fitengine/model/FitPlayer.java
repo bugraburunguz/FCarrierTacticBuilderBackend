@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 @Getter
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 public class FitPlayer {
 

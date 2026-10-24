@@ -27,6 +27,9 @@ public class PlayerSearchRequest {
     private List<String> positions = new ArrayList<>();
     @Builder.Default
     private List<String> playstyles = new ArrayList<>();
+    /** KARIYER-UX 6: PlayStyle+ (seviye ≥ 2) istenenler; hepsi birden (AND). */
+    @Builder.Default
+    private List<String> playstylesPlus = new ArrayList<>();
     @Builder.Default
     private List<String> accelerate = new ArrayList<>();
     @Builder.Default

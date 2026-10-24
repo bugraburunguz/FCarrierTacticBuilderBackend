@@ -28,6 +28,11 @@ public class PlayerMapper {
     private final PositionOverallService positionOverallService;
     private final com.fcareer.ingestion.base.LeRoleCodes leRoleCodes;
 
+    /** Katalog öznitelikleri (kariyer kaydında öznitelik yoksa düşülen kaynak). */
+    public Map<Attr, Integer> attrs(RatingColumns rating) {
+        return ratingAttrAccessor.read(rating);
+    }
+
     public FitPlayer toFitPlayer(BasePlayerEntity base, RatingColumns rating, PlayerValuationEntity valuation, LocalDate gameDate) {
         return FitPlayer.builder()
                 .id(base.getId())
