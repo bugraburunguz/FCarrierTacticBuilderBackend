@@ -152,7 +152,7 @@ class ReplicaApplyIntegrationTest {
     @Test
     void naturalPositionsAreFilledFirst_outOfPositionOnlyWhenNeeded() throws Exception {
         String token = register();
-        for (String id : List.of("guardiola_barcelona_2011", "sacchi_milan_1989", "mourinho_inter_2010", "zidane_real_2017", "klopp_liverpool_2020", "flick_bayern_2020", "ferguson_united_2008", "vangaal_ajax_1995")) {
+        for (String id : List.of("guardiola_barcelona_2011", "wenger_arsenal_2008", "mourinho_inter_2010", "zidane_real_2017", "klopp_liverpool_2020", "flick_bayern_2020", "ferguson_united_2008", "conte_chelsea_2017")) {
             JsonNode data = call(post("/api/v1/replicas/" + id + "/apply"), Map.of("playerIds", catalogPool(60)), token, 200).path("data");
             List<String> slotPositions = new ArrayList<>();
             List<Set<String>> natural = new ArrayList<>();

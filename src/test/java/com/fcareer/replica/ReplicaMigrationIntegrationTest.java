@@ -21,8 +21,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 class ReplicaMigrationIntegrationTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    private static final int LEGACY_REPLICAS = 34;
-    private static final int MAPPED = 33;
+    /** 34 eski REPLICA preset'i + REP-e yeniden adlandırması (dogan_trabzonspor_2005). */
+    private static final int LEGACY_REPLICAS = 35;
+    /** REP-c: hedefi 2000 öncesi olduğu için seed'den çıkan 5 eşleme null + gerekçe oldu. */
+    private static final int MAPPED = 29;
 
     @Autowired
     private MockMvc mockMvc;

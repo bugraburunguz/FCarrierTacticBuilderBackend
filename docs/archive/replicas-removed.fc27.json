@@ -1,0 +1,2620 @@
+[
+ {
+  "id": "delbosque_real_2000",
+  "kind": "REPLICA",
+  "category": "UCL_WINNER",
+  "club": "Real Madrid",
+  "coach": "Vicente del Bosque",
+  "season": "1999-00",
+  "honours": [
+   "Şampiyonlar Ligi"
+  ],
+  "whyIconic": "Sezon ortasında Toshack'tan devralan Del Bosque, ligde 5. biten takımı beşli savunma ve Redondo-McManaman-Raúl ekseniyle Avrupa şampiyonu yaptı; Paris finalinde Valencia 3-0.",
+  "realShape": {
+   "inPossession": "3-4-1-2 / 3-5-2: Helguera-Campo-Karanka üçlüsü, Salgado ve Roberto Carlos kanat bekleri, Redondo tek pivot",
+   "outOfPossession": "5-3-2 orta-alçak blok, kanat bekleri beşli hatta iner",
+   "keyMechanisms": [
+    "Redondo'dan dikey/çapraz dağıtım",
+    "Roberto Carlos sol koridor overlap'i",
+    "McManaman'ın içeriden top sürme ve ikinci dalga koşuları",
+    "Raúl'un forvet arkası boşluk okuması"
+   ]
+  },
+  "fc27": {
+   "formation": "5-2-1-2",
+   "buildUp": "BALANCED",
+   "defensiveApproach": "BALANCED",
+   "lineHeight": 42,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Goalkeeper",
+     "focus": "Balanced",
+     "profile": "Casillas tipi: 19 yaşında refleks kalecisi, çizgide güçlü",
+     "keyAttributes": [
+      "GK Reflexes",
+      "GK Diving",
+      "Reactions"
+     ],
+     "keyPlayStyles": [
+      "Far Reach",
+      "Deflector"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Attacking Wingback",
+     "focus": "Attack",
+     "profile": "Roberto Carlos tipi: sol koridoru tek başına kullanan bombardıman kanat beki",
+     "keyAttributes": [
+      "Sprint Speed",
+      "Shot Power",
+      "Crossing",
+      "Stamina"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Power Shot",
+      "Whipped Pass"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Defender",
+     "focus": "Defend",
+     "profile": "Karanka tipi: alan tutan sol stoper",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Standing Tackle",
+      "Strength",
+      "Heading Accuracy"
+     ],
+     "keyPlayStyles": [
+      "Block",
+      "Aerial Fortress"
+     ]
+    },
+    {
+     "slot": "CB",
+     "position": "CB",
+     "role": "Ball-Playing Defender",
+     "focus": "Build-Up",
+     "profile": "Helguera tipi: orta sahadan dönme, pasla çıkan libero",
+     "keyAttributes": [
+      "Short Passing",
+      "Long Passing",
+      "Composure",
+      "Interceptions"
+     ],
+     "keyPlayStyles": [
+      "Long Ball Pass",
+      "Intercept"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Stopper",
+     "focus": "Balanced",
+     "profile": "Iván Campo tipi: adam tutan, havada güçlü sağ stoper",
+     "keyAttributes": [
+      "Aggression",
+      "Standing Tackle",
+      "Strength",
+      "Jumping"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Anticipate"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Wingback",
+     "focus": "Balanced",
+     "profile": "Míchel Salgado tipi: iki yönlü, sert sağ kanat beki",
+     "keyAttributes": [
+      "Stamina",
+      "Standing Tackle",
+      "Crossing",
+      "Aggression"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Jockey"
+     ]
+    },
+    {
+     "slot": "LCM",
+     "position": "CM",
+     "role": "Playmaker",
+     "focus": "Roaming",
+     "profile": "McManaman tipi: soldan içeri sürüp ikinci dalgada kutuya gelen serbest 8",
+     "keyAttributes": [
+      "Dribbling",
+      "Stamina",
+      "Ball Control",
+      "Vision"
+     ],
+     "keyPlayStyles": [
+      "Press Proven",
+      "Technical",
+      "Relentless"
+     ]
+    },
+    {
+     "slot": "RCM",
+     "position": "CM",
+     "role": "Deep-Lying Playmaker",
+     "focus": "Build-Up",
+     "profile": "Redondo tipi: zarif, topu saklayan, tempo kuran derin oyun kurucu",
+     "keyAttributes": [
+      "Vision",
+      "Short Passing",
+      "Ball Control",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Press Proven",
+      "Tiki Taka",
+      "Pinged Pass"
+     ]
+    },
+    {
+     "slot": "CAM",
+     "position": "CAM",
+     "role": "Shadow Striker",
+     "focus": "Attack",
+     "profile": "Raúl tipi: forvet arkasından boşluğa sızan, soğukkanlı bitirici",
+     "keyAttributes": [
+      "Positioning",
+      "Finishing",
+      "Composure",
+      "Reactions"
+     ],
+     "keyPlayStyles": [
+      "Finesse Shot",
+      "Quick Step",
+      "Chip Shot"
+     ]
+    },
+    {
+     "slot": "LST",
+     "position": "ST",
+     "role": "Advanced Forward",
+     "focus": "Attack",
+     "profile": "Anelka tipi: hızlı, kanallara kaçan derinlik forveti",
+     "keyAttributes": [
+      "Finishing",
+      "Acceleration",
+      "Positioning",
+      "Sprint Speed"
+     ],
+     "keyPlayStyles": [
+      "Quick Step",
+      "Low Driven Shot",
+      "Rapid"
+     ]
+    },
+    {
+     "slot": "RST",
+     "position": "ST",
+     "role": "Target Forward",
+     "focus": "Balanced",
+     "profile": "Morientes tipi: kafa vuruşu güçlü, duvar olan pivot santrfor",
+     "keyAttributes": [
+      "Heading Accuracy",
+      "Jumping",
+      "Positioning",
+      "Finishing"
+     ],
+     "keyPlayStyles": [
+      "Precision Header",
+      "Aerial Fortress"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Önde koruma: 5-3-2 blok",
+    "formation": "5-3-2",
+    "buildUp": "COUNTER",
+    "defensiveApproach": "DEEP",
+    "lineHeight": 25,
+    "changes": [
+     "CDM: Holding/Defend (Redondo öne kapatır)",
+     "LCM: Box-to-Box/Balanced (McManaman iki yönlü)",
+     "RCM: Holding/Ball-Winning (Raúl yerine Geremi/Helguera tipi)",
+     "LB: Wingback/Balanced (R. Carlos daha temkinli)",
+     "LST: Advanced Forward/Attack (kontra ucu)",
+     "RST: Target Forward/Balanced"
+    ]
+   },
+   "smartTactics": [
+    "Tactical Focus: Hücum → savunma yaklaşımı BALANCED→HIGH, build-up bir kademe kayar; LCB Defender Defend→Balanced; LCM Playmaker Roaming→Attack; RST Target Forward Balanced→Attack. Ne zaman: skor eşitken 60'tan sonra; Roberto Carlos ve Raúl daha önde, kanat bekleri daha cesur.",
+    "Tactical Focus: Savunma → savunma yaklaşımı BALANCED→DEEP, build-up bir kademe kayar; GK Goalkeeper Balanced→Defend; CB Ball-Playing Defender Build-Up→Defend; RCM Deep-Lying Playmaker Build-Up→Defend. Ne zaman: farkı koruma; Redondo ve McManaman geriye bağlanır, beşli hat sabitlenir.",
+    "Quick Tactic: Get In Box: Morientes ortaları için Raúl ve McManaman kutuya — duran top ve kanat ortalarında."
+   ],
+   "tacticCode": null
+  },
+  "replicaFidelity": {
+   "score": 3,
+   "cannotReplicate": [
+    "FC27'de hibrit 4-4-2 / 5-3-2 geçişi tek formasyonla verilemiyor; lig maçlarında dörtlü savunma da kullanıldı",
+    "Redondo'nun pres altında top saklama kalitesi rol değil oyuncu kalitesi"
+   ]
+  },
+  "behaviorTags": [
+   "gk_line_keeper",
+   "fb_overlap",
+   "cb_hold",
+   "cb_progress",
+   "cb_step_up",
+   "fb_balanced",
+   "cm_playmake",
+   "cm_deep_build",
+   "cam_run_beyond",
+   "st_run_behind",
+   "st_target",
+   "back_three",
+   "wingback_width",
+   "deep_playmaker_pivot"
+  ],
+  "sources": [
+   "model bilgisi — VERIFY"
+  ],
+  "verify": [
+   "Final dizilişi (Helguera stoper mi ön libero mu) doğrulanmalı",
+   "Anelka-Morientes ikilisi ve Raúl'un konumu doğrulanmalı",
+   "Del Bosque'nin göreve geliş tarihi (Kasım 1999) doğrulanmalı"
+  ]
+ },
+ {
+  "id": "cruyff_barcelona_1992",
+  "kind": "REPLICA",
+  "category": "LEGENDARY_COACH",
+  "club": "FC Barcelona",
+  "coach": "Johan Cruyff",
+  "season": "1991-92",
+  "honours": [
+   "Avrupa Şampiyon Kulüpler Kupası",
+   "La Liga"
+  ],
+  "whyIconic": "Barcelona'nın ilk Avrupa Kupası (Wembley, Koeman frikiği). 3-4-3 elmasla pozisyonel oyunun ve bugünkü Barça kimliğinin kurucu metni.",
+  "realShape": {
+   "inPossession": "3-4-3 elmas (3-1-2-1-3): Koeman merkezde libero, Guardiola tek pivot, Bakero elmasın ucu, iki açık kanat ve serbest Laudrup",
+   "outOfPossession": "Yüksek hat + ofsayt tuzağı, kayıpta anında geri kazanma; savunmada 4-3-3'e yakın orta-yüksek blok",
+   "keyMechanisms": [
+    "tek pivot (Guardiola)",
+    "libero kuruluşu ve Koeman'ın uzun topları",
+    "çizgiye yapışan açık kanatlar",
+    "Laudrup'un düşen/serbest 9 rolü",
+    "üçgenler ve 3. adam"
+   ]
+  },
+  "fc27": {
+   "formation": "4-3-3 (2)",
+   "buildUp": "SHORT_PASSING",
+   "defensiveApproach": "HIGH",
+   "lineHeight": 80,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Sweeper Keeper",
+     "focus": "Balanced",
+     "profile": "Zubizarreta tipi: yüksek hattın arkasını süpüren tecrübeli kaleci",
+     "keyAttributes": [
+      "GK Positioning",
+      "Reactions",
+      "GK Kicking"
+     ],
+     "keyPlayStyles": [
+      "Rush Out",
+      "Footwork"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Falseback",
+     "focus": "Balanced",
+     "profile": "Juan Carlos / Eusebio tipi: içe kayıp pivotun yanına giren, elmasın sol ayağını kuran bek",
+     "keyAttributes": [
+      "Short Passing",
+      "Interceptions",
+      "Stamina"
+     ],
+     "keyPlayStyles": [
+      "Tiki Taka",
+      "Intercept"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Ball-Playing Defender",
+     "focus": "Build-Up",
+     "profile": "Koeman tipi: libero; uzun diyagonal pas ve frikik silahı",
+     "keyAttributes": [
+      "Long Passing",
+      "Composure",
+      "Shot Power",
+      "Free Kick Accuracy"
+     ],
+     "keyPlayStyles": [
+      "Long Ball Pass",
+      "Dead Ball",
+      "Power Shot"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Stopper",
+     "focus": "Balanced",
+     "profile": "Nando / Alexanco tipi: öne çıkıp hattı kapatan, hızlı markajcı stoper",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Standing Tackle",
+      "Sprint Speed"
+     ],
+     "keyPlayStyles": [
+      "Intercept",
+      "Anticipate"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Fullback",
+     "focus": "Defend",
+     "profile": "Ferrer tipi: üçlü savunmanın sağ ayağına kayan disiplinli bek",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Standing Tackle",
+      "Acceleration",
+      "Short Passing"
+     ],
+     "keyPlayStyles": [
+      "Jockey",
+      "Intercept"
+     ]
+    },
+    {
+     "slot": "CDM",
+     "position": "CDM",
+     "role": "Deep-Lying Playmaker",
+     "focus": "Build-Up",
+     "profile": "Guardiola tipi: tek pivot; bir-iki dokunuşla tempoyu belirleyen 4 numara",
+     "keyAttributes": [
+      "Short Passing",
+      "Vision",
+      "Composure",
+      "Interceptions"
+     ],
+     "keyPlayStyles": [
+      "Tiki Taka",
+      "Incisive Pass"
+     ]
+    },
+    {
+     "slot": "LCM",
+     "position": "CM",
+     "role": "Box-to-Box",
+     "focus": "Balanced",
+     "profile": "Amor / Eusebio tipi: dengeli iç oyuncu; top taşıyan ve kayıpta ilk basan 8",
+     "keyAttributes": [
+      "Stamina",
+      "Short Passing",
+      "Ball Control"
+     ],
+     "keyPlayStyles": [
+      "Press Proven",
+      "Tiki Taka"
+     ]
+    },
+    {
+     "slot": "RCM",
+     "position": "CM",
+     "role": "Playmaker",
+     "focus": "Attack",
+     "profile": "Bakero tipi: elmasın ucu; ceza sahasına geç giren, kafası iyi 10/8",
+     "keyAttributes": [
+      "Positioning",
+      "Heading Accuracy",
+      "Finishing",
+      "Stamina"
+     ],
+     "keyPlayStyles": [
+      "Precision Header",
+      "Relentless"
+     ]
+    },
+    {
+     "slot": "LW",
+     "position": "LW",
+     "role": "Inside Forward",
+     "focus": "Attack",
+     "profile": "Stoichkov tipi: soldan içe kesen, sert şutlu golcü kanat",
+     "keyAttributes": [
+      "Shot Power",
+      "Finishing",
+      "Acceleration",
+      "Dribbling"
+     ],
+     "keyPlayStyles": [
+      "Power Shot",
+      "Low Driven Shot",
+      "Rapid"
+     ]
+    },
+    {
+     "slot": "ST",
+     "position": "ST",
+     "role": "False 9",
+     "focus": "Build-Up",
+     "profile": "Laudrup tipi: düşen 9; boşluk bulup kanatları ara pasla koşturan dahi",
+     "keyAttributes": [
+      "Vision",
+      "Dribbling",
+      "Short Passing",
+      "Agility"
+     ],
+     "keyPlayStyles": [
+      "Incisive Pass",
+      "Technical",
+      "First Touch"
+     ]
+    },
+    {
+     "slot": "RW",
+     "position": "RW",
+     "role": "Winger",
+     "focus": "Attack",
+     "profile": "Goikoetxea / Begiristain tipi: çizgiye yapışıp genişliği veren açık kanat",
+     "keyAttributes": [
+      "Crossing",
+      "Acceleration",
+      "Dribbling"
+     ],
+     "keyPlayStyles": [
+      "Whipped Pass",
+      "Rapid"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Klasik 9 ile derinlik (Julio Salinas)",
+    "formation": "4-3-3 (2)",
+    "buildUp": "SHORT_PASSING",
+    "defensiveApproach": "HIGH",
+    "lineHeight": 78,
+    "changes": [
+     "ST: Target Forward/Balanced (Salinas tipi kutu 9'u)",
+     "RCM: Playmaker/Roaming (Laudrup 10'a çekilir)"
+    ]
+   },
+   "smartTactics": [
+    "Tactical Focus: Hücum → savunma HIGH→AGGRESSIVE olur, RB Fullback/Defend→Balanced'a kayar ve üçlü savunma dağılır; sadece geride kalınca aç.",
+    "Quick Tactic: Offside Trap — Cruyff'un yüksek hattının imzası; rakip uzun topa yöneldiğinde kullan. Team Press'i top kaybı sonrası geri kazanma patlaması için sakla."
+   ],
+   "tacticCode": null
+  },
+  "replicaFidelity": {
+   "score": 3,
+   "cannotReplicate": [
+    "FC27'de 3-1-2-1-3 elması yok; üçlü savunma RB Fullback/Defend + LB Falseback kombinasyonuyla taklit ediliyor",
+    "Koeman'ın libero olarak öne çıkıp orta sahaya girmesi BPD/Build-Up ile ancak kısmen karşılanıyor",
+    "Laudrup–Bakero–Stoichkov arasındaki sürekli pozisyon değişimi sabit rollerle tam yakalanamıyor"
+   ]
+  },
+  "behaviorTags": [
+   "fb_invert",
+   "fb_stay_back",
+   "cb_long_pass",
+   "cdm_single_pivot",
+   "cm_late_run",
+   "w_hug_line",
+   "w_cut_inside",
+   "st_false_nine",
+   "high_line",
+   "offside_trap",
+   "positional_play"
+  ],
+  "sources": [
+   "model bilgisi — VERIFY"
+  ],
+  "verify": [
+   "Wembley finali dizilişinde Nando / Juan Carlos / Eusebio'nun hangi yanlarda oynadığı",
+   "Bakero'nun elmasın ucu mu iç oyuncu mu olduğu (maça göre değişiyor)"
+  ]
+ },
+ {
+  "id": "sacchi_milan_1989",
+  "kind": "REPLICA",
+  "category": "LEGENDARY_COACH",
+  "club": "AC Milan",
+  "coach": "Arrigo Sacchi",
+  "season": "1988-89",
+  "honours": [
+   "Avrupa Şampiyon Kulüpler Kupası",
+   "İtalya Süper Kupası"
+  ],
+  "whyIconic": "Zonal savunma, 25-30 metrelik kompaktlık ve kolektif presle futbolu değiştiren takım; Steaua'yı finalde 4-0 ezdi.",
+  "realShape": {
+   "inPossession": "4-4-2: dar ve kompakt bloktan hızlı dikey çıkış; beklerin kontrollü bindirmesi, Gullit-Van Basten ikilisine erken top",
+   "outOfPossession": "Çok yüksek hat + ofsayt tuzağı, topa yönelik zonal pres (top–rakip–alan–takım arkadaşı referansı); hatlar arası 25-30 m",
+   "keyMechanisms": [
+    "zonal savunma",
+    "ofsayt tuzağı (Baresi'nin işaretiyle hattın çıkması)",
+    "kolektif top yönelimli pres",
+    "kompakt dikdörtgen blok",
+    "hızlı dikey geçiş"
+   ]
+  },
+  "fc27": {
+   "formation": "4-4-2",
+   "buildUp": "BALANCED",
+   "defensiveApproach": "HIGH",
+   "lineHeight": 88,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Goalkeeper",
+     "focus": "Balanced",
+     "profile": "Galli tipi: güvenilir, sade oynayan kaleci",
+     "keyAttributes": [
+      "GK Reflexes",
+      "GK Positioning",
+      "GK Handling"
+     ],
+     "keyPlayStyles": [
+      "Cross Claimer",
+      "Footwork"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Wingback",
+     "focus": "Balanced",
+     "profile": "Genç Maldini tipi: hem savunan hem zamanlı bindiren komple bek",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Standing Tackle",
+      "Sprint Speed",
+      "Crossing"
+     ],
+     "keyPlayStyles": [
+      "Jockey",
+      "Anticipate"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Ball-Playing Defender",
+     "focus": "Aggressive",
+     "profile": "Baresi tipi: hattın lideri; ofsaytı yöneten, öne çıkıp top kapan libero",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Interceptions",
+      "Reactions",
+      "Long Passing"
+     ],
+     "keyPlayStyles": [
+      "Anticipate",
+      "Intercept",
+      "Long Ball Pass"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Defender",
+     "focus": "Balanced",
+     "profile": "Costacurta tipi: hızlı, hattı Baresi'yle birlikte çıkaran stoper",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Sprint Speed",
+      "Standing Tackle"
+     ],
+     "keyPlayStyles": [
+      "Jockey",
+      "Block"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Fullback",
+     "focus": "Balanced",
+     "profile": "Tassotti tipi: pas kalitesi yüksek, dengeli sağ bek",
+     "keyAttributes": [
+      "Short Passing",
+      "Crossing",
+      "Defensive Awareness"
+     ],
+     "keyPlayStyles": [
+      "Whipped Pass",
+      "Intercept"
+     ]
+    },
+    {
+     "slot": "LM",
+     "position": "LM",
+     "role": "Wide Midfielder",
+     "focus": "Support",
+     "profile": "Evani / Colombo tipi: kanatta dar oynayan, presin yan duvarı olan çalışkan oyuncu",
+     "keyAttributes": [
+      "Stamina",
+      "Interceptions",
+      "Short Passing"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Press Proven"
+     ]
+    },
+    {
+     "slot": "LCM",
+     "position": "CM",
+     "role": "Deep-Lying Playmaker",
+     "focus": "Build-Up",
+     "profile": "Ancelotti tipi: pozisyon bilen, kısa-uzun dağıtan orta saha",
+     "keyAttributes": [
+      "Short Passing",
+      "Long Passing",
+      "Vision"
+     ],
+     "keyPlayStyles": [
+      "Pinged Pass",
+      "Long Ball Pass"
+     ]
+    },
+    {
+     "slot": "RCM",
+     "position": "CM",
+     "role": "Box-to-Box",
+     "focus": "Ball-Winning",
+     "profile": "Rijkaard tipi: fiziksel, top kapan ve ileri taşıyan komple orta saha",
+     "keyAttributes": [
+      "Strength",
+      "Standing Tackle",
+      "Stamina",
+      "Short Passing"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Intercept",
+      "Press Proven"
+     ]
+    },
+    {
+     "slot": "RM",
+     "position": "RM",
+     "role": "Winger",
+     "focus": "Balanced",
+     "profile": "Donadoni tipi: tekniği yüksek, içe-dışa oynayabilen sağ kanat",
+     "keyAttributes": [
+      "Dribbling",
+      "Agility",
+      "Crossing"
+     ],
+     "keyPlayStyles": [
+      "Technical",
+      "Whipped Pass"
+     ]
+    },
+    {
+     "slot": "LST",
+     "position": "ST",
+     "role": "Advanced Forward",
+     "focus": "Support",
+     "profile": "Gullit tipi: fiziği ve tekniğiyle her yere giden, topu tutup oyuna katılan forvet",
+     "keyAttributes": [
+      "Strength",
+      "Dribbling",
+      "Heading Accuracy",
+      "Short Passing"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Power Shot",
+      "First Touch"
+     ]
+    },
+    {
+     "slot": "RST",
+     "position": "ST",
+     "role": "Advanced Forward",
+     "focus": "Attack",
+     "profile": "Van Basten tipi: her türlü bitiricilikte zirve santrfor",
+     "keyAttributes": [
+      "Finishing",
+      "Volleys",
+      "Positioning",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Acrobatic",
+      "Finesse Shot",
+      "Precision Header"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Önde koruma: hattı bir kademe indir",
+    "formation": "4-4-2",
+    "buildUp": "BALANCED",
+    "defensiveApproach": "BALANCED",
+    "lineHeight": 58,
+    "changes": [
+     "LB: Fullback/Defend",
+     "RST: Advanced Forward/Support (ilk pres hattı ama geri dönen)"
+    ]
+   },
+   "smartTactics": [
+    "Quick Tactic: Offside Trap'i rakibin her uzun topunda kullan — Sacchi Milan'ının kalbi; Team Press'i rakip geri pas yaptığında tetikle.",
+    "Tactical Focus: Hücum → savunma HIGH→AGGRESSIVE; RCB Defender Balanced kalır (Attack/Roaming yok), RM Winger Balanced→Attack'a geçer."
+   ],
+   "tacticCode": null
+  },
+  "replicaFidelity": {
+   "score": 4,
+   "cannotReplicate": [
+    "Topa yönelik zonal kayma ve 25 m kompaktlık doğrudan ayar değil; HIGH yaklaşım + yüksek hat ile yaklaşık",
+    "FC27'de genişlik ayarı yok; dar 4-4-2'nin darlığı LM Wide Midfielder/Support rolünden geliyor"
+   ]
+  },
+  "behaviorTags": [
+   "high_line",
+   "offside_trap",
+   "zonal_press",
+   "compact_block",
+   "cb_step_up",
+   "cm_ball_winner",
+   "cm_deep_build",
+   "st_hold_up",
+   "st_run_behind"
+  ],
+  "sources": [
+   "model bilgisi — VERIFY"
+  ],
+  "verify": [
+   "Sol kanatta Evani mi Colombo mu ilk tercih olduğu (1988-89)",
+   "Baresi–Costacurta sol/sağ yerleşimi"
+  ]
+ },
+ {
+  "id": "capello_milan_1994",
+  "kind": "REPLICA",
+  "category": "LEGENDARY_COACH",
+  "club": "AC Milan",
+  "coach": "Fabio Capello",
+  "season": "1993-94",
+  "honours": [
+   "UEFA Şampiyonlar Ligi",
+   "Serie A",
+   "İtalya Süper Kupası"
+  ],
+  "whyIconic": "34 maçta sadece 15 gol yiyen savunma blokuyla Serie A, ardından Atina'da Cruyff'un Barcelona'sını 4-0 dağıtan pragmatik dev.",
+  "realShape": {
+   "inPossession": "4-4-2: Albertini'nin dağıtımı, Desailly'nin taşıması; Savićević serbest, Massaro derinlik; az ama keskin hücum",
+   "outOfPossession": "Orta-yüksek kompakt blok, Baresi-Costacurta ofsayt hattı; kaptıktan sonra hızlı dikey çıkış",
+   "keyMechanisms": [
+    "kompakt 4-4-2 blok",
+    "Desailly'nin önlibero kalkanı",
+    "Albertini metronom",
+    "Savićević'in serbest yaratıcılığı",
+    "ofsayt hattı"
+   ]
+  },
+  "fc27": {
+   "formation": "4-4-2",
+   "buildUp": "BALANCED",
+   "defensiveApproach": "BALANCED",
+   "lineHeight": 58,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Goalkeeper",
+     "focus": "Defend",
+     "profile": "Sebastiano Rossi tipi: çizgide güven veren uzun kaleci",
+     "keyAttributes": [
+      "GK Reflexes",
+      "GK Handling",
+      "GK Positioning"
+     ],
+     "keyPlayStyles": [
+      "Far Reach",
+      "Cross Claimer"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Fullback",
+     "focus": "Balanced",
+     "profile": "Maldini tipi: dünya klasında savunan, gerektiğinde bindiren bek",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Standing Tackle",
+      "Sprint Speed"
+     ],
+     "keyPlayStyles": [
+      "Jockey",
+      "Anticipate"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Ball-Playing Defender",
+     "focus": "Defend",
+     "profile": "Baresi tipi: hattı yöneten, okuma gücü üst düzey lider",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Interceptions",
+      "Reactions",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Anticipate",
+      "Intercept"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Defender",
+     "focus": "Defend",
+     "profile": "Costacurta tipi: hızlı, temiz müdahale yapan stoper",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Standing Tackle",
+      "Sprint Speed"
+     ],
+     "keyPlayStyles": [
+      "Block",
+      "Jockey"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Fullback",
+     "focus": "Defend",
+     "profile": "Tassotti / Panucci tipi: önce savunan sağ bek",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Standing Tackle",
+      "Stamina"
+     ],
+     "keyPlayStyles": [
+      "Intercept",
+      "Jockey"
+     ]
+    },
+    {
+     "slot": "LM",
+     "position": "LM",
+     "role": "Wide Playmaker",
+     "focus": "Build-Up",
+     "profile": "Donadoni tipi: soldan içe girip oyunu bağlayan teknik kanat",
+     "keyAttributes": [
+      "Short Passing",
+      "Dribbling",
+      "Vision"
+     ],
+     "keyPlayStyles": [
+      "Technical",
+      "Incisive Pass"
+     ]
+    },
+    {
+     "slot": "LCM",
+     "position": "CM",
+     "role": "Holding",
+     "focus": "Ball-Winning",
+     "profile": "Desailly tipi: fizik canavarı; top kesen ve hatları koruyan kalkan",
+     "keyAttributes": [
+      "Strength",
+      "Standing Tackle",
+      "Interceptions",
+      "Sprint Speed"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Intercept",
+      "Anticipate"
+     ]
+    },
+    {
+     "slot": "RCM",
+     "position": "CM",
+     "role": "Deep-Lying Playmaker",
+     "focus": "Build-Up",
+     "profile": "Albertini tipi: uzun-kısa pas dağıtan metronom",
+     "keyAttributes": [
+      "Long Passing",
+      "Short Passing",
+      "Vision",
+      "Long Shots"
+     ],
+     "keyPlayStyles": [
+      "Long Ball Pass",
+      "Pinged Pass",
+      "Dead Ball"
+     ]
+    },
+    {
+     "slot": "RM",
+     "position": "RM",
+     "role": "Wide Midfielder",
+     "focus": "Defend",
+     "profile": "Eranio / Boban tipi: sağda dengeyi koruyan çalışkan orta saha",
+     "keyAttributes": [
+      "Stamina",
+      "Interceptions",
+      "Short Passing"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Intercept"
+     ]
+    },
+    {
+     "slot": "LST",
+     "position": "ST",
+     "role": "Advanced Forward",
+     "focus": "Support",
+     "profile": "Savićević tipi: 'Il Genio' — düşüp çalım ve sihirli pasla oyun açan ikinci forvet",
+     "keyAttributes": [
+      "Dribbling",
+      "Vision",
+      "Ball Control",
+      "Curve"
+     ],
+     "keyPlayStyles": [
+      "Trickster",
+      "Chip Shot",
+      "Incisive Pass"
+     ]
+    },
+    {
+     "slot": "RST",
+     "position": "ST",
+     "role": "Poacher",
+     "focus": "Attack",
+     "profile": "Massaro tipi: kutuda doğru yerde olan fırsatçı bitirici",
+     "keyAttributes": [
+      "Positioning",
+      "Finishing",
+      "Reactions"
+     ],
+     "keyPlayStyles": [
+      "Low Driven Shot",
+      "Quick Step"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Skor koruma: 4-4-2 (2) çift pivot kilit",
+    "formation": "4-4-2 (2)",
+    "buildUp": "COUNTER",
+    "defensiveApproach": "DEEP",
+    "lineHeight": 28,
+    "changes": [
+     "LDM: Holding/Defend (Desailly)",
+     "RDM: Deep-Lying Playmaker/Defend (Albertini)",
+     "LST: Advanced Forward/Support"
+    ]
+   },
+   "smartTactics": [
+    "Tactical Focus: Savunma → buildUp ve savunma bir kademe geri, LM Wide Playmaker Build-Up korunur; 1-0 sonrası en sadık Capello modu.",
+    "Quick Tactic: Offside Trap — Baresi-Costacurta hattını taklit eder; Team Press'i nadiren, rakip geri oyunda."
+   ],
+   "tacticCode": null
+  },
+  "replicaFidelity": {
+   "score": 4,
+   "cannotReplicate": [
+    "Capello'nun maç içi çok sık sistem/insan değiştirmesi tek tacticCode'a sığmıyor",
+    "Savićević'in serbest rolü sabit focus'la kısıtlanıyor"
+   ]
+  },
+  "behaviorTags": [
+   "compact_block",
+   "offside_trap",
+   "cb_hold",
+   "cm_ball_winner",
+   "cm_deep_build",
+   "st_drop_deep",
+   "st_poacher",
+   "low_risk"
+  ],
+  "sources": [
+   "model bilgisi — VERIFY"
+  ],
+  "verify": [
+   "Atina finalinde Baresi-Costacurta cezalıyken oynayan Galli-Maldini/Panucci dizilişi lig şablonundan farklı",
+   "Sağ kanatta Eranio / Boban / Donadoni rotasyonu"
+  ]
+ },
+ {
+  "id": "kovacs_ajax_1972",
+  "kind": "REPLICA",
+  "category": "LEGENDARY_COACH",
+  "club": "AFC Ajax",
+  "coach": "Ștefan Kovács",
+  "season": "1971-72",
+  "honours": [
+   "Avrupa Şampiyon Kulüpler Kupası",
+   "Eredivisie",
+   "KNVB Kupası",
+   "Kıtalararası Kupa"
+  ],
+  "whyIconic": "Total Football'un zirvesi: Michels'in 1970-71 disiplinli temelini Kovács serbestleştirdi; Cruyff merkezli dörtlü kupa sezonu. Michels yerine Kovács seçildi çünkü pozisyon rotasyonu ve öne çıkan pres en saf hâlini bu sezonda aldı.",
+  "realShape": {
+   "inPossession": "4-3-3: Blankenburg orta sahaya çıkan libero, Krol bindiren bek, Cruyff her yere düşen serbest 9; oyuncular sürekli yer değiştiriyor",
+   "outOfPossession": "Çok yüksek hat, agresif ofsayt tuzağı ve 'jagen' (avlanma) presi; topu rakip yarı sahada kazanma",
+   "keyMechanisms": [
+    "pozisyon rotasyonu (total football)",
+    "ofsayt tuzağı",
+    "avlanma presi",
+    "Cruyff'un serbest 9'u",
+    "libero orta sahaya çıkıyor"
+   ]
+  },
+  "fc27": {
+   "formation": "4-3-3 (2)",
+   "buildUp": "SHORT_PASSING",
+   "defensiveApproach": "AGGRESSIVE",
+   "lineHeight": 93,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Sweeper Keeper",
+     "focus": "Balanced",
+     "profile": "Stuy tipi: hattın arkasını süpüren, ayakla oynayan kaleci",
+     "keyAttributes": [
+      "GK Positioning",
+      "GK Kicking",
+      "Reactions"
+     ],
+     "keyPlayStyles": [
+      "Rush Out",
+      "Footwork"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Attacking Wingback",
+     "focus": "Attack",
+     "profile": "Krol tipi: hücuma katılan, şutu ve pası olan modern bek",
+     "keyAttributes": [
+      "Stamina",
+      "Crossing",
+      "Sprint Speed",
+      "Long Shots"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Whipped Pass"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Stopper",
+     "focus": "Aggressive",
+     "profile": "Hulshoff tipi: öne çıkıp rakip forveti kaynağında kesen güçlü stoper",
+     "keyAttributes": [
+      "Aggression",
+      "Standing Tackle",
+      "Heading Accuracy",
+      "Strength"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Aerial Fortress"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Ball-Playing Defender",
+     "focus": "Build-Up",
+     "profile": "Blankenburg tipi: topla orta sahaya çıkan libero",
+     "keyAttributes": [
+      "Short Passing",
+      "Composure",
+      "Ball Control"
+     ],
+     "keyPlayStyles": [
+      "Tiki Taka",
+      "Anticipate"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Wingback",
+     "focus": "Balanced",
+     "profile": "Suurbier tipi: hızlı, sürekli koridor açan sağ bek",
+     "keyAttributes": [
+      "Sprint Speed",
+      "Stamina",
+      "Crossing"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Relentless"
+     ]
+    },
+    {
+     "slot": "CDM",
+     "position": "CDM",
+     "role": "Deep-Lying Playmaker",
+     "focus": "Roaming",
+     "profile": "Haan tipi: her yöne dolaşan, uzun şutlu ve pası güçlü pivot",
+     "keyAttributes": [
+      "Long Passing",
+      "Long Shots",
+      "Vision",
+      "Stamina"
+     ],
+     "keyPlayStyles": [
+      "Long Ball Pass",
+      "Power Shot"
+     ]
+    },
+    {
+     "slot": "LCM",
+     "position": "CM",
+     "role": "Playmaker",
+     "focus": "Roaming",
+     "profile": "Gerrie Mühren tipi: sol ayaklı, zarif ve yaratıcı iç oyuncu",
+     "keyAttributes": [
+      "Vision",
+      "Short Passing",
+      "Ball Control",
+      "Curve"
+     ],
+     "keyPlayStyles": [
+      "Incisive Pass",
+      "Technical"
+     ]
+    },
+    {
+     "slot": "RCM",
+     "position": "CM",
+     "role": "Box-to-Box",
+     "focus": "Ball-Winning",
+     "profile": "Neeskens tipi: presin avcısı, kutudan kutuya koşan savaşçı",
+     "keyAttributes": [
+      "Stamina",
+      "Aggression",
+      "Standing Tackle",
+      "Shot Power"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Press Proven",
+      "Slide Tackle"
+     ]
+    },
+    {
+     "slot": "LW",
+     "position": "LW",
+     "role": "Winger",
+     "focus": "Attack",
+     "profile": "Keizer tipi: çalımcı, çizgiye inen sol açık",
+     "keyAttributes": [
+      "Dribbling",
+      "Agility",
+      "Crossing"
+     ],
+     "keyPlayStyles": [
+      "Trickster",
+      "Whipped Pass"
+     ]
+    },
+    {
+     "slot": "ST",
+     "position": "ST",
+     "role": "False 9",
+     "focus": "Build-Up",
+     "profile": "Cruyff tipi: düşen, kanada kayan, oyunu her yerden yöneten dâhi",
+     "keyAttributes": [
+      "Vision",
+      "Dribbling",
+      "Acceleration",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Inventive",
+      "Incisive Pass",
+      "Rapid"
+     ]
+    },
+    {
+     "slot": "RW",
+     "position": "RW",
+     "role": "Winger",
+     "focus": "Balanced",
+     "profile": "Swart tipi: hızlı, direkt sağ açık",
+     "keyAttributes": [
+      "Acceleration",
+      "Crossing",
+      "Dribbling"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Whipped Pass"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Michels 1970-71 disiplini (daha az risk)",
+    "formation": "4-3-3 (2)",
+    "buildUp": "BALANCED",
+    "defensiveApproach": "HIGH",
+    "lineHeight": 82,
+    "changes": [
+     "LB: Wingback/Balanced",
+     "CDM: Holding/Roaming",
+     "LCM: Deep-Lying Playmaker/Build-Up"
+    ]
+   },
+   "smartTactics": [
+    "Quick Tactic: Offside Trap ve Team Press birlikte — 'avlanma' anları için; Team Press 100 sn'de bir dolduğundan rakibin geri pasına sakla.",
+    "Tactical Focus: Savunma → AGGRESSIVE→HIGH; LW Winger Attack→Balanced, RCB BPD Build-Up→Defend — önde iken mantıklı geri adım."
+   ],
+   "tacticCode": null
+  },
+  "replicaFidelity": {
+   "score": 3,
+   "cannotReplicate": [
+    "Total Football'un özü olan serbest pozisyon değiştirme FC27 AI'da yok; roller sabit kalıyor",
+    "Blankenburg'un liberodan orta sahaya çıkışı BPD Build-Up ile kısmen; Haan'ın stopere düşmesi gösterilemiyor"
+   ]
+  },
+  "behaviorTags": [
+   "total_football",
+   "positional_rotation",
+   "offside_trap",
+   "high_press",
+   "fb_overlap",
+   "cb_step_up",
+   "st_false_nine",
+   "w_hug_line"
+  ],
+  "sources": [
+   "model bilgisi — VERIFY"
+  ],
+  "verify": [
+   "Haan'ın 1971-72'de pivot mu libero yedeği mi olarak oynadığı",
+   "Swart / Rep sağ kanat paylaşımı"
+  ]
+ },
+ {
+  "id": "herrera_inter_1965",
+  "kind": "REPLICA",
+  "category": "LEGENDARY_COACH",
+  "club": "Internazionale",
+  "coach": "Helenio Herrera",
+  "season": "1964-65",
+  "honours": [
+   "Avrupa Şampiyon Kulüpler Kupası",
+   "Serie A",
+   "Kıtalararası Kupa"
+  ],
+  "whyIconic": "Catenaccio'nun simgesi Grande Inter: libero + adam adama markaj, Facchetti'nin bindiren bek devrimi ve Suárez'in uzun toplarıyla kontra.",
+  "realShape": {
+   "inPossession": "1-3-3-3 / 5-3-2: Picchi libero, Facchetti sol koridor, Suárez derin oyun kurucu, Jair sağda hız, Mazzola–Peirò önde",
+   "outOfPossession": "Derin blok; markajcılar adama, libero arkada süpürür; kazanınca Suárez'den Jair/Mazzola'ya uzun top",
+   "keyMechanisms": [
+    "libero (Picchi)",
+    "adam adama markaj",
+    "Facchetti'nin bindirmesi",
+    "Suárez uzun topla kontra",
+    "kanatta hız (Jair)"
+   ]
+  },
+  "fc27": {
+   "formation": "4-4-2 (2)",
+   "buildUp": "COUNTER",
+   "defensiveApproach": "DEEP",
+   "lineHeight": 20,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Goalkeeper",
+     "focus": "Defend",
+     "profile": "Sarti tipi: çizgide sakin, pozisyon bilen kaleci",
+     "keyAttributes": [
+      "GK Positioning",
+      "GK Reflexes",
+      "GK Handling"
+     ],
+     "keyPlayStyles": [
+      "Footwork",
+      "Cross Claimer"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Attacking Wingback",
+     "focus": "Attack",
+     "profile": "Facchetti tipi: golcü sol bek; uzun koşularla kontra ucuna giden devrim",
+     "keyAttributes": [
+      "Sprint Speed",
+      "Stamina",
+      "Finishing",
+      "Heading Accuracy"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Relentless",
+      "Precision Header"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Defender",
+     "focus": "Defend",
+     "profile": "Picchi tipi: libero; markajcıların arkasını süpüren kaptan",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Interceptions",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Anticipate",
+      "Block"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Stopper",
+     "focus": "Aggressive",
+     "profile": "Guarneri tipi: santrforu adam adama izleyen sert stoper",
+     "keyAttributes": [
+      "Aggression",
+      "Standing Tackle",
+      "Strength",
+      "Heading Accuracy"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Aerial Fortress"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Fullback",
+     "focus": "Defend",
+     "profile": "Burgnich tipi: 'kaya'; kanat forvetini her yerde takip eden markajcı",
+     "keyAttributes": [
+      "Standing Tackle",
+      "Defensive Awareness",
+      "Strength"
+     ],
+     "keyPlayStyles": [
+      "Jockey",
+      "Slide Tackle"
+     ]
+    },
+    {
+     "slot": "LM",
+     "position": "LM",
+     "role": "Wide Playmaker",
+     "focus": "Build-Up",
+     "profile": "Corso tipi: sol ayaklı sihirbaz; içeri girip frikik ve kilit pas atan kanat",
+     "keyAttributes": [
+      "Curve",
+      "Free Kick Accuracy",
+      "Vision",
+      "Ball Control"
+     ],
+     "keyPlayStyles": [
+      "Dead Ball",
+      "Incisive Pass",
+      "Technical"
+     ]
+    },
+    {
+     "slot": "LDM",
+     "position": "CDM",
+     "role": "Holding",
+     "focus": "Ball-Winning",
+     "profile": "Bedin / Tagnin tipi: rakip 10'u söndüren markajcı orta saha",
+     "keyAttributes": [
+      "Standing Tackle",
+      "Aggression",
+      "Stamina"
+     ],
+     "keyPlayStyles": [
+      "Enforcer",
+      "Intercept"
+     ]
+    },
+    {
+     "slot": "RDM",
+     "position": "CDM",
+     "role": "Deep-Lying Playmaker",
+     "focus": "Build-Up",
+     "profile": "Luis Suárez tipi: derinden tek pasla kontrayı başlatan regista",
+     "keyAttributes": [
+      "Long Passing",
+      "Vision",
+      "Composure",
+      "Shot Power"
+     ],
+     "keyPlayStyles": [
+      "Long Ball Pass",
+      "Pinged Pass"
+     ]
+    },
+    {
+     "slot": "RM",
+     "position": "RM",
+     "role": "Winger",
+     "focus": "Attack",
+     "profile": "Jair tipi: kontranın hız füzesi, çizgiden çizgiye koşan sağ açık",
+     "keyAttributes": [
+      "Sprint Speed",
+      "Acceleration",
+      "Dribbling"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Quick Step"
+     ]
+    },
+    {
+     "slot": "LST",
+     "position": "ST",
+     "role": "Advanced Forward",
+     "focus": "Attack",
+     "profile": "Mazzola tipi: çok yönlü, hızlı, sürekli derine koşan forvet",
+     "keyAttributes": [
+      "Acceleration",
+      "Finishing",
+      "Dribbling",
+      "Positioning"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Finesse Shot"
+     ]
+    },
+    {
+     "slot": "RST",
+     "position": "ST",
+     "role": "Target Forward",
+     "focus": "Balanced",
+     "profile": "Peirò / Milani tipi: topu tutup Mazzola ve Jair'e bağlayan santrfor",
+     "keyAttributes": [
+      "Strength",
+      "Heading Accuracy",
+      "Ball Control"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Precision Header"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Tam kilit: 5-4-1 catenaccio",
+    "formation": "5-4-1",
+    "buildUp": "COUNTER",
+    "defensiveApproach": "DEEP",
+    "lineHeight": 12,
+    "changes": [
+     "LB: Wingback/Balanced (Facchetti daha temkinli)",
+     "CB: Defender/Defend (libero)",
+     "ST: Target Forward/Balanced"
+    ]
+   },
+   "smartTactics": [
+    "Tactical Focus: Savunma → buildUp bir kademe geri, RM Winger Attack→Balanced (Jair daha çok geri döner), RDM DLP Build-Up→Defend. 1-0'dan sonra Herrera tarzı.",
+    "Quick Tactic: Team Press kullanma; sadece Overload Set Pieces'i Corso frikiklerinde değerlendir."
+   ],
+   "tacticCode": null
+  },
+  "replicaFidelity": {
+   "score": 2,
+   "cannotReplicate": [
+    "Libero (markajcıların arkasında süpüren serbest adam) FC27'de yok; LCB Defender/Defend en yakın karşılık",
+    "Gerçek adam adama markaj ayarı yok; DEEP + Stopper/Aggressive + Holding/Ball-Winning ile yaklaşık",
+    "Asimetrik 1-3-3-3 sol tarafı (Facchetti + Corso) 4-4-2 (2) iskeletinde sıkışıyor"
+   ]
+  },
+  "behaviorTags": [
+   "catenaccio",
+   "libero",
+   "man_marking",
+   "low_block",
+   "counter_attack",
+   "fb_overlap",
+   "cm_long_pass",
+   "w_speed"
+  ],
+  "sources": [
+   "model bilgisi — VERIFY"
+  ],
+  "verify": [
+   "1964-65'te Peirò mu Milani mi ilk 11'de daha çok oynadı",
+   "Bedin / Tagnin dağılımı",
+   "Lig şampiyonluğunun 1964-65 sezonuna ait olduğu doğrulanmalı (Inter 1965 Scudetto)"
+  ]
+ },
+ {
+  "id": "lobanovskyi_dynamokyiv_1986",
+  "kind": "REPLICA",
+  "category": "LEGENDARY_COACH",
+  "club": "Dinamo Kyiv",
+  "coach": "Valeriy Lobanovskyi",
+  "season": "1985-86",
+  "honours": [
+   "UEFA Kupa Galipleri Kupası",
+   "Sovyet Ligi"
+  ],
+  "whyIconic": "Bilimsel futbolun manifestosu: Atlético'yu 3-0 yenen, 'evrensel oyuncu' ve alan sıkıştırmayla oynayan, Belanov'a Ballon d'Or getiren takım.",
+  "realShape": {
+   "inPossession": "4-4-2: evrensel oyuncular, Zavarov'un yaratıcılığı, bekler ve kanatlar arasında sürekli rotasyon; hızlı dikey atak",
+   "outOfPossession": "Alanı daraltan kolektif pres, yüksek hat ve ofsayt; topa en yakın üç oyuncunun eşzamanlı baskısı",
+   "keyMechanisms": [
+    "alan sıkıştırma (bilimsel pres)",
+    "evrensel oyuncu",
+    "hızlı dikey kontra",
+    "kanat rotasyonları",
+    "veriyle yönetilen kondisyon"
+   ]
+  },
+  "fc27": {
+   "formation": "4-4-2",
+   "buildUp": "BALANCED",
+   "defensiveApproach": "HIGH",
+   "lineHeight": 80,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Sweeper Keeper",
+     "focus": "Balanced",
+     "profile": "Chanov tipi: hattın gerisini temizleyen kaleci",
+     "keyAttributes": [
+      "GK Positioning",
+      "Reactions",
+      "GK Reflexes"
+     ],
+     "keyPlayStyles": [
+      "Rush Out",
+      "Footwork"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Attacking Wingback",
+     "focus": "Support",
+     "profile": "Demyanenko tipi: kaptan; sol koridoru baştan sona kullanan bek",
+     "keyAttributes": [
+      "Stamina",
+      "Crossing",
+      "Sprint Speed"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Whipped Pass"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Ball-Playing Defender",
+     "focus": "Build-Up",
+     "profile": "Kuznetsov tipi: geriden pasla çıkaran, oyun okuyan stoper",
+     "keyAttributes": [
+      "Short Passing",
+      "Defensive Awareness",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Anticipate",
+      "Intercept"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Stopper",
+     "focus": "Aggressive",
+     "profile": "Baltacha tipi: öne çıkıp kapan fiziksel stoper",
+     "keyAttributes": [
+      "Aggression",
+      "Standing Tackle",
+      "Strength"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Slide Tackle"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Wingback",
+     "focus": "Balanced",
+     "profile": "Bessonov tipi: evrensel oyuncu; bek, libero ve orta saha oynayabilen",
+     "keyAttributes": [
+      "Stamina",
+      "Short Passing",
+      "Defensive Awareness"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Intercept"
+     ]
+    },
+    {
+     "slot": "LM",
+     "position": "LM",
+     "role": "Winger",
+     "focus": "Balanced",
+     "profile": "Rats tipi: güçlü, şutu sert, kanatta top taşıyan",
+     "keyAttributes": [
+      "Shot Power",
+      "Dribbling",
+      "Stamina"
+     ],
+     "keyPlayStyles": [
+      "Power Shot",
+      "Relentless"
+     ]
+    },
+    {
+     "slot": "LCM",
+     "position": "CM",
+     "role": "Box-to-Box",
+     "focus": "Balanced",
+     "profile": "Yakovenko tipi: kutudan kutuya, presin motoru",
+     "keyAttributes": [
+      "Stamina",
+      "Short Passing",
+      "Standing Tackle"
+     ],
+     "keyPlayStyles": [
+      "Press Proven",
+      "Relentless"
+     ]
+    },
+    {
+     "slot": "RCM",
+     "position": "CM",
+     "role": "Playmaker",
+     "focus": "Roaming",
+     "profile": "Zavarov tipi: dar alanda çalım ve pasla oyunu açan yaratıcı",
+     "keyAttributes": [
+      "Dribbling",
+      "Vision",
+      "Ball Control"
+     ],
+     "keyPlayStyles": [
+      "Technical",
+      "Incisive Pass"
+     ]
+    },
+    {
+     "slot": "RM",
+     "position": "RM",
+     "role": "Wide Midfielder",
+     "focus": "Support",
+     "profile": "Yaremchuk tipi: sağda çok çalışan, iki yönlü kanat oyuncusu",
+     "keyAttributes": [
+      "Stamina",
+      "Crossing",
+      "Interceptions"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Press Proven"
+     ]
+    },
+    {
+     "slot": "LST",
+     "position": "ST",
+     "role": "Advanced Forward",
+     "focus": "Support",
+     "profile": "Blokhin tipi: kanada açılan, tecrübeli ve hızlı sol forvet",
+     "keyAttributes": [
+      "Finishing",
+      "Acceleration",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Finesse Shot",
+      "Rapid"
+     ]
+    },
+    {
+     "slot": "RST",
+     "position": "ST",
+     "role": "Advanced Forward",
+     "focus": "Attack",
+     "profile": "Belanov tipi: patlayıcı hızla savunma arkasına koşan bitirici",
+     "keyAttributes": [
+      "Sprint Speed",
+      "Acceleration",
+      "Finishing",
+      "Shot Power"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Quick Step",
+      "Power Shot"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Deplasman kontra modu",
+    "formation": "4-4-2",
+    "buildUp": "COUNTER",
+    "defensiveApproach": "BALANCED",
+    "lineHeight": 50,
+    "changes": [
+     "LST: Advanced Forward/Attack",
+     "RCM: Box-to-Box/Balanced"
+    ]
+   },
+   "smartTactics": [
+    "Quick Tactic: Team Press — Lobanovskyi'nin 'topa en yakın üçlü' baskısını 20 sn'lik patlamalarla taklit et; Offside Trap yüksek hatla uyumlu.",
+    "Tactical Focus: Hücum → HIGH→AGGRESSIVE; LCB BPD Build-Up korunur, RB Wingback Balanced kalır (Attack yok)."
+   ],
+   "tacticCode": null
+  },
+  "replicaFidelity": {
+   "score": 3,
+   "cannotReplicate": [
+    "Evrensel oyuncu rotasyonu (bek–kanat–orta saha yer değiştirme) sabit rollerle sınırlı",
+    "Bilimsel kondisyon/rotasyon planı (deplasmanda düşük pres, evde yüksek) ancak iki ayrı taktik slotuyla temsil edilebilir"
+   ]
+  },
+  "behaviorTags": [
+   "scientific_press",
+   "universal_player",
+   "high_line",
+   "counter_attack",
+   "fb_overlap",
+   "st_run_behind",
+   "cm_engine"
+  ],
+  "sources": [
+   "model bilgisi — VERIFY"
+  ],
+  "verify": [
+   "Rats ve Yaremchuk'un hangi kanatta oynadığı",
+   "Kuznetsov–Baltacha merkez dağılımı"
+  ]
+ },
+ {
+  "id": "lobanovskyi_dynamokyiv_1999",
+  "kind": "REPLICA",
+  "category": "LEGENDARY_COACH",
+  "club": "Dinamo Kyiv",
+  "coach": "Valeriy Lobanovskyi",
+  "season": "1998-99",
+  "honours": [
+   "Ukrayna Ligi",
+   "Ukrayna Kupası",
+   "UEFA Şampiyonlar Ligi yarı finali"
+  ],
+  "whyIconic": "Lobanovskyi'nin son büyük eseri: Şevçenko–Rebrov ikilisiyle Arsenal, Real Madrid'i eleyip Şampiyonlar Ligi yarı finaline kadar uzanan takım.",
+  "realShape": {
+   "inPossession": "4-1-3-2 / 4-4-2: Husin önlibero, Belkevich ortada pas, iki hızlı forvet arasında sürekli kombinasyon",
+   "outOfPossession": "Orta-yüksek blok, kolektif pres ve hızlı geçiş; kanatlar savunmada dörtlü orta saha olur",
+   "keyMechanisms": [
+    "Şevçenko–Rebrov paslaşma ikilisi",
+    "hızlı dikey geçiş",
+    "kolektif pres",
+    "önlibero dengesi"
+   ]
+  },
+  "fc27": {
+   "formation": "4-1-3-2",
+   "buildUp": "BALANCED",
+   "defensiveApproach": "HIGH",
+   "lineHeight": 74,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Goalkeeper",
+     "focus": "Balanced",
+     "profile": "Shovkovskyi tipi: refleksleri güçlü genç kaleci",
+     "keyAttributes": [
+      "GK Reflexes",
+      "GK Diving",
+      "Reactions"
+     ],
+     "keyPlayStyles": [
+      "Far Reach",
+      "Footwork"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Fullback",
+     "focus": "Balanced",
+     "profile": "Kaladze / Dmytrulin tipi: stoper kökenli güvenli sol bek",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Strength",
+      "Standing Tackle"
+     ],
+     "keyPlayStyles": [
+      "Block",
+      "Jockey"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Stopper",
+     "focus": "Aggressive",
+     "profile": "Vashchuk tipi: agresif, öne çıkan stoper",
+     "keyAttributes": [
+      "Aggression",
+      "Standing Tackle",
+      "Heading Accuracy"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Aerial Fortress"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Defender",
+     "focus": "Defend",
+     "profile": "Holovko tipi: pozisyon bilen, sakin stoper",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Interceptions",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Anticipate",
+      "Block"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Attacking Wingback",
+     "focus": "Support",
+     "profile": "Luzhnyi tipi: sağ koridoru yukarı taşıyan kaptan bek",
+     "keyAttributes": [
+      "Stamina",
+      "Crossing",
+      "Sprint Speed"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Whipped Pass"
+     ]
+    },
+    {
+     "slot": "CDM",
+     "position": "CDM",
+     "role": "Holding",
+     "focus": "Ball-Winning",
+     "profile": "Husin tipi: uzun boylu, top kesen ve hava hakimi önlibero",
+     "keyAttributes": [
+      "Standing Tackle",
+      "Heading Accuracy",
+      "Strength"
+     ],
+     "keyPlayStyles": [
+      "Aerial Fortress",
+      "Intercept"
+     ]
+    },
+    {
+     "slot": "LM",
+     "position": "LM",
+     "role": "Wide Midfielder",
+     "focus": "Support",
+     "profile": "Kalytvyntsev / Gerasymenko tipi: içe yakın, çalışkan sol orta saha",
+     "keyAttributes": [
+      "Stamina",
+      "Short Passing",
+      "Interceptions"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Press Proven"
+     ]
+    },
+    {
+     "slot": "CM",
+     "position": "CM",
+     "role": "Playmaker",
+     "focus": "Attack",
+     "profile": "Belkevich tipi: forvet ikilisini besleyen teknik pasör",
+     "keyAttributes": [
+      "Vision",
+      "Short Passing",
+      "Ball Control"
+     ],
+     "keyPlayStyles": [
+      "Incisive Pass",
+      "Technical"
+     ]
+    },
+    {
+     "slot": "RM",
+     "position": "RM",
+     "role": "Winger",
+     "focus": "Balanced",
+     "profile": "Kosovskyi tipi: sağda hızlı, orta açan kanat",
+     "keyAttributes": [
+      "Acceleration",
+      "Crossing",
+      "Dribbling"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Whipped Pass"
+     ]
+    },
+    {
+     "slot": "LST",
+     "position": "ST",
+     "role": "Advanced Forward",
+     "focus": "Attack",
+     "profile": "Şevçenko tipi: hız, bitiricilik ve savunma arkası koşusunun zirvesi",
+     "keyAttributes": [
+      "Sprint Speed",
+      "Finishing",
+      "Positioning",
+      "Shot Power"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Power Shot",
+      "Low Driven Shot"
+     ]
+    },
+    {
+     "slot": "RST",
+     "position": "ST",
+     "role": "Advanced Forward",
+     "focus": "Support",
+     "profile": "Rebrov tipi: düşüp bağlantı kuran, pas ve şutu iyi ikinci forvet",
+     "keyAttributes": [
+      "Short Passing",
+      "Finishing",
+      "Agility"
+     ],
+     "keyPlayStyles": [
+      "Finesse Shot",
+      "First Touch"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Avrupa deplasmanı: 4-4-2 (2) kontra",
+    "formation": "4-4-2 (2)",
+    "buildUp": "COUNTER",
+    "defensiveApproach": "BALANCED",
+    "lineHeight": 45,
+    "changes": [
+     "LDM: Holding/Ball-Winning",
+     "RDM: Deep-Lying Playmaker/Defend",
+     "RST: Advanced Forward/Attack"
+    ]
+   },
+   "smartTactics": [
+    "Tactical Focus: Hücum → CM Playmaker Attack zaten en ileri focus; LB Fullback Balanced→Attack yok, olduğu gibi kalır; RM Winger Balanced→Attack.",
+    "Quick Tactic: Team Press'i ev maçında ilk 15 dk; Avrupa deplasmanında Plan B'ye geç."
+   ],
+   "tacticCode": null
+  },
+  "replicaFidelity": {
+   "score": 3,
+   "cannotReplicate": [
+    "Lobanovskyi'nin maç özelinde bilimsel planlaması (rakibe göre pres yüksekliği) tek slotta yok",
+    "Forvet ikilisinin ezberlenmiş kombinasyonları AI'da garanti değil"
+   ]
+  },
+  "behaviorTags": [
+   "scientific_press",
+   "counter_attack",
+   "cdm_screen",
+   "st_run_behind",
+   "st_link_up",
+   "fb_overlap"
+  ],
+  "sources": [
+   "model bilgisi — VERIFY"
+  ],
+  "verify": [
+   "1998-99 sol bek ve sol orta saha isimleri (Kaladze'nin pozisyonu)",
+   "Belkevich'in tek 10 mu yoksa ikili orta saha mı oynadığı",
+   "Ukrayna Kupası'nın 1998-99'da kazanıldığı"
+  ]
+ },
+ {
+  "id": "vangaal_ajax_1995",
+  "kind": "REPLICA",
+  "category": "LEGENDARY_COACH",
+  "club": "AFC Ajax",
+  "coach": "Louis van Gaal",
+  "season": "1994-95",
+  "honours": [
+   "UEFA Şampiyonlar Ligi",
+   "Eredivisie (yenilgisiz)",
+   "Johan Cruijff Schaal"
+  ],
+  "whyIconic": "Ligi yenilgisiz bitirip Milan'ı Viyana'da deviren genç Ajax: 3-4-3 elmas, pozisyonel disiplin ve akademi üretimi.",
+  "realShape": {
+   "inPossession": "3-4-3 elmas: Blind libero, Rijkaard pivot, Davids–Seedorf içler, Litmanen 10, Finidi ve Overmars çizgide",
+   "outOfPossession": "Yüksek hat, alan presi, hızlı geri kazanma; savunmada 4-3-3'e dönüş",
+   "keyMechanisms": [
+    "genişliği veren saf kanatlar",
+    "Litmanen'in 10 arası koşuları",
+    "Rijkaard'ın pivot/stoper ikiliği",
+    "kalecinin kuruluşa katılması"
+   ]
+  },
+  "fc27": {
+   "formation": "4-3-3 (4)",
+   "buildUp": "SHORT_PASSING",
+   "defensiveApproach": "HIGH",
+   "lineHeight": 82,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Ball-Playing Keeper",
+     "focus": "Build-Up",
+     "profile": "Van der Sar tipi: ayağı bir libero kadar iyi kaleci",
+     "keyAttributes": [
+      "GK Kicking",
+      "Composure",
+      "GK Positioning"
+     ],
+     "keyPlayStyles": [
+      "Footwork",
+      "Rush Out"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Fullback",
+     "focus": "Defend",
+     "profile": "Frank de Boer tipi: sol ayaklı stoper-bek; üçlünün sol ayağı ve uzun top",
+     "keyAttributes": [
+      "Long Passing",
+      "Defensive Awareness",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Long Ball Pass",
+      "Intercept"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Ball-Playing Defender",
+     "focus": "Build-Up",
+     "profile": "Blind tipi: kaptan libero, pasla oyunu başlatan",
+     "keyAttributes": [
+      "Short Passing",
+      "Defensive Awareness",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Anticipate",
+      "Tiki Taka"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Ball-Playing Defender",
+     "focus": "Aggressive",
+     "profile": "Rijkaard tipi: stoperden orta sahaya çıkan güç ve pas",
+     "keyAttributes": [
+      "Strength",
+      "Interceptions",
+      "Short Passing",
+      "Heading Accuracy"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Intercept",
+      "Aerial Fortress"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Fullback",
+     "focus": "Defend",
+     "profile": "Reiziger tipi: hızlı, üçlü savunmanın sağı",
+     "keyAttributes": [
+      "Sprint Speed",
+      "Defensive Awareness",
+      "Standing Tackle"
+     ],
+     "keyPlayStyles": [
+      "Jockey",
+      "Quick Step"
+     ]
+    },
+    {
+     "slot": "LCM",
+     "position": "CM",
+     "role": "Box-to-Box",
+     "focus": "Ball-Winning",
+     "profile": "Davids tipi: 'pitbull'; top kapan, taşıyan iç oyuncu",
+     "keyAttributes": [
+      "Aggression",
+      "Stamina",
+      "Standing Tackle",
+      "Dribbling"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Press Proven",
+      "Slide Tackle"
+     ]
+    },
+    {
+     "slot": "RCM",
+     "position": "CM",
+     "role": "Box-to-Box",
+     "focus": "Balanced",
+     "profile": "Seedorf tipi: güçlü, teknik, uzaktan şutlu iç oyuncu",
+     "keyAttributes": [
+      "Ball Control",
+      "Shot Power",
+      "Strength",
+      "Short Passing"
+     ],
+     "keyPlayStyles": [
+      "Power Shot",
+      "Technical"
+     ]
+    },
+    {
+     "slot": "CAM",
+     "position": "CAM",
+     "role": "Shadow Striker",
+     "focus": "Attack",
+     "profile": "Litmanen tipi: forvetin arkasından kutuya zamanlı giren 10",
+     "keyAttributes": [
+      "Positioning",
+      "Finishing",
+      "Vision",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "First Touch",
+      "Finesse Shot",
+      "Incisive Pass"
+     ]
+    },
+    {
+     "slot": "LW",
+     "position": "LW",
+     "role": "Winger",
+     "focus": "Attack",
+     "profile": "Overmars tipi: patlayıcı hızla çizgiyi kullanan sol kanat",
+     "keyAttributes": [
+      "Sprint Speed",
+      "Acceleration",
+      "Dribbling",
+      "Crossing"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Quick Step"
+     ]
+    },
+    {
+     "slot": "ST",
+     "position": "ST",
+     "role": "Advanced Forward",
+     "focus": "Versatile",
+     "profile": "R. de Boer / Kluivert tipi: hem bağlantı hem bitiricilik yapan 9",
+     "keyAttributes": [
+      "Finishing",
+      "Ball Control",
+      "Strength"
+     ],
+     "keyPlayStyles": [
+      "First Touch",
+      "Finesse Shot"
+     ]
+    },
+    {
+     "slot": "RW",
+     "position": "RW",
+     "role": "Winger",
+     "focus": "Attack",
+     "profile": "Finidi tipi: sağda çalımla bire bir kazanan açık kanat",
+     "keyAttributes": [
+      "Dribbling",
+      "Acceleration",
+      "Crossing"
+     ],
+     "keyPlayStyles": [
+      "Trickster",
+      "Rapid"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Kluivert + Kanu ile kutu varlığı",
+    "formation": "4-3-3 (4)",
+    "buildUp": "SHORT_PASSING",
+    "defensiveApproach": "HIGH",
+    "lineHeight": 80,
+    "changes": [
+     "ST: Target Forward/Balanced",
+     "CAM: Classic 10/Attack"
+    ]
+   },
+   "smartTactics": [
+    "Tactical Focus: Hücum → HIGH→AGGRESSIVE; LB/RB Fullback Defend→Balanced olur, üçlü kuruluş bozulur — sadece son 15 dk.",
+    "Quick Tactic: Team Press'i rakip kalecinin kısa oyununa karşı kullan; Offside Trap yüksek hatla uyumlu."
+   ],
+   "tacticCode": null
+  },
+  "replicaFidelity": {
+   "score": 3,
+   "cannotReplicate": [
+    "3-4-3 elması FC27'de yok; üçlü savunma iki Fullback/Defend + BPD ile kuruluyor, Rijkaard'ın pivot rolü RCB BPD/Aggressive'e kayıyor",
+    "Litmanen'in Shadow Striker'ı ile false 9 arası esneklik sabit"
+   ]
+  },
+  "behaviorTags": [
+   "gk_build_up",
+   "fb_stay_back",
+   "cb_step_up",
+   "w_hug_line",
+   "cam_late_run",
+   "positional_play",
+   "high_line"
+  ],
+  "sources": [
+   "model bilgisi — VERIFY"
+  ],
+  "verify": [
+   "Rijkaard'ın final ve ligde stoper mi pivot mu oynadığı",
+   "R. de Boer'in forvet mi 10 mu olduğu"
+  ]
+ },
+ {
+  "id": "ferguson_manutd_1999",
+  "kind": "REPLICA",
+  "category": "LEGENDARY_COACH",
+  "club": "Manchester United",
+  "coach": "Sir Alex Ferguson",
+  "season": "1998-99",
+  "honours": [
+   "UEFA Şampiyonlar Ligi",
+   "Premier League",
+   "FA Cup"
+  ],
+  "whyIconic": "İngiliz futbolunun ilk tarihi üçlemesi; Camp Nou'da uzatmada iki golle dönülen final ve klasik 4-4-2'nin zirvesi.",
+  "realShape": {
+   "inPossession": "4-4-2: Beckham'ın sağdan ortaları, Giggs'in çizgi koşuları, Yorke–Cole'un paslaşmaya dayalı ikilisi; Keane–Scholes motoru",
+   "outOfPossession": "Orta blok 4-4-2, ikili orta sahanın agresif ikili mücadelesi; skora göre risk alan, son dakikalara kadar baskı",
+   "keyMechanisms": [
+    "Beckham orta fabrikası",
+    "Yorke–Cole bir-iki paslar",
+    "Keane'in liderlik ve top kapma",
+    "Scholes'un geç koşuları",
+    "'Fergie time' — son dakika riski"
+   ]
+  },
+  "fc27": {
+   "formation": "4-4-2",
+   "buildUp": "BALANCED",
+   "defensiveApproach": "BALANCED",
+   "lineHeight": 55,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Goalkeeper",
+     "focus": "Balanced",
+     "profile": "Schmeichel tipi: dev cüssesiyle bire birde açı kapatan, hızlı oyun başlatan kaleci",
+     "keyAttributes": [
+      "GK Reflexes",
+      "GK Positioning",
+      "GK Diving"
+     ],
+     "keyPlayStyles": [
+      "Rush Out",
+      "Far Throw",
+      "Far Reach"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Fullback",
+     "focus": "Versatile",
+     "profile": "Irwin tipi: iki ayağını kullanan, hatasız ve penaltı atan bek",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Short Passing",
+      "Crossing"
+     ],
+     "keyPlayStyles": [
+      "Jockey",
+      "Dead Ball"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Defender",
+     "focus": "Defend",
+     "profile": "Johnsen / Berg tipi: sakin, okuyan stoper",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Interceptions",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Block",
+      "Anticipate"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Stopper",
+     "focus": "Aggressive",
+     "profile": "Stam tipi: fizik, hız ve agresiflikle forveti silen stoper",
+     "keyAttributes": [
+      "Strength",
+      "Standing Tackle",
+      "Aggression",
+      "Sprint Speed"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Aerial Fortress",
+      "Slide Tackle"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Fullback",
+     "focus": "Balanced",
+     "profile": "Gary Neville tipi: Beckham'ın arkasından bindiren, çalışkan sağ bek",
+     "keyAttributes": [
+      "Stamina",
+      "Crossing",
+      "Defensive Awareness"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Whipped Pass"
+     ]
+    },
+    {
+     "slot": "LM",
+     "position": "LM",
+     "role": "Winger",
+     "focus": "Attack",
+     "profile": "Giggs tipi: çizgiye inen, çalımla adam eksilten sol kanat",
+     "keyAttributes": [
+      "Dribbling",
+      "Acceleration",
+      "Agility",
+      "Crossing"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Trickster",
+      "Quick Step"
+     ]
+    },
+    {
+     "slot": "LCM",
+     "position": "CM",
+     "role": "Box-to-Box",
+     "focus": "Balanced",
+     "profile": "Scholes tipi: geç koşu ve uzaktan şut ustası, pası kusursuz orta saha",
+     "keyAttributes": [
+      "Short Passing",
+      "Long Shots",
+      "Vision",
+      "Positioning"
+     ],
+     "keyPlayStyles": [
+      "Pinged Pass",
+      "Power Shot",
+      "Tiki Taka"
+     ]
+    },
+    {
+     "slot": "RCM",
+     "position": "CM",
+     "role": "Box-to-Box",
+     "focus": "Ball-Winning",
+     "profile": "Keane tipi: kaptan; top kapan, temposu ve öfkesiyle takımı sürükleyen",
+     "keyAttributes": [
+      "Standing Tackle",
+      "Aggression",
+      "Stamina",
+      "Short Passing"
+     ],
+     "keyPlayStyles": [
+      "Enforcer",
+      "Relentless",
+      "Intercept"
+     ]
+    },
+    {
+     "slot": "RM",
+     "position": "RM",
+     "role": "Winger",
+     "focus": "Balanced",
+     "profile": "Beckham tipi: sağ kanattan dünyanın en iyi ortası ve duran top",
+     "keyAttributes": [
+      "Crossing",
+      "Curve",
+      "Free Kick Accuracy",
+      "Long Passing"
+     ],
+     "keyPlayStyles": [
+      "Whipped Pass",
+      "Dead Ball",
+      "Long Ball Pass"
+     ]
+    },
+    {
+     "slot": "LST",
+     "position": "ST",
+     "role": "Advanced Forward",
+     "focus": "Support",
+     "profile": "Yorke tipi: düşüp oyunu bağlayan, gülerek bitiren forvet",
+     "keyAttributes": [
+      "Ball Control",
+      "Short Passing",
+      "Finishing"
+     ],
+     "keyPlayStyles": [
+      "First Touch",
+      "Technical"
+     ]
+    },
+    {
+     "slot": "RST",
+     "position": "ST",
+     "role": "Poacher",
+     "focus": "Attack",
+     "profile": "Andy Cole tipi: kutuda hızlı ayak, savunma arkasına koşan bitirici",
+     "keyAttributes": [
+      "Positioning",
+      "Finishing",
+      "Acceleration"
+     ],
+     "keyPlayStyles": [
+      "Quick Step",
+      "Low Driven Shot"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Fergie time: dört forvet",
+    "formation": "4-2-4",
+    "buildUp": "BALANCED",
+    "defensiveApproach": "HIGH",
+    "lineHeight": 70,
+    "changes": [
+     "LW: Winger/Attack (Giggs)",
+     "RW: Winger/Balanced (Beckham ortaları)",
+     "LST: Poacher/Attack (Solskjær)",
+     "RST: Target Forward/Attack (Sheringham)"
+    ]
+   },
+   "smartTactics": [
+    "Tactical Focus: Hücum → BALANCED→HIGH; RM Winger Balanced→Attack, RB Fullback Balanced değişmez (Attack yok), LCB Defender Defend→Balanced. Son 10 dk Plan B ile birleştir.",
+    "Quick Tactic: Get In Box — geride kalınca Beckham ortalarına kutuyu doldur; Overload Set Pieces Beckham kornerlerinde."
+   ],
+   "tacticCode": null
+  },
+  "replicaFidelity": {
+   "score": 4,
+   "cannotReplicate": [
+    "Ferguson'un rakip/skor bazlı psikolojik risk iştahı tek ayarla ifade edilemez",
+    "Beckham'ın derinden erken orta tercihi Winger/Balanced ile kısmen; AI zaman zaman içe kat ediyor"
+   ]
+  },
+  "behaviorTags": [
+   "classic_442",
+   "w_cross",
+   "w_hug_line",
+   "cm_late_run",
+   "cm_ball_winner",
+   "st_link_up",
+   "st_poacher",
+   "late_comeback"
+  ],
+  "sources": [
+   "model bilgisi — VERIFY"
+  ],
+  "verify": [
+   "Johnsen / Berg / May'in kimin ilk tercih olduğu",
+   "Final'de Keane–Scholes cezalıyken Beckham'ın merkeze geçmesi lig şablonundan farklı"
+  ]
+ },
+ {
+  "id": "ucl_winner_2026_tbd",
+  "kind": "REPLICA",
+  "category": "UCL_WINNER",
+  "club": "DOĞRULANMALI (2025-26 UCL kazananı)",
+  "coach": "DOĞRULANMALI",
+  "season": "2025-26",
+  "honours": [
+   "Şampiyonlar Ligi"
+  ],
+  "whyIconic": "Yer tutucu: 30 Mayıs 2026 Budapeşte (Puskás Aréna) finalinin kazananı modelin elinde güvenilir bilgi olarak yok; kayıt doğrulandıktan sonra doldurulmalı.",
+  "realShape": {
+   "inPossession": "DOĞRULANMALI",
+   "outOfPossession": "DOĞRULANMALI",
+   "keyMechanisms": []
+  },
+  "fc27": null,
+  "replicaFidelity": {
+   "score": 1,
+   "cannotReplicate": [
+    "Kazanan doğrulanmadan replika üretilmedi (fc27 = null)"
+   ]
+  },
+  "behaviorTags": [
+   "placeholder"
+  ],
+  "sources": [
+   "model bilgisi — VERIFY"
+  ],
+  "verify": [
+   "2025-26 kazananı doğrulanmalı",
+   "Teknik direktör ve final XI doğrulanmalı",
+   "Final skoru ve formasyonu doğrulanmalı"
+  ]
+ }
+]
