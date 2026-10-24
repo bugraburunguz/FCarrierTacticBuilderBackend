@@ -182,6 +182,20 @@ class ReplicaSeedIntegrationTest {
         assertThat(verified).as("verified=true sayısı").isBetween(1, RECORDS - 1);
     }
 
+    /** REP-d: liste de verified bayrağını taşır ("Doğrulandı" süzgeci ve kart rozeti); değer detaydakiyle aynı. */
+    @Test
+    void theListCarriesTheSameVerifiedFlagAsTheDetail() throws Exception {
+        JsonNode list = MAPPER.readTree(mockMvc.perform(get("/api/v1/replicas")).andReturn().getResponse().getContentAsString()).at("/data");
+        int verified = 0;
+        for (JsonNode r : list) {
+            assertThat(r.path("verified").isBoolean()).as(r.path("id").asText()).isTrue();
+            JsonNode detail = MAPPER.readTree(mockMvc.perform(get("/api/v1/replicas/" + r.path("id").asText())).andReturn().getResponse().getContentAsString()).at("/data");
+            assertThat(r.path("verified").asBoolean()).as(r.path("id").asText()).isEqualTo(detail.path("verified").asBoolean());
+            verified += r.path("verified").asBoolean() ? 1 : 0;
+        }
+        assertThat(verified).isEqualTo(73);
+    }
+
     @Test
     void everyReplicaIsValid_formationSlotsRolesFocusesApproachAndPlanB() throws Exception {
         List<String> problems = new ArrayList<>();
