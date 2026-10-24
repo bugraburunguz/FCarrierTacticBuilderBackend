@@ -91,6 +91,27 @@ class CareerPlayerListIntegrationTest {
         }
     }
 
+    /** KARIYER-UX 6 (API CONTRACT CHANGE, geriye uyumlu): `ps_plus` PlayStyle+ (seviye ≥ 2) ister; `ps` yalnız varlık. Kariyer havuzu ve katalog. */
+    @Test
+    void playStylePlusFilterRequiresLevelTwo() throws Exception {
+        String name = jdbc.queryForObject("""
+                SELECT k FROM career_player, jsonb_each_text(playstyles) AS e(k, v)
+                 WHERE career_id = ? AND v::int >= 2 GROUP BY k ORDER BY count(*) DESC, k LIMIT 1""", String.class, careerId);
+        List<Long> plus = jdbc.queryForList("SELECT player_id FROM career_player WHERE career_id = ? AND (playstyles ->> ?)::int >= 2", Long.class, careerId, name);
+        List<Long> any = jdbc.queryForList("SELECT player_id FROM career_player WHERE career_id = ? AND jsonb_exists(playstyles, ?)", Long.class, careerId, name);
+        assertThat(any.size()).as("testte hem PS hem PS+ olmalı").isGreaterThan(plus.size());
+
+        List<Long> career = idsOf(call(get("/api/v1/players?career=" + careerId + "&ps_plus=" + name + "&size=200"), null, token, 200));
+        assertThat(career).isNotEmpty().allMatch(plus::contains);
+        List<Long> careerAny = idsOf(call(get("/api/v1/players?career=" + careerId + "&ps=" + name + "&size=200"), null, token, 200));
+        assertThat(careerAny).anyMatch((id) -> !plus.contains(id));
+
+        short gv = catalogProperties.getDefaultGameVersion();
+        List<Long> catalogPlus = jdbc.queryForList("SELECT base_player_id FROM player_rating WHERE game_version_id = ? AND (playstyles ->> ?)::int >= 2", Long.class, gv, name);
+        List<Long> catalog = idsOf(call(get("/api/v1/players?ps_plus=" + name + "&size=200"), null, null, 200));
+        assertThat(catalog).isNotEmpty().allMatch(catalogPlus::contains);
+    }
+
     @Test
     void facetsTellWhichFiltersHaveData() throws Exception {
         JsonNode empty = call(get("/api/v1/players/facets?career=" + careerId), null, token, 200).at("/data");

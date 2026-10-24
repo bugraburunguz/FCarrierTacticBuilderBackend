@@ -64,7 +64,7 @@ public class CareerDeskController {
 
     @PutMapping("/tags/{playerId}")
     public TagDto setTag(@AuthenticationPrincipal AuthUser user, @PathVariable Long careerId, @PathVariable Long playerId, @Valid @RequestBody TagRequest request) {
-        return service.setTag(user.id(), careerId, playerId, request.tag());
+        return service.setTag(user.id(), careerId, playerId, request.tag(), request.askingPriceEur());
     }
 
     @DeleteMapping("/tags/{playerId}")

@@ -172,12 +172,37 @@ class CareerDeskIntegrationTest {
         return body;
     }
 
+    /** KARIYER-UX FAZ 5 (15 §7.2, API CONTRACT CHANGE geriye uyumlu): satış planı = etiket + istenen bedel; ayrı tablo yok. */
+    @Test
+    void sellPlanKeepsTheAskingPriceWithTheTag() throws Exception {
+        String token = register();
+        long careerId = createCareer(token);
+        long playerId = call(get("/api/v1/careers/" + careerId + "/squad"), null, token, 200).at("/data/0/player/id").asLong();
+        String url = "/api/v1/careers/" + careerId + "/tags/" + playerId;
+
+        JsonNode saved = call(put(url), Map.of("tag", "FOR_SALE", "askingPriceEur", 2_500_000), token, 200).at("/data");
+        assertThat(saved.at("/askingPriceEur").asLong()).isEqualTo(2_500_000L);
+        JsonNode listed = call(get("/api/v1/careers/" + careerId + "/tags"), null, token, 200).at("/data/0");
+        assertThat(listed.at("/tag").asText()).isEqualTo("FOR_SALE");
+        assertThat(listed.at("/askingPriceEur").asLong()).isEqualTo(2_500_000L);
+
+        JsonNode backup = call(get("/api/v1/careers/" + careerId + "/backup"), null, token, 200).at("/data");
+        long other = createCareer(token);
+        call(post("/api/v1/careers/" + other + "/backup"), backup, token, 200);
+        assertThat(call(get("/api/v1/careers/" + other + "/tags"), null, token, 200).at("/data/0/askingPriceEur").asLong()).isEqualTo(2_500_000L);
+
+        call(put(url), Map.of("tag", "LOAN_OK"), token, 200);
+        assertThat(call(get("/api/v1/careers/" + careerId + "/tags"), null, token, 200).at("/data/0/askingPriceEur").isNull()).as("bedelsiz gövde bedeli temizler").isTrue();
+        call(put(url), Map.of("tag", "FOR_SALE", "askingPriceEur", -1), token, 400);
+    }
+
     @Test
     void otherUsersCannotTouchTheCareer() throws Exception {
         long careerId = createCareer(register());
         String stranger = register();
         call(get("/api/v1/careers/" + careerId + "/snapshots"), null, stranger, 404);
         call(put("/api/v1/careers/" + careerId + "/tags/1"), Map.of("tag", "LOCKED"), stranger, 404);
+        call(put("/api/v1/careers/" + careerId + "/tags/1"), Map.of("tag", "FOR_SALE", "askingPriceEur", 1_000_000), stranger, 404);
         call(get("/api/v1/careers/" + careerId + "/backup"), null, stranger, 404);
     }
 
