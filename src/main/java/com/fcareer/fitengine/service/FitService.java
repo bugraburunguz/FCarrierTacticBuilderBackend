@@ -137,6 +137,10 @@ public class FitService {
 
     /** Kredi harcamayan kadro dizilişi: yalnız atama + slot başına RoleFit% ve rozet. Kurallar, NLG, zayıf halka ve atak paterni ücretli /fit/squad'dadır (SEC-02). */
     public SquadFitResponse lineup(Long userId, SquadFitRequest request) {
+        // REVIEW F9: kariyersiz istek 400 (önceden findById(null) → 500).
+        if (Objects.isNull(request.getCareerId())) {
+            throw new InvalidTacticException("careerId required");
+        }
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, request.getCareerId());
         List<FitPlayer> players = playerService.fitPlayers(squad.playerIds(), squad.gameVersionId(), request.getCareerId());
         List<IntentProfile> slots = tacticResolver.resolve(request.getTactic()).slots();

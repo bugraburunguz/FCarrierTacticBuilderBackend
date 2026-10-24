@@ -3,6 +3,7 @@ package com.fcareer.auth.service;
 import com.fcareer.auth.configuration.AuthProperties;
 import com.fcareer.auth.entity.AppUserEntity;
 import com.fcareer.auth.mail.VerificationMailer;
+import com.fcareer.auth.security.AuthUser;
 import com.fcareer.auth.repository.AppUserRepository;
 import com.fcareer.billing.service.CreditService;
 import com.fcareer.common.exception.InvalidVerificationTokenException;
@@ -45,6 +46,7 @@ public class EmailVerificationService {
     private final CreditService creditService;
     private final VerificationMailer mailer;
     private final Clock clock;
+    private final BootstrapAdmin bootstrapAdmin;
     private final SecureRandom secureRandom = new SecureRandom();
 
     @Value("${spring.mail.host:}")
@@ -84,6 +86,10 @@ public class EmailVerificationService {
         if (!user.isEmailVerified()) {
             user.setEmailVerified(true);
             creditService.grantOnVerification(user);
+            if (bootstrapAdmin.matches(user.getEmail())) {
+                user.setRole(AuthUser.ROLE_ADMIN);
+                log.info("bootstrap admin atandı userId : {}", userId);
+            }
             log.info("Email verified userId : {}", userId);
         }
     }

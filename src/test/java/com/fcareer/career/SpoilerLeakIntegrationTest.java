@@ -95,6 +95,15 @@ class SpoilerLeakIntegrationTest {
         assertNoExactPotential(similar.at("/data"));
     }
 
+    /** REVIEW F2: replika "kadromla uygula" de spoiler politikasına uyar (kesin POT yok). */
+    @Test
+    void replicaApplyWithTheCareerSquadCarriesNoExactPotential() throws Exception {
+        String replicaId = call(get("/api/v1/replicas"), null, token, 200).at("/data/0/id").asText();
+        JsonNode applied = call(post("/api/v1/replicas/" + replicaId + "/apply"), Map.of("careerId", careerId), token, 200);
+        assertThat(applied.at("/data/slots").size()).isPositive();
+        assertNoExactPotential(applied.at("/data/slots"));
+    }
+
     private static void assertNoExactPotential(JsonNode node) {
         if (node.isObject()) {
             assertThat(node.has("potential") && !node.get("potential").isNull()).as("potential leaked in " + node).isFalse();
