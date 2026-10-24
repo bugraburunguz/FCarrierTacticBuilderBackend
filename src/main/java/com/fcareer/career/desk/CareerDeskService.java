@@ -125,8 +125,9 @@ public class CareerDeskService {
             return new DiffRow(rs.getLong("pid"), rs.getString("full_name"), kind, (Integer) rs.getObject("a_ovr"), (Integer) rs.getObject("b_ovr"),
                     (Integer) rs.getObject("a_pot"), (Integer) rs.getObject("b_pot"), teamFrom, teamTo);
         });
-        List<DiffRow> shown = rows.stream().map(r -> new DiffRow(r.playerId(), r.name(), r.kind(), r.overallFrom(), r.overallTo(), spoilerPolicy.bandOrSame(careerId, r.potentialFrom()),
-                spoilerPolicy.bandOrSame(careerId, r.potentialTo()), r.teamFrom(), r.teamTo())).toList();
+        boolean ranged = spoilerPolicy.ranged(careerId);
+        List<DiffRow> shown = rows.stream().map(r -> new DiffRow(r.playerId(), r.name(), r.kind(), r.overallFrom(), r.overallTo(), spoilerPolicy.bandOrSame(ranged, r.potentialFrom()),
+                spoilerPolicy.bandOrSame(ranged, r.potentialTo()), r.teamFrom(), r.teamTo())).toList();
         return new DiffResult(fromId, toId, count(rows, "CHANGED"), count(rows, "TRANSFER"), count(rows, "NEW"), count(rows, "REMOVED"), shown);
     }
 
@@ -145,12 +146,13 @@ public class CareerDeskService {
     @Transactional(readOnly = true)
     public List<HistoryPoint> history(Long userId, Long careerId, Long playerId) {
         careerService.requireOwned(userId, careerId);
+        boolean ranged = spoilerPolicy.ranged(careerId);
         return jdbc.query("""
                 SELECT s.id, s.taken_at, s.season, s.game_date, p.overall, p.potential, p.team_id FROM career_snapshot s
                 JOIN career_snapshot_player p ON p.snapshot_id = s.id AND p.base_player_id = :p
                 WHERE s.career_id = :c ORDER BY s.id
                 """, Map.of("c", careerId, "p", playerId), (rs, i) -> new HistoryPoint(rs.getLong("id"), rs.getTimestamp("taken_at").toInstant(), (Integer) rs.getObject("season"),
-                rs.getInt("overall"), spoilerPolicy.bandOrSame(careerId, rs.getInt("potential")), (Integer) rs.getObject("team_id"), gameDateOf(rs)));
+                rs.getInt("overall"), spoilerPolicy.bandOrSame(ranged, rs.getInt("potential")), (Integer) rs.getObject("team_id"), gameDateOf(rs)));
     }
 
     /** Konsol oyuncusu için sezon arası hızlı güncelleme: yalnız değişen OVR/POT girilir, canlı veri güncellenir ve MANUAL snapshot alınır. */
