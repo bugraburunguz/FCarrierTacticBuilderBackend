@@ -70,6 +70,20 @@ class CareerLimitIntegrationTest {
         assertThat(daily.at("/error/0/code").asText()).isEqualTo("fc.exception.0032");
     }
 
+    /** Geçersiz istek (yok kulüp, 404) günlük kotayı tüketmez; aksi hâlde kullanıcı kendi gününü kilitlerdi. */
+    @Test
+    void failedCreatesDoNotUseTheDailyQuota() throws Exception {
+        String token = call(post("/api/v1/auth/register"), Map.of("email", "limit-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!", "privacyVersion", 1), null, 200)
+                .at("/data/accessToken").asText();
+        for (int i = 0; i < 5; i++) {
+            call(post("/api/v1/careers"), Map.of("clubId", 999_999_999), token, 404);
+        }
+        long clubId = clubRepository.findAll().get(0).getId();
+        for (int i = 0; i < 3; i++) {
+            call(post("/api/v1/careers"), Map.of("clubId", clubId), token, 200);
+        }
+    }
+
     private JsonNode call(MockHttpServletRequestBuilder builder, Object body, String token, int expectedStatus) throws Exception {
         builder.accept(MediaType.APPLICATION_JSON);
         if (body != null) {

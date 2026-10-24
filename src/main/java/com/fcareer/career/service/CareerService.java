@@ -77,7 +77,6 @@ public class CareerService {
     private final CareerLimiter careerLimiter;
 
     public CareerResponse create(Long userId, CreateCareerRequest request) {
-        careerLimiter.checkCreate(userId);
         short gameVersion = Objects.isNull(request.getGameVersionId())
                 ? catalogProperties.getDefaultGameVersion() : request.getGameVersionId();
         if (!gameVersionRepository.existsById(gameVersion)) {
@@ -85,6 +84,8 @@ public class CareerService {
         }
         ClubEntity club = clubRepository.findById(request.getClubId())
                 .orElseThrow(() -> new NotFoundException(CLUB, request.getClubId()));
+        // Sınır doğrulamadan sonra: geçersiz istek günlük kotayı tüketmez (GUV-2).
+        careerLimiter.checkCreate(userId);
 
         CareerEntity career = new CareerEntity();
         career.setUserId(userId);

@@ -111,6 +111,18 @@ class RateLimitFilterTest {
         assertThat(run("/api/v1/careers/7/import", "10.0.0.1").getStatus()).isEqualTo(429);
     }
 
+    /** GUV-2: Spring yolu çözülmüş hâliyle eşler ve id'yi Long.decode ile okur; kodlanmış ya da "+7"/"0x7" yazımı kovayı atlatamaz. */
+    @Test
+    void encodedOrOddlyWrittenPathsCannotEscapeTheirBucket() throws Exception {
+        for (String path : new String[] {"/api/v1/careers/+7/import", "/api/v1/careers/0x7/import", "/api/v1/careers/%37/import"}) {
+            when(counter.increment(anyString(), eq(Duration.ofHours(1)))).thenReturn(11L);
+            assertThat(run(path, "10.0.0.1").getStatus()).as(path).isEqualTo(429);
+        }
+        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(6L);
+        assertThat(run("/api/v1/fit/%6Cineup", "10.0.0.1").getStatus()).isEqualTo(429);
+        assertThat(run("/api/v1/careers/%2B7/starter-tactic", "10.0.0.1").getStatus()).isEqualTo(429);
+    }
+
     /** GUV-2 karar değerleri: analiz 60/dk, içe aktarma 10/saat; diğerleri aynen. */
     @Test
     void defaultsMatchTheDecision() {

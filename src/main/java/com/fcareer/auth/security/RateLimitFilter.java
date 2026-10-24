@@ -16,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.UrlPathHelper;
 
 import java.io.IOException;
 import java.time.Clock;
@@ -36,12 +37,14 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final String DELETE_PATH = API_V1 + "/me/delete";
     private static final String SOLVER_PATH = API_V1 + "/ut/sbc/streamlined";
     private static final String IMAGE_PATH = API_V1 + "/img/";
-    /** GUV-2 (F8): pahalı ama ücretsiz uçlar analiz kovasında. */
+    /** GUV-2 (F8): pahalı ama ücretsiz uçlar analiz kovasında. Id parçası serbest: Spring "{id}"yi Long.decode ile okur ("+7", "0x7"). */
     private static final Pattern ANALYSIS_PATHS = Pattern.compile(Pattern.quote(API_V1)
-            + "/(tactics/analysis|fit/lineup|replicas/[^/]+/apply|recommend/preview|recommend/slot-view|careers/\\d+/starter-tactic)/?$");
-    private static final Pattern IMPORT_PATH = Pattern.compile(Pattern.quote(API_V1) + "/careers/\\d+/import/?$");
+            + "/(tactics/analysis|fit/lineup|replicas/[^/]+/apply|recommend/preview|recommend/slot-view|careers/[^/]+/starter-tactic)/?$");
+    private static final Pattern IMPORT_PATH = Pattern.compile(Pattern.quote(API_V1) + "/careers/[^/]+/import/?$");
     private static final Duration WINDOW = Duration.ofMinutes(1);
     private static final Duration IMPORT_WINDOW = Duration.ofHours(1);
+    /** Kovalar Spring'in eşlediği gibi çözülmüş yol üzerinden seçilir; "%6Cineup" ya da "/api/%761" kovayı atlatamaz. */
+    private static final UrlPathHelper PATHS = new UrlPathHelper();
 
     private final SecurityProperties properties;
     private final WindowCounter counter;
@@ -51,20 +54,24 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !properties.getRateLimit().isEnabled() || !request.getRequestURI().startsWith(API_V1);
+        return !properties.getRateLimit().isEnabled() || !path(request).startsWith(API_V1);
+    }
+
+    private static String path(HttpServletRequest request) {
+        return PATHS.getPathWithinApplication(request);
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         // Şifre değiştir (V3-07a) ve hesap silme (PROD-PREP 4) şifre deneme yüzeyi: /auth ile aynı sıkı, fail-closed kova.
-        boolean authPath = request.getRequestURI().startsWith(AUTH_PATH) || request.getRequestURI().equals(PASSWORD_PATH)
-                || request.getRequestURI().equals(DELETE_PATH);
-        boolean solverPath = request.getRequestURI().startsWith(SOLVER_PATH);
-        boolean analysisPath = ANALYSIS_PATHS.matcher(request.getRequestURI()).matches();
-        boolean importPath = IMPORT_PATH.matcher(request.getRequestURI()).matches();
+        String path = path(request);
+        boolean authPath = path.startsWith(AUTH_PATH) || path.equals(PASSWORD_PATH) || path.equals(DELETE_PATH);
+        boolean solverPath = path.startsWith(SOLVER_PATH);
+        boolean analysisPath = ANALYSIS_PATHS.matcher(path).matches();
+        boolean importPath = IMPORT_PATH.matcher(path).matches();
         // Kart/yüz görselleri sayfa başına onlarca istek: genel API kovasını doldurmasın diye kendi (geniş) kovası.
-        boolean imagePath = request.getRequestURI().startsWith(IMAGE_PATH);
+        boolean imagePath = path.startsWith(IMAGE_PATH);
         String bucket = authPath ? "auth:" : solverPath ? "solver:" : analysisPath ? "analysis:" : importPath ? "import:" : imagePath ? "img:" : "api:";
         int limit = authPath ? properties.getRateLimit().getAuthPerMinute() : solverPath ? properties.getRateLimit().getSolverPerMinute()
                 : analysisPath ? properties.getRateLimit().getAnalysisPerMinute() : importPath ? properties.getRateLimit().getImportPerHour()
