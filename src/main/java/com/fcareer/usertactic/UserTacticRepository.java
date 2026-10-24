@@ -23,6 +23,8 @@ public class UserTacticRepository {
     private static final String COLUMNS = "slot, career_id, name, formation, build_up, defensive_approach, line_height, slots::text AS slots, ea_code, source_replica_id, "
             + "is_main, lineup::text AS lineup, depth, preset_id, updated_at";
     private static final String SAME_OWNER = "user_id = ? AND COALESCE(career_id, 0) = COALESCE(?, 0)";
+    /** setMain advisory lock ad alanı (pg_advisory_xact_lock(int, int)). */
+    private static final int MAIN_LOCK_NAMESPACE = 7301;
     private static final TypeReference<List<Map<String, Object>>> SLOTS = new TypeReference<>() {
     };
     private static final TypeReference<Map<String, Long>> LINEUP = new TypeReference<>() {
@@ -56,6 +58,10 @@ public class UserTacticRepository {
 
     /** Kariyerin ana taktiğini bu slota taşır (önce eski işaret düşer: kısmi unique index). Slot yoksa 0. */
     public int setMain(long userId, long careerId, int slot) {
+        // REVIEW: eşzamanlı çağrılar kariyer bazında sıralanır (transaction sonuna kadar kilit); aksi halde ikisi de "eski işaret yok" görüp
+        // ikinci işaret kısmi unique index'e çarpıyordu (sahte 409).
+        // İki int'lik kilit anahtar alanı JobLock'un tek bigint alanıyla çakışmaz (PostgreSQL); ad alanı sabit, nesne kariyer.
+        jdbc.query("SELECT pg_advisory_xact_lock(" + MAIN_LOCK_NAMESPACE + ", CAST(? AS integer))", rs -> { }, careerId);
         jdbc.update("UPDATE user_tactic SET is_main = false WHERE user_id = ? AND career_id = ? AND is_main AND slot <> ?", userId, careerId, slot);
         return jdbc.update("UPDATE user_tactic SET is_main = true WHERE user_id = ? AND career_id = ? AND slot = ?", userId, careerId, slot);
     }

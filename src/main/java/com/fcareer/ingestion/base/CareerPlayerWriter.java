@@ -44,12 +44,16 @@ public class CareerPlayerWriter {
     private static final String ATTRS_FROM_OVERLAY = Arrays.stream(Attr.values())
             .map((a) -> "COALESCE(cpr." + a.getColumn() + ", r." + a.getColumn() + ")").collect(Collectors.joining(", "));
 
+    /**
+     * "Canlı" = LE içe aktarmasından gelen satır (içe aktarma her oyuncuya takım yazar). Masa'nın elle OVR/POT güncellemesi (team_id boş) yalnız
+     * reytingi değiştirir; oyuncuyu canlı yapmaz, kulübünü silmez (REVIEW K1: konsol kariyerinde havuz bu oyunculara iniyordu).
+     */
     private static final String SELECT = """
             SELECT CAST(:c AS BIGINT) AS career_id, b.id AS player_id, COALESCE(k.current_game_date, CURRENT_DATE) AS as_of,
                    cpd.team_id AS team_id, COALESCE(cpd.free_agent, false) AS free_agent, cpd.loan_from_team_id AS loan_from_team_id,
-                   CASE WHEN cpd.base_player_id IS NOT NULL THEN tc.id ELSE r.club_id END AS club_id,
+                   CASE WHEN cpd.team_id IS NOT NULL THEN tc.id ELSE r.club_id END AS club_id,
                    CASE WHEN b.owner_career_id IS NULL THEN r.club_id END AS base_club_id,
-                   (cpd.base_player_id IS NOT NULL) AS live,
+                   (cpd.team_id IS NOT NULL) AS live,
                    b.dob AS dob, b.height_cm AS height_cm, b.weight_kg AS weight_kg,
                    CASE lower(left(b.preferred_foot, 1)) WHEN 'r' THEN 'R' WHEN 'l' THEN 'L' END AS preferred_foot,
                    COALESCE(cpr.weak_foot, r.weak_foot) AS weak_foot, COALESCE(cpr.skill_moves, r.skill_moves) AS skill_moves,

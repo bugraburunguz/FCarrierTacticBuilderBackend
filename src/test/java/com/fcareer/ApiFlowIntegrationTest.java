@@ -163,6 +163,8 @@ class ApiFlowIntegrationTest {
                 Map.of("type", "BUY", "playerId", outsiderId, "feeEur", 1), token, 422);
         assertThat(duplicate.at("/error/0/code").asText()).isEqualTo("fc.exception.0010");
 
+        // REVIEW (Orta): ücret üst sınırı; Long.MAX_VALUE bütçeyi taşırıp eksiye çeviriyordu.
+        call(post("/api/v1/careers/" + careerId + "/events"), Map.of("type", "SELL", "playerId", ownPlayer, "feeEur", Long.MAX_VALUE), token, 400);
         JsonNode sold = call(post("/api/v1/careers/" + careerId + "/events"),
                 Map.of("type", "SELL", "playerId", ownPlayer, "feeEur", 1_000_000), token, 200);
         assertThat(sold.at("/data/budgetEurAfter").asLong()).isEqualTo(4_000_000);
