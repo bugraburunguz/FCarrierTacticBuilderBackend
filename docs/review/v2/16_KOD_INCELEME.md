@@ -22,7 +22,7 @@ Yöntem: önce otomatik taramalar, sonra alan alan elle okuma (güvenlik, backen
 | Güvenlik (F) | 0 | 0 | 7 | 3 | 4 |
 | Backend doğruluk (K) | 1 | 1 | 8 | 3 | 4 |
 | Backend performans (P) | 0 | 3 | 4 | 2 | 2 |
-| Web doğruluk/perf (Y, O, W) | 0 | 6 | 14 | 9 | 9 |
+| Web doğruluk/perf (Y, O, W) | 0 | 6 | 14 | 10 | 9 |
 | Sadeleştirme (D, S) | 0 | 0 | 6 | 12 | 2 |
 | Test (T) | 0 | 2 | 6 | 5 | 5 |
 | Doküman (M) | 0 | 0 | 0 | 19 | 15 |
