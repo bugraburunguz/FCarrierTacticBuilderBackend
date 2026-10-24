@@ -74,6 +74,7 @@ public class CareerService {
     private final org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate jdbc;
     private final com.fcareer.career.desk.SpoilerPolicy spoilerPolicy;
     private final com.fcareer.ingestion.base.CareerPlayerWriter careerPlayerWriter;
+    private final CareerLimiter careerLimiter;
 
     public CareerResponse create(Long userId, CreateCareerRequest request) {
         short gameVersion = Objects.isNull(request.getGameVersionId())
@@ -83,6 +84,8 @@ public class CareerService {
         }
         ClubEntity club = clubRepository.findById(request.getClubId())
                 .orElseThrow(() -> new NotFoundException(CLUB, request.getClubId()));
+        // Sınır doğrulamadan sonra: geçersiz istek günlük kotayı tüketmez (GUV-2).
+        careerLimiter.checkCreate(userId);
 
         CareerEntity career = new CareerEntity();
         career.setUserId(userId);

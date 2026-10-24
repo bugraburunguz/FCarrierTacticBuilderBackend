@@ -32,6 +32,8 @@ public final class ErrorCodes {
     public static final String DELETE_EMAIL_MISMATCH = "fc.exception.0028";
     public static final String LAST_ADMIN = "fc.exception.0029";
     public static final String SQUAD_TOO_SMALL = "fc.exception.0030";
+    public static final String CAREER_LIMIT_REACHED = "fc.exception.0031";
+    public static final String CAREER_CREATE_LIMIT_EXCEEDED = "fc.exception.0032";
     public static final String UNKNOWN_ERROR = "fc.exception.9999";
 
     private ErrorCodes() {
