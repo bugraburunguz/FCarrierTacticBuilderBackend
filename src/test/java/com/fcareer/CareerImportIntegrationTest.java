@@ -76,6 +76,8 @@ class CareerImportIntegrationTest {
 
         JsonNode stranger = json(get("/api/v1/players?career=" + careerId + "&free_agent=true"), register());
         assertThat(stranger.at("/success").asBoolean()).isFalse();
+        // REVIEW: "bulunamadı" (404) kodu; 400/500 de success=false verir.
+        assertThat(stranger.at("/error/0/code").asText()).isEqualTo("fc.exception.0001");
 
         JsonNode synced = json(post("/api/v1/careers/" + careerId + "/import/squad?teamId=1"), token);
         assertThat(synced.at("/data/players").asInt()).isEqualTo(2);
