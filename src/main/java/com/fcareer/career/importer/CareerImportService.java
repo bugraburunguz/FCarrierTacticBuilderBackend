@@ -192,11 +192,12 @@ public class CareerImportService {
             }
         });
         int contracts = careerPlayerWriter.applyContracts(careerId, tables.get("players"), allLoans, eaToBase);
-        careerDeskService.takeSnapshot(careerId, "IMPORT", Objects.nonNull(upload.exportId()) ? "export " + upload.exportId() : null);
         log.info("Career import done careerId : {} players : {} teams : {} freeAgents : {} unmatched : {}",
                 careerId, playerRows.size(), teamParams.size(), freeAgents, unmatched);
         Integer guessedTeam = guess.isEmpty() ? null : ((Number) guess.get(0).get("team_id")).intValue();
         Integer synced = Objects.isNull(guessedTeam) || squadEditedByUser(careerId) ? null : rebuildSquad(career, careerId, guessedTeam);
+        // FAZ 6a-E: görüntü kadro kurulduktan sonra alınır; kadro sayısı, giren/çıkan ve kadro maaşı içe aktarılan kadroyu yansıtır.
+        careerDeskService.takeSnapshot(careerId, "IMPORT", Objects.nonNull(upload.exportId()) ? "export " + upload.exportId() : null);
         int skippedNoPosition = baseCatalogImporter.careerPlayersWithoutPositions(tables.get("players"), eaToBase.keySet());
         List<String> warnings = new ArrayList<>();
         if (skippedNoPosition > 0) {

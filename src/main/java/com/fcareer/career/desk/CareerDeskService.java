@@ -77,6 +77,7 @@ public class CareerDeskService {
         // Finans Δ (15 §7.2): kadro maaş toplamı yalnız her kadro oyuncusunun maaşı biliniyorsa yazılır (careerFacets.squad_wage ile aynı kural).
         jdbc.update("""
                 UPDATE career_snapshot SET player_count = :n,
+                       squad_player_ids = (SELECT COALESCE(array_agg(s.base_player_id ORDER BY s.base_player_id), '{}') FROM user_player_state s WHERE s.career_id = :c),
                        budget_eur = (SELECT budget_eur FROM career WHERE id = :c),
                        squad_wage_eur = (SELECT CASE WHEN count(*) > 0 AND count(cp.wage_eur) = count(*) THEN sum(cp.wage_eur) END
                                            FROM user_player_state s LEFT JOIN career_player cp ON cp.career_id = s.career_id AND cp.player_id = s.base_player_id
@@ -94,8 +95,47 @@ public class CareerDeskService {
     @Transactional(readOnly = true)
     public List<SnapshotDto> snapshots(Long userId, Long careerId) {
         careerService.requireOwned(userId, careerId);
-        return jdbc.query("SELECT " + SNAPSHOT_COLUMNS + " FROM career_snapshot WHERE career_id = :c ORDER BY id DESC",
-                Map.of("c", careerId), (rs, i) -> snapshotOf(rs));
+        List<Map.Entry<SnapshotDto, List<Long>>> rows = jdbc.query("SELECT " + SNAPSHOT_COLUMNS + ", squad_player_ids FROM career_snapshot WHERE career_id = :c ORDER BY id DESC",
+                Map.of("c", careerId), (rs, i) -> Map.entry(snapshotOf(rs), squadIds(rs)));
+        return withSquadChanges(rows);
+    }
+
+    /**
+     * FAZ 6a-E: her görüntüye kadro sayısı ve bir önceki (daha eski, kadrosu bilinen) görüntüye göre giren/çıkan oyuncu adları.
+     * Kadrosu bilinmeyen (V46 öncesi) görüntüde alanlar yok; önceki görüntü yoksa giren/çıkan yok.
+     */
+    private List<SnapshotDto> withSquadChanges(List<Map.Entry<SnapshotDto, List<Long>>> rows) {
+        java.util.Set<Long> involved = new java.util.HashSet<>();
+        rows.forEach(r -> {
+            if (Objects.nonNull(r.getValue())) {
+                involved.addAll(r.getValue());
+            }
+        });
+        Map<Long, String> names = new java.util.HashMap<>();
+        if (!involved.isEmpty()) {
+            jdbc.query("SELECT id, full_name FROM base_player WHERE id IN (:ids)", Map.of("ids", involved), rs -> {
+                names.put(rs.getLong("id"), rs.getString("full_name"));
+            });
+        }
+        List<SnapshotDto> result = new java.util.ArrayList<>();
+        for (int i = 0; i < rows.size(); i++) {
+            SnapshotDto dto = rows.get(i).getKey();
+            List<Long> squad = rows.get(i).getValue();
+            if (Objects.isNull(squad)) {
+                result.add(dto);
+                continue;
+            }
+            List<Long> previous = rows.subList(i + 1, rows.size()).stream().map(Map.Entry::getValue).filter(Objects::nonNull).findFirst().orElse(null);
+            List<String> joined = Objects.isNull(previous) ? null : squad.stream().filter(id -> !previous.contains(id)).map(names::get).filter(Objects::nonNull).toList();
+            List<String> left = Objects.isNull(previous) ? null : previous.stream().filter(id -> !squad.contains(id)).map(names::get).filter(Objects::nonNull).toList();
+            result.add(dto.withSquad(squad.size(), joined, left));
+        }
+        return result;
+    }
+
+    private static List<Long> squadIds(java.sql.ResultSet rs) throws java.sql.SQLException {
+        java.sql.Array array = rs.getArray("squad_player_ids");
+        return Objects.isNull(array) ? null : java.util.Arrays.stream((Long[]) array.getArray()).toList();
     }
 
     /** from/to verilmezse son iki snapshot karşılaştırılır. Yalnız değişenler döner: overall/potansiyel, takım değişimi, yeni ve kaybolan oyuncular. */
