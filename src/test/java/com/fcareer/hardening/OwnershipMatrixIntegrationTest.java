@@ -60,7 +60,10 @@ class OwnershipMatrixIntegrationTest {
     void everyCareerScopedEndpointHidesAnotherUsersCareer() throws Exception {
         CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, clubRepository);
         String owner = support.register();
-        long c = support.premiumCareer(owner, 5_000_000L);
+        // Kulüp açıkça (en kalabalık kadro) seçilir: "ilk kulüp" sırasızdır ve başka testler kulüp satırlarını güncelleyince kadrosuz kalabilir.
+        Integer clubId = jdbc.queryForObject("SELECT club_id FROM player_rating WHERE game_version_id = 27 GROUP BY club_id ORDER BY count(*) DESC, club_id LIMIT 1", Integer.class);
+        long c = support.json(MockMvcRequestBuilders.post("/api/v1/careers").contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsBytes(Map.of("clubId", clubId, "budgetEur", 5_000_000))), owner).at("/data/id").asLong();
         String stranger = support.register();
         long squadPlayer = jdbc.queryForObject("SELECT base_player_id FROM user_player_state WHERE career_id = ? ORDER BY base_player_id LIMIT 1", Long.class, c);
         long outsider = jdbc.queryForObject("SELECT r.base_player_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id WHERE b.owner_career_id IS NULL "
