@@ -38,7 +38,14 @@ public class SpoilerPolicy {
     }
 
     public void mask(Long careerId, PlayerSummaryResponse summary) {
-        if (Objects.nonNull(summary) && Objects.nonNull(summary.getPotential()) && ranged(careerId)) {
+        if (Objects.nonNull(summary) && Objects.nonNull(summary.getPotential())) {
+            mask(ranged(careerId), summary);
+        }
+    }
+
+    /** REVIEW (N+1): döngüde çağıranlar spoiler modunu bir kez okuyup buraya verir; satır başına career sorgusu atılmaz. */
+    public void mask(boolean ranged, PlayerSummaryResponse summary) {
+        if (ranged && Objects.nonNull(summary) && Objects.nonNull(summary.getPotential())) {
             apply(summary);
         }
     }
@@ -55,27 +62,28 @@ public class SpoilerPolicy {
 
     /** Aralık modunda geçmiş/fark gibi tek sayılık potansiyel alanları bandın alt sınırına iner (BE-SEC-05). */
     public Integer bandOrSame(Long careerId, Integer potential) {
-        if (Objects.nonNull(potential) && ranged(careerId)) {
-            return low(potential);
-        }
-        return potential;
+        return Objects.isNull(potential) ? null : bandOrSame(ranged(careerId), potential);
+    }
+
+    public Integer bandOrSame(boolean ranged, Integer potential) {
+        return ranged && Objects.nonNull(potential) ? Integer.valueOf(low(potential)) : potential;
     }
 
     public void maskItems(Long careerId, java.util.Collection<com.fcareer.recommendation.model.response.RecommendationItem> items) {
         if (Objects.nonNull(items) && ranged(careerId)) {
-            items.forEach(i -> mask(careerId, i.getPlayer()));
+            items.forEach(i -> mask(true, i.getPlayer()));
         }
     }
 
     public void maskTargets(Long careerId, java.util.Collection<com.fcareer.recommendation.model.response.PositionTargets> positions) {
         if (Objects.nonNull(positions) && ranged(careerId)) {
-            positions.forEach(p -> Objects.requireNonNullElse(p.getTargets(), java.util.List.<com.fcareer.recommendation.model.response.TransferTarget>of()).forEach(t -> mask(careerId, t.getPlayer())));
+            positions.forEach(p -> Objects.requireNonNullElse(p.getTargets(), java.util.List.<com.fcareer.recommendation.model.response.TransferTarget>of()).forEach(t -> mask(true, t.getPlayer())));
         }
     }
 
     public void maskScouting(Long careerId, java.util.Collection<com.fcareer.recommendation.model.response.ScoutingCandidate> candidates) {
         if (Objects.nonNull(candidates) && ranged(careerId)) {
-            candidates.forEach(c -> mask(careerId, c.getPlayer()));
+            candidates.forEach(c -> mask(true, c.getPlayer()));
         }
     }
 

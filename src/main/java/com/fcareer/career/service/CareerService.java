@@ -165,6 +165,7 @@ public class CareerService {
         Map<Long, PlayerSummaryResponse> summaries = playerService.summaries(
                 states.stream().map(UserPlayerStateEntity::getBasePlayerId).toList(), career.getGameVersionId(), careerId);
         Map<Long, Imported> overlay = importedRatings(careerId, states);
+        boolean ranged = spoilerPolicy.ranged(careerId);
         return states.stream()
                 .filter(s -> summaries.containsKey(s.getBasePlayerId()))
                 .map(s -> {
@@ -175,13 +176,13 @@ public class CareerService {
                         summary.setPotential(imported.potential());
                         summary.setValuationEstimated(false);
                     }
-                    spoilerPolicy.mask(careerId, summary);
+                    spoilerPolicy.mask(ranged, summary);
                     CareerPlayerResponse row = careerMapper.toPlayer(s, summary);
                     if (Objects.nonNull(imported)) {
                         row.setLoanUntil(imported.loanUntil());
                         row.setWageEur(imported.wageEur());
                     }
-                    if (spoilerPolicy.ranged(careerId)) {
+                    if (ranged) {
                         row.setDynamicPotential(null);
                     }
                     return row;

@@ -30,9 +30,10 @@ public class CareerRecommendationController {
     public CreditedResponse<CareerRecommendationResponse> recommend(@AuthenticationPrincipal AuthUser user, @PathVariable Long careerId,
                                                                     @Valid @RequestBody CareerRecommendationRequest request) {
         CreditedResponse<CareerRecommendationResponse> response = recommender.recommend(user.id(), careerId, request);
-        response.getResult().getItems().forEach((item) -> spoilerPolicy.mask(careerId, item.getPlayer()));
+        boolean ranged = spoilerPolicy.ranged(careerId);
+        response.getResult().getItems().forEach((item) -> spoilerPolicy.mask(ranged, item.getPlayer()));
         if (response.getResult().getLongShots() != null) {
-            response.getResult().getLongShots().forEach((item) -> spoilerPolicy.mask(careerId, item.getPlayer()));
+            response.getResult().getLongShots().forEach((item) -> spoilerPolicy.mask(ranged, item.getPlayer()));
         }
         return response;
     }

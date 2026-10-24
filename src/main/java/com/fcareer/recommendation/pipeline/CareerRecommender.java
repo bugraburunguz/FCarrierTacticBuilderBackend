@@ -115,9 +115,9 @@ public class CareerRecommender {
         int limit = Math.min(Objects.isNull(request.getLimit()) ? properties.getDefaultLimit() : request.getLimit(), properties.getMaxLimit());
         Map<Long, Scored> byId = ranked.scored().stream().collect(Collectors.toMap((s) -> s.summary().getId(), (s) -> s, (a, b) -> a));
         List<Diversifier.Candidate> candidates = ranked.scored().stream().filter((s) -> s.feasibility().bucket() != FeasibilityBucket.HAYAL).map((s) -> toCandidate(s, ranked.profile())).toList();
-        List<CareerRecommendationResponse.Item> longShots = request.isIncludeLongShots()
-                ? ranked.scored().stream().filter((s) -> s.feasibility().bucket() == FeasibilityBucket.HAYAL).limit(properties.getLongShots()).map((s) -> toItem(s, request.getPosition(), spoilerPolicy.ranged(squad.careerId()))).toList() : null;
         boolean hideGrowth = spoilerPolicy.ranged(squad.careerId());
+        List<CareerRecommendationResponse.Item> longShots = request.isIncludeLongShots()
+                ? ranked.scored().stream().filter((s) -> s.feasibility().bucket() == FeasibilityBucket.HAYAL).limit(properties.getLongShots()).map((s) -> toItem(s, request.getPosition(), hideGrowth)).toList() : null;
         List<Diversifier.Candidate> picked = new ArrayList<>(diversifier.select(candidates, limit, properties.getMaxOutOfPosition(), ranked.profile().getMinPrime()));
         // Doğal mevkisi hedef olan oyuncular önce gelir; mevki dışı adaylar (en çok maxOutOfPosition) etiketli olarak sona eklenir.
         picked.sort(Comparator.comparing(Diversifier.Candidate::outOfPosition).thenComparing(Comparator.comparingDouble(Diversifier.Candidate::rank).reversed()));
