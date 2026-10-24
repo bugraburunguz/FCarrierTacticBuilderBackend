@@ -42,8 +42,7 @@ public class ReplicaController {
         ReplicaService.Replica replica = replicas.find(id).orElseThrow(() -> new NotFoundException("replica", id));
         ObjectNode out = replicas.rawOf(id).orElseThrow().deepCopy();
         // İç doğrulama notları yalnız yöneticiye; herkese yalnız "doğrulanmadı" bayrağı.
-        boolean verified = out.path("verify").isEmpty() && !out.path("sources").toString().contains("VERIFY");
-        out.put("verified", verified);
+        out.put("verified", replica.verified());
         if (Objects.isNull(user) || !AuthUser.ROLE_ADMIN.equals(user.role())) {
             out.remove("verify");
             out.remove("sources");
