@@ -131,6 +131,31 @@ class UserTacticMainIntegrationTest {
         return call(get("/api/v1/replicas"), null, token, 200).at("/data/0/id").asText();
     }
 
+    /** REVIEW (Orta): eşzamanlı "ana taktik yap" (çift tık, iki sekme) kısmi unique index'e çarpıp sahte 409 dönmemeli; sonunda tek ana taktik. */
+    @Test
+    void concurrentSetMainCallsAllSucceedAndLeaveExactlyOneMain() throws Exception {
+        String token = support.register();
+        long careerId = support.premiumCareer(token, null);
+        for (int slot = 1; slot <= 4; slot++) {
+            call(put("/api/v1/user-tactics/" + slot), Map.of("careerId", careerId, "name", "T" + slot, "tactic", tactic()), token, 200);
+        }
+        java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(8);
+        try {
+            java.util.List<java.util.concurrent.Future<Integer>> results = new java.util.ArrayList<>();
+            for (int i = 0; i < 16; i++) {
+                int slot = 1 + i % 4;
+                results.add(pool.submit(() -> mockMvc.perform(put("/api/v1/user-tactics/" + slot + "/main?careerId=" + careerId).header("Authorization", "Bearer " + token))
+                        .andReturn().getResponse().getStatus()));
+            }
+            for (java.util.concurrent.Future<Integer> r : results) {
+                assertThat(r.get()).isEqualTo(200);
+            }
+        } finally {
+            pool.shutdown();
+        }
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM user_tactic WHERE career_id = ? AND is_main", Integer.class, careerId)).isEqualTo(1);
+    }
+
     @Test
     void oneMainTacticPerCareerAndUpsertKeepsTheFlag() throws Exception {
         String token = support.register();

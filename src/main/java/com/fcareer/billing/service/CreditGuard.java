@@ -22,7 +22,13 @@ public class CreditGuard {
             result = operation.get();
         } catch (RuntimeException e) {
             log.warn("Charged operation failed, refunding userId : {} reason : {}", userId, reason);
-            creditService.refund(userId, charged, reason + "_FAILED");
+            // REVIEW: iade de başarısız olursa asıl hata kaybolmaz; iade hatası loglanır ve asıl hataya eklenir.
+            try {
+                creditService.refund(userId, charged, reason + "_FAILED");
+            } catch (RuntimeException refundError) {
+                log.error("Credit refund failed userId : {} amount : {} reason : {}", userId, charged, reason, refundError);
+                e.addSuppressed(refundError);
+            }
             throw e;
         }
         CreditStatus status = creditService.status(userId);
