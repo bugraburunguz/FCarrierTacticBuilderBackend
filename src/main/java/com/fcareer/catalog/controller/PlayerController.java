@@ -56,6 +56,7 @@ public class PlayerController {
             @RequestParam(name = "q", required = false) String query,
             @RequestParam(name = "pos", required = false) List<String> positions,
             @RequestParam(name = "ps", required = false) List<String> playstyles,
+            @RequestParam(name = "ps_plus", required = false) List<String> playstylesPlus,
             @RequestParam(name = "at", required = false) List<String> accelerate,
             @RequestParam(name = "ovr_min", required = false) Integer overallMin,
             @RequestParam(name = "ovr_max", required = false) Integer overallMax,
@@ -93,6 +94,7 @@ public class PlayerController {
                 .query(query)
                 .positions(orEmpty(positions))
                 .playstyles(orEmpty(playstyles))
+                .playstylesPlus(orEmpty(playstylesPlus))
                 .accelerate(orEmpty(accelerate))
                 .attrMin(attrMin)
                 .attrMax(attrMax)
