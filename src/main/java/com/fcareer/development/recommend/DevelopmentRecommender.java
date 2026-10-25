@@ -83,13 +83,25 @@ public class DevelopmentRecommender {
     private final FitEngineProperties fitProperties;
 
     public List<PlayerRecommendation> recommend(Long userId, Long careerId, List<WeakSlot> weakSlots) {
+        return recommend(userId, careerId, weakSlots, null);
+    }
+
+    /**
+     * ACADEMY-b: altyapı oyuncuları için öneri. Bağlam (taktik mevkileri, ilk 11 eşiği) A takım kadrosundan; adaylar yalnız verilen oyuncular. Sahiplik
+     * squadPlayerIds'te doğrulanır; oyuncuları çağıran aynı kariyerden yükler.
+     */
+    public List<PlayerRecommendation> recommendFor(Long userId, Long careerId, List<FitPlayer> players) {
+        return recommend(userId, careerId, List.of(), players);
+    }
+
+    private List<PlayerRecommendation> recommend(Long userId, Long careerId, List<WeakSlot> weakSlots, List<FitPlayer> only) {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
         // Spoiler (13 İlke 4): SCOUT_RANGE kariyerinde kesin potansiyel yerine bandın alt sınırı (kapsam ve tahmin ondan; baş boşluk geri hesaplanamaz).
         boolean ranged = spoilerPolicy.ranged(careerId);
-        List<FitPlayer> players = playerService.fitPlayers(squad.playerIds(), squad.gameVersionId(), careerId).stream()
-                .map((p) -> ranged && Objects.nonNull(p.getPotential()) ? p.toBuilder().potential(SpoilerPolicy.low(p.getPotential())).build() : p).toList();
+        Function<FitPlayer, FitPlayer> banded = (p) -> ranged && Objects.nonNull(p.getPotential()) ? p.toBuilder().potential(SpoilerPolicy.low(p.getPotential())).build() : p;
+        List<FitPlayer> players = playerService.fitPlayers(squad.playerIds(), squad.gameVersionId(), careerId).stream().map(banded).toList();
         Map<Long, FitPlayer> byId = players.stream().collect(Collectors.toMap(FitPlayer::getId, Function.identity(), (a, b) -> a));
-        List<FitPlayer> candidates = players.stream().filter(this::inScope).toList();
+        List<FitPlayer> candidates = (Objects.isNull(only) ? players : only.stream().map(banded).toList()).stream().filter(this::inScope).toList();
         // Dönüşüm adayı, Kadro/Roller ile aynı eşikten (ilk 11'in alt üçte biri; gençte 2 sezonluk tahmin).
         PositionAdviceService.TeamContext team = positionAdvice.teamContext(userId, careerId, players);
         Map<Long, PlayerPositionAdvice> advice = positionAdvice.advise(candidates, team).stream()

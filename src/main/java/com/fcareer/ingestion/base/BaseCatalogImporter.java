@@ -42,6 +42,8 @@ public class BaseCatalogImporter {
     /** LE-01: lig türleri ADLA (dil değişir) değil EA lig id'siyle tanınır. 76 Erkekler - Diğer, 2000/2028 yer tutucu: katalogdan dışlanır. */
     /** 76 Erkekler - Diğer, 2000/2028 yer tutucu, 2255 Klasik Lig (Classic XI, Soccer Aid, … XI: transfer edilemeyen efsane takımları). */
     private static final Set<Integer> NON_CATALOG_LEAGUE_IDS = Set.of(76, 2000, 2028, 2255);
+    /** Adı çözülmemiş takımın genel yedek adı: "Takım #id". */
+    public static final String PLACEHOLDER_TEAM_LABEL = "Takım #";
     /** 78 Erkek Milli, 2136 Kadın Milli: milli takımlar kulüp değildir. */
     public static final Set<Integer> NATIONAL_LEAGUE_IDS = Set.of(78, 2136);
     public static final int FREE_AGENT_LEAGUE_ID = 382;
@@ -665,7 +667,7 @@ public class BaseCatalogImporter {
     }
 
     public static String displayTeamName(String name, Integer teamId) {
-        return isPlaceholderTeam(name) ? "Takım #" + teamId : name;
+        return isPlaceholderTeam(name) ? PLACEHOLDER_TEAM_LABEL + teamId : name;
     }
 
     private static boolean isPlaceholderTeam(String name) {

@@ -107,6 +107,25 @@ class AcademyIntegrationTest {
         List<String> names = new ArrayList<>();
         data(token, "/api/v1/careers/" + careerId + "/teams?limit=100", 200).forEach((t) -> names.add(t.path("name").asText()));
         assertThat(names).noneMatch((n) -> n.startsWith("*")).contains("Port Vale Youth Academy");
+        // ACADEMY-b karar 1: oyuncusu olmayan ve adı çözülmemiş takım ("Takım #id") listelerde görünmez.
+        assertThat(names).noneMatch((n) -> n.startsWith("Takım #"));
+
+        // ACADEMY-b: satırda FIT-3 en iyi mevki, önerilen gelişim planı ve "A takıma al" değerlendirmesi (tahmin).
+        assertThat(kyle.path("bestPosition").asText()).isNotBlank();
+        assertThat(kyle.has("sideReason")).isTrue();
+        assertThat(kyle.at("/plan/name").asText()).isNotBlank();
+        assertThat(kyle.at("/plan/text").asText()).isNotBlank();
+        assertThat(kyle.has("promote")).isTrue();
+        JsonNode promoted = null;
+        for (JsonNode p : academy.get("players")) {
+            if (!p.path("promote").isNull()) {
+                promoted = p.get("promote");
+            }
+        }
+        assertThat(promoted).as("fixture'da en az bir 'A takıma al' önerisi").isNotNull();
+        assertThat(promoted.path("position").asText()).isNotBlank();
+        assertThat(promoted.path("strength1").isNumber()).isTrue();
+        assertThat(promoted.path("text").asText()).contains("tahmin");
         assertThat(jdbc.queryForList("SELECT name FROM career_team WHERE career_id = ?", String.class, careerId)).noneMatch((n) -> n.startsWith("*"));
 
         // Kariyer verisi: oyun tarihi META'dan (career_calendar varsayılan 20080101), maaş ve sözleşme dolu → Masa bandı kalkar.
