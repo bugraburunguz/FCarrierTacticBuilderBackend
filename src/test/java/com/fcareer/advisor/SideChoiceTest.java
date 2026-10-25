@@ -114,6 +114,14 @@ class SideChoiceTest {
     }
 
     @Test
+    void closeProfileIndexesReadAsBalancedProfile() {
+        // Gerçek veride görüldü: "Bitirici profil baskın (Orta 68 · Bitiricilik 71) → RW · Winger" çelişkili okunuyordu; fark < 5 → dengeli profil.
+        FitPlayer p = winger(Map.of(Attr.CROSSING, 68, Attr.CURVE, 68, Attr.FINISHING, 71, Attr.LONG_SHOTS, 71, Attr.POSITIONING, 71), "Right", 2, List.of("LW"));
+        Choice c = SideChoice.choose("LW", Map.of("LW", new Best("Inside Forward (Attack)", 70), "RW", new Best("Winger (Attack)", 72)), p, THRESHOLD);
+        assertThat(c.reason()).isEqualTo("Dengeli profil (Orta 68 · Bitiricilik 71) + sağ ayak → RW · Winger");
+    }
+
+    @Test
     void nonWidePositionsAreUntouched() {
         Choice c = SideChoice.choose("CM", Map.of(), winger(CROSSER, "Right", 2, List.of("CM")), THRESHOLD);
         assertThat(c.position()).isEqualTo("CM");

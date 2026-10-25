@@ -13,6 +13,8 @@ import java.util.Objects;
  */
 public final class SideChoice {
 
+    /** Orta ve bitiricilik endeksleri bundan az farklıysa "Dengeli profil" (gerekçe metni; seçim etkilenmez). */
+    private static final int BALANCED_PROFILE_GAP = 5;
     private static final Map<String, String> MIRROR = Map.of("LB", "RB", "RB", "LB", "LM", "RM", "RM", "LM", "LW", "RW", "RW", "LW");
 
     private SideChoice() {
@@ -90,7 +92,7 @@ public final class SideChoice {
     private static String reason(FitPlayer player, String position, String roleName) {
         long cross = Math.round((player.attr(Attr.CROSSING) + player.attr(Attr.CURVE)) / 2.0);
         long finishing = Math.round((player.attr(Attr.FINISHING) + player.attr(Attr.LONG_SHOTS) + player.attr(Attr.POSITIONING)) / 3.0);
-        String profile = cross >= finishing ? "Orta profili baskın" : "Bitirici profil baskın";
+        String profile = Math.abs(cross - finishing) < BALANCED_PROFILE_GAP ? "Dengeli profil" : cross > finishing ? "Orta profili baskın" : "Bitirici profil baskın";
         String foot = "Left".equalsIgnoreCase(player.getPreferredFoot()) ? "sol ayak" : "Right".equalsIgnoreCase(player.getPreferredFoot()) ? "sağ ayak" : "ayak bilinmiyor";
         String base = roleName.replaceAll("\\s*\\(.*\\)\\s*$", "");
         return profile + " (Orta " + cross + " · Bitiricilik " + finishing + ") + " + foot + " → " + position + " · " + base;
