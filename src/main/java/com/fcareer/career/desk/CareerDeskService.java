@@ -96,7 +96,8 @@ public class CareerDeskService {
     public List<SnapshotDto> snapshots(Long userId, Long careerId) {
         careerService.requireOwned(userId, careerId);
         List<Map.Entry<SnapshotDto, List<Long>>> rows = jdbc.query("SELECT " + SNAPSHOT_COLUMNS + ", squad_player_ids FROM career_snapshot WHERE career_id = :c ORDER BY id DESC",
-                Map.of("c", careerId), (rs, i) -> Map.entry(snapshotOf(rs), squadIds(rs)));
+                // SimpleEntry: V46 öncesi görüntüde kadro NULL (Map.entry null değeri reddeder).
+                Map.of("c", careerId), (rs, i) -> new java.util.AbstractMap.SimpleEntry<>(snapshotOf(rs), squadIds(rs)));
         return withSquadChanges(rows);
     }
 

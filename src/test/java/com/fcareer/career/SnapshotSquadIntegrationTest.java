@@ -39,6 +39,8 @@ class SnapshotSquadIntegrationTest {
     private ClubRepository clubRepository;
     @Autowired
     private IngestionService ingestionService;
+    @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     @BeforeEach
     void seed() {
@@ -70,6 +72,16 @@ class SnapshotSquadIntegrationTest {
         assertThat(latest.at("/squadCount").asInt()).isEqualTo(size - 1);
         assertThat(latest.at("/squadLeft").toString()).contains(firstName);
         assertThat(latest.at("/squadJoined").size()).isZero();
+
+        // V46 öncesi görüntü (kadro bilinmiyor): alanlar yok; sonraki görüntü onu atlayıp kadrosu bilinen daha eskiyle kıyaslanır.
+        jdbc.update("UPDATE career_snapshot SET squad_player_ids = NULL WHERE id = ?", older.at("/id").asLong());
+        JsonNode again = call(get("/api/v1/careers/" + careerId + "/snapshots"), null, token, 200).at("/data");
+        assertThat(again.get(1).has("squadCount")).isFalse();
+        assertThat(again.get(0).has("squadLeft")).as("önceki dolu görüntü yok").isFalse();
+
+        String stranger = call(post("/api/v1/auth/register"), Map.of("email", "snap-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!", "privacyVersion", 1), null, 200)
+                .at("/data/accessToken").asText();
+        call(get("/api/v1/careers/" + careerId + "/snapshots"), null, stranger, 404);
     }
 
     private JsonNode call(MockHttpServletRequestBuilder builder, Object body, String token, int expectedStatus) throws Exception {
