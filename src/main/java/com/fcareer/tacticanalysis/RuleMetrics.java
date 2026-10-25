@@ -70,12 +70,14 @@ public class RuleMetrics {
             // 3+ stoperli hatta bekler zaten ileri çıkar (FULLBACKS_DYFWD_MIN ile aynı gerekçe): kural dörtlü savunma içindir.
             case "OVERLAPPING_FULLBACK_COUNT" -> ctx.outfield().stream().filter((p) -> "CB".equals(p.position())).count() >= BACK_LINE_COVER ? OptionalDouble.empty()
                     : OptionalDouble.of(ctx.outfield().stream().filter((p) -> FULLBACKS.contains(p.position()) && p.m().dyFwd() >= number(params, PARAM_MIN)).count());
-            case "CREATIVE_ROLE_COUNT" -> OptionalDouble.of(ctx.outfield().stream().filter(creative(params)).count());
-            case "CREATIVE_VISION_AVG" -> average(ctx, creative(params).and((p) -> p.player() != null), (p) -> p.player().attr(Attr.VISION));
+            case "CREATIVE_ROLE_COUNT" -> OptionalDouble.of(ctx.outfield().stream().filter(rolesIn(params)).count());
+            case "CREATIVE_VISION_AVG" -> average(ctx, rolesIn(params).and((p) -> p.player() != null), (p) -> p.player().attr(Attr.VISION));
             case "CENTRE_FORWARD_COUNT" -> OptionalDouble.of(ctx.outfield().stream().filter((p) -> CENTRE_FORWARDS.contains(p.position())).count());
             case "WINGERS_CUTIN_MIN" -> ctx.outfield().stream().filter((p) -> WINGERS.contains(p.position())).count() < 2 ? OptionalDouble.empty()
                     : ctx.outfield().stream().filter((p) -> WINGERS.contains(p.position())).mapToDouble((p) -> p.m().cutIn()).min();
-            case "LATE_RUNNER_COUNT" -> OptionalDouble.of(ctx.outfield().stream().filter((p) -> MIDFIELD.contains(p.position()) && p.m().runBehind() >= number(params, PARAM_MIN)).count());
+            // Eşiği geçen ya da seed'de açıkça sayılan (`roles`: box_to_box, box_crasher) merkez orta saha.
+            case "LATE_RUNNER_COUNT" -> OptionalDouble.of(ctx.outfield().stream().filter((p) -> MIDFIELD.contains(p.position())
+                    && (p.m().runBehind() >= number(params, PARAM_MIN) || (params.containsKey(PARAM_ROLES) && rolesIn(params).test(p)))).count());
             default -> throw new IllegalArgumentException("bilinmeyen metrik: " + metric);
         };
     }
@@ -90,8 +92,8 @@ public class RuleMetrics {
         return left.isPresent() && right.isPresent() ? OptionalDouble.of(Math.min(left.getAsDouble(), right.getAsDouble())) : OptionalDouble.empty();
     }
 
-    /** Yaratıcı roller seed'de (`params.roles`, virgülle ayrılmış temel rol adları). */
-    private static Predicate<Placed> creative(Map<String, Object> params) {
+    /** Seed'deki rol listesi (`params.roles`, virgülle ayrılmış temel rol adları; örn. yaratıcı roller, kutuya geç gelenler). */
+    private static Predicate<Placed> rolesIn(Map<String, Object> params) {
         Set<String> roles = Set.of(String.valueOf(params.get(PARAM_ROLES)).split(","));
         return (p) -> roles.contains(p.m().role());
     }

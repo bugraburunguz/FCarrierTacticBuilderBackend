@@ -43,6 +43,8 @@ public class SecurityProperties {
          * Lab'da her değişiklik bir istek; dakikada 60 saniyede bir değişikliğe yeter.
          */
         private int analysisPerMinute = 60;
+        /** FIT-2 kararı: taktik analizi (/tactics/analysis) kendi kovasında; Lab'da her değişiklik /fit/lineup'la birlikte gider. */
+        private int tacticAnalysisPerMinute = 60;
         /** LE içe aktarma (/careers/{id}/import): her biri katalog kopyalar; kullanıcı başına saatte. */
         private int importPerHour = 10;
     }

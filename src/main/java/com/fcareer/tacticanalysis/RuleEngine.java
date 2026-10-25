@@ -55,6 +55,10 @@ public class RuleEngine {
                 });
             }
         }
+        // Bastıran kural seed'de sonra gelse de geçerli (FIT-2: counter_risk_overlap → counter_risk); sıra bağımlılığı yok.
+        Map<String, List<String>> suppressedBy = new java.util.HashMap<>();
+        rules.rules().forEach((r) -> suppressedBy.put(r.id(), r.suppressedBy()));
+        findings.removeIf((f) -> suppressedBy.getOrDefault(f.code(), List.of()).stream().anyMatch(produced::contains));
         return new Result(findings, skipped);
     }
 

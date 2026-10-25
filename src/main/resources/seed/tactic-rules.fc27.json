@@ -150,7 +150,10 @@
       "recommendation": {
         "code": "LOWER_LINE_OR_FASTER_CBS",
         "text": "Hattı düşür ya da daha hızlı stoper(ler) kullan."
-      }
+      },
+      "suppressedBy": [
+        "counter_risk_overlap"
+      ]
     },
     {
       "id": "no_box_target",
@@ -569,7 +572,8 @@
         {
           "metric": "LATE_RUNNER_COUNT",
           "params": {
-            "min": 0.35
+            "min": 0.35,
+            "roles": "box_to_box,box_crasher"
           },
           "op": "EQ",
           "value": 0

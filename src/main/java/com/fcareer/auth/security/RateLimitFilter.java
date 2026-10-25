@@ -39,7 +39,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final String IMAGE_PATH = API_V1 + "/img/";
     /** GUV-2 (F8): pahalı ama ücretsiz uçlar analiz kovasında. Id parçası serbest: Spring "{id}"yi Long.decode ile okur ("+7", "0x7"). */
     private static final Pattern ANALYSIS_PATHS = Pattern.compile(Pattern.quote(API_V1)
-            + "/(tactics/analysis|fit/lineup|replicas/[^/]+/apply|recommend/preview|recommend/slot-view|careers/[^/]+/starter-tactic)/?$");
+            + "/(fit/lineup|replicas/[^/]+/apply|recommend/preview|recommend/slot-view|careers/[^/]+/starter-tactic)/?$");
+    /** FIT-2 kararı: taktik analizi kendi kovasında (Lab'da diziliş isteğiyle birlikte gider; ortak kovayı yarı hızda doldurmasın). */
+    private static final Pattern TACTIC_ANALYSIS_PATH = Pattern.compile(Pattern.quote(API_V1) + "/tactics/analysis/?$");
     private static final Pattern IMPORT_PATH = Pattern.compile(Pattern.quote(API_V1) + "/careers/[^/]+/import/?$");
     private static final Duration WINDOW = Duration.ofMinutes(1);
     private static final Duration IMPORT_WINDOW = Duration.ofHours(1);
@@ -69,12 +71,15 @@ public class RateLimitFilter extends OncePerRequestFilter {
         boolean authPath = path.startsWith(AUTH_PATH) || path.equals(PASSWORD_PATH) || path.equals(DELETE_PATH);
         boolean solverPath = path.startsWith(SOLVER_PATH);
         boolean analysisPath = ANALYSIS_PATHS.matcher(path).matches();
+        boolean tacticAnalysisPath = TACTIC_ANALYSIS_PATH.matcher(path).matches();
         boolean importPath = IMPORT_PATH.matcher(path).matches();
         // Kart/yüz görselleri sayfa başına onlarca istek: genel API kovasını doldurmasın diye kendi (geniş) kovası.
         boolean imagePath = path.startsWith(IMAGE_PATH);
-        String bucket = authPath ? "auth:" : solverPath ? "solver:" : analysisPath ? "analysis:" : importPath ? "import:" : imagePath ? "img:" : "api:";
+        String bucket = authPath ? "auth:" : solverPath ? "solver:" : analysisPath ? "analysis:" : tacticAnalysisPath ? "tactic-analysis:"
+                : importPath ? "import:" : imagePath ? "img:" : "api:";
         int limit = authPath ? properties.getRateLimit().getAuthPerMinute() : solverPath ? properties.getRateLimit().getSolverPerMinute()
-                : analysisPath ? properties.getRateLimit().getAnalysisPerMinute() : importPath ? properties.getRateLimit().getImportPerHour()
+                : analysisPath ? properties.getRateLimit().getAnalysisPerMinute()
+                : tacticAnalysisPath ? properties.getRateLimit().getTacticAnalysisPerMinute() : importPath ? properties.getRateLimit().getImportPerHour()
                 : imagePath ? properties.getRateLimit().getImagePerMinute() : properties.getRateLimit().getApiPerMinute();
         Duration window = importPath ? IMPORT_WINDOW : WINDOW;
         String key = RATE_LIMIT_PREFIX + bucket + subject(request) + ":" + clock.millis() / window.toMillis();

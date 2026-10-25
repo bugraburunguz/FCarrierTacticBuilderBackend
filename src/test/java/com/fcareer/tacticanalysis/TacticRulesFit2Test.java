@@ -98,6 +98,16 @@ class TacticRulesFit2Test {
         assertThat(run(50, Map.of(), TWO_ATTACKING_WINGBACKS).notEvaluated()).extracting((n) -> n.code()).as("oyuncusuz değerlendirilmez").contains("counter_risk_overlap");
     }
 
+    /** Karar: yeni kontra kuralı tetiklenince eski "yüksek hat + yavaş stoper" (counter_risk) gizlenir; tek başına eski kural yine çıkar. */
+    @Test
+    void counterRiskOverlap_suppressesTheOldHighLineCounterRisk() {
+        Map<String, FitPlayer> slow = squad(70, Map.of("LCB", pace(58), "RCB", pace(61)));
+        Analysis both = run(80, slow, TWO_ATTACKING_WINGBACKS);
+        assertThat(finding(both, "counter_risk_overlap")).isPresent();
+        assertThat(finding(both, "counter_risk")).as("gizlenir").isEmpty();
+        assertThat(finding(run(80, slow), "counter_risk")).as("bekler bindirmiyorsa eski kural kalır").isPresent();
+    }
+
     @Test
     void counterRisk_notForThreeCentreBacks() {
         // İnceleme: 3+ stoperli hatta bekler (wingback) zaten ileri çıkar; kural dörtlü savunma içindir (FULLBACKS_DYFWD_MIN ile aynı gerekçe).
@@ -132,7 +142,8 @@ class TacticRulesFit2Test {
 
     // ---- santrfor yalnız --------------------------------------------------------------------------------------------------------
 
-    private static final String[] CUTTING_WINGERS = {"LW=inside_forward_attack", "RW=inside_forward_attack"};
+    /** İki kanat içe kat eder; merkez orta saha kutuya koşmayan playmaker'lar. */
+    private static final String[] CUTTING_WINGERS = {"LW=inside_forward_attack", "RW=inside_forward_attack", "LCM=playmaker_balanced", "RCM=playmaker_build_up"};
 
     @Test
     void lonelyStriker_triggersWithOneStrikerTwoCuttingWingersAndNoLateRunner() {
@@ -141,6 +152,21 @@ class TacticRulesFit2Test {
         assertThat(f.evidence()).extracting((e) -> e.metric()).containsExactly("CENTRE_FORWARD_COUNT", "WINGERS_CUTIN_MIN", "LATE_RUNNER_COUNT");
         assertThat(f.recommendation().text()).isNotBlank();
         assertThat(f.text()).as("kullanıcıya iç eğilim sayısı (0-1) gösterilmez").doesNotMatch(".*\\d\\.\\d.*");
+    }
+
+    /**
+     * Karar (FIT-2 sonrası): eşik 0.35'te kalır, çünkü 0.25–0.35 bandında kutuya koşmayan roller var (classic_10_wide, half_winger_roaming/balanced,
+     * playmaker_attack). Box-to-Box (her odak) ve Box Crasher açıkça geç gelen sayılır.
+     */
+    @Test
+    void lonelyStriker_boxToBoxAndBoxCrasherCountAsLateRunnersButWideTenDoesNot() {
+        assertThat(finding(run(50, Map.of(), "LW=inside_forward_attack", "RW=inside_forward_attack"), "striker_isolated")).as("B2B Balanced (0.25)").isEmpty();
+        assertThat(finding(run(50, Map.of(), "LW=inside_forward_attack", "RW=inside_forward_attack", "LCM=playmaker_balanced", "RCM=box_to_box_ball_winning"), "striker_isolated"))
+                .as("B2B Ball Winning (0.15) de sayılır").isEmpty();
+        assertThat(finding(run(50, Map.of(), "LW=inside_forward_attack", "RW=inside_forward_attack", "LCM=playmaker_balanced", "RCM=playmaker_build_up", "CDM=box_crasher_balanced"), "striker_isolated"))
+                .as("Box Crasher").isEmpty();
+        assertThat(finding(run(50, Map.of(), "LW=inside_forward_attack", "RW=inside_forward_attack", "LCM=half_winger_roaming", "RCM=playmaker_attack"), "striker_isolated"))
+                .as("bant içi ama kutuya koşmayan roller sayılmaz").isPresent();
     }
 
     @Test
