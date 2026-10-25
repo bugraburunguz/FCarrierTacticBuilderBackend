@@ -67,7 +67,9 @@ public class RuleMetrics {
             case "SIDE_FULLBACK_DYFWD_MAX" -> max(ctx, side(params, FULLBACKS), (p) -> p.m().dyFwd());
             case "SIDE_DEF_DUTY_MAX" -> max(ctx, side(params, union(FULLBACKS, WINGERS)), (p) -> p.m().d());
             // FIT-2 madde 7 (fit_engine_spec §5): kontra riski, yaratıcılık, santrfor yalnızlığı.
-            case "OVERLAPPING_FULLBACK_COUNT" -> OptionalDouble.of(ctx.outfield().stream().filter((p) -> FULLBACKS.contains(p.position()) && p.m().dyFwd() >= number(params, PARAM_MIN)).count());
+            // 3+ stoperli hatta bekler zaten ileri çıkar (FULLBACKS_DYFWD_MIN ile aynı gerekçe): kural dörtlü savunma içindir.
+            case "OVERLAPPING_FULLBACK_COUNT" -> ctx.outfield().stream().filter((p) -> "CB".equals(p.position())).count() >= BACK_LINE_COVER ? OptionalDouble.empty()
+                    : OptionalDouble.of(ctx.outfield().stream().filter((p) -> FULLBACKS.contains(p.position()) && p.m().dyFwd() >= number(params, PARAM_MIN)).count());
             case "CREATIVE_ROLE_COUNT" -> OptionalDouble.of(ctx.outfield().stream().filter(creative(params)).count());
             case "CREATIVE_VISION_AVG" -> average(ctx, creative(params).and((p) -> p.player() != null), (p) -> p.player().attr(Attr.VISION));
             case "CENTRE_FORWARD_COUNT" -> OptionalDouble.of(ctx.outfield().stream().filter((p) -> CENTRE_FORWARDS.contains(p.position())).count());

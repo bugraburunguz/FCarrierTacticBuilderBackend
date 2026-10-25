@@ -19,9 +19,18 @@ class RoleSuggestRulesTest {
     }
 
     @Test
-    void ranksByRoleFitThenStrengthWithStrengthFallback() {
-        List<RoleAlternative> ranked = RoleSuggestService.rank(List.of(alt("a", 70, 40.0), alt("b", 60, 71.0), alt("c", 80, null), alt("d", 65, 71.0)));
-        assertThat(ranked).extracting(RoleAlternative::getRoleId).as("oturma azalan (c normsuz → Güç 80), eşitlikte Güç").containsExactly("c", "d", "b", "a");
+    void ranksByRoleFitThenStrength_unnormedLastByStrength() {
+        // İnceleme: oturma göreli yüzdelik, Güç mutlak — iki ölçek karşılaştırılmaz; normsuz roller sonda, kendi aralarında Güç'le.
+        List<RoleAlternative> ranked = RoleSuggestService.rank(List.of(alt("a", 70, 40.0), alt("b", 60, 71.0), alt("c", 80, null), alt("d", 65, 71.0), alt("e", 85, null)));
+        assertThat(ranked).extracting(RoleAlternative::getRoleId).containsExactly("d", "b", "a", "e", "c");
+    }
+
+    @Test
+    void unnormedRoleIsNeverSuggestedNorCountsAsCurrentBasis() {
+        List<RoleAlternative> unnormedBest = RoleSuggestService.rank(List.of(alt("cur", 60, 40.0), alt("x", 90, null)));
+        assertThat(RoleSuggestService.better("cur", unnormedBest, 10)).isEmpty();
+        List<RoleAlternative> unnormedCurrent = RoleSuggestService.rank(List.of(alt("cur", 90, null), alt("y", 60, 70.0)));
+        assertThat(RoleSuggestService.better("cur", unnormedCurrent, 10)).as("mevcut rolün oturması bilinmiyor").isEmpty();
     }
 
     @Test

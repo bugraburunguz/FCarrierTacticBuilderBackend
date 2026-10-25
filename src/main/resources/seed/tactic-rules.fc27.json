@@ -575,7 +575,7 @@
           "value": 0
         }
       ],
-      "text": "Santrfor yalnız: tek forvet var, iki kanat da içe kat ediyor (en az {e1}) ve kutuya geç gelen orta saha yok.",
+      "text": "Santrfor yalnız: tek forvet var, iki kanat da içe kat ediyor ve kutuya geç gelen orta saha yok.",
       "recommendation": {
         "code": "ADD_LATE_RUNNER",
         "text": "Bir orta sahayı kutuya koşan role (Box Crasher, Half Winger, Shadow Striker) çevir ya da ikinci forvet ekle."

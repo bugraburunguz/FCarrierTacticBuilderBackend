@@ -21,9 +21,9 @@ public class RoleAlternative {
     private double currentFit;
     private Double levelFit;
 
-    /** Sıralama ölçüsü: Rol oturması, norm yoksa Güç. */
+    /** Rol oturması (göreli yüzdelik) biliniyor mu; bilinmiyorsa yalnız Güç (mutlak) var, iki ölçek karşılaştırılmaz. */
     @JsonIgnore
-    public double basis() {
-        return Objects.isNull(levelFit) ? currentFit : levelFit;
+    public boolean normed() {
+        return Objects.nonNull(levelFit);
     }
 }

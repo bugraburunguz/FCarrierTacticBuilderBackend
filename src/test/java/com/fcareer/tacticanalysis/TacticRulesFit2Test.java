@@ -98,6 +98,18 @@ class TacticRulesFit2Test {
         assertThat(run(50, Map.of(), TWO_ATTACKING_WINGBACKS).notEvaluated()).extracting((n) -> n.code()).as("oyuncusuz değerlendirilmez").contains("counter_risk_overlap");
     }
 
+    @Test
+    void counterRisk_notForThreeCentreBacks() {
+        // İnceleme: 3+ stoperli hatta bekler (wingback) zaten ileri çıkar; kural dörtlü savunma içindir (FULLBACKS_DYFWD_MIN ile aynı gerekçe).
+        List<Slot> slots = new ArrayList<>();
+        for (String[] s : base433()) {
+            String role = s[0].equals("LB") || s[0].equals("RB") ? "attacking_wingback_attack" : s[0].equals("LCM") ? "defender_defend" : s[4];
+            slots.add(new Slot(s[0], s[0].equals("LCM") ? "CB" : s[1], Integer.parseInt(s[2]), s[0].equals("LCM") ? 80 : Integer.parseInt(s[3]), role));
+        }
+        Map<String, FitPlayer> players = squad(70, Map.of("LCB", pace(58), "RCB", pace(61), "LCM", pace(60)));
+        assertThat(finding(analyzer.analyze(new Input("3-cb", BuildUpType.BALANCED, 50, slots, players)), "counter_risk_overlap")).isEmpty();
+    }
+
     // ---- yaratıcılık yetersiz ---------------------------------------------------------------------------------------------------
 
     private static final String[] THREE_CREATORS = {"CDM=deep_lying_playmaker_build_up", "LCM=playmaker_balanced", "RCM=playmaker_attack"};
@@ -128,6 +140,7 @@ class TacticRulesFit2Test {
         assertThat(f.severity()).isEqualTo(Severity.WARN);
         assertThat(f.evidence()).extracting((e) -> e.metric()).containsExactly("CENTRE_FORWARD_COUNT", "WINGERS_CUTIN_MIN", "LATE_RUNNER_COUNT");
         assertThat(f.recommendation().text()).isNotBlank();
+        assertThat(f.text()).as("kullanıcıya iç eğilim sayısı (0-1) gösterilmez").doesNotMatch(".*\\d\\.\\d.*");
     }
 
     @Test
