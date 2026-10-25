@@ -13,4 +13,6 @@ public class AcademyProperties {
     private int waitingMonths = 12;
     /** Artış bakılan son içe aktarma sayısı (en az 2; tek içe aktarmada durum bilinmez → Gelişiyor). */
     private int stallImports = 2;
+    /** GROWTH-CAL (verified:false, kaynak: Buğra): altyapı oyuncusu bu yaştan önce A takıma alınamaz. */
+    private int minPromotionAge = 16;
 }

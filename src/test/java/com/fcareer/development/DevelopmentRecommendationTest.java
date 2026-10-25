@@ -35,6 +35,36 @@ class DevelopmentRecommendationTest {
         return new Option(plan, plan, "ROLE", position, "r", "Rol", strength2 - 2, strength2, 55.0, balanced2, strength2 - balanced2, null, null);
     }
 
+    /**
+     * GROWTH-CAL madde 3: "net hedef" kıyası mevki grubuna göre — kanat hücum (LW, RW, LM, RM) tek grup, bek (LB, RB) tek grup, diğerleri kendi başına.
+     * Kanat oyuncusunda LW/RW/LM/RM birbirine yakın çıktığı için önceden hep Dengeli öneriliyordu.
+     */
+    @Test
+    void clearTargetComparesAgainstTheBestRoleInAnotherPositionGroup() {
+        List<Option> winger = List.of(at("role:winger:RW", "RW", 80, 70), at("role:winger:LW", "LW", 79, 70), at("role:winger:RM", "RM", 78, 70), at("role:shadow:CAM", "CAM", 70, 65));
+        DevelopmentRecommender.Decision d = DevelopmentRecommender.decide(winger, 2.0, 5.0);
+        assertThat(d.reason()).as("RW 80, başka gruptaki en iyi CAM 70 → fark 10").isEqualTo("CLEAR_TARGET");
+        assertThat(d.chosen().position()).isEqualTo("RW");
+        // CAM/LW listeli oyuncu: gruplar arası kıyas (CAM 75 – LW 72 = 3 < 5).
+        List<Option> mixed = List.of(at("role:shadow:CAM", "CAM", 75, 65), at("role:winger:LW", "LW", 72, 65));
+        assertThat(DevelopmentRecommender.decide(mixed, 2.0, 5.0).reason()).isEqualTo("NO_CLEAR_TARGET");
+        List<Option> fullback = List.of(at("role:fb:LB", "LB", 74, 65), at("role:fb:RB", "RB", 73, 65), at("role:cb:CB", "CB", 66, 60));
+        assertThat(DevelopmentRecommender.decide(fullback, 2.0, 5.0).reason()).as("bek grubu").isEqualTo("CLEAR_TARGET");
+        assertThat(DevelopmentRecommender.positionGroup("LM")).isEqualTo(DevelopmentRecommender.positionGroup("RW"));
+        assertThat(DevelopmentRecommender.positionGroup("CM")).isNotEqualTo(DevelopmentRecommender.positionGroup("CDM"));
+    }
+
+    /** GROWTH-CAL madde 3: hedefin tarafı FIT-3 taraf kuralıyla (oyuncunun en iyi mevkisi): sağ ayaklı orta profili kanat → RW · Winger. */
+    @Test
+    void theSideOfAWingTargetFollowsTheSideRule() {
+        List<Option> both = List.of(at("role:winger:LW", "LW", 80, 70), at("role:winger:RW", "RW", 79, 70), at("role:shadow:CAM", "CAM", 70, 65));
+        List<Option> right = DevelopmentRecommender.preferSide(both, "RW");
+        assertThat(right).extracting(Option::position).containsExactly("RW", "CAM");
+        assertThat(DevelopmentRecommender.decide(right, 2.0, 5.0).chosen().position()).isEqualTo("RW");
+        assertThat(DevelopmentRecommender.preferSide(both, "CAM")).as("en iyi mevki kanatta değilse dokunulmaz").isEqualTo(both);
+        assertThat(DevelopmentRecommender.preferSide(both, null)).isEqualTo(both);
+    }
+
     /** Karar: 2 sezon sonraki en iyi rol, farklı mevkideki ikinci en iyiden ≥ 5 öndeyse "net hedef" → o rol planı; değilse Dengeli + gerekçe. */
     @Test
     void clearTargetWinsOtherwiseBalancedWithNoClearPositionReason() {

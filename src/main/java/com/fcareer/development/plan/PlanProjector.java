@@ -36,12 +36,21 @@ public class PlanProjector {
     }
 
     public PlanProjection project(FitPlayer player, Plan plan, int seasons) {
+        return project(player, plan, seasons, 0);
+    }
+
+    /**
+     * GROWTH-CAL: ilk `academySeasons` sezon altyapıda (kazanç tavanı academyMaxGain), sonrası A takımda (firstTeamMaxGain). Tavan plan dağılımından
+     * önce uygulanır; plan toplamı değiştirmez.
+     */
+    public PlanProjection project(FitPlayer player, Plan plan, int seasons, int academySeasons) {
         FitPlayer current = player;
         int overall = player.getOverall();
         // Karar: hiçbir planda (Dengeli dahil) OVR POT'u geçmez (bilinmiyorsa 99).
         int cap = Objects.isNull(player.getPotential()) ? MAX_OVERALL : Math.min(MAX_OVERALL, Math.max(player.getOverall(), player.getPotential()));
         for (int season = 1; season <= seasons; season++) {
-            GrowthProjector.Projection balanced = growth.project(current);
+            GrowthProjector.Stage stage = season <= academySeasons ? GrowthProjector.Stage.ACADEMY : GrowthProjector.Stage.FIRST_TEAM;
+            GrowthProjector.Projection balanced = growth.project(current, stage);
             int balancedOverall = Math.min(cap, balanced.projectedRating());
             if (plan.kind() == Kind.GENERAL) {
                 current = balanced.grown().toBuilder().overall(balancedOverall).build();
@@ -50,7 +59,7 @@ public class PlanProjector {
             }
             // Karar: plan yalnız dağılımı değiştirir. Ana mevkide tahmini OVR artışı Dengeli ile aynı: artışlar, ana mevki formülündeki (doğrusal)
             // ağırlıklı toplam Dengeli'ninkine eşit olacak biçimde ölçeklenir; OVR Dengeli'nin OVR'si.
-            Map<Attr, Double> planned = growth.increments(current, plan.attributes());
+            Map<Attr, Double> planned = growth.increments(current, plan.attributes(), stage);
             if (planned.isEmpty()) {
                 current = balanced.grown().toBuilder().overall(balancedOverall).roleFamiliarity(familiarity(player, plan, season)).build();
                 overall = balancedOverall;
@@ -58,7 +67,7 @@ public class PlanProjector {
             }
             Map<Attr, Double> weights = positionOverall.weights(mainPosition(current));
             double plannedGain = weighted(weights, planned);
-            double balancedGain = weighted(weights, growth.increments(current, List.of()));
+            double balancedGain = weighted(weights, growth.increments(current, List.of(), stage));
             double scale = plannedGain > 0 ? balancedGain / plannedGain : 1;
             Map<Attr, Double> scaled = new EnumMap<>(Attr.class);
             planned.forEach((attr, inc) -> scaled.put(attr, inc * scale));

@@ -39,6 +39,13 @@ fcareer:
     # Tek içe aktarmada artış ölçülemez: Bekliyor gösterilmez (yalnız Hazır/Gelişiyor).
     waiting-months: 12
     stall-imports: 2
+    # GROWTH-CAL (verified:false, kaynak: Buğra): altyapı oyuncusu 16 yaşından önce A takıma alınamaz.
+    min-promotion-age: 16
+  growth:
+    # GROWTH-CAL (verified:false, kaynak: Buğra oyun tecrübesi, ölçülmedi): sezon OVR kazancı tavanı — altyapıda (A takımda değil) ve A takımda.
+    # Kalibrasyon raporu gerçek veri verince yeniden ayarlanır.
+    academy-max-gain: 5
+    first-team-max-gain: 8
   fit:
     # FIT-3 kararı (verified:false): öneri dışı roller ("baseRole|Focus"). Dönüşüm ve gelişim önerisi hedefi olamaz; Lab'da elle seçilebilir,
     # uyum hesabında kalır. Vektör kalibrasyonundan sonra listeden çıkar.

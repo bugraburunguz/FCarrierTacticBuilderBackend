@@ -175,16 +175,13 @@ class AcademyIntegrationTest {
         assertThat(kyle.at("/plan/name").asText()).isNotBlank();
         assertThat(kyle.at("/plan/text").asText()).isNotBlank();
         assertThat(kyle.has("promote")).isTrue();
-        JsonNode promoted = null;
+        // GROWTH-CAL madde 2: fixture'daki 7 gencin hepsi 15 yaşında → "A takıma al" önerisi yok; yerine 16. doğum gününün tarihli notu.
         for (JsonNode p : academy.get("players")) {
-            if (!p.path("promote").isNull()) {
-                promoted = p.get("promote");
-            }
+            assertThat(p.path("promote").isNull()).as(p.path("name").asText()).isTrue();
+            assertThat(p.at("/promoteInfo/text").asText()).matches("16 yaşında A takıma alınabilir · \\d{2}\\.\\d{2}\\.\\d{4}");
+            assertThat(p.at("/promoteInfo/eligibleOn").asText()).matches("\\d{4}-\\d{2}-\\d{2}");
+            assertThat(p.path("status").asText()).isNotEqualTo("READY");
         }
-        assertThat(promoted).as("fixture'da en az bir 'A takıma al' önerisi").isNotNull();
-        assertThat(promoted.path("position").asText()).isNotBlank();
-        assertThat(promoted.path("strength1").isNumber()).isTrue();
-        assertThat(promoted.path("text").asText()).contains("tahmin");
         assertThat(jdbc.queryForList("SELECT name FROM career_team WHERE career_id = ?", String.class, careerId)).noneMatch((n) -> n.startsWith("*"));
 
         // Kariyer verisi: oyun tarihi META'dan (career_calendar varsayılan 20080101), maaş ve sözleşme dolu → Masa bandı kalkar.
@@ -231,6 +228,9 @@ class AcademyIntegrationTest {
             assertThat(p.path("overall2").asInt()).isGreaterThanOrEqualTo(p.path("overall1").asInt());
         });
         assertThat(detail.at("/advice/estimated").asBoolean()).isTrue();
+        // GROWTH-CAL madde 1: iki sezonluk tahmin varsayımı tek satır (altyapı: 1. sezon +5 tavanı, 2. sezon A takımda sayılır).
+        assertThat(detail.at("/advice/assumption").asText()).isEqualTo("Tahmin: 1. sezon altyapıda (en çok +5 OVR), 2. sezon A takımda (en çok +8 OVR).");
+        plans.forEach((p) -> assertThat(p.path("overall1").asInt() - detail.path("overall").asInt()).as("altyapıda 1 sezonda en çok +5 (genel OVR, mevki farkı ±)").isLessThanOrEqualTo(12));
         assertThat(detail.at("/position/bestPosition").asText()).isNotBlank();
         assertThat(detail.at("/team/position").asText()).isNotBlank();
         assertThat(detail.at("/team/source").asText()).isIn("MAIN", "AUTO");

@@ -38,13 +38,13 @@ public class AcademyService {
     private final AcademyProperties properties;
     private final DevelopmentRecommender.Config youth;
 
-    private static final AcademyAdvisor.Advice EMPTY_ADVICE = new AcademyAdvisor.Advice(null, null, null, null, null);
+    private static final AcademyAdvisor.Advice EMPTY_ADVICE = new AcademyAdvisor.Advice(null, null, null, null, null, null);
 
     /** status: READY (Hazır), GROWING (Gelişiyor), WAITING (Bekliyor); kadro gençlerinde null. loanedOut: başka kulübe kiralık (Gelişim). */
     public record AcademyPlayer(long playerId, String name, Integer age, List<String> positions, Integer overall, Integer potential, String potentialRange,
                                 Integer monthsInSquad, Integer playerTier, Integer potentialVariance, Integer swingLowPotential, boolean youthVerified,
                                 String bestPosition, String sideReason, String conversionPosition, AcademyAdvisor.PlanAdvice plan, AcademyAdvisor.Promote promote,
-                                String status, boolean loanedOut) {
+                                String status, boolean loanedOut, AcademyAdvisor.PromoteInfo promoteInfo) {
     }
 
     public record Academy(boolean found, Integer teamId, String name, String message, List<AcademyPlayer> players) {
@@ -92,7 +92,7 @@ public class AcademyService {
             throw new NotFoundException(PLAYER, playerId);
         }
         Row row = repository.playersByIds(careerId, List.of(playerId)).stream().findFirst().orElseThrow(() -> new NotFoundException(PLAYER, playerId));
-        AcademyAdvisor.Detail detail = advisor.detail(userId, careerId, playerId).orElseThrow(() -> new NotFoundException(PLAYER, playerId));
+        AcademyAdvisor.Detail detail = advisor.detail(userId, careerId, playerId, academy, timing(List.of(row))).orElseThrow(() -> new NotFoundException(PLAYER, playerId));
         boolean ranged = spoilerPolicy.ranged(careerId);
         return new YouthDetail(row.playerId(), row.name(), row.age(), row.positions(), row.overall(), ranged ? null : row.potential(),
                 ranged && Objects.nonNull(row.potential()) ? SpoilerPolicy.range(row.potential()) : null, row.monthsInSquad(), academy,
@@ -102,7 +102,7 @@ public class AcademyService {
     private List<AcademyPlayer> players(Long userId, Long careerId, List<Row> rows, boolean academy, Set<Long> loanedOut) {
         boolean ranged = spoilerPolicy.ranged(careerId);
         List<Long> ids = rows.stream().map(Row::playerId).toList();
-        Map<Long, AcademyAdvisor.Advice> advice = advisor.advise(userId, careerId, ids, academy);
+        Map<Long, AcademyAdvisor.Advice> advice = advisor.advise(userId, careerId, ids, academy, timing(rows));
         Map<Long, List<Integer>> recent = academy ? repository.recentOveralls(careerId, ids, Math.max(2, properties.getStallImports())) : Map.of();
         return rows.stream().map((r) -> {
             AcademyAdvisor.Advice a = advice.getOrDefault(r.playerId(), EMPTY_ADVICE);
@@ -110,7 +110,19 @@ public class AcademyService {
             return new AcademyPlayer(r.playerId(), r.name(), r.age(), r.positions(), r.overall(),
                     ranged ? null : r.potential(), ranged && Objects.nonNull(r.potential()) ? SpoilerPolicy.range(r.potential()) : null,
                     r.monthsInSquad(), r.playerTier(), ranged ? null : r.potentialVariance(), ranged ? null : r.swingLowPotential(), false,
-                    a.bestPosition(), a.sideReason(), a.conversionPosition(), a.plan(), a.promote(), status, loanedOut.contains(r.playerId()));
+                    a.bestPosition(), a.sideReason(), a.conversionPosition(), a.plan(), a.promote(), status, loanedOut.contains(r.playerId()), a.promoteInfo());
         }).toList();
+    }
+
+    /** GROWTH-CAL: 16 yaş terfi tarihi (doğum tarihi + minPromotionAge) ve oyun tarihi (ufuk için). */
+    private AcademyAdvisor.Timing timing(List<Row> rows) {
+        Map<Long, java.time.LocalDate> eligible = new java.util.HashMap<>();
+        rows.forEach((r) -> {
+            java.time.LocalDate on = AcademyAdvisor.eligibleOn(r.dob(), properties.getMinPromotionAge());
+            if (Objects.nonNull(on)) {
+                eligible.put(r.playerId(), on);
+            }
+        });
+        return new AcademyAdvisor.Timing(rows.isEmpty() ? null : rows.get(0).gameDate(), eligible);
     }
 }
