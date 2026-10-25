@@ -6,8 +6,8 @@ import com.fcareer.catalog.model.response.ClubResponse;
 import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.catalog.repository.LeagueRepository;
 import lombok.RequiredArgsConstructor;
+import com.fcareer.ingestion.base.BaseCatalogImporter;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,11 +33,11 @@ public class ClubService {
     public List<ClubResponse> search(String query, Integer limit, Integer leagueId, Integer gender) {
         int size = Objects.isNull(limit) || limit <= 0 ? DEFAULT_LIMIT : Math.min(limit, MAX_PAGE_SIZE);
         String term = Objects.isNull(query) ? "" : query.trim();
-        List<ClubEntity> clubs = clubRepository.search(term, Objects.isNull(leagueId) ? ANY_LEAGUE : leagueId,
-                Objects.isNull(gender) ? ANY_GENDER : gender, PageRequest.of(0, size, Sort.by("name"))).getContent();
+        List<ClubEntity> clubs = clubRepository.searchWithPlayers(term, Objects.isNull(leagueId) ? ANY_LEAGUE : leagueId,
+                Objects.isNull(gender) ? ANY_GENDER : gender, PageRequest.of(0, size));
         Map<Integer, String> leagues = leagueRepository.findAllById(
                         clubs.stream().map(ClubEntity::getLeagueId).filter(Objects::nonNull).distinct().toList()).stream()
-                .collect(Collectors.toMap(LeagueEntity::getId, LeagueEntity::getName, (a, b) -> a));
+                .collect(Collectors.toMap(LeagueEntity::getId, (l) -> BaseCatalogImporter.displayLeagueName(l.getName(), l.getEaLeagueId()), (a, b) -> a));
         return clubs.stream()
                 .map(c -> ClubResponse.builder()
                         .id(c.getId())

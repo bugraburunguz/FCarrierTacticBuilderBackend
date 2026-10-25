@@ -25,4 +25,8 @@ public class LeagueEntity {
     private String country;
 
     private Short tier;
+
+    /** Yalnız okuma (yazımı JDBC içe aktarma yapar): çözülmemiş lig adının yedeği "Lig #id" için. */
+    @Column(name = "ea_league_id", insertable = false, updatable = false)
+    private Integer eaLeagueId;
 }
