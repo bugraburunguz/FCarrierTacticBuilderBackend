@@ -2,6 +2,8 @@ package com.fcareer.development;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.catalog.service.PositionOverallFixture;
+import com.fcareer.catalog.service.PositionOverallService;
+import com.fcareer.development.plan.DevelopmentPlans.Plan;
 import com.fcareer.development.plan.DevelopmentPlans;
 import com.fcareer.development.plan.PlanProjector;
 import com.fcareer.development.plan.PlanProjector.PlanProjection;
@@ -25,7 +27,8 @@ class PlanProjectorTest {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private final GrowthProjector growth = new GrowthProjector(new GrowthProjector.Config());
     private final DevelopmentPlans plans = new DevelopmentPlans(MAPPER);
-    private final PlanProjector projector = new PlanProjector(growth, PositionOverallFixture.loaded(MAPPER));
+    private static final PositionOverallService OVERALL = PositionOverallFixture.loaded(MAPPER);
+    private final PlanProjector projector = new PlanProjector(growth, OVERALL);
 
     private static FitPlayer player(String position) {
         Map<Attr, Integer> attrs = new EnumMap<>(Attr.class);
@@ -53,19 +56,39 @@ class PlanProjectorTest {
         assertThat(projector.project(p, plans.positionPlan("CDM").orElseThrow(), 2).grown().getRoleFamiliarity()).doesNotContainKey("holding");
     }
 
+    /** Karar: plan yalnız dağılımı değiştirir; ana mevkideki tahmini OVR artışı Dengeli ile aynı, hiçbir planda OVR POT'u geçmez. */
     @Test
-    void plannedOverallNeverPassesPotential() {
-        // İnceleme: Dengeli OVR'yi potansiyelle sınırlıyor; planlı yol da aynı tavanı kullanmalı.
-        FitPlayer striker = player("ST").toBuilder().potential(70).build();
-        assertThat(projector.project(striker, plans.positionPlan("ST").orElseThrow(), 2).overall()).isLessThanOrEqualTo(70);
+    void noPlanPassesPotentialIncludingBalanced() {
+        FitPlayer striker = player("ST").toBuilder().overall(64).potential(66).build();
+        for (Plan plan : List.of(plans.general(), plans.positionPlan("ST").orElseThrow(), plans.positionPlan("CB").orElseThrow(), plans.rolePlan("poacher", "ST").orElseThrow())) {
+            assertThat(projector.project(striker, plan, 2).overall()).as(plan.key()).isLessThanOrEqualTo(66);
+        }
     }
 
     @Test
-    void plannedOverallFollowsThePositionFormula() {
+    void everyPlanKeepsTheBalancedOverallAtTheMainPosition() {
         FitPlayer striker = player("ST");
-        int stPlan = projector.project(striker, plans.positionPlan("ST").orElseThrow(), 1).overall();
-        int cbPlan = projector.project(striker, plans.positionPlan("CB").orElseThrow(), 1).overall();
-        assertThat(stPlan).as("forvet planı forvet OVR'sini stoper planından çok artırır").isGreaterThan(cbPlan);
-        assertThat(stPlan).isGreaterThan(striker.getOverall());
+        for (int seasons = 1; seasons <= 2; seasons++) {
+            int balanced = projector.project(striker, plans.general(), seasons).overall();
+            for (Plan plan : List.of(plans.positionPlan("ST").orElseThrow(), plans.positionPlan("CB").orElseThrow(), plans.rolePlan("poacher", "ST").orElseThrow())) {
+                assertThat(projector.project(striker, plan, seasons).overall()).as(plan.key() + " " + seasons + " sezon").isEqualTo(balanced);
+            }
+        }
+    }
+
+    @Test
+    void planAttributesAreScaledSoTheMainPositionFormulaGainMatchesBalanced() {
+        // Ana mevki formülü doğrusal: Σ ağırlık × attribute artışı. Plan bu toplamı Dengeli'ye eşitler (yuvarlama payı ±1); dağılım farklı kalır.
+        FitPlayer striker = player("ST");
+        Map<Attr, Double> w = OVERALL.weights("ST");
+        double balanced = gain(w, striker, projector.project(striker, plans.general(), 1).grown());
+        FitPlayer planned = projector.project(striker, plans.positionPlan("ST").orElseThrow(), 1).grown();
+        assertThat(gain(w, striker, planned)).isCloseTo(balanced, org.assertj.core.api.Assertions.within(1.0));
+        assertThat(planned.getAttrs().get(Attr.FINISHING) - 62).as("plan attribute'u yine öne çıkar")
+                .isGreaterThan(planned.getAttrs().get(Attr.STAMINA) - 62);
+    }
+
+    private static double gain(Map<Attr, Double> w, FitPlayer before, FitPlayer after) {
+        return w.entrySet().stream().mapToDouble((e) -> e.getValue() * (after.getAttrs().get(e.getKey()) - before.getAttrs().get(e.getKey()))).sum();
     }
 }

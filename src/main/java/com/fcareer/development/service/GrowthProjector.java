@@ -54,7 +54,7 @@ public class GrowthProjector {
         private double declineStep = 0.4;
         private double ovrPerPhysical = 0.6;
         /** FIT-3 madde 9 (verified:false): mevki/rol planında sezon kazancı bütçesinin plan attribute'larına giden payı; kalanı diğerlerine eşit. */
-        private double planShare = 0.7;
+        private double planShare = 0.45;
         /** FIT-3 madde 9 (verified:false): rol planı Role+ ailesini kaç sezonda bir kademe artırır (Role+ → Role++). */
         private int familiaritySeasonsPerLevel = 1;
     }
@@ -103,21 +103,39 @@ public class GrowthProjector {
         if (gain <= 0) {
             return new Projection(player.getOverall(), player);
         }
+        return apply(player, increments(player, plan), Math.min(MAX_ATTR, player.getOverall() + gain));
+    }
+
+    /**
+     * Bir sezonun attribute artışları (yuvarlamadan önce, hız grubu çarpanı dahil). Plan boşsa Dengeli (her attribute kazanç kadar); düşüş yaşında ya da
+     * kazanç yoksa boş. Plan ölçeklemesi (ana mevkide OVR artışını Dengeli'ye eşitleme) çağıran tarafta: PlanProjector.
+     */
+    public Map<Attr, Double> increments(FitPlayer player, Collection<Attr> plan) {
+        int gain = physicalDecline(player) > 0 ? 0 : seasonGain(player);
+        Map<Attr, Double> out = new EnumMap<>(Attr.class);
+        if (gain <= 0) {
+            return out;
+        }
         boolean goalkeeperPlan = plan.stream().anyMatch(GOALKEEPING::contains);
         // Bütçe planın alanında: kaleci planı yalnız kaleci attribute'ları, saha planı yalnız saha attribute'ları.
-        List<Attr> relevant = player.getAttrs().keySet().stream().filter((a) -> goalkeeperPlan == GOALKEEPING.contains(a)).toList();
+        List<Attr> relevant = player.getAttrs().keySet().stream().filter((a) -> plan.isEmpty() || goalkeeperPlan == GOALKEEPING.contains(a)).toList();
         long inPlan = relevant.stream().filter(plan::contains).count();
         long others = relevant.size() - inPlan;
         double budget = (double) gain * relevant.size();
         double perPlan = inPlan == 0 ? 0 : config.getPlanShare() * budget / inPlan;
-        double perOther = others == 0 ? 0 : (1 - config.getPlanShare()) * budget / others;
-        Map<Attr, Integer> attrs = new EnumMap<>(Attr.class);
-        player.getAttrs().forEach((attr, value) -> {
+        double perOther = plan.isEmpty() ? gain : others == 0 ? 0 : (1 - config.getPlanShare()) * budget / others;
+        player.getAttrs().keySet().forEach((attr) -> {
             double base = !relevant.contains(attr) ? 0 : plan.contains(attr) ? perPlan : perOther;
-            attrs.put(attr, Math.min(MAX_ATTR, value + (int) Math.round(base * (HARD_TO_TRAIN.contains(attr) ? config.getHardToTrain() : 1.0))));
+            out.put(attr, base * (HARD_TO_TRAIN.contains(attr) ? config.getHardToTrain() : 1.0));
         });
-        int projected = Math.min(MAX_ATTR, player.getOverall() + gain);
-        return new Projection(projected, copy(player, attrs, projected));
+        return out;
+    }
+
+    /** Artışları uygular (yuvarlama, 99 tavanı); yaş bir artar, OVR verilen. */
+    public Projection apply(FitPlayer player, Map<Attr, Double> increments, int overall) {
+        Map<Attr, Integer> attrs = new EnumMap<>(Attr.class);
+        player.getAttrs().forEach((attr, value) -> attrs.put(attr, Math.min(MAX_ATTR, value + (int) Math.round(increments.getOrDefault(attr, 0.0)))));
+        return new Projection(overall, copy(player, attrs, overall));
     }
 
     public Config config() {

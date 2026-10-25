@@ -4,19 +4,22 @@ import com.fcareer.catalog.service.PositionOverallService;
 import com.fcareer.development.plan.DevelopmentPlans.Kind;
 import com.fcareer.development.plan.DevelopmentPlans.Plan;
 import com.fcareer.development.service.GrowthProjector;
+import com.fcareer.fitengine.model.Attr;
 import com.fcareer.fitengine.model.FitPlayer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 /**
- * FIT-3 madde 9: bir gelişim planıyla N sezon sonrası oyuncu. Dengeli: bugünkü GrowthProjector aynen (OVR = OVR + kazanç).
- * Mevki/rol planı: kazancın büyük kısmı plan attribute'larına (GrowthProjector.project(player, plan)); OVR etkisi ana mevkide
- * position-overall-weights formül farkıyla. Rol planı Role+ ailesini `familiaritySeasonsPerLevel` sezonda bir kademe artırır (en çok Role++).
+ * FIT-3 madde 9: bir gelişim planıyla N sezon sonrası oyuncu. Dengeli: bugünkü GrowthProjector (OVR = OVR + kazanç), POT tavanıyla.
+ * Mevki/rol planı yalnız dağılımı değiştirir (karar): kazancın `planShare` kadarı plan attribute'larına, ama artışlar ana mevki formülündeki ağırlıklı
+ * toplam Dengeli'ninkine eşit olacak biçimde ölçeklenir; OVR Dengeli'ninkiyle aynı. Rol planı Role+ ailesini `familiaritySeasonsPerLevel` sezonda bir
+ * kademe artırır (en çok Role++).
  */
 @Component
 @RequiredArgsConstructor
@@ -35,35 +38,42 @@ public class PlanProjector {
     public PlanProjection project(FitPlayer player, Plan plan, int seasons) {
         FitPlayer current = player;
         int overall = player.getOverall();
+        // Karar: hiçbir planda (Dengeli dahil) OVR POT'u geçmez (bilinmiyorsa 99).
+        int cap = Objects.isNull(player.getPotential()) ? MAX_OVERALL : Math.min(MAX_OVERALL, Math.max(player.getOverall(), player.getPotential()));
         for (int season = 1; season <= seasons; season++) {
+            GrowthProjector.Projection balanced = growth.project(current);
+            int balancedOverall = Math.min(cap, balanced.projectedRating());
             if (plan.kind() == Kind.GENERAL) {
-                GrowthProjector.Projection step = growth.project(current);
-                current = step.grown();
-                overall = step.projectedRating();
+                current = balanced.grown().toBuilder().overall(balancedOverall).build();
+                overall = balancedOverall;
                 continue;
             }
-            GrowthProjector.Projection step = growth.project(current, plan.attributes());
-            // Dengeli ile aynı tavan: potansiyel (bilinmiyorsa 99).
-            int cap = Objects.isNull(player.getPotential()) ? MAX_OVERALL : Math.min(MAX_OVERALL, Math.max(overall, player.getPotential()));
-            overall = Math.min(cap, Math.max(1, overall + formulaDelta(current, step.grown())));
-            current = withOverall(step.grown(), overall, familiarity(player, plan, season));
+            // Karar: plan yalnız dağılımı değiştirir. Ana mevkide tahmini OVR artışı Dengeli ile aynı: artışlar, ana mevki formülündeki (doğrusal)
+            // ağırlıklı toplam Dengeli'ninkine eşit olacak biçimde ölçeklenir; OVR Dengeli'nin OVR'si.
+            Map<Attr, Double> planned = growth.increments(current, plan.attributes());
+            if (planned.isEmpty()) {
+                current = balanced.grown().toBuilder().overall(balancedOverall).roleFamiliarity(familiarity(player, plan, season)).build();
+                overall = balancedOverall;
+                continue;
+            }
+            Map<Attr, Double> weights = positionOverall.weights(mainPosition(current));
+            double plannedGain = weighted(weights, planned);
+            double balancedGain = weighted(weights, growth.increments(current, List.of()));
+            double scale = plannedGain > 0 ? balancedGain / plannedGain : 1;
+            Map<Attr, Double> scaled = new EnumMap<>(Attr.class);
+            planned.forEach((attr, inc) -> scaled.put(attr, inc * scale));
+            overall = balancedOverall;
+            current = withOverall(growth.apply(current, scaled, overall).grown(), overall, familiarity(player, plan, season));
         }
         return new PlanProjection(current, overall);
     }
 
-    /**
-     * Ana mevkide ham formül farkı. byPosition ana mevkiyi gerçek OVR'ye eşitler (artık terim); farkı görmek için ana mevki verilmez
-     * (artık 0) ve iki ham değer çıkarılır.
-     */
-    private int formulaDelta(FitPlayer before, FitPlayer after) {
-        String main = before.getPositions().isEmpty() ? null : before.getPositions().get(0);
-        if (Objects.isNull(main) || Objects.isNull(before.getOverall())) {
-            return 0;
-        }
-        boolean goalkeeper = GOALKEEPER.equals(main);
-        Integer was = positionOverall.byPosition(before.getAttrs(), goalkeeper, null, before.getOverall()).get(main);
-        Integer now = positionOverall.byPosition(after.getAttrs(), goalkeeper, null, before.getOverall()).get(main);
-        return Objects.isNull(was) || Objects.isNull(now) ? 0 : now - was;
+    private static String mainPosition(FitPlayer player) {
+        return player.getPositions().isEmpty() ? GOALKEEPER : player.getPositions().get(0);
+    }
+
+    private static double weighted(Map<Attr, Double> weights, Map<Attr, Double> increments) {
+        return increments.entrySet().stream().mapToDouble((e) -> weights.getOrDefault(e.getKey(), 0.0) * e.getValue()).sum();
     }
 
     private Map<String, Integer> familiarity(FitPlayer player, Plan plan, int season) {

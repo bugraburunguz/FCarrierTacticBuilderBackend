@@ -40,11 +40,11 @@ class GrowthPlanDistributionTest {
     @Test
     void planAttributesTakeMostOfTheSeasonBudget() {
         // 23 yaş, 70→76: kazanç round(6 × 0,35) = 2; bütçe 2 × 29 saha attribute'u = 58.
-        // Plan (8): round(0,7 × 58 / 8) = 5 · diğerleri (21): round(0,3 × 58 / 21) = 1 · hız grubu: round(0,83 × 0,3) = 0 · kaleci attribute'u: değişmez.
+        // Karar: pay 0,45. Plan (8): round(0,45 × 58 / 8) = 3 · diğerleri (21): round(0,55 × 58 / 21) = 2 · hız grubu: round(1,52 × 0,3) = 0 · kaleci: değişmez.
         Map<Attr, Integer> grown = projector.project(player(23, 70, 76, 60), PLAN).grown().getAttrs();
-        assertThat(grown.get(Attr.FINISHING)).isEqualTo(65);
-        assertThat(grown.get(Attr.DRIBBLING)).isEqualTo(65);
-        assertThat(grown.get(Attr.STAMINA)).isEqualTo(61);
+        assertThat(grown.get(Attr.FINISHING)).isEqualTo(63);
+        assertThat(grown.get(Attr.DRIBBLING)).isEqualTo(63);
+        assertThat(grown.get(Attr.STAMINA)).isEqualTo(62);
         assertThat(grown.get(Attr.SPRINT_SPEED)).isEqualTo(60);
         assertThat(grown.get(Attr.GK_DIVING)).as("saha planı kaleci attribute'una bütçe ayırmaz").isEqualTo(60);
     }
@@ -61,10 +61,10 @@ class GrowthPlanDistributionTest {
     @Test
     void goalkeeperPlanBudgetsOnlyGoalkeepingAttributes() {
         // İnceleme: kaleci planı bütçesi 34 attribute'tan değil yalnız 5 kaleci attribute'undan (yoksa 3 attribute'a ~8× kazanç yığılıyordu).
-        // 23 yaş, 70→76: kazanç 2; bütçe 2 × 5 = 10; plan (3): round(0,7 × 10 / 3) = 2 · diğer kaleci (2): round(0,3 × 10 / 2) = 2 · saha: değişmez.
+        // 23 yaş, 70→76: kazanç 2; bütçe 2 × 5 = 10; plan (3): round(0,45 × 10 / 3) = 2 · diğer kaleci (2): round(0,55 × 10 / 2) = 3 · saha: değişmez.
         Map<Attr, Integer> grown = projector.project(player(23, 70, 76, 60), List.of(Attr.GK_DIVING, Attr.GK_HANDLING, Attr.GK_REFLEXES)).grown().getAttrs();
         assertThat(grown.get(Attr.GK_DIVING)).isEqualTo(62);
-        assertThat(grown.get(Attr.GK_KICKING)).isEqualTo(62);
+        assertThat(grown.get(Attr.GK_KICKING)).isEqualTo(63);
         assertThat(grown.get(Attr.FINISHING)).isEqualTo(60);
     }
 
