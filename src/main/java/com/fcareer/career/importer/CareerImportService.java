@@ -1,6 +1,7 @@
 package com.fcareer.career.importer;
 
 import com.fcareer.billing.service.EntitlementService;
+import com.fcareer.career.academy.AcademyDetector;
 import com.fcareer.career.entity.CareerEntity;
 import com.fcareer.career.model.response.ImportSummaryResponse;
 import com.fcareer.career.service.CareerService;
@@ -25,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import static com.fcareer.career.importer.CsvStream.toInt;
@@ -119,6 +121,9 @@ public class CareerImportService {
         playerRows.forEach((row) -> matchedBaseIds.add((Long) row.getValue("base")));
         baseCatalogImporter.saveCareerRatings(careerId, tables.get("players"), eaToBase, matchedBaseIds, generated.keySet(), career.getGameVersionId());
 
+        // ACADEMY-a: altyapı takımı veriden (kodda kimlik yok); adı "{kulüp} Youth Academy", diğer çözülmemiş adlar genel kural.
+        AcademyDetector.Detection academy = AcademyDetector.detect(tables, userTeam);
+        String userTeamName = Optional.ofNullable(teamRows.get(userTeam)).map((r) -> r.get("teamname")).orElse(null);
         List<SqlParameterSource> teamParams = new ArrayList<>();
         for (Map.Entry<Integer, Map<String, String>> entry : teamRows.entrySet()) {
             Integer teamId = entry.getKey();
@@ -127,7 +132,7 @@ public class CareerImportService {
             }
             Map<String, String> row = entry.getValue();
             teamParams.add(new MapSqlParameterSource()
-                    .addValue("career", careerId).addValue("team", teamId).addValue("name", BaseCatalogImporter.displayTeamName(row.get("teamname"), teamId))
+                    .addValue("career", careerId).addValue("team", teamId).addValue("name", AcademyDetector.displayName(row.get("teamname"), teamId, academy.teamId(), userTeamName))
                     .addValue("league", leagueNames.get(teamLeague.get(teamId)))
                     .addValue("gender", toInt(row.get("gender")))
                     .addValue("pool", freeAgentTeams.contains(teamId))
@@ -145,6 +150,8 @@ public class CareerImportService {
                   popularity, club_worth, profitability, rival_team_id)
                 VALUES (:career, :team, :name, :league, :gender, :pool, :overall, :attack, :midfield, :defence, :buildUp, :depth,
                   :youth, :domestic, :international, :popularity, :worth, :profit, :rival)""", teamParams);
+
+        saveAcademy(careerId, academy, tables.get("career_youthplayers"), eaToBase);
 
         jdbc.update("""
                 INSERT INTO career_import (career_id, imported_at, player_count, team_count) VALUES (:c, now(), :p, :t)
@@ -227,6 +234,31 @@ public class CareerImportService {
                 .guessedTeamId(guess.isEmpty() ? null : ((Number) guess.get(0).get("team_id")).intValue())
                 .guessedTeamName(guess.isEmpty() ? null : (String) guess.get(0).get("name"))
                 .build();
+    }
+
+    /**
+     * ACADEMY-a: altyapı takımı (career.academy_team_id; bulunamadıysa NULL) ve career_youthplayers alanları her içe aktarmada yeniden yazılır.
+     * Alanların anlamı doğrulanmadı (verified:false). Oyuncu kimliği EA → base eşlemesiyle (üretilmiş oyuncular kariyere aittir).
+     */
+    private void saveAcademy(Long careerId, AcademyDetector.Detection academy, List<Map<String, String>> youthRows, Map<Long, Long> eaToBase) {
+        jdbc.update("UPDATE career SET academy_team_id = :t WHERE id = :c", new MapSqlParameterSource().addValue("t", academy.teamId(), java.sql.Types.INTEGER)
+                .addValue("c", careerId));
+        jdbc.update("DELETE FROM career_youth_player WHERE career_id = :c", Map.of("c", careerId));
+        List<SqlParameterSource> rows = new ArrayList<>();
+        for (Map<String, String> row : Objects.isNull(youthRows) ? List.<Map<String, String>>of() : youthRows) {
+            Long baseId = eaToBase.get(toLong(row.get("playerid")));
+            if (Objects.nonNull(baseId)) {
+                rows.add(new MapSqlParameterSource().addValue("c", careerId).addValue("p", baseId)
+                        .addValue("months", toInt(row.get("monthsinsquad")), java.sql.Types.SMALLINT)
+                        .addValue("tier", toInt(row.get("playertier")), java.sql.Types.SMALLINT)
+                        .addValue("variance", toInt(row.get("potentialvariance")), java.sql.Types.SMALLINT)
+                        .addValue("swing", toInt(row.get("swinglowpotential")), java.sql.Types.SMALLINT));
+            }
+        }
+        batch("""
+                INSERT INTO career_youth_player (career_id, base_player_id, months_in_squad, player_tier, potential_variance, swing_low_potential)
+                VALUES (:c, :p, :months, :tier, :variance, :swing) ON CONFLICT DO NOTHING""", rows);
+        log.info("Career academy careerId : {} teamId : {} signal : {} youth : {}", careerId, academy.teamId(), academy.signal(), rows.size());
     }
 
     /** Kullanıcı kadroyu elle değiştirdiyse (transfer/terfi olayı var) otomatik yeniden kurma yapılmaz; kullanıcı /import/squad ile açıkça ister (BE-BUG-13). */
