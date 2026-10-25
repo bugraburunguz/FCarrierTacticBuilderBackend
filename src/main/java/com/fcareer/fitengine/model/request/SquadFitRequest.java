@@ -37,4 +37,7 @@ public class SquadFitRequest {
      */
     @Size(max = 11)
     private Map<String, Long> locked;
+
+    /** FIT-2 madde 6, yalnız /fit/lineup: dizili her slot için rol alternatifleri (tek istekte; 11 ayrı /fit/role yerine). */
+    private Boolean roleAlternatives;
 }

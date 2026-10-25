@@ -102,6 +102,39 @@ class LineupReasonsIntegrationTest {
     }
 
     @Test
+    void roleAlternativesInOneRequestOnlyWhenAsked() throws Exception {
+        // FIT-2 madde 6: tek /fit/lineup isteği her dizili slot için o mevkinin tüm rollerini bu oyuncuya göre sıralı döner (11 ayrı çağrı yok).
+        String token = support.register();
+        long careerId = support.premiumCareer(token, null);
+        Map<String, Object> tactic = Map.of("formation", "4-4-2");
+        JsonNode free = post(token, "/api/v1/fit/lineup", Map.of("careerId", careerId, "tactic", tactic));
+        Map<String, Long> locked = new LinkedHashMap<>();
+        free.get("slots").forEach(s -> locked.put(s.get("slotId").asText(), s.get("playerId").asLong()));
+        assertThat(free.findValues("roleAlternatives")).as("istenmedikçe yok").isEmpty();
+
+        JsonNode batch = post(token, "/api/v1/fit/lineup", Map.of("careerId", careerId, "tactic", tactic, "locked", locked, "roleAlternatives", true));
+
+        batch.get("slots").forEach(s -> {
+            String slotId = s.get("slotId").asText();
+            JsonNode alts = s.get("roleAlternatives");
+            assertThat(alts.isArray() && alts.size() >= 2).as(slotId).isTrue();
+            List<String> ids = new ArrayList<>();
+            List<Double> basis = new ArrayList<>();
+            alts.forEach(a -> {
+                ids.add(a.get("roleId").asText());
+                basis.add(a.hasNonNull("levelFit") ? a.get("levelFit").asDouble() : a.get("currentFit").asDouble());
+            });
+            assertThat(ids).as(slotId + " mevcut rol listede").contains(s.get("roleId").asText());
+            assertThat(basis).as(slotId + " oturma azalan").isSortedAccordingTo(java.util.Comparator.reverseOrder());
+            JsonNode current = alts.get(ids.indexOf(s.get("roleId").asText()));
+            assertThat(current.get("currentFit").asDouble()).as(slotId + " mevcut rolün Güç'ü slotla aynı").isEqualTo(s.at("/roleFit/currentFit").asDouble());
+            if (s.hasNonNull("betterRole")) {
+                assertThat(s.at("/betterRole/roleId").asText()).isEqualTo(ids.get(0)).isNotEqualTo(s.get("roleId").asText());
+            }
+        });
+    }
+
+    @Test
     void partialLockClassifiesOnlyLockedSlots() throws Exception {
         // FIT-1 inceleme: çözücünün yedekle doldurduğu kilitsiz slotlar (web göstermez) alt üçte biri ve medyanı kaydırmamalı.
         String token = support.register();
