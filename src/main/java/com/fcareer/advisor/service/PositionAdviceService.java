@@ -1,7 +1,9 @@
 package com.fcareer.advisor.service;
 
 import com.fcareer.advisor.configuration.PositionProperties;
+import com.fcareer.advisor.model.response.AdvisorResponses.Conversion;
 import com.fcareer.advisor.model.response.AdvisorResponses.PlayerPositionAdvice;
+import com.fcareer.development.plan.DevelopmentPlans;
 import com.fcareer.advisor.model.response.AdvisorResponses.PositionOption;
 import com.fcareer.career.service.CareerService;
 import com.fcareer.catalog.service.PlayerService;
@@ -39,6 +41,8 @@ public class PositionAdviceService {
     private final PlayerService playerService;
     private final PositionOverallService positionOverallService;
     private final PositionProperties positionProperties;
+    private final SideScorer sideScorer;
+    private final DevelopmentPlans developmentPlans;
 
     public List<PlayerPositionAdvice> forCareer(Long userId, Long careerId) {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
@@ -79,11 +83,16 @@ public class PositionAdviceService {
             }
             options.sort(Comparator.comparingDouble(PositionOption::getScore).reversed());
             options = sideFirst(options, player);
-            Map.Entry<String, Integer> bestOverall = bestOverall(player);
+            Map.Entry<String, Integer> picked = bestOverall(player);
+            SideChoice.Choice side = sideChoice(player, picked.getKey(), positionOveralls, roles);
+            Map.Entry<String, Integer> bestOverall = side.position().equals(picked.getKey()) ? picked : Map.entry(side.position(), positionOveralls.get(side.position()));
+            Conversion conversion = keeper ? null : ConversionRule.find(options, player.getPositions(), positionOveralls, player.getOverall(),
+                    positionProperties.getConversionGain(), positionProperties.getConversionMaxOverallDrop(),
+                    (pos) -> developmentPlans.positionPlan(pos).map((plan) -> pos + " mevki planı")).orElse(null);
             advice.add(PlayerPositionAdvice.builder().playerId(player.getId()).playerName(player.getName())
                     .listedPositions(player.getPositions()).best(options.stream().limit(POSITIONS_SHOWN).toList())
                     .note(note(options)).ownPositionBest(isOwnBest(options))
-                    .bestOverallPosition(bestOverall.getKey()).bestOverall(bestOverall.getValue()).build());
+                    .bestOverallPosition(bestOverall.getKey()).bestOverall(bestOverall.getValue()).sideReason(side.reason()).conversion(conversion).build());
         }
         return advice;
     }
@@ -131,6 +140,20 @@ public class PositionAdviceService {
         Map.Entry<String, Integer> picked = BestPositionRule.pick(positionOveralls(player), player.getPositions(), player.getPreferredFoot(),
                 positionProperties.getListedPreference());
         return Objects.nonNull(picked) ? picked : Map.entry(player.getPositions().get(0), player.getOverall());
+    }
+
+    /**
+     * FIT-3 madde 13 (BEHAVIOR CHANGE): seçilen mevki kanattaysa ve ayna tarafın EA OVR'si en çok listedPreference düşükse taraf, iki tarafın en iyi
+     * rol Güç'üne göre (ayak terimleri tarzı taşır); fark sideThreshold altındaysa BestPositionRule'un seçimi kalır.
+     */
+    private SideChoice.Choice sideChoice(FitPlayer player, String picked, Map<String, Integer> overalls, Map<String, FitRole> roles) {
+        String mirror = SideChoice.mirror(picked);
+        Integer here = overalls.get(picked);
+        Integer there = Objects.isNull(mirror) ? null : overalls.get(mirror);
+        if (Objects.isNull(here) || Objects.isNull(there) || there < here - positionProperties.getListedPreference()) {
+            return new SideChoice.Choice(picked, null, false, null);
+        }
+        return SideChoice.choose(picked, sideScorer.sideBests(player, picked, mirror, roles.values()), player, positionProperties.getSideThreshold());
     }
 
     /** Öneri listesinde eşit puanlı simetrik mevkilerin sırası aynı kurala göre (aday listesi soldan başladığı için sol öne geçiyordu). */

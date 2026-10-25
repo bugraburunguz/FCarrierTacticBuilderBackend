@@ -61,6 +61,26 @@ public final class AdvisorResponses {
         private boolean ownPositionBest;
         private String bestOverallPosition;
         private Integer bestOverall;
+        /** FIT-3 madde 13: kanat mevkisinde taraf tarzla seçildiyse kısa gerekçe ("Orta profili baskın (Orta 78 · Bitiricilik 61) + sağ ayak → RW · Winger"). */
+        private String sideReason;
+        /** FIT-3 madde 12: rol bazlı dönüşüm önerisi (yoksa null). */
+        private Conversion conversion;
+    }
+
+    /** FIT-3 madde 12: listede olmayan mevkide belirgin daha yüksek Güç (EA OVR'si yakınsa). */
+    @Data
+    @Builder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class Conversion {
+        private String position;
+        private String roleName;
+        private double strength;
+        private String fromPosition;
+        private String fromRoleName;
+        private double fromStrength;
+        private Integer overallAt;
+        private String planName;
+        private String text;
     }
 
     @Data
