@@ -45,7 +45,8 @@ public class AcademyRepository {
                   JOIN base_player b ON b.id = cp.player_id
                   LEFT JOIN career_youth_player y ON y.career_id = cp.career_id AND y.base_player_id = cp.player_id
                 """;
-    private static final String ROW_ORDER = " ORDER BY cp.pot DESC NULLS LAST, cp.ovr DESC, b.full_name";
+    // Potansiyele göre sıralanmaz: aralık modunda yanıt sırası bant içi gerçek POT sırasını vermesin (sıralama istemcide, bantla).
+    private static final String ROW_ORDER = " ORDER BY cp.ovr DESC, b.full_name, cp.player_id";
 
     public List<Row> players(long careerId, int teamId) {
         return jdbc.query(ROW_SELECT + " WHERE cp.career_id = :c AND cp.live AND cp.team_id = :t" + ROW_ORDER, Map.of("c", careerId, "t", teamId), this::row);

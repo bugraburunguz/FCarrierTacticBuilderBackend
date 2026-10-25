@@ -218,6 +218,15 @@ class AcademyIntegrationTest {
             assertThat(p.get("potentialVariance").isNull()).isTrue();
             assertThat(p.get("swingLowPotential").isNull()).isTrue();
         }
+        // ACADEMY-b: yeni uçlar da maskeli (genç listesi ve panel).
+        long playerId = academy.get("players").get(0).path("playerId").asLong();
+        JsonNode detail = data(token, "/api/v1/careers/" + careerId + "/youth/" + playerId, 200);
+        assertThat(detail.get("potential").isNull()).isTrue();
+        assertThat(detail.get("potentialRange").asText()).matches("\\d+–\\d+");
+        data(token, "/api/v1/careers/" + careerId + "/youth", 200).forEach((p) -> {
+            assertThat(p.get("potential").isNull()).isTrue();
+            assertThat(p.get("potentialRange").asText()).matches("\\d+–\\d+");
+        });
     }
 
     @Test

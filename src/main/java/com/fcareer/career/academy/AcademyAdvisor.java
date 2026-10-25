@@ -162,6 +162,7 @@ public class AcademyAdvisor {
         String target = target(player, pos, ctx.slotPositions()).orElse(bestPosition);
         int slots = slotCount(ctx.slotPositions(), target);
         List<Backup> ranked = squadAt(ctx.squad(), target, playerId).stream().sorted(Comparator.comparingDouble(Backup::strength).reversed()).toList();
+        // Slot sayısından az oyuncu varsa boş slot var: ilk 11 eşiği yok (en zayıf ilk 11 değil, boş yer).
         Backup starter = ranked.size() >= slots ? ranked.get(slots - 1) : null;
         Backup backup = backup(ranked, slots);
         Plan grow = growPlan(rec);
@@ -211,7 +212,8 @@ public class AcademyAdvisor {
         }
         if (Objects.nonNull(rec.recommended()) && !rec.balanced()) {
             Option o = rec.recommended();
-            PlanRow chosen = rows.stream().filter((r) -> r.position().equals(o.position()) && !"GENERAL".equals(r.kind())).findFirst().orElse(rows.get(0));
+            PlanRow chosen = rows.stream().filter((r) -> r.position().equals(o.position()) && r.kind().equals(o.kind())).findFirst()
+                    .or(() -> rows.stream().filter((r) -> r.position().equals(o.position()) && !"GENERAL".equals(r.kind())).findFirst()).orElse(rows.get(0));
             String label = "POSITION".equals(o.kind()) ? o.position() + " mevki" : o.position() + " · " + o.roleName();
             return String.format(Locale.ROOT, "%s planını seç: 2 sezonda %s OVR %d (Dengeli %d).", label, chosen.position(), chosen.overall2(), rows.get(0).overall2());
         }

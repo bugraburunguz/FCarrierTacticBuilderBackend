@@ -73,9 +73,11 @@ public class AcademyService {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
         Set<Long> loanedOut = new HashSet<>(squad.ownedIds());
         loanedOut.removeAll(squad.playerIds());
+        // Spoiler: aralık modunda kapsam bandın alt sınırıyla (listede olmak bant içi bilgi vermesin; önericiyle aynı kural).
+        boolean ranged = spoilerPolicy.ranged(careerId);
         List<Row> rows = repository.playersByIds(careerId, squad.ownedIds()).stream()
                 .filter((r) -> Objects.nonNull(r.age()) && Objects.nonNull(r.overall()) && Objects.nonNull(r.potential())
-                        && r.age() <= youth.getMaxAge() && r.potential() - r.overall() >= youth.getMinHeadroom())
+                        && r.age() <= youth.getMaxAge() && (ranged ? SpoilerPolicy.low(r.potential()) : r.potential()) - r.overall() >= youth.getMinHeadroom())
                 .toList();
         return rows.isEmpty() ? List.of() : players(userId, careerId, rows, false, loanedOut);
     }
