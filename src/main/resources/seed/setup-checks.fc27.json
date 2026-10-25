@@ -1,0 +1,75 @@
+{
+  "version": "fc27-1",
+  "verified": false,
+  "_basis": "FIT-2 madde 7: SetupCheckService sabitlerinden birebir taşındı (davranış aynı). Eşikler oyun içi gözlemle doğrulanmadı. Değerler: PACE = (hızlanma+sprint)/2, AIR = (kafa+sıçrama+güç)/3, PASSING = (kısa pas+top kontrolü)/2. Durum: uygun ≥ gereken → GREEN, gereken−1 → YELLOW, altı → RED. Hat bantları: ≥65 yüksek (≥85 agresif), ≤35 alçak, arası orta.",
+  "checks": [
+    {
+      "id": "high_line_pace",
+      "title": "Yüksek hat: stoperlerde hız",
+      "detail": "Yüksek/agresif hatta stoperler arkadaki boşluğu kapatabilmeli (ort. hızlanma+sprint ≥ {threshold}).",
+      "advice": "Savunma hattını biraz düşür ya da hızlı bir stoper ekle.",
+      "depthMin": 65,
+      "positions": ["CB"],
+      "needed": 2,
+      "metric": "PACE",
+      "threshold": 66,
+      "thresholdSteps": [{ "depthMin": 85, "threshold": 72 }]
+    },
+    {
+      "id": "low_block_air",
+      "title": "Alçak blok: hava hakimiyeti",
+      "detail": "Geride beklerken stoperler ortaları kesmeli (ort. kafa, sıçrama, güç ≥ {threshold}).",
+      "advice": "Hava toplarında güçlü bir stoper ekle ya da hattı biraz yükselt.",
+      "depthMax": 35,
+      "positions": ["CB"],
+      "needed": 2,
+      "metric": "AIR",
+      "threshold": 68
+    },
+    {
+      "id": "mid_block_reading",
+      "title": "Orta blok: savunma okuması",
+      "detail": "Dengeli hatta stoperler pozisyon almayı bilmeli (savunma farkındalığı ≥ {threshold}).",
+      "advice": "Savunma farkındalığı yüksek bir stoper dene.",
+      "depthMin": 36,
+      "depthMax": 64,
+      "positions": ["CB"],
+      "needed": 2,
+      "metric": "DEF_AWARENESS",
+      "threshold": 65
+    },
+    {
+      "id": "short_build_up_passing",
+      "title": "Kısa pasla çıkış: pas güvenliği",
+      "detail": "Defans ve pivotta topu kaybetmeden oynayabilen en az {needed} oyuncu gerekir (ort. kısa pas+top kontrolü ≥ {threshold}).",
+      "advice": "Dengeli çıkışa geç ya da pası iyi bir defans/pivot oyuncusu ekle.",
+      "buildUp": "short",
+      "positions": ["CB", "CDM", "LB", "RB"],
+      "needed": 4,
+      "metric": "PASSING",
+      "threshold": 66
+    },
+    {
+      "id": "short_build_up_keeper",
+      "title": "Kısa pasla çıkış: kaleci dağıtımı",
+      "detail": "Kaleci de kurulumda yer alır (kaleci vuruşu ≥ {threshold}).",
+      "advice": "Ayağı iyi bir kaleci dene ya da uzun topla çıkışı seç.",
+      "buildUp": "short",
+      "positions": ["GK"],
+      "needed": 1,
+      "metric": "GK_KICKING",
+      "threshold": 65
+    },
+    {
+      "id": "counter_runners",
+      "title": "Kontra: hızlı koşucular",
+      "detail": "Boşluğa koşacak en az {needed} hızlı oyuncu gerekir (ort. hızlanma+sprint ≥ {threshold}).",
+      "advice": "Hızlı bir kanat/forvet ekle ya da dengeli çıkışa geç.",
+      "buildUp": "counter",
+      "positions": ["LW", "RW", "LM", "RM", "ST", "CAM"],
+      "needed": 3,
+      "metric": "PACE",
+      "threshold": 76
+    }
+  ]
+}
