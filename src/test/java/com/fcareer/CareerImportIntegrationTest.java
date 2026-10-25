@@ -210,14 +210,19 @@ class CareerImportIntegrationTest {
     }
 
     private String fcx2Log(String clubName, boolean inCareer, String gameDate, int userTeamId) {
+        return fcx2Log(clubName, inCareer, gameDate, userTeamId, "[\"playerid\",\"overallrating\",\"potential\"]",
+                java.util.List.of("[" + FIRST_MOCK_ID + ",91,95]", "[" + (FIRST_MOCK_ID + 1) + ",90,93]"));
+    }
+
+    private String fcx2Log(String clubName, boolean inCareer, String gameDate, int userTeamId, String playersHeader, java.util.List<String> players) {
         String prefix = "10:00:00.1\tINFO\t[LUA API] FCX2\t";
         java.util.List<String> log = new java.util.ArrayList<>();
         log.add(prefix + "META\t{\"schema\":\"fccareer.le-export\",\"schemaVersion\":2,\"script\":\"2.0.0\",\"context\":{\"inCareer\":" + inCareer
                 + ",\"mode\":\"MANAGER\",\"gameDate\":\"" + gameDate + "\",\"userTeamId\":" + userTeamId + "}}");
-        fcx2Table(log, "players", "[\"playerid\",\"overallrating\",\"potential\"]", java.util.List.of("[" + FIRST_MOCK_ID + ",91,95]", "[" + (FIRST_MOCK_ID + 1) + ",90,93]"));
+        fcx2Table(log, "players", playersHeader, players);
         fcx2Table(log, "teams", "[\"teamid\",\"teamname\",\"overallrating\",\"gender\"]", java.util.List.of("[1,\"" + clubName + "\",80,0]", "[77,\"Baska FC\",70,0]"));
         fcx2Table(log, "teamplayerlinks", "[\"playerid\",\"teamid\"]", java.util.List.of("[" + FIRST_MOCK_ID + ",1]", "[" + (FIRST_MOCK_ID + 1) + ",77]"));
-        log.add(prefix + "DONE\t[]");
+        log.add(prefix + "DONE\t[\"MISSINGTABLE career_users\"]");
         return String.join("\n", log);
     }
 
@@ -235,6 +240,25 @@ class CareerImportIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT current_game_date FROM career WHERE id = ?", java.time.LocalDate.class, careerId)).isEqualTo(java.time.LocalDate.of(2029, 7, 1));
         assertThat(jdbc.queryForObject("SELECT game_date FROM career_snapshot WHERE career_id = ? ORDER BY id DESC LIMIT 1", java.time.LocalDate.class, careerId)).isEqualTo(java.time.LocalDate.of(2029, 7, 1));
         assertThat(jdbc.queryForObject("SELECT note FROM career_snapshot WHERE career_id = ? ORDER BY id DESC LIMIT 1", String.class, careerId)).contains("export ");
+        // FAZ 6a-A: özet neyin geldiğini söyler; maaş/sözleşme kolonu olmayan export'ta açık uyarı, betiğin ham MISSINGTABLE satırı kullanıcıya gitmez.
+        assertThat(result.at("/data/gameDate").asText()).isEqualTo("2029-07-01");
+        assertThat(result.at("/data/contracts").asInt()).isZero();
+        assertThat(result.at("/data/warnings").toString()).contains("CONTRACTS_MISSING").doesNotContain("MISSINGTABLE");
+    }
+
+    @Test
+    void v2ExportWithWagesAndContractsReportsThemAndDoesNotWarn() throws Exception {
+        String token = register();
+        long careerId = premiumCareer(token);
+        String club = clubRepository.findAll().get(0).getName();
+        String log = fcx2Log(club, true, "2029-07-01", 77, "[\"playerid\",\"overallrating\",\"potential\",\"wage\",\"contractvaliduntil\"]",
+                java.util.List.of("[" + FIRST_MOCK_ID + ",91,95,11000,2030]", "[" + (FIRST_MOCK_ID + 1) + ",90,93,6500,2029]"));
+
+        JsonNode result = json(multipart("/api/v1/careers/" + careerId + "/import").file(file("log", log)), token);
+
+        assertThat(result.at("/success").asBoolean()).as(result.toString()).isTrue();
+        assertThat(result.at("/data/contracts").asInt()).isEqualTo(2);
+        assertThat(result.at("/data/warnings").toString()).doesNotContain("CONTRACTS_MISSING");
     }
 
     @Test

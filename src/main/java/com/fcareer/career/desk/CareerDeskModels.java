@@ -28,7 +28,20 @@ public final class CareerDeskModels {
     public record SnapshotDto(long id, Instant takenAt, Integer season, String transferWindow, String source, int playerCount, String note,
                               @JsonInclude(JsonInclude.Include.NON_NULL) java.time.LocalDate gameDate,
                               /* KARIYER-UX FAZ 2 (V44): snapshot anındaki transfer bütçesi ve kadro maaş toplamı; bilinmiyorsa alan yok. */
-                              Long budgetEur, Long squadWageEur) {
+                              Long budgetEur, Long squadWageEur,
+                              /* FAZ 6a-E (V46): görüntü anındaki kadro sayısı ve önceki görüntüye göre giren/çıkan oyuncu adları; bilinmiyorsa alan yok. */
+                              @JsonInclude(JsonInclude.Include.NON_NULL) Integer squadCount,
+                              @JsonInclude(JsonInclude.Include.NON_NULL) List<String> squadJoined,
+                              @JsonInclude(JsonInclude.Include.NON_NULL) List<String> squadLeft) {
+
+        public SnapshotDto(long id, Instant takenAt, Integer season, String transferWindow, String source, int playerCount, String note,
+                           java.time.LocalDate gameDate, Long budgetEur, Long squadWageEur) {
+            this(id, takenAt, season, transferWindow, source, playerCount, note, gameDate, budgetEur, squadWageEur, null, null, null);
+        }
+
+        public SnapshotDto withSquad(int count, List<String> joined, List<String> left) {
+            return new SnapshotDto(id, takenAt, season, transferWindow, source, playerCount, note, gameDate, budgetEur, squadWageEur, count, joined, left);
+        }
     }
 
     /** kind: CHANGED (overall/potansiyel), TRANSFER (takım değişti), NEW (yeni oyuncu), REMOVED (dosyada yok). */
