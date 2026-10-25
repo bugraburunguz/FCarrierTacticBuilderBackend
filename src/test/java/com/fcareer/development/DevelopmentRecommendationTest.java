@@ -1,0 +1,42 @@
+package com.fcareer.development;
+
+import com.fcareer.development.recommend.DevelopmentRecommender;
+import com.fcareer.development.recommend.DevelopmentRecommender.Option;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * FIT-3 madde 11: her özel plan Dengeli'ye karşı aynı hedefte (mevki, rol) kıyaslanır. En büyük fark eşiğin (2 Güç, verified:false) altındaysa
+ * Dengeli önerilir. Metin "tahmin" olarak okunur: Güç 2 sezon sonrası.
+ */
+class DevelopmentRecommendationTest {
+
+    private static Option option(String plan, String kind, double strength2, double balanced2) {
+        return new Option(plan, plan, kind, "CDM", "holding_defend", "Holding (Defend)", strength2 - 2, strength2, 55.0, balanced2, strength2 - balanced2, null, null);
+    }
+
+    @Test
+    void bestSpecialPlanWinsWhenItBeatsBalancedByTheThreshold() {
+        List<Option> options = List.of(option("role:holding:CDM", "ROLE", 71, 67), option("pos_cdm", "POSITION", 69, 67));
+        Option chosen = DevelopmentRecommender.choose(options, 2.0).orElseThrow();
+        assertThat(chosen.planKey()).isEqualTo("role:holding:CDM");
+    }
+
+    @Test
+    void belowThresholdBalancedIsRecommended() {
+        List<Option> options = List.of(option("role:holding:CDM", "ROLE", 68, 67), option("pos_cdm", "POSITION", 68.5, 67));
+        assertThat(DevelopmentRecommender.choose(options, 2.0)).as("en çok +1,5 → Dengeli").isEmpty();
+    }
+
+    @Test
+    void textReadsLikeTheBrief() {
+        Option chosen = new Option("role:deep_lying_playmaker:CDM", "Deep-Lying Playmaker", "ROLE", "CDM", "deep_lying_playmaker_build_up",
+                "Deep-Lying Playmaker (Build-Up)", 69, 71.2, 58.0, 67.4, 3.8, "Nyoni", 68.1);
+        assertThat(DevelopmentRecommender.text("Figueiredo", chosen))
+                .isEqualTo("Figueiredo · CDM Deep-Lying Playmaker planı → 2 sezonda CDM gücü 71 (Dengeli: 67; Nyoni'nin tahmini 68)");
+        assertThat(DevelopmentRecommender.balancedText("Figueiredo", 1.4)).isEqualTo("Figueiredo · Dengeli plan yeterli: özel planlar 2 sezonda en çok +1 Güç getiriyor");
+    }
+}

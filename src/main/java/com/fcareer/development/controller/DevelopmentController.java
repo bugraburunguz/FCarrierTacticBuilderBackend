@@ -1,6 +1,7 @@
 package com.fcareer.development.controller;
 
 import com.fcareer.development.model.DevelopmentModels.DevelopmentRequest;
+import com.fcareer.development.recommend.DevelopmentRecommender;
 import com.fcareer.development.model.DevelopmentModels.DevelopmentResponse;
 import com.fcareer.development.model.DevelopmentModels.WonderkidQuery;
 import com.fcareer.development.model.DevelopmentModels.WonderkidResponse;
@@ -29,6 +30,7 @@ public class DevelopmentController {
     private final DevelopmentService developmentService;
     private final CareerService careerService;
     private final com.fcareer.career.desk.SpoilerPolicy spoilerPolicy;
+    private final DevelopmentRecommender recommender;
 
     @PostMapping("/players/{id}/development")
     public DevelopmentResponse development(@AuthenticationPrincipal AuthUser user, @PathVariable Long id, @RequestBody(required = false) DevelopmentRequest request) {
@@ -37,6 +39,17 @@ public class DevelopmentController {
             careerService.requireOwned(user == null ? null : user.id(), body.getCareerId());
         }
         return developmentService.plan(id, body);
+    }
+
+    /** FIT-3 madde 11: 23 yaş ve altı, potansiyeli OVR'den ≥ 5 yüksek oyuncular için plan önerisi (tahmin · kalibre edilmedi). Sahiplik servis katmanında. */
+    @PostMapping("/careers/{careerId}/development/recommendations")
+    public List<DevelopmentRecommender.PlayerRecommendation> recommendations(@AuthenticationPrincipal AuthUser user, @PathVariable Long careerId,
+                                                                            @jakarta.validation.Valid @RequestBody(required = false) RecommendationRequest request) {
+        return recommender.recommend(user.id(), careerId, request == null ? List.of() : request.weakSlots());
+    }
+
+    /** weakSlots: Masa'nın KALITE_ACIGI/IKISI slotları (mevki, rol, slottaki oyuncu). */
+    public record RecommendationRequest(@jakarta.validation.constraints.Size(max = 11) List<DevelopmentRecommender.WeakSlot> weakSlots) {
     }
 
     @GetMapping("/wonderkids")

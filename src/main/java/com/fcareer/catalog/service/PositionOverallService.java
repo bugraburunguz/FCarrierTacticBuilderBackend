@@ -54,6 +54,21 @@ public class PositionOverallService {
         }
     }
 
+    /** FIT-3: mevki formülünün (doğrusal) attribute ağırlıkları; mevki yoksa boş. */
+    public Map<Attr, Double> weights(String position) {
+        Formula formula = formulas.get(position);
+        Map<Attr, Double> out = new java.util.EnumMap<>(Attr.class);
+        if (Objects.nonNull(formula)) {
+            for (Attr attr : Attr.values()) {
+                Double w = formula.weights().get(attr.getColumn());
+                if (Objects.nonNull(w)) {
+                    out.put(attr, w);
+                }
+            }
+        }
+        return out;
+    }
+
     /**
      * Formül tüm mevkilerde aynı kalibrasyon hatasını taşır; oyuncunun gerçek overall'ı ile ana mevkisindeki formül
      * sonucu arasındaki fark (PlayStyle/yuvarlama kaynaklı) tüm mevkilere eklenir. Böylece ana mevki gerçek overall'a eşitlenir.
