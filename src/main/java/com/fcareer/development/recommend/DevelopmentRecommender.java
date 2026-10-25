@@ -135,7 +135,8 @@ public class DevelopmentRecommender {
         List<Option> distinct = options.stream().collect(Collectors.toMap((o) -> o.planKey() + "@" + o.position() + "@" + o.roleId(), Function.identity(), (a, b) -> a))
                 .values().stream().sorted(Comparator.comparingDouble(Option::gain).reversed()).toList();
         Decision decision = decide(distinct, config.getMinGain(), config.getClearTargetGap());
-        double bestGain = distinct.isEmpty() ? 0 : distinct.get(0).gain();
+        // "Dengeli yeterli" metni kararın dayandığı hedefin (2 sezon sonra en güçlü) farkını yazar, en büyük farkı değil.
+        double bestGain = Objects.isNull(decision.best()) ? 0 : decision.best().gain();
         String text = Objects.nonNull(decision.chosen()) ? text(player.getName(), decision.chosen())
                 : "NO_CLEAR_TARGET".equals(decision.reason()) ? noClearTargetText(player.getName()) : balancedText(player.getName(), bestGain);
         return new PlayerRecommendation(player.getId(), player.getName(), player.getAge(), player.getOverall(), Objects.isNull(decision.chosen()), decision.chosen(),
@@ -176,8 +177,11 @@ public class DevelopmentRecommender {
         return roleService.fitRolesById().values().stream().filter((r) -> r.getPositions().contains(position) && !fitProperties.recommendationExcluded(r)).toList();
     }
 
-    /** chosen null → Dengeli; reason: CLEAR_TARGET, NO_CLEAR_TARGET, SMALL_GAIN, NO_OPTIONS. */
-    public record Decision(Option chosen, String reason) {
+    /** chosen null → Dengeli; best: 2 sezon sonra en güçlü hedef (metin onun farkını yazar); reason: CLEAR_TARGET, NO_CLEAR_TARGET, SMALL_GAIN, NO_OPTIONS. */
+    public record Decision(Option chosen, String reason, Option best) {
+        public Decision(Option chosen, String reason) {
+            this(chosen, reason, chosen);
+        }
     }
 
     /**
@@ -192,9 +196,9 @@ public class DevelopmentRecommender {
         }
         Optional<Option> otherPosition = special.stream().filter((o) -> !o.position().equals(best.get().position())).max(Comparator.comparingDouble(Option::strength2));
         if (otherPosition.isPresent() && best.get().strength2() - otherPosition.get().strength2() < clearTargetGap) {
-            return new Decision(null, "NO_CLEAR_TARGET");
+            return new Decision(null, "NO_CLEAR_TARGET", best.get());
         }
-        return best.get().gain() >= minGain ? new Decision(best.get(), "CLEAR_TARGET") : new Decision(null, "SMALL_GAIN");
+        return best.get().gain() >= minGain ? new Decision(best.get(), "CLEAR_TARGET") : new Decision(null, "SMALL_GAIN", best.get());
     }
 
     /** Eşik kuralı tek başına (net hedef aranmaz). */
@@ -216,7 +220,7 @@ public class DevelopmentRecommender {
     }
 
     public static String balancedText(String player, double bestGain) {
-        return player + " · Dengeli plan yeterli: özel planlar 2 sezonda en çok +" + Math.max(0, Math.round(bestGain)) + " Güç getiriyor";
+        return player + " · Dengeli plan yeterli: en güçlü hedefte özel plan 2 sezonda yalnız +" + Math.max(0, Math.round(bestGain)) + " Güç getiriyor";
     }
 
     /** Türkçe iyelik eki (ünlü uyumu): Nyoni'nin, Okafor'un, Kaya'nın. */

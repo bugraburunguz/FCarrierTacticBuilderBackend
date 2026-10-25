@@ -47,6 +47,10 @@ class DevelopmentRecommendationTest {
         assertThat(n.chosen().planKey()).isEqualTo("role:holding:CDM");
         assertThat(n.reason()).isEqualTo("CLEAR_TARGET");
         assertThat(DevelopmentRecommender.decide(List.of(at("role:holding:CDM", "CDM", 71, 70)), 2.0, 5.0).reason()).as("tek mevki ama Dengeli'den +1").isEqualTo("SMALL_GAIN");
+        // Metin kararın dayandığı hedefin farkını yazar (en büyük farkı değil): en güçlü hedef CDM 71 (+1), başka CDM planı +10 olsa da.
+        DevelopmentRecommender.Decision small = DevelopmentRecommender.decide(List.of(at("role:holding:CDM", "CDM", 71, 70), at("role:box_crasher:CDM", "CDM", 66, 56)), 2.0, 5.0);
+        assertThat(small.reason()).isEqualTo("SMALL_GAIN");
+        assertThat(small.best().gain()).isEqualTo(1.0);
         assertThat(DevelopmentRecommender.noClearTargetText("Genç")).isEqualTo("Genç · Dengeli plan: Henüz net bir mevkisi yok, esnek gelişsin");
     }
 
@@ -56,6 +60,6 @@ class DevelopmentRecommendationTest {
                 "Deep-Lying Playmaker (Build-Up)", 69, 71.2, 58.0, 67.4, 3.8, "Nyoni", 68.1);
         assertThat(DevelopmentRecommender.text("Figueiredo", chosen))
                 .isEqualTo("Figueiredo · CDM Deep-Lying Playmaker planı → 2 sezonda CDM gücü 71 (Dengeli: 67; Nyoni'nin tahmini 68)");
-        assertThat(DevelopmentRecommender.balancedText("Figueiredo", 1.4)).isEqualTo("Figueiredo · Dengeli plan yeterli: özel planlar 2 sezonda en çok +1 Güç getiriyor");
+        assertThat(DevelopmentRecommender.balancedText("Figueiredo", 1.4)).isEqualTo("Figueiredo · Dengeli plan yeterli: en güçlü hedefte özel plan 2 sezonda yalnız +1 Güç getiriyor");
     }
 }
