@@ -34,6 +34,13 @@ spring:
       max-request-size: 66MB
 
 fcareer:
+  fit:
+    # FIT-3 kararı (verified:false): öneri dışı roller ("baseRole|Focus"). Dönüşüm ve gelişim önerisi hedefi olamaz; Lab'da elle seçilebilir,
+    # uyum hesabında kalır. Vektör kalibrasyonundan sonra listeden çıkar.
+    recommendation-excluded-roles:
+      # wide_midfielder|Defend: seed vektörü fiilen defansif orta saha vektörü (DefAwareness 0,25 · Stamina 0,20 · Interceptions/StandingTackle 0,14);
+      # LM normlarıyla top kazanan orta sahalara yanlış dönüşüm ve gelişim hedefi üretiyordu (Crewe: Taylor, Ure, Holíček, Dancey).
+      - "wide_midfielder|Defend"
   # KARIYER-UX FAZ 3.1: listelenen mevki en iyi mevki overall'ına bu kadar (puan) yakınsa "en iyi mevki" olarak listelenen gösterilir.
   position:
     listed-preference: 1

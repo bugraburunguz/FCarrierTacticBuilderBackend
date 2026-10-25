@@ -3,7 +3,10 @@ package com.fcareer.advisor.service;
 import com.fcareer.advisor.configuration.PositionProperties;
 import com.fcareer.advisor.model.response.AdvisorResponses.Conversion;
 import com.fcareer.advisor.model.response.AdvisorResponses.PlayerPositionAdvice;
+import com.fcareer.advisor.model.response.StarterTactic;
+import com.fcareer.fitengine.configuration.FitEngineProperties;
 import com.fcareer.career.desk.SpoilerPolicy;
+import org.springframework.beans.factory.ObjectProvider;
 import com.fcareer.development.plan.DevelopmentPlans;
 import com.fcareer.development.plan.PlanProjector;
 import com.fcareer.development.recommend.DevelopmentRecommender;
@@ -55,6 +58,9 @@ public class PositionAdviceService {
     private final DevelopmentRecommender.Config youth;
     private final UserTacticService userTactics;
     private final SpoilerPolicy spoilerPolicy;
+    /** Başlangıç önerisi PositionAdviceService'e bağlı (bestScores): döngü olmasın diye tembel. */
+    private final ObjectProvider<StarterTacticService> starterTactics;
+    private final FitEngineProperties fitProperties;
 
     public List<PlayerPositionAdvice> forCareer(Long userId, Long careerId) {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
@@ -65,11 +71,44 @@ public class PositionAdviceService {
         boolean ranged = spoilerPolicy.ranged(careerId);
         List<FitPlayer> players = playerService.fitPlayers(squad.playerIds(), squad.gameVersionId(), careerId).stream()
                 .map((p) -> ranged && Objects.nonNull(p.getPotential()) ? p.toBuilder().potential(SpoilerPolicy.low(p.getPotential())).build() : p).toList();
-        return advise(players, startingElevenCutoff(userId, careerId, players));
+        return advise(players, teamContext(userId, careerId, players));
     }
 
     public List<PlayerPositionAdvice> advise(List<FitPlayer> players) {
-        return advise(players, null);
+        return advise(players, TeamContext.NONE);
+    }
+
+    /**
+     * FIT-3 kararları: dönüşüm için takım bağlamı. cutoff: ilk 11'in Güç alt üçte birinin üst sınırı (null → eşik yok); tacticPositions: ana taktiğin
+     * (yoksa başlangıç önerisinin) mevkileri — dönüşüm yalnız bunlara (null → kısıt yok).
+     */
+    public record TeamContext(Double cutoff, java.util.Set<String> tacticPositions) {
+        public static final TeamContext NONE = new TeamContext(null, null);
+    }
+
+    /** Taktik slotu: mevki, rol ve dizilen oyuncu (ana taktik ya da başlangıç önerisi). */
+    private record TacticSlot(String position, String roleId, Long playerId) {
+    }
+
+    public TeamContext teamContext(Long userId, Long careerId, List<FitPlayer> players) {
+        List<TacticSlot> slots = tacticSlots(userId, careerId);
+        java.util.Set<String> positions = slots.stream().map(TacticSlot::position).collect(java.util.stream.Collectors.toSet());
+        return new TeamContext(startingElevenCutoff(slots, players), positions);
+    }
+
+    private List<TacticSlot> tacticSlots(Long userId, Long careerId) {
+        UserTacticModels.UserTactic main = userTactics.main(userId, careerId);
+        if (Objects.nonNull(main) && Objects.nonNull(main.slots()) && !main.slots().isEmpty()) {
+            Map<String, Long> lineup = Objects.isNull(main.lineup()) ? Map.of() : main.lineup();
+            return main.slots().stream().map((s) -> new TacticSlot(String.valueOf(s.get("position")), String.valueOf(s.get("roleId")),
+                    lineup.get(String.valueOf(s.get("slot"))))).toList();
+        }
+        StarterTactic starter = starterTactics.getObject().starter(userId, careerId);
+        if (Objects.isNull(starter) || Objects.isNull(starter.slots())) {
+            return List.of();
+        }
+        Map<String, Long> lineup = Objects.isNull(starter.lineup()) ? Map.of() : starter.lineup();
+        return starter.slots().stream().map((s) -> new TacticSlot(s.position(), s.roleId(), lineup.get(s.slotId()))).toList();
     }
 
     /**
@@ -82,19 +121,16 @@ public class PositionAdviceService {
         return bottom == 0 ? null : sorted.get(bottom - 1);
     }
 
-    /** İlk 11: ana taktiğin dizilişi (slot rolüyle Güç); yoksa her oyuncunun listelenen mevkideki en iyi Güç'üne göre ilk 11. */
-    public Double startingElevenCutoff(Long userId, Long careerId, List<FitPlayer> players) {
+    /** İlk 11: ana taktiğin (yoksa başlangıç önerisinin) dizilişi, slot rolüyle Güç; dizilen yoksa listelenen mevkide en iyi Güç'e göre ilk 11. */
+    private Double startingElevenCutoff(List<TacticSlot> slots, List<FitPlayer> players) {
         Map<Long, FitPlayer> byId = players.stream().collect(java.util.stream.Collectors.toMap(FitPlayer::getId, (p) -> p, (a, b) -> a));
         Map<String, FitRole> roles = roleService.fitRolesById();
-        UserTacticModels.UserTactic main = userTactics.main(userId, careerId);
         List<Double> strengths = new ArrayList<>();
-        if (Objects.nonNull(main) && Objects.nonNull(main.lineup()) && Objects.nonNull(main.slots())) {
-            for (Map<String, Object> slot : main.slots()) {
-                FitPlayer p = byId.get(main.lineup().get(String.valueOf(slot.get("slot"))));
-                FitRole role = roles.get(String.valueOf(slot.get("roleId")));
-                if (Objects.nonNull(p) && Objects.nonNull(role)) {
-                    strengths.add(roleFitRouter.forCareer(p, role, null, String.valueOf(slot.get("position"))).getScore());
-                }
+        for (TacticSlot slot : slots) {
+            FitPlayer p = Objects.isNull(slot.playerId()) ? null : byId.get(slot.playerId());
+            FitRole role = roles.get(slot.roleId());
+            if (Objects.nonNull(p) && Objects.nonNull(role)) {
+                strengths.add(roleFitRouter.forCareer(p, role, null, slot.position()).getScore());
             }
         }
         if (strengths.isEmpty()) {
@@ -117,20 +153,25 @@ public class PositionAdviceService {
         }
         String pos = option.getPosition();
         FitPlayer grown = planProjector.project(player, developmentPlans.positionPlan(pos).orElse(developmentPlans.general()), YOUTH_SEASONS).grown();
-        return roles.values().stream().filter((r) -> r.getPositions().contains(pos)).mapToDouble((r) -> roleFitRouter.forCareer(grown, r, null, pos).getScore())
+        return roles.values().stream().filter((r) -> r.getPositions().contains(pos) && !fitProperties.recommendationExcluded(r))
+                .mapToDouble((r) -> roleFitRouter.forCareer(grown, r, null, pos).getScore())
                 .max().orElse(option.getScore());
     }
 
-    public List<PlayerPositionAdvice> advise(List<FitPlayer> players, Double startingCutoff) {
+    public List<PlayerPositionAdvice> advise(List<FitPlayer> players, TeamContext team) {
+        Double startingCutoff = team.cutoff();
         Map<String, FitRole> roles = roleService.fitRolesById();
         List<PlayerPositionAdvice> advice = new ArrayList<>();
         for (FitPlayer player : players) {
             boolean keeper = player.getPositions().contains(GOALKEEPER);
             List<String> candidates = keeper ? List.of(GOALKEEPER) : OUTFIELD_POSITIONS;
             List<PositionOption> options = new ArrayList<>();
+            // Dönüşüm adayları: listedeki mevkide en iyi rol; listede olmayanda öneri dışı roller (fcareer.fit.recommendation-excluded-roles) hariç en iyi.
+            List<PositionOption> conversionOptions = new ArrayList<>();
             Map<String, Integer> positionOveralls = positionOveralls(player);
             for (String position : candidates) {
                 PositionOption best = null;
+                PositionOption bestTarget = null;
                 for (FitRole role : roles.values()) {
                     if (!role.getPositions().contains(position)) {
                         continue;
@@ -139,15 +180,23 @@ public class PositionAdviceService {
                     if (!plausible(player, position, fit, positionOveralls)) {
                         continue;
                     }
-                    if (Objects.isNull(best) || fit.getScore() > best.getScore()) {
-                        best = PositionOption.builder().position(position).roleName(role.getName()).score(round1(fit.getScore()))
-                                .natural(player.getPositions().contains(position))
-                                .reasons(fit.getReasons() == null ? List.of() : fit.getReasons().stream().limit(REASONS_SHOWN).toList())
-                                .build();
+                    PositionOption option = PositionOption.builder().position(position).roleName(role.getName()).score(round1(fit.getScore()))
+                            .natural(player.getPositions().contains(position))
+                            .reasons(fit.getReasons() == null ? List.of() : fit.getReasons().stream().limit(REASONS_SHOWN).toList())
+                            .build();
+                    if (Objects.isNull(best) || option.getScore() > best.getScore()) {
+                        best = option;
+                    }
+                    boolean target = option.isNatural() || !fitProperties.recommendationExcluded(role);
+                    if (target && (Objects.isNull(bestTarget) || option.getScore() > bestTarget.getScore())) {
+                        bestTarget = option;
                     }
                 }
                 if (Objects.nonNull(best)) {
                     options.add(best);
+                }
+                if (Objects.nonNull(bestTarget)) {
+                    conversionOptions.add(bestTarget);
                 }
             }
             options.sort(Comparator.comparingDouble(PositionOption::getScore).reversed());
@@ -155,10 +204,11 @@ public class PositionAdviceService {
             Map.Entry<String, Integer> picked = bestOverall(player);
             SideChoice.Choice side = sideChoice(player, picked.getKey(), positionOveralls, roles);
             Map.Entry<String, Integer> bestOverall = side.position().equals(picked.getKey()) ? picked : Map.entry(side.position(), positionOveralls.get(side.position()));
-            Conversion conversion = keeper ? null : ConversionRule.find(options, player.getPositions(), positionOveralls, player.getOverall(),
+            Conversion conversion = keeper ? null : ConversionRule.find(conversionOptions, player.getPositions(), positionOveralls, player.getOverall(),
                     positionProperties.getConversionGain(), positionProperties.getConversionMaxOverallDrop(),
                     (pos) -> developmentPlans.positionPlan(pos).map((plan) -> pos + " mevki planı"),
-                    (o) -> Objects.isNull(startingCutoff) || conversionStrength(player, o, roles) > startingCutoff).orElse(null);
+                    (o) -> (Objects.isNull(team.tacticPositions()) || team.tacticPositions().contains(o.getPosition()))
+                            && (Objects.isNull(startingCutoff) || conversionStrength(player, o, roles) > startingCutoff)).orElse(null);
             advice.add(PlayerPositionAdvice.builder().playerId(player.getId()).playerName(player.getName())
                     .listedPositions(player.getPositions()).best(options.stream().limit(POSITIONS_SHOWN).toList())
                     .note(note(options)).ownPositionBest(isOwnBest(options))

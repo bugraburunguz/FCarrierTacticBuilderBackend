@@ -24,6 +24,15 @@ public class FitEngineProperties {
     private V3 v3 = new V3();
     private WeakLink weakLink = new WeakLink();
     private RoleSuggest roleSuggest = new RoleSuggest();
+    /**
+     * FIT-3 kararı (verified:false): öneri dışı roller, "baseRole|Focus". Dönüşüm ve gelişim önerisi hedefi olamaz; Lab'da elle seçilebilir ve uyum
+     * hesabında kalır. Gerekçeler application.yml'de (fcareer.fit.recommendation-excluded-roles). Vektör kalibrasyonundan sonra listeden çıkar.
+     */
+    private List<String> recommendationExcludedRoles = new java.util.ArrayList<>(List.of("wide_midfielder|Defend"));
+
+    public boolean recommendationExcluded(com.fcareer.fitengine.model.FitRole role) {
+        return recommendationExcludedRoles.contains(role.getBaseRole() + "|" + role.getFocus());
+    }
     private DefensiveGate defensiveGate = new DefensiveGate();
     private double outOfPositionPenalty = 15;
     private double globalFloorPenaltyPerPoint = 0.8;
