@@ -131,7 +131,8 @@ class DevelopmentRecommendationIntegrationTest {
         for (JsonNode r : recs) {
             assertThat(r.get("age").asInt()).isLessThanOrEqualTo(23);
             assertThat(r.get("estimated").asBoolean()).isTrue();
-            assertThat(r.get("text").asText()).contains("2 sezonda");
+            assertThat(r.get("text").asText()).containsAnyOf("2 sezonda", "Henüz net bir mevkisi yok, esnek gelişsin");
+            assertThat(r.get("reason").asText()).isIn("CLEAR_TARGET", "NO_CLEAR_TARGET", "SMALL_GAIN", "NO_OPTIONS");
             assertThat(r.has("potential")).as("spoiler: ham potansiyel dönmez").isFalse();
             if (!r.get("balanced").asBoolean()) {
                 assertThat(r.at("/recommended/gain").asDouble()).isGreaterThanOrEqualTo(2.0);

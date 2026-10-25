@@ -52,6 +52,8 @@ public class DevelopmentRecommender {
         private int minHeadroom = 5;
         /** Özel plan Dengeli'yi 2 sezonda en az bu kadar Güç geçmezse Dengeli önerilir (verified:false). */
         private double minGain = 2.0;
+        /** Karar (verified:false): en iyi rol, farklı mevkideki en iyi rolden 2 sezon sonra en az bu kadar Güç öndeyse "net hedef". */
+        private double clearTargetGap = 5.0;
     }
 
     /** Takımın zayıf slotu (Masa sınıfı KALITE_ACIGI/IKISI); playerId slottaki oyuncu (karşılaştırma için). */
@@ -64,7 +66,7 @@ public class DevelopmentRecommender {
     }
 
     public record PlayerRecommendation(Long playerId, String playerName, Integer age, Integer overall, boolean balanced, Option recommended, List<Option> options,
-                                       String text, boolean estimated) {
+                                       String text, boolean estimated, String reason) {
     }
 
     private final Config config;
@@ -86,7 +88,7 @@ public class DevelopmentRecommender {
         Map<Long, FitPlayer> byId = players.stream().collect(Collectors.toMap(FitPlayer::getId, Function.identity(), (a, b) -> a));
         List<FitPlayer> candidates = players.stream().filter(this::inScope).toList();
         // Dönüşüm adayı, Kadro/Roller ile aynı eşikten (ilk 11'in alt üçte biri; gençte 2 sezonluk tahmin).
-        Map<Long, PlayerPositionAdvice> advice = positionAdvice.advise(candidates, positionAdvice.startingElevenCutoff(userId, careerId, players)).stream()
+        Map<Long, PlayerPositionAdvice> advice = positionAdvice.advise(candidates, positionAdvice.teamContext(userId, careerId, players)).stream()
                 .collect(Collectors.toMap(PlayerPositionAdvice::getPlayerId, Function.identity(), (a, b) -> a));
         // Aynı slot iki kez gelirse tek hesap.
         List<WeakSlot> slots = Objects.isNull(weakSlots) ? List.of() : weakSlots.stream().distinct().toList();
@@ -126,11 +128,12 @@ public class DevelopmentRecommender {
         }
         List<Option> distinct = options.stream().collect(Collectors.toMap((o) -> o.planKey() + "@" + o.position() + "@" + o.roleId(), Function.identity(), (a, b) -> a))
                 .values().stream().sorted(Comparator.comparingDouble(Option::gain).reversed()).toList();
-        Optional<Option> chosen = choose(distinct, config.getMinGain());
+        Decision decision = decide(distinct, config.getMinGain(), config.getClearTargetGap());
         double bestGain = distinct.isEmpty() ? 0 : distinct.get(0).gain();
-        String text = chosen.map((o) -> text(player.getName(), o)).orElseGet(() -> balancedText(player.getName(), bestGain));
-        return new PlayerRecommendation(player.getId(), player.getName(), player.getAge(), player.getOverall(), chosen.isEmpty(), chosen.orElse(null),
-                distinct.stream().limit(OPTIONS_SHOWN).toList(), text, true);
+        String text = Objects.nonNull(decision.chosen()) ? text(player.getName(), decision.chosen())
+                : "NO_CLEAR_TARGET".equals(decision.reason()) ? noClearTargetText(player.getName()) : balancedText(player.getName(), bestGain);
+        return new PlayerRecommendation(player.getId(), player.getName(), player.getAge(), player.getOverall(), Objects.isNull(decision.chosen()), decision.chosen(),
+                distinct.stream().limit(OPTIONS_SHOWN).toList(), text, true, decision.reason());
     }
 
     /** Plan, hedef mevkideki aday rollerden 2. sezonda en güçlüsünde değerlendirilir; Dengeli aynı rolde. */
@@ -166,9 +169,34 @@ public class DevelopmentRecommender {
         return roleService.fitRolesById().values().stream().filter((r) -> r.getPositions().contains(position)).toList();
     }
 
-    /** En büyük kazançlı özel plan; kazanç eşiğin altındaysa boş (Dengeli). */
+    /** chosen null → Dengeli; reason: CLEAR_TARGET, NO_CLEAR_TARGET, SMALL_GAIN, NO_OPTIONS. */
+    public record Decision(Option chosen, String reason) {
+    }
+
+    /**
+     * FIT-3 kararı: 2 sezon sonraki en iyi rol (en yüksek Güç), farklı mevkideki en iyi rolden en az `clearTargetGap` öndeyse "net hedef" ve o plan
+     * önerilir; değilse Dengeli ("Henüz net bir mevkisi yok"). Net hedefte de plan Dengeli'yi `minGain` kadar geçmezse Dengeli.
+     */
+    public static Decision decide(List<Option> options, double minGain, double clearTargetGap) {
+        List<Option> special = options.stream().filter((o) -> !"GENERAL".equals(o.kind())).toList();
+        Optional<Option> best = special.stream().max(Comparator.comparingDouble(Option::strength2));
+        if (best.isEmpty()) {
+            return new Decision(null, "NO_OPTIONS");
+        }
+        Optional<Option> otherPosition = special.stream().filter((o) -> !o.position().equals(best.get().position())).max(Comparator.comparingDouble(Option::strength2));
+        if (otherPosition.isPresent() && best.get().strength2() - otherPosition.get().strength2() < clearTargetGap) {
+            return new Decision(null, "NO_CLEAR_TARGET");
+        }
+        return best.get().gain() >= minGain ? new Decision(best.get(), "CLEAR_TARGET") : new Decision(null, "SMALL_GAIN");
+    }
+
+    /** Eşik kuralı tek başına (net hedef aranmaz). */
     public static Optional<Option> choose(List<Option> options, double minGain) {
-        return options.stream().filter((o) -> !"GENERAL".equals(o.kind())).max(Comparator.comparingDouble(Option::gain)).filter((o) -> o.gain() >= minGain);
+        return Optional.ofNullable(decide(options, minGain, 0).chosen());
+    }
+
+    public static String noClearTargetText(String player) {
+        return player + " · Dengeli plan: Henüz net bir mevkisi yok, esnek gelişsin";
     }
 
     /** "Figueiredo · CDM Deep-Lying Playmaker planı → 2 sezonda CDM gücü 71 (Dengeli: 67; Nyoni'nin tahmini 68)". */

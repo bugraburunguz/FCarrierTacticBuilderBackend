@@ -66,7 +66,7 @@ class ConversionGateTest {
             return new PlanProjector.PlanProjection(p.toBuilder().overall(p.getOverall() + 10).build(), p.getOverall() + 10);
         });
         return new PositionAdviceService(roles, router, mock(CareerService.class), mock(PlayerService.class), overall, new PositionProperties(), scorer,
-                new DevelopmentPlans(new ObjectMapper()), projector, new DevelopmentRecommender.Config(), mock(UserTacticService.class), mock(SpoilerPolicy.class));
+                new DevelopmentPlans(new ObjectMapper()), projector, new DevelopmentRecommender.Config(), mock(UserTacticService.class), mock(SpoilerPolicy.class), mock(org.springframework.beans.factory.ObjectProvider.class));
     }
 
     private static FitPlayer lm(int age, Integer potential) {
@@ -74,7 +74,17 @@ class ConversionGateTest {
     }
 
     private PlayerPositionAdvice advise(FitPlayer p, Double cutoff) {
-        return service().advise(List.of(p), cutoff).get(0);
+        return service().advise(List.of(p), new PositionAdviceService.TeamContext(cutoff, null)).get(0);
+    }
+
+    /** FIT-3 kararı: dönüşüm yalnız ana taktikte (yoksa başlangıç önerisinde) bulunan mevkilere. */
+    @Test
+    void conversionOnlyToPositionsInTheTactic() {
+        PositionAdviceService s = service();
+        assertThat(s.advise(List.of(lm(28, 70)), new PositionAdviceService.TeamContext(null, java.util.Set.of("CM", "LM"))).get(0).getConversion())
+                .as("taktikte CDM yok").isNull();
+        assertThat(s.advise(List.of(lm(28, 70)), new PositionAdviceService.TeamContext(null, java.util.Set.of("CDM", "LM"))).get(0).getConversion())
+                .isNotNull();
     }
 
     @Test

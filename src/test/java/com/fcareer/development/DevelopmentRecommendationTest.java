@@ -31,6 +31,25 @@ class DevelopmentRecommendationTest {
         assertThat(DevelopmentRecommender.choose(options, 2.0)).as("en çok +1,5 → Dengeli").isEmpty();
     }
 
+    private static Option at(String plan, String position, double strength2, double balanced2) {
+        return new Option(plan, plan, "ROLE", position, "r", "Rol", strength2 - 2, strength2, 55.0, balanced2, strength2 - balanced2, null, null);
+    }
+
+    /** Karar: 2 sezon sonraki en iyi rol, farklı mevkideki ikinci en iyiden ≥ 5 öndeyse "net hedef" → o rol planı; değilse Dengeli + gerekçe. */
+    @Test
+    void clearTargetWinsOtherwiseBalancedWithNoClearPositionReason() {
+        List<Option> clear = List.of(at("role:holding:CDM", "CDM", 71, 60), at("role:holding:CM", "CM", 68, 60), at("role:winger:LM", "LM", 65, 60));
+        DevelopmentRecommender.Decision d = DevelopmentRecommender.decide(clear, 2.0, 5.0);
+        assertThat(d.chosen()).as("CDM 71, farklı mevkide en iyi CM 68 → fark 3 < 5").isNull();
+        assertThat(d.reason()).isEqualTo("NO_CLEAR_TARGET");
+        List<Option> net = List.of(at("role:holding:CDM", "CDM", 71, 60), at("role:box_crasher:CDM", "CDM", 70, 60), at("role:holding:CM", "CM", 65, 60));
+        DevelopmentRecommender.Decision n = DevelopmentRecommender.decide(net, 2.0, 5.0);
+        assertThat(n.chosen().planKey()).isEqualTo("role:holding:CDM");
+        assertThat(n.reason()).isEqualTo("CLEAR_TARGET");
+        assertThat(DevelopmentRecommender.decide(List.of(at("role:holding:CDM", "CDM", 71, 70)), 2.0, 5.0).reason()).as("tek mevki ama Dengeli'den +1").isEqualTo("SMALL_GAIN");
+        assertThat(DevelopmentRecommender.noClearTargetText("Genç")).isEqualTo("Genç · Dengeli plan: Henüz net bir mevkisi yok, esnek gelişsin");
+    }
+
     @Test
     void textReadsLikeTheBrief() {
         Option chosen = new Option("role:deep_lying_playmaker:CDM", "Deep-Lying Playmaker", "ROLE", "CDM", "deep_lying_playmaker_build_up",
