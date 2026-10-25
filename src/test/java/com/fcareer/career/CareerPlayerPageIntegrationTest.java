@@ -61,7 +61,9 @@ class CareerPlayerPageIntegrationTest {
             ingestionService.run();
         }
         token = register();
-        Integer clubId = jdbc.queryForObject("SELECT club_id FROM player_rating WHERE game_version_id = ? GROUP BY club_id ORDER BY count(*) DESC, club_id LIMIT 1",
+        // Yalnız katalog oyuncuları sayılır: içe aktarmanın ürettiği (owner_career_id) oyuncular yeni kariyerin kadrosuna girmez (test sırasından bağımsız).
+        Integer clubId = jdbc.queryForObject("SELECT r.club_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id WHERE r.game_version_id = ? "
+                        + "AND b.owner_career_id IS NULL GROUP BY r.club_id ORDER BY count(*) DESC, r.club_id LIMIT 1",
                 Integer.class, catalogProperties.getDefaultGameVersion());
         careerId = call(post("/api/v1/careers"), Map.of("clubId", clubId, "budgetEur", BUDGET), token, 200).at("/data/id").asLong();
         call(get("/api/v1/players?career=" + careerId + "&size=1"), null, token, 200); // kayıt havuzunu tohumla

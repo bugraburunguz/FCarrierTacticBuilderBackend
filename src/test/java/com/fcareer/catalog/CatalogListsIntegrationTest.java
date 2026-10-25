@@ -24,6 +24,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
  * (3) çözülmemiş lig adı (`*LeagueName_…`) "Lig #id" olarak gösterilir.
  */
 @IntegrationTest
+// Eklenen kulüp/lig/oyuncu satırları test sonunda geri alınır: ortak test veritabanında kalırsa katalog geneli testler (öneri, lig adları,
+// "en kalabalık kulüp") sıraya göre bozulur. MockMvc aynı iş parçacığında çalışır, aynı transaction'ı görür.
+@org.springframework.transaction.annotation.Transactional
 class CatalogListsIntegrationTest {
 
     @Autowired
