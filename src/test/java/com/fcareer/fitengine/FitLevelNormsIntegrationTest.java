@@ -5,6 +5,10 @@ import com.fcareer.catalog.repository.BasePlayerRepository;
 import com.fcareer.fitengine.level.FitLevelNormsBuilder;
 import com.fcareer.fitengine.level.FitLevelNormsRepository;
 import com.fcareer.fitengine.level.LevelFitService;
+import com.fcareer.catalog.entity.PlayerRatingEntity;
+import com.fcareer.fitengine.model.AcceleRate;
+import com.fcareer.fitengine.model.FitPlayer;
+import com.fcareer.fitengine.model.FitRole;
 import com.fcareer.fitengine.service.FitEngineV3;
 import com.fcareer.ingestion.service.IngestionService;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,11 +35,38 @@ class FitLevelNormsIntegrationTest {
     private FitLevelNormsRepository repository;
     @Autowired
     private LevelFitService levelFitService;
+    @Autowired
+    private com.fcareer.roles.service.RoleService roleService;
+    @Autowired
+    private com.fcareer.catalog.repository.PlayerRatingRepository ratings;
+    @Autowired
+    private com.fcareer.catalog.mapper.PlayerMapper playerMapper;
+    @Autowired
+    private FitEngineV3 engine;
 
     @BeforeEach
     void seed() {
         if (basePlayerRepository.count() == 0) {
             ingestionService.run();
+        }
+    }
+
+    /**
+     * FIT-1 madde 3: normlar canlı hesapla aynı girdiyle üretilir. Önceden AcceleRATE terimi normlarda yoktu (preferredAccelerate=null);
+     * tercih edilen ivmelenme tipindekiler levelFit'te sistematik yukarı, diğerleri aşağı kayıyordu. Oyuncu eşleyicisi ve diğer terimler
+     * (playstyle, aile, ayak, beceri, hava topu) aynı FitPlayer ve motordan geldiği için aynı kalır; burada her AcceleRATE tipiyle sabitlenir.
+     */
+    @Test
+    void normInputsMatchTheLiveCalculationIncludingAcceleRate() {
+        FitRole role = roleService.fitRolesById().values().stream().filter((r) -> !r.getAcceleRates().isEmpty())
+                .sorted(java.util.Comparator.comparing(FitRole::getId)).findFirst().orElseThrow();
+        String position = role.getPositions().get(0);
+        PlayerRatingEntity rating = ratings.findCatalog(GAME_VERSION).get(0);
+        FitPlayer catalogPlayer = playerMapper.toFitPlayer(basePlayerRepository.findById(rating.getBasePlayerId()).orElseThrow(), rating, null, null);
+        for (AcceleRate accelerate : AcceleRate.values()) {
+            FitPlayer player = catalogPlayer.toBuilder().acceleRate(accelerate).build();
+            double live = engine.currentFit(player, position, role).currentFit();
+            assertThat(builder.normFit(player, position, role.getBaseRole(), role.getFocus())).as(accelerate.name()).isEqualTo(live);
         }
     }
 
