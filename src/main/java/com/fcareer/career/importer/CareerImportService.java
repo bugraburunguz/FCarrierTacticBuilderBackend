@@ -462,7 +462,7 @@ public class CareerImportService {
             if (Objects.isNull(id)) {
                 continue;
             }
-            names.put(id, row.get("leaguename"));
+            names.put(id, BaseCatalogImporter.displayLeagueName(row.get("leaguename"), id));
             if (Objects.equals(toInt(row.get("isinternationalleague")), 1)) {
                 international.add(id);
             }

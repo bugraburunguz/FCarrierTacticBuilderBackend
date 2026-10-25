@@ -44,6 +44,9 @@ public class BaseCatalogImporter {
     private static final Set<Integer> NON_CATALOG_LEAGUE_IDS = Set.of(76, 2000, 2028, 2255);
     /** Adı çözülmemiş takımın genel yedek adı: "Takım #id". */
     public static final String PLACEHOLDER_TEAM_LABEL = "Takım #";
+    private static final String PLACEHOLDER_LEAGUE_PREFIX = "*LeagueName";
+    /** Adı çözülmemiş ligin genel yedek adı: "Lig #id" (EA lig kimliği). */
+    public static final String PLACEHOLDER_LEAGUE_LABEL = "Lig #";
     /** 78 Erkek Milli, 2136 Kadın Milli: milli takımlar kulüp değildir. */
     public static final Set<Integer> NATIONAL_LEAGUE_IDS = Set.of(78, 2136);
     public static final int FREE_AGENT_LEAGUE_ID = 382;
@@ -266,7 +269,7 @@ public class BaseCatalogImporter {
         for (Map<String, String> row : leagues) {
             Integer id = toInt(row.get("leagueid"));
             if (Objects.nonNull(id)) {
-                leagueNames.put(id, row.get("leaguename"));
+                leagueNames.put(id, displayLeagueName(row.get("leaguename"), id));
                 if (Objects.equals(toInt(row.get("isinternationalleague")), 1)) {
                     international.add(id);
                 }
@@ -668,6 +671,11 @@ public class BaseCatalogImporter {
 
     public static String displayTeamName(String name, Integer teamId) {
         return isPlaceholderTeam(name) ? PLACEHOLDER_TEAM_LABEL + teamId : name;
+    }
+
+    /** ACADEMY-b kararı: çözülmemiş lig adı (`*LeagueName_…`) "Lig #id" olarak gösterilir. */
+    public static String displayLeagueName(String name, Integer leagueId) {
+        return Objects.nonNull(name) && name.startsWith(PLACEHOLDER_LEAGUE_PREFIX) ? PLACEHOLDER_LEAGUE_LABEL + leagueId : name;
     }
 
     private static boolean isPlaceholderTeam(String name) {

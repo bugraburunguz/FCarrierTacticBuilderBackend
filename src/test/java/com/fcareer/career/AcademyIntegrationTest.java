@@ -107,8 +107,12 @@ class AcademyIntegrationTest {
         List<String> names = new ArrayList<>();
         data(token, "/api/v1/careers/" + careerId + "/teams?limit=100", 200).forEach((t) -> names.add(t.path("name").asText()));
         assertThat(names).noneMatch((n) -> n.startsWith("*")).contains("Port Vale Youth Academy");
-        // ACADEMY-b karar 1: oyuncusu olmayan ve adı çözülmemiş takım ("Takım #id") listelerde görünmez.
+        // ACADEMY-b kararları: oyuncusu olmayan takım (adı ne olursa olsun) listelerde görünmez; lig adı çözülmemişse "Lig #id".
         assertThat(names).noneMatch((n) -> n.startsWith("Takım #"));
+        data(token, "/api/v1/careers/" + careerId + "/teams?limit=100", 200).forEach((t) -> {
+            assertThat(t.path("playerCount").asInt()).as(t.path("name").asText()).isPositive();
+            assertThat(t.path("league").asText()).doesNotStartWith("*");
+        });
 
         // ACADEMY-b: satırda FIT-3 en iyi mevki, önerilen gelişim planı ve "A takıma al" değerlendirmesi (tahmin).
         assertThat(kyle.path("bestPosition").asText()).isNotBlank();
