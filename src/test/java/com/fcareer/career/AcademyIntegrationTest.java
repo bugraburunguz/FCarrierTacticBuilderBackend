@@ -95,7 +95,26 @@ class AcademyIntegrationTest {
         support = new CareerTestSupport(mockMvc, objectMapper, clubRepository);
     }
 
+    /** İçe aktarılan kariyerler (token, id): test sonunda silinir. */
+    private final List<Object[]> imported = new ArrayList<>();
+
+    /**
+     * Fixture 37 oyuncuyu kariyerde üretir (base_player + player_rating). Ortak test veritabanında kalırsa "en kalabalık kulüp" gibi katalog geneli
+     * sorgular test sırasına göre bozulur (CI'da CareerPlayerListIntegrationTest düştü). Kariyer silme üretilmiş oyuncuları da siler.
+     */
+    @org.junit.jupiter.api.AfterEach
+    void deleteImportedCareers() throws Exception {
+        for (Object[] c : imported) {
+            mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/v1/careers/" + c[1])
+                    .header("Authorization", "Bearer " + c[0])).andReturn();
+        }
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM base_player WHERE owner_career_id IN (" + (imported.isEmpty() ? "NULL"
+                : String.join(",", imported.stream().map((c) -> String.valueOf(c[1])).toList())) + ")", Integer.class)).isZero();
+        imported.clear();
+    }
+
     private JsonNode importFixture(String token, long careerId) throws Exception {
+        imported.add(new Object[] {token, careerId});
         byte[] log = new ClassPathResource("le-export/academy-portvale.log").getInputStream().readAllBytes();
         return support.json(multipart("/api/v1/careers/" + careerId + "/import").file(new MockMultipartFile("log", "academy.log", "text/plain", log)), token);
     }
