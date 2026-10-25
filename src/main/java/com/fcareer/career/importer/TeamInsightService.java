@@ -5,6 +5,7 @@ import com.fcareer.career.model.response.TeamProfileResponse;
 import com.fcareer.career.model.response.TeamSummaryResponse;
 import com.fcareer.career.service.CareerService;
 import com.fcareer.catalog.model.request.PlayerSearchRequest;
+import com.fcareer.ingestion.base.BaseCatalogImporter;
 import com.fcareer.catalog.model.response.PlayerSummaryResponse;
 import com.fcareer.catalog.repository.PlayerSearchRepository;
 import com.fcareer.common.exception.NotFoundException;
@@ -40,6 +41,8 @@ public class TeamInsightService {
                    (SELECT count(*) FROM career_player cp WHERE cp.career_id = t.career_id AND cp.team_id = t.team_id) AS players
             FROM career_team t
             WHERE t.career_id = :c AND NOT t.free_agent_pool AND (:q IS NULL OR t.name ILIKE :q)
+              -- ACADEMY-b karar 1: adı çözülmemiş ("Takım #id") ve oyuncusu olmayan takım listelenmez.
+              AND (t.name NOT LIKE :placeholder OR EXISTS (SELECT 1 FROM career_player cp WHERE cp.career_id = t.career_id AND cp.team_id = t.team_id))
             ORDER BY t.overall DESC NULLS LAST, t.name LIMIT :limit""";
 
     private static final String PROFILE_SQL = """
@@ -63,7 +66,8 @@ public class TeamInsightService {
         careerService.requireOwned(userId, careerId);
         String like = Objects.isNull(query) || query.isBlank() ? null : "%" + query.trim() + "%";
         return jdbc.query(SUMMARY_SQL,
-                new MapSqlParameterSource().addValue("c", careerId).addValue("q", like, java.sql.Types.VARCHAR).addValue("limit", limit),
+                new MapSqlParameterSource().addValue("c", careerId).addValue("q", like, java.sql.Types.VARCHAR).addValue("limit", limit)
+                        .addValue("placeholder", BaseCatalogImporter.PLACEHOLDER_TEAM_LABEL + "%"),
                 (rs, i) -> TeamSummaryResponse.builder()
                         .teamId(rs.getInt("team_id")).name(rs.getString("name")).league(rs.getString("league_name"))
                         .gender(nullable(rs.getObject("gender"))).overall(nullable(rs.getObject("overall")))

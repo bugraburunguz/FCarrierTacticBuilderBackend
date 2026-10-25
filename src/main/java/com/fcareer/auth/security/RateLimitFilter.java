@@ -39,7 +39,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final String IMAGE_PATH = API_V1 + "/img/";
     /** GUV-2 (F8): pahalı ama ücretsiz uçlar analiz kovasında. Id parçası serbest: Spring "{id}"yi Long.decode ile okur ("+7", "0x7"). */
     private static final Pattern ANALYSIS_PATHS = Pattern.compile(Pattern.quote(API_V1)
-            + "/(fit/lineup|replicas/[^/]+/apply|recommend/preview|recommend/slot-view|careers/[^/]+/starter-tactic|careers/[^/]+/development/recommendations)/?$");
+            + "/(fit/lineup|replicas/[^/]+/apply|recommend/preview|recommend/slot-view|careers/[^/]+/starter-tactic|careers/[^/]+/development/recommendations|careers/[^/]+/academy)/?$");
     /** FIT-2 kararı: taktik analizi kendi kovasında (Lab'da diziliş isteğiyle birlikte gider; ortak kovayı yarı hızda doldurmasın). */
     private static final Pattern TACTIC_ANALYSIS_PATH = Pattern.compile(Pattern.quote(API_V1) + "/tactics/analysis/?$");
     private static final Pattern IMPORT_PATH = Pattern.compile(Pattern.quote(API_V1) + "/careers/[^/]+/import/?$");

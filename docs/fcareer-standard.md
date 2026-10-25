@@ -27,7 +27,7 @@ Karar kaydı `docs/review/08_DECISIONS_LOG.md`; çelişkide o geçerlidir.
   Admin uçları ADMIN rolü; `X-Admin-Key` yalnız `/admin/ingestion` ve `/admin/ml` (makine-makine).
 - Rate limit bellek içi sabit pencereli sayaçla (`WindowCounter`; backend tek örnek, yeniden başlatmada sıfırlanır).
   Kovalar (`RateLimitFilter`): auth 10/dk (IP), kayıt 5/gün (IP), genel API 300/dk (kullanıcı), analiz 60/dk (`/fit/lineup`,
-  replika uygula, öneri önizlemesi, başlangıç önerisi, gelişim planı önerisi; yeni pahalı ücretsiz uç buraya), taktik analizi 60/dk (`/tactics/analysis`, kendi kovası:
+  replika uygula, öneri önizlemesi, başlangıç önerisi, gelişim planı önerisi, altyapı; yeni pahalı ücretsiz uç buraya), taktik analizi 60/dk (`/tactics/analysis`, kendi kovası:
   Lab'da dizilişle birlikte gider), LE içe aktarma 10/saat, görsel 1200/dk.
   Kariyer: kullanıcı başına en çok 10 açık (422), günde 20 açma (429) — `CareerLimiter`.
 - EA hesap kimlik bilgisi istenmez, saklanmaz, loglanmaz. Sunucu EA'nın oturum gerektiren uçlarını çağırmaz.

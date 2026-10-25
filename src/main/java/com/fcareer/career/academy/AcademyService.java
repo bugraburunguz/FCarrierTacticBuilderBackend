@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -27,9 +28,13 @@ public class AcademyService {
     private final CareerService careerService;
     private final AcademyRepository repository;
     private final SpoilerPolicy spoilerPolicy;
+    private final AcademyAdvisor advisor;
+
+    private static final AcademyAdvisor.Advice EMPTY_ADVICE = new AcademyAdvisor.Advice(null, null, null, null);
 
     public record AcademyPlayer(long playerId, String name, Integer age, List<String> positions, Integer overall, Integer potential, String potentialRange,
-                                Integer monthsInSquad, Integer playerTier, Integer potentialVariance, Integer swingLowPotential, boolean youthVerified) {
+                                Integer monthsInSquad, Integer playerTier, Integer potentialVariance, Integer swingLowPotential, boolean youthVerified,
+                                String bestPosition, String sideReason, AcademyAdvisor.PlanAdvice plan, AcademyAdvisor.Promote promote) {
     }
 
     public record Academy(boolean found, Integer teamId, String name, String message, List<AcademyPlayer> players) {
@@ -44,9 +49,14 @@ public class AcademyService {
             return new Academy(false, team.map(Team::teamId).orElse(null), team.map(Team::name).orElse(null), EMPTY_MESSAGE, List.of());
         }
         boolean ranged = spoilerPolicy.ranged(careerId);
-        List<AcademyPlayer> players = rows.stream().map((r) -> new AcademyPlayer(r.playerId(), r.name(), r.age(), r.positions(), r.overall(),
-                ranged ? null : r.potential(), ranged && Objects.nonNull(r.potential()) ? SpoilerPolicy.range(r.potential()) : null,
-                r.monthsInSquad(), r.playerTier(), ranged ? null : r.potentialVariance(), ranged ? null : r.swingLowPotential(), false)).toList();
+        Map<Long, AcademyAdvisor.Advice> advice = advisor.advise(userId, careerId, rows.stream().map(Row::playerId).toList());
+        List<AcademyPlayer> players = rows.stream().map((r) -> {
+            AcademyAdvisor.Advice a = advice.getOrDefault(r.playerId(), EMPTY_ADVICE);
+            return new AcademyPlayer(r.playerId(), r.name(), r.age(), r.positions(), r.overall(),
+                    ranged ? null : r.potential(), ranged && Objects.nonNull(r.potential()) ? SpoilerPolicy.range(r.potential()) : null,
+                    r.monthsInSquad(), r.playerTier(), ranged ? null : r.potentialVariance(), ranged ? null : r.swingLowPotential(), false,
+                    a.bestPosition(), a.sideReason(), a.plan(), a.promote());
+        }).toList();
         return new Academy(true, team.get().teamId(), team.get().name(), null, players);
     }
 }
