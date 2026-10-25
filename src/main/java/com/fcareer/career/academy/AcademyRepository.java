@@ -35,8 +35,7 @@ public class AcademyRepository {
                 (rs, i) -> new Team(rs.getObject("academy_team_id", Integer.class), rs.getString("name"))).stream().findFirst();
     }
 
-    public List<Row> players(long careerId, int teamId) {
-        return jdbc.query("""
+    private static final String ROW_SELECT = """
                 SELECT cp.player_id, b.full_name, cp.positions, cp.ovr, cp.pot,
                        CASE WHEN COALESCE(cp.dob, b.dob) IS NULL THEN NULL
                             ELSE date_part('year', age(COALESCE(k.current_game_date, CURRENT_DATE), COALESCE(cp.dob, b.dob)))::int END AS age,
@@ -45,11 +44,44 @@ public class AcademyRepository {
                   JOIN career k ON k.id = cp.career_id
                   JOIN base_player b ON b.id = cp.player_id
                   LEFT JOIN career_youth_player y ON y.career_id = cp.career_id AND y.base_player_id = cp.player_id
-                 WHERE cp.career_id = :c AND cp.live AND cp.team_id = :t
-                 ORDER BY cp.pot DESC NULLS LAST, cp.ovr DESC, b.full_name""", Map.of("c", careerId, "t", teamId), (rs, i) -> new Row(
+                """;
+    private static final String ROW_ORDER = " ORDER BY cp.pot DESC NULLS LAST, cp.ovr DESC, b.full_name";
+
+    public List<Row> players(long careerId, int teamId) {
+        return jdbc.query(ROW_SELECT + " WHERE cp.career_id = :c AND cp.live AND cp.team_id = :t" + ROW_ORDER, Map.of("c", careerId, "t", teamId), this::row);
+    }
+
+    /** ACADEMY-b: kadro gençleri (Gelişim) ve panel için aynı satır, kimlikle (yalnız bu kariyerin kaydı). */
+    public List<Row> playersByIds(long careerId, java.util.Collection<Long> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.query(ROW_SELECT + " WHERE cp.career_id = :c AND cp.player_id IN (:ids)" + ROW_ORDER, Map.of("c", careerId, "ids", ids), this::row);
+    }
+
+    /** Oyuncu başına son içe aktarmalardaki OVR, yeniden eskiye (en çok `limit`); anlık görüntüler kariyerin canlı oyuncularını (altyapı dahil) tutar. */
+    public Map<Long, List<Integer>> recentOveralls(long careerId, java.util.Collection<Long> ids, int limit) {
+        Map<Long, List<Integer>> out = new java.util.HashMap<>();
+        if (ids.isEmpty()) {
+            return out;
+        }
+        jdbc.query("""
+                SELECT player_id, overall FROM (
+                  SELECT sp.base_player_id AS player_id, sp.overall,
+                         row_number() OVER (PARTITION BY sp.base_player_id ORDER BY s.taken_at DESC, s.id DESC) AS n
+                    FROM career_snapshot_player sp JOIN career_snapshot s ON s.id = sp.snapshot_id
+                   WHERE s.career_id = :c AND s.source = 'IMPORT' AND sp.base_player_id IN (:ids)) x
+                 WHERE n <= :limit ORDER BY player_id, n""", Map.of("c", careerId, "ids", ids, "limit", limit),
+                (org.springframework.jdbc.core.RowCallbackHandler) (rs) -> out.computeIfAbsent(rs.getLong("player_id"), (k) -> new java.util.ArrayList<>())
+                        .add(rs.getObject("overall", Integer.class)));
+        return out;
+    }
+
+    private Row row(java.sql.ResultSet rs, int i) throws java.sql.SQLException {
+        return new Row(
                 rs.getLong("player_id"), rs.getString("full_name"), rs.getObject("age", Integer.class),
                 Arrays.asList((String[]) rs.getArray("positions").getArray()), rs.getObject("ovr", Integer.class), rs.getObject("pot", Integer.class),
                 rs.getObject("months_in_squad", Integer.class), rs.getObject("player_tier", Integer.class),
-                rs.getObject("potential_variance", Integer.class), rs.getObject("swing_low_potential", Integer.class)));
+                rs.getObject("potential_variance", Integer.class), rs.getObject("swing_low_potential", Integer.class));
     }
 }

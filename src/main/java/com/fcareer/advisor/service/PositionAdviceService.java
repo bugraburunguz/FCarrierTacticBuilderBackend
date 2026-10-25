@@ -96,6 +96,12 @@ public class PositionAdviceService {
         return new TeamContext(startingElevenCutoff(slots, players), positions);
     }
 
+    /** ACADEMY-b: hesap ana taktikten mi (true) yoksa başlangıç önerisinden mi ("Otomatik öneri")? */
+    public boolean hasMainTactic(Long userId, Long careerId) {
+        UserTacticModels.UserTactic main = userTactics.main(userId, careerId);
+        return Objects.nonNull(main) && Objects.nonNull(main.slots()) && !main.slots().isEmpty();
+    }
+
     /** ACADEMY-b: ana taktiğin (yoksa başlangıç önerisinin) slot mevkileri, tekrarlarıyla (iki CB slotu → iki "CB"). */
     public List<String> tacticSlotPositions(Long userId, Long careerId) {
         return tacticSlots(userId, careerId).stream().map(TacticSlot::position).toList();

@@ -33,6 +33,26 @@ class AcademyAdvisorTest {
         assertThat(AcademyAdvisor.promotes(50.0, null)).as("yedek yok").isTrue();
     }
 
+    /** ACADEMY-b: Hazır = "A takıma al" önerisi var; Bekliyor = altyapıda en az eşik kadar ay ve son iki içe aktarmada OVR artışı yok; diğerleri Gelişiyor. */
+    @Test
+    void statusRule() {
+        assertThat(AcademyAdvisor.status(true, 2, List.of(55, 54), 12)).isEqualTo("READY");
+        assertThat(AcademyAdvisor.status(false, 13, List.of(55, 55), 12)).isEqualTo("WAITING");
+        assertThat(AcademyAdvisor.status(false, 13, List.of(54, 55), 12)).as("düşüş de artış değil").isEqualTo("WAITING");
+        assertThat(AcademyAdvisor.status(false, 13, List.of(56, 55), 12)).as("arttı").isEqualTo("GROWING");
+        assertThat(AcademyAdvisor.status(false, 11, List.of(55, 55), 12)).as("eşik altı").isEqualTo("GROWING");
+        assertThat(AcademyAdvisor.status(false, 20, List.of(55), 12)).as("tek içe aktarma: bilinmiyor").isEqualTo("GROWING");
+        assertThat(AcademyAdvisor.status(false, null, List.of(55, 55), 12)).isEqualTo("GROWING");
+    }
+
+    /** "Takımdaki yeri": kaçıncı sezonda (1..3) eşiği geçer; geçmezse null, eşik yoksa 1 (boş yer). */
+    @Test
+    void seasonToPass() {
+        assertThat(AcademyAdvisor.seasonToPass(List.of(60.0, 64.0, 69.0), 63.0)).isEqualTo(2);
+        assertThat(AcademyAdvisor.seasonToPass(List.of(60.0, 61.0, 62.0), 63.0)).isNull();
+        assertThat(AcademyAdvisor.seasonToPass(List.of(60.0, 61.0, 62.0), null)).isEqualTo(1);
+    }
+
     @Test
     void textSaysItIsAnEstimateAndAppliedInTheGame() {
         assertThat(AcademyAdvisor.promoteText("Kyle Preston", "CM", 66.4, b("Smith", 65.2)))

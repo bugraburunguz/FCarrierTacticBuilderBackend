@@ -99,7 +99,7 @@ class RateLimitFilterTest {
     @Test
     void expensiveFreeEndpointsShareTheAnalysisBucket() throws Exception {
         for (String path : new String[] {"/api/v1/fit/lineup", "/api/v1/replicas/r-1/apply", "/api/v1/recommend/preview",
-                "/api/v1/recommend/slot-view", "/api/v1/careers/7/starter-tactic", "/api/v1/careers/7/development/recommendations", "/api/v1/careers/7/academy"}) {
+                "/api/v1/recommend/slot-view", "/api/v1/careers/7/starter-tactic", "/api/v1/careers/7/development/recommendations", "/api/v1/careers/7/academy", "/api/v1/careers/7/youth", "/api/v1/careers/7/youth/12"}) {
             when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(5L);
             assertThat(run(path, "10.0.0.1").getStatus()).as(path).isEqualTo(200);
             when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(6L);
