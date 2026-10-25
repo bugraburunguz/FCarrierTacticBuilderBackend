@@ -65,7 +65,9 @@ class ReplicaApplyIntegrationTest {
 
     /** Kadrosu en kalabalık kulüp: diğer testler katalogu değiştirebilir. */
     private int richClub() {
-        return jdbc.queryForObject("SELECT club_id FROM player_rating WHERE club_id IS NOT NULL GROUP BY club_id ORDER BY count(*) DESC, club_id LIMIT 1", Integer.class);
+        // Yalnız katalog oyuncuları sayılır: içe aktarmanın ürettiği (owner_career_id) oyuncular yeni kariyerin kadrosuna girmez.
+        return jdbc.queryForObject("SELECT r.club_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id WHERE r.club_id IS NOT NULL "
+                + "AND b.owner_career_id IS NULL GROUP BY r.club_id ORDER BY count(*) DESC, r.club_id LIMIT 1", Integer.class);
     }
 
     private JsonNode apply(String token, Map<String, Object> body, int status) throws Exception {

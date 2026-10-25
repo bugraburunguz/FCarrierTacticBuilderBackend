@@ -4,6 +4,8 @@ target/
 .vscode/
 .DS_Store
 *.log
+# Test fixture'ları: kariyer export'undan kesilmiş küçük LE logları (tam log repo dışında)
+!src/test/resources/le-export/*.log
 .env
 ml-service/.venv/
 ml-service/__pycache__/

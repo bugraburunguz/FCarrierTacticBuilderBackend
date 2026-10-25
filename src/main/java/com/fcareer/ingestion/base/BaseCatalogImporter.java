@@ -424,7 +424,7 @@ public class BaseCatalogImporter {
                     renames.add(new MapSqlParameterSource().addValue("id", known.get(sourceId)).addValue("name", name));
                 }
                 baseUpdates.add(baseUpdateParams(known.get(sourceId), row));
-                ratingUpdates.add(ratingParams(known.get(sourceId), row, gameVersionId, ctx.clubs().idFor(ctx.playerTeam().get(sourceId))));
+                ratingUpdates.add(ratingParams(known.get(sourceId), row, gameVersionId, catalogClub(ctx, ctx.playerTeam().get(sourceId))));
                 continue;
             }
             Integer birth = toInt(row.get("birthdate"));
@@ -448,10 +448,21 @@ public class BaseCatalogImporter {
         Map<Long, Long> all = careerPlayers(careerId);
         List<SqlParameterSource> ratings = new ArrayList<>();
         fresh.forEach((sourceId, row) -> ratings.add(ratingParams(all.get(sourceId), row, gameVersionId,
-                ctx.clubs().idFor(ctx.playerTeam().get(sourceId)))));
+                catalogClub(ctx, ctx.playerTeam().get(sourceId)))));
         batch(RATING_SQL, ratings);
         log.info("Career generated players careerId : {} created : {} updated : {}", careerId, ratings.size(), ratingUpdates.size());
         return all;
+    }
+
+    /**
+     * ACADEMY-a: kariyerin ürettiği oyuncunun takımı katalog dışıysa (yer tutucu lig ya da çözülmemiş ad; ör. altyapı) global katalogda kulüp/lig
+     * açılmaz, kulüp NULL kalır. Kariyerdeki takımı career_player.team_id'de durur.
+     */
+    private static Integer catalogClub(Context ctx, Integer teamId) {
+        if (Objects.nonNull(teamId) && (ctx.excludedTeams().contains(teamId) || isPlaceholderTeam(ctx.clubs().teamName(teamId)))) {
+            return null;
+        }
+        return ctx.clubs().idFor(teamId);
     }
 
     public int saveCareerRatings(Long careerId, List<Map<String, String>> players, Map<Long, Long> eaToBase, Set<Long> includeBaseIds,

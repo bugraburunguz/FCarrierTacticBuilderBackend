@@ -61,7 +61,9 @@ class OwnershipMatrixIntegrationTest {
         CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, clubRepository);
         String owner = support.register();
         // Kulüp açıkça (en kalabalık kadro) seçilir: "ilk kulüp" sırasızdır ve başka testler kulüp satırlarını güncelleyince kadrosuz kalabilir.
-        Integer clubId = jdbc.queryForObject("SELECT club_id FROM player_rating WHERE game_version_id = 27 GROUP BY club_id ORDER BY count(*) DESC, club_id LIMIT 1", Integer.class);
+        // Yalnız katalog oyuncuları sayılır: içe aktarmanın ürettiği (owner_career_id) oyuncular yeni kariyerin kadrosuna girmez.
+        Integer clubId = jdbc.queryForObject("SELECT r.club_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id WHERE r.game_version_id = 27 "
+                + "AND b.owner_career_id IS NULL GROUP BY r.club_id ORDER BY count(*) DESC, r.club_id LIMIT 1", Integer.class);
         long c = support.json(MockMvcRequestBuilders.post("/api/v1/careers").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsBytes(Map.of("clubId", clubId, "budgetEur", 5_000_000))), owner).at("/data/id").asLong();
         String stranger = support.register();
@@ -76,6 +78,7 @@ class OwnershipMatrixIntegrationTest {
                 new Call(HttpMethod.GET, "/api/v1/careers/" + c, null),
                 new Call(HttpMethod.PATCH, "/api/v1/careers/" + c, Map.of("budgetEur", 1_000_000)),
                 new Call(HttpMethod.GET, "/api/v1/careers/" + c + "/squad", null),
+                new Call(HttpMethod.GET, "/api/v1/careers/" + c + "/academy", null),
                 new Call(HttpMethod.GET, "/api/v1/careers/" + c + "/events", null),
                 new Call(HttpMethod.GET, "/api/v1/careers/" + c + "/moves", null),
                 new Call(HttpMethod.POST, "/api/v1/careers/" + c + "/events", Map.of("type", "PROMOTE", "playerId", outsider)),
