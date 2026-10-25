@@ -22,6 +22,7 @@ public class FitEngineProperties {
     private String engineVersion = "v1";
     private String careerEngineVersion = "v3";
     private V3 v3 = new V3();
+    private WeakLink weakLink = new WeakLink();
     private DefensiveGate defensiveGate = new DefensiveGate();
     private double outOfPositionPenalty = 15;
     private double globalFloorPenaltyPerPoint = 0.8;
@@ -40,6 +41,16 @@ public class FitEngineProperties {
         private double yellowFrom = 20;
         /** "Biçilmiş kaftan" rozeti yalnız levelFit bu değer ve üstündeyken (verified:false). */
         private double tailoredFrom = 85;
+    }
+
+    /** FIT-1 madde 2: iki eksenli zayıf halka eşikleri (WeakLinkClassifier). verified:false, UX ayarı. */
+    @Getter
+    @Setter
+    public static class WeakLink {
+        /** Rol oturması (levelFit) bunun altındaysa rol uyumsuz. */
+        private double roleFitMin = 40;
+        /** Güç (currentFit) takımın en düşük bu dilimindeyse kalite açığı (11'de 3). */
+        private double qualityLowerFraction = 1.0 / 3;
     }
 
     @Getter

@@ -267,6 +267,8 @@ class ApiFlowIntegrationTest {
         assertThat(setupCheck.at("/success").asBoolean()).as(setupCheck.toString()).isTrue();
         assertThat(setupCheck.at("/data")).hasSize(3);
         setupCheck.at("/data").forEach(c -> assertThat(c.at("/status").asText()).isIn("GREEN", "YELLOW", "RED"));
+        // FIT-1 madde 5: Lab "Taktik riskleri" paneli her risk için öneri gösterir.
+        setupCheck.at("/data").forEach(c -> assertThat(c.at("/advice").asText()).as(c.at("/title").asText()).isNotBlank());
 
         JsonNode careerDetail = call(get("/api/v1/players/" + playerId + "?career=" + careerId), null, token, 200);
         assertThat(careerDetail.at("/success").asBoolean()).as(careerDetail.toString()).isTrue();

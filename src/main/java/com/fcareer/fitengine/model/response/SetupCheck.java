@@ -16,6 +16,8 @@ public class SetupCheck {
     private String title;
     private WeaponState status;
     private String detail;
+    /** FIT-1 madde 5: risk varsa ne yapılmalı (Lab "Taktik riskleri"). */
+    private String advice;
     private List<Candidate> players;
 
     @Data

@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.ToIntFunction;
 
@@ -39,6 +40,15 @@ public class SetupCheckService {
     private static final int COUNTER_RUNNERS = 3;
     private static final Set<String> BUILD_UP_POSITIONS = Set.of("CB", "CDM", "LB", "RB");
     private static final Set<String> RUNNER_POSITIONS = Set.of("LW", "RW", "LM", "RM", "ST", "CAM");
+
+    /** FIT-1 madde 5: kontrol başına öneri (risk sarı/kırmızıysa Lab'da gösterilir). */
+    private static final Map<String, String> ADVICE = Map.of(
+            "Yüksek hat: stoperlerde hız", "Savunma hattını biraz düşür ya da hızlı bir stoper ekle.",
+            "Alçak blok: hava hakimiyeti", "Hava toplarında güçlü bir stoper ekle ya da hattı biraz yükselt.",
+            "Orta blok: savunma okuması", "Savunma farkındalığı yüksek bir stoper dene.",
+            "Kısa pasla çıkış: pas güvenliği", "Dengeli çıkışa geç ya da pası iyi bir defans/pivot oyuncusu ekle.",
+            "Kısa pasla çıkış: kaleci dağıtımı", "Ayağı iyi bir kaleci dene ya da uzun topla çıkışı seç.",
+            "Kontra: hızlı koşucular", "Hızlı bir kanat/forvet ekle ya da dengeli çıkışa geç.");
 
     private final CareerService careerService;
     private final PlayerService playerService;
@@ -89,7 +99,7 @@ public class SetupCheckService {
                 .toList();
         long ok = candidates.stream().filter(Candidate::isOk).count();
         WeaponState status = ok >= needed ? WeaponState.GREEN : ok >= needed - 1 ? WeaponState.YELLOW : WeaponState.RED;
-        return SetupCheck.builder().title(title).status(status)
+        return SetupCheck.builder().title(title).status(status).advice(ADVICE.get(title))
                 .detail(detail + " Uygun: " + ok + " / gereken " + needed + ".").players(candidates).build();
     }
 

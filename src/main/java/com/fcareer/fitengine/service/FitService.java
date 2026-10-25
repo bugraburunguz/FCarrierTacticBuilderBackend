@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Slf4j
@@ -52,6 +53,7 @@ public class FitService {
     private final BillingProperties billingProperties;
     private final RoleFitV3Service roleFitV3Service;
     private final FitEngineProperties fitProperties;
+    private final WeakLinkClassifier weakLinkClassifier;
 
     public FitRoleResult roleFit(FitRoleRequest request) {
         FitPlayer player = playerService.fitPlayers(List.of(request.getPlayerId()), request.getGameVersionId()).get(0);
@@ -144,7 +146,22 @@ public class FitService {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, request.getCareerId());
         List<FitPlayer> players = playerService.fitPlayers(squad.playerIds(), squad.gameVersionId(), request.getCareerId());
         List<IntentProfile> slots = tacticResolver.resolve(request.getTactic()).slots();
-        return withoutPaidInsights(squadFitService.solveBest(players, slots, fitProperties.getCareerEngineVersion(), request.getLocked()));
+        return withWeakClasses(withoutPaidInsights(squadFitService.solveBest(players, slots, fitProperties.getCareerEngineVersion(), request.getLocked())), request.getLocked());
+    }
+
+    /**
+     * FIT-1 madde 2: dizili slotlara iki eksenli zayıf halka sınıfı (Güç = currentFit, Rol oturması = levelFit).
+     * Kilit varsa yalnız kilitli slotlar sınıflanır; çözücünün yedekle doldurduğu slotlar (web göstermez) eşikleri kaydırmaz.
+     */
+    private SquadFitResponse withWeakClasses(SquadFitResponse response, Map<String, Long> locked) {
+        boolean partial = Objects.nonNull(locked) && !locked.isEmpty();
+        List<SlotAssignment> placed = Objects.isNull(response.getSlots()) ? List.of()
+                : response.getSlots().stream().filter(s -> Objects.nonNull(s.getPlayerId()) && Objects.nonNull(s.getRoleFit()))
+                        .filter(s -> !partial || locked.containsKey(s.getSlotId())).toList();
+        Map<String, WeakLinkClassifier.WeakClass> classes = weakLinkClassifier.classify(placed.stream().map(s -> new WeakLinkClassifier.Slot(s.getSlotId(),
+                Objects.isNull(s.getRoleFit().getCurrentFit()) ? s.getRoleFit().getScore() : s.getRoleFit().getCurrentFit(), s.getRoleFit().getLevelFit())).toList());
+        placed.forEach(s -> s.setWeakClass(classes.get(s.getSlotId()).name()));
+        return response;
     }
 
     private static SquadFitResponse withoutPaidInsights(SquadFitResponse full) {

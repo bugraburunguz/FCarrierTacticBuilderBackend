@@ -79,6 +79,11 @@ class LineupReasonsIntegrationTest {
             reasons.forEach(r -> assertThat(r.asText()).matches("\\S+ [+-]\\d+\\.\\d"));
         });
 
+        // FIT-1 madde 2: slot başına iki eksenli sınıf (etiket gibi ücretsiz; gerekçeli zayıf halka listesi ücretli kalır).
+        List<String> classes = bySlot.values().stream().map(s -> s.path("weakClass").asText()).toList();
+        assertThat(classes).allMatch(c -> List.of("KALITE_ACIGI", "ROL_UYUMSUZ", "IKISI", "UYGUN").contains(c));
+        assertThat(classes.stream().filter(c -> c.equals("KALITE_ACIGI") || c.equals("IKISI"))).as("11'de alt üçte bir = 3").hasSize(3);
+
         for (String slotId : List.of("GK", "LST")) {
             JsonNode slot = bySlot.get(slotId);
             JsonNode single = post(token, "/api/v1/fit/role", Map.of("playerId", slot.get("playerId").asLong(), "roleId", slot.get("roleId").asText(),
@@ -94,5 +99,31 @@ class LineupReasonsIntegrationTest {
         assertThat(batch.path("weakLinks").isMissingNode() || batch.path("weakLinks").isNull() || batch.path("weakLinks").isEmpty()).as("zayıf halka ücretli").isTrue();
         assertThat(batch.path("summary").isMissingNode() || batch.path("summary").isNull()).as("özet ücretli").isTrue();
         assertThat(batch.path("attackPattern").isMissingNode() || batch.path("attackPattern").isNull()).as("atak paterni ücretli").isTrue();
+    }
+
+    @Test
+    void partialLockClassifiesOnlyLockedSlots() throws Exception {
+        // FIT-1 inceleme: çözücünün yedekle doldurduğu kilitsiz slotlar (web göstermez) alt üçte biri ve medyanı kaydırmamalı.
+        String token = support.register();
+        long careerId = support.premiumCareer(token, null);
+        Map<String, Object> tactic = Map.of("formation", "4-4-2");
+        JsonNode free = post(token, "/api/v1/fit/lineup", Map.of("careerId", careerId, "tactic", tactic));
+        Map<String, Long> locked = new LinkedHashMap<>();
+        free.get("slots").forEach(s -> {
+            if (locked.size() < 6) {
+                locked.put(s.get("slotId").asText(), s.get("playerId").asLong());
+            }
+        });
+
+        JsonNode batch = post(token, "/api/v1/fit/lineup", Map.of("careerId", careerId, "tactic", tactic, "locked", locked));
+
+        List<String> classified = new ArrayList<>();
+        batch.get("slots").forEach(s -> {
+            if (!s.path("weakClass").isMissingNode() && !s.path("weakClass").isNull()) {
+                classified.add(s.get("slotId").asText());
+            }
+        });
+        assertThat(classified).containsExactlyInAnyOrderElementsOf(locked.keySet());
+        assertThat(batch.findValuesAsText("weakClass").stream().filter(c -> c.equals("KALITE_ACIGI") || c.equals("IKISI"))).as("6'da alt üçte bir = 2").hasSize(2);
     }
 }

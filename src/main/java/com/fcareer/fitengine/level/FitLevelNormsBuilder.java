@@ -5,9 +5,12 @@ import com.fcareer.catalog.entity.PlayerRatingEntity;
 import com.fcareer.catalog.mapper.PlayerMapper;
 import com.fcareer.catalog.repository.BasePlayerRepository;
 import com.fcareer.catalog.repository.PlayerRatingRepository;
+import com.fcareer.fitengine.model.AcceleRate;
 import com.fcareer.fitengine.model.FitPlayer;
+import com.fcareer.fitengine.model.FitRole;
 import com.fcareer.fitengine.norms.RoleSeeds;
 import com.fcareer.fitengine.service.FitEngineV3;
+import com.fcareer.roles.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * fit_level_norms üretici (E3-5): katalogdaki her oyuncunun her (mevki, rol, focus) için currentFit'ini FitEngineV3 ile hesaplar,
@@ -41,6 +46,7 @@ public class FitLevelNormsBuilder {
     private final FitEngineV3 engine;
     private final RoleSeeds seeds;
     private final FitLevelNormsRepository repository;
+    private final RoleService roleService;
 
     private record Candidate(int ovr, FitPlayer player) {
     }
@@ -81,8 +87,9 @@ public class FitLevelNormsBuilder {
         List<Candidate> sorted = candidates.stream().sorted(Comparator.comparingInt(Candidate::ovr)).toList();
         int[] ovrs = sorted.stream().mapToInt(Candidate::ovr).toArray();
         double[] fits = new double[sorted.size()];
+        Set<AcceleRate> accelerate = acceleRatesOf(role, focus);
         for (int i = 0; i < fits.length; i++) {
-            fits[i] = engine.currentFit(sorted.get(i).player(), position, role, focus, null).currentFit();
+            fits[i] = engine.currentFit(sorted.get(i).player(), position, role, focus, accelerate).currentFit();
         }
         List<FitLevelNormsRepository.Row> rows = new ArrayList<>();
         for (int ovr = MIN_OVR; ovr <= MAX_OVR; ovr++) {
@@ -100,6 +107,20 @@ public class FitLevelNormsBuilder {
             rows.add(new FitLevelNormsRepository.Row(gender, position, role, focus, ovr, band.lo(), band.hi(), band.count(), LevelFitCalculator.quantiles(inBand)));
         }
         return rows;
+    }
+
+    /**
+     * Norm dağılımına giren currentFit; canlı hesapla (RoleFitV3Service → engine.currentFit(player, position, role)) aynı girdiyle (FIT-1 madde 3).
+     * Rolün AcceleRATE tercihleri canlı hesabın kullandığı kaynaktan (roles tablosu → RoleMapper) okunur; önceden null geçiliyordu.
+     */
+    public double normFit(FitPlayer player, String position, String baseRole, String focus) {
+        return engine.currentFit(player, position, baseRole, focus, acceleRatesOf(baseRole, focus)).currentFit();
+    }
+
+    private Set<AcceleRate> acceleRatesOf(String baseRole, String focus) {
+        return roleService.fitRolesById().values().stream()
+                .filter((r) -> r.getBaseRole().equals(baseRole) && Objects.equals(r.getFocus(), focus))
+                .map(FitRole::getAcceleRates).findFirst().orElse(Set.of());
     }
 
     private Map<Long, BasePlayerEntity> loadBases(List<PlayerRatingEntity> catalog) {
