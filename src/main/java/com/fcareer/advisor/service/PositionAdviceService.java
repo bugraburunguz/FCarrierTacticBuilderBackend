@@ -4,6 +4,7 @@ import com.fcareer.advisor.configuration.PositionProperties;
 import com.fcareer.advisor.model.response.AdvisorResponses.Conversion;
 import com.fcareer.advisor.model.response.AdvisorResponses.PlayerPositionAdvice;
 import com.fcareer.advisor.model.response.StarterTactic;
+import com.fcareer.fitengine.configuration.FitEngineProperties;
 import com.fcareer.career.desk.SpoilerPolicy;
 import org.springframework.beans.factory.ObjectProvider;
 import com.fcareer.development.plan.DevelopmentPlans;
@@ -59,6 +60,7 @@ public class PositionAdviceService {
     private final SpoilerPolicy spoilerPolicy;
     /** Başlangıç önerisi PositionAdviceService'e bağlı (bestScores): döngü olmasın diye tembel. */
     private final ObjectProvider<StarterTacticService> starterTactics;
+    private final FitEngineProperties fitProperties;
 
     public List<PlayerPositionAdvice> forCareer(Long userId, Long careerId) {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
@@ -151,7 +153,8 @@ public class PositionAdviceService {
         }
         String pos = option.getPosition();
         FitPlayer grown = planProjector.project(player, developmentPlans.positionPlan(pos).orElse(developmentPlans.general()), YOUTH_SEASONS).grown();
-        return roles.values().stream().filter((r) -> r.getPositions().contains(pos)).mapToDouble((r) -> roleFitRouter.forCareer(grown, r, null, pos).getScore())
+        return roles.values().stream().filter((r) -> r.getPositions().contains(pos) && !fitProperties.recommendationExcluded(r))
+                .mapToDouble((r) -> roleFitRouter.forCareer(grown, r, null, pos).getScore())
                 .max().orElse(option.getScore());
     }
 
@@ -163,9 +166,12 @@ public class PositionAdviceService {
             boolean keeper = player.getPositions().contains(GOALKEEPER);
             List<String> candidates = keeper ? List.of(GOALKEEPER) : OUTFIELD_POSITIONS;
             List<PositionOption> options = new ArrayList<>();
+            // Dönüşüm adayları: listedeki mevkide en iyi rol; listede olmayanda öneri dışı roller (fcareer.fit.recommendation-excluded-roles) hariç en iyi.
+            List<PositionOption> conversionOptions = new ArrayList<>();
             Map<String, Integer> positionOveralls = positionOveralls(player);
             for (String position : candidates) {
                 PositionOption best = null;
+                PositionOption bestTarget = null;
                 for (FitRole role : roles.values()) {
                     if (!role.getPositions().contains(position)) {
                         continue;
@@ -174,15 +180,23 @@ public class PositionAdviceService {
                     if (!plausible(player, position, fit, positionOveralls)) {
                         continue;
                     }
-                    if (Objects.isNull(best) || fit.getScore() > best.getScore()) {
-                        best = PositionOption.builder().position(position).roleName(role.getName()).score(round1(fit.getScore()))
-                                .natural(player.getPositions().contains(position))
-                                .reasons(fit.getReasons() == null ? List.of() : fit.getReasons().stream().limit(REASONS_SHOWN).toList())
-                                .build();
+                    PositionOption option = PositionOption.builder().position(position).roleName(role.getName()).score(round1(fit.getScore()))
+                            .natural(player.getPositions().contains(position))
+                            .reasons(fit.getReasons() == null ? List.of() : fit.getReasons().stream().limit(REASONS_SHOWN).toList())
+                            .build();
+                    if (Objects.isNull(best) || option.getScore() > best.getScore()) {
+                        best = option;
+                    }
+                    boolean target = option.isNatural() || !fitProperties.recommendationExcluded(role);
+                    if (target && (Objects.isNull(bestTarget) || option.getScore() > bestTarget.getScore())) {
+                        bestTarget = option;
                     }
                 }
                 if (Objects.nonNull(best)) {
                     options.add(best);
+                }
+                if (Objects.nonNull(bestTarget)) {
+                    conversionOptions.add(bestTarget);
                 }
             }
             options.sort(Comparator.comparingDouble(PositionOption::getScore).reversed());
@@ -190,7 +204,7 @@ public class PositionAdviceService {
             Map.Entry<String, Integer> picked = bestOverall(player);
             SideChoice.Choice side = sideChoice(player, picked.getKey(), positionOveralls, roles);
             Map.Entry<String, Integer> bestOverall = side.position().equals(picked.getKey()) ? picked : Map.entry(side.position(), positionOveralls.get(side.position()));
-            Conversion conversion = keeper ? null : ConversionRule.find(options, player.getPositions(), positionOveralls, player.getOverall(),
+            Conversion conversion = keeper ? null : ConversionRule.find(conversionOptions, player.getPositions(), positionOveralls, player.getOverall(),
                     positionProperties.getConversionGain(), positionProperties.getConversionMaxOverallDrop(),
                     (pos) -> developmentPlans.positionPlan(pos).map((plan) -> pos + " mevki planı"),
                     (o) -> (Objects.isNull(team.tacticPositions()) || team.tacticPositions().contains(o.getPosition()))

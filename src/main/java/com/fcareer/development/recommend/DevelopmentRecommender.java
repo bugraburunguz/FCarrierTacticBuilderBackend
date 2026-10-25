@@ -3,6 +3,7 @@ package com.fcareer.development.recommend;
 import com.fcareer.advisor.model.response.AdvisorResponses.PlayerPositionAdvice;
 import com.fcareer.advisor.service.PositionAdviceService;
 import com.fcareer.career.desk.SpoilerPolicy;
+import com.fcareer.fitengine.configuration.FitEngineProperties;
 import com.fcareer.career.service.CareerService;
 import com.fcareer.catalog.service.PlayerService;
 import com.fcareer.development.plan.DevelopmentPlans;
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -78,6 +80,7 @@ public class DevelopmentRecommender {
     private final PlanProjector projector;
     private final PositionAdviceService positionAdvice;
     private final SpoilerPolicy spoilerPolicy;
+    private final FitEngineProperties fitProperties;
 
     public List<PlayerRecommendation> recommend(Long userId, Long careerId, List<WeakSlot> weakSlots) {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
@@ -88,11 +91,14 @@ public class DevelopmentRecommender {
         Map<Long, FitPlayer> byId = players.stream().collect(Collectors.toMap(FitPlayer::getId, Function.identity(), (a, b) -> a));
         List<FitPlayer> candidates = players.stream().filter(this::inScope).toList();
         // Dönüşüm adayı, Kadro/Roller ile aynı eşikten (ilk 11'in alt üçte biri; gençte 2 sezonluk tahmin).
-        Map<Long, PlayerPositionAdvice> advice = positionAdvice.advise(candidates, positionAdvice.teamContext(userId, careerId, players)).stream()
+        PositionAdviceService.TeamContext team = positionAdvice.teamContext(userId, careerId, players);
+        Map<Long, PlayerPositionAdvice> advice = positionAdvice.advise(candidates, team).stream()
                 .collect(Collectors.toMap(PlayerPositionAdvice::getPlayerId, Function.identity(), (a, b) -> a));
+        // Karar: hedefler yalnız ana taktik (yoksa başlangıç önerisi) mevkilerinden — dönüşümle aynı kural; mevki bilinmiyorsa kısıt yok.
+        Predicate<String> inTactic = (pos) -> Objects.isNull(team.tacticPositions()) || team.tacticPositions().isEmpty() || team.tacticPositions().contains(pos);
         // Aynı slot iki kez gelirse tek hesap.
         List<WeakSlot> slots = Objects.isNull(weakSlots) ? List.of() : weakSlots.stream().distinct().toList();
-        List<PlayerRecommendation> out = candidates.stream().map((p) -> recommend(p, slots, byId, advice.get(p.getId()))).toList();
+        List<PlayerRecommendation> out = candidates.stream().map((p) -> recommend(p, slots, byId, advice.get(p.getId()), inTactic)).toList();
         log.info("Development recommendations careerId : {} candidates : {}", careerId, out.size());
         return out;
     }
@@ -102,11 +108,11 @@ public class DevelopmentRecommender {
                 && p.getAge() <= config.getMaxAge() && p.getPotential() - p.getOverall() >= config.getMinHeadroom();
     }
 
-    private PlayerRecommendation recommend(FitPlayer player, List<WeakSlot> slots, Map<Long, FitPlayer> byId, PlayerPositionAdvice advice) {
+    private PlayerRecommendation recommend(FitPlayer player, List<WeakSlot> slots, Map<Long, FitPlayer> byId, PlayerPositionAdvice advice, Predicate<String> inTactic) {
         Plan balanced = plans.general();
         FitPlayer balanced2 = projector.project(player, balanced, SEASONS).grown();
         List<Option> options = new ArrayList<>();
-        for (String position : player.getPositions()) {
+        for (String position : player.getPositions().stream().filter(inTactic).toList()) {
             for (Plan plan : plans.rolePlans(position)) {
                 option(player, plan, position, rolesOf(plan.baseRole(), position), balanced2, null).ifPresent(options::add);
             }
@@ -116,7 +122,7 @@ public class DevelopmentRecommender {
                 continue;
             }
             FitRole role = roleService.fitRolesById().get(slot.roleId());
-            if (Objects.isNull(role)) {
+            if (Objects.isNull(role) || fitProperties.recommendationExcluded(role) || !inTactic.test(slot.position())) {
                 continue;
             }
             plans.rolePlan(role.getBaseRole(), slot.position()).flatMap((plan) -> option(player, plan, slot.position(), List.of(role), balanced2,
@@ -161,12 +167,13 @@ public class DevelopmentRecommender {
                 Objects.isNull(incumbentStrength) ? null : round1(incumbentStrength)));
     }
 
+    /** Öneri hedefi olabilecek roller: öneri dışı listesindekiler (fcareer.fit.recommendation-excluded-roles) hariç. */
     private List<FitRole> rolesOf(String baseRole, String position) {
-        return roleService.fitRolesById().values().stream().filter((r) -> r.getBaseRole().equals(baseRole) && r.getPositions().contains(position)).toList();
+        return rolesAt(position).stream().filter((r) -> r.getBaseRole().equals(baseRole)).toList();
     }
 
     private List<FitRole> rolesAt(String position) {
-        return roleService.fitRolesById().values().stream().filter((r) -> r.getPositions().contains(position)).toList();
+        return roleService.fitRolesById().values().stream().filter((r) -> r.getPositions().contains(position) && !fitProperties.recommendationExcluded(r)).toList();
     }
 
     /** chosen null → Dengeli; reason: CLEAR_TARGET, NO_CLEAR_TARGET, SMALL_GAIN, NO_OPTIONS. */

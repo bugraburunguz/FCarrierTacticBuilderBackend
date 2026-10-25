@@ -43,10 +43,15 @@ class ConversionGateTest {
     private static final Map<String, Integer> OVERALLS = Map.of("LM", 68, "RM", 68, "CDM", 68, "CM", 60);
 
     private PositionAdviceService service() {
+        return service(List.of());
+    }
+
+    /** excluded: fcareer.fit.recommendation-excluded-roles ("baseRole|Focus"). */
+    private PositionAdviceService service(List<String> excluded) {
         RoleService roles = mock(RoleService.class);
         Map<String, FitRole> byId = new LinkedHashMap<>();
-        byId.put("winger_balanced", FitRole.builder().id("winger_balanced").baseRole("winger").name("Winger (Balanced)").positions(List.of("LM", "RM")).build());
-        byId.put("holding_defend", FitRole.builder().id("holding_defend").baseRole("holding").name("Holding (Defend)").positions(List.of("CDM")).build());
+        byId.put("winger_balanced", FitRole.builder().id("winger_balanced").baseRole("winger").focus("Balanced").name("Winger (Balanced)").positions(List.of("LM", "RM")).build());
+        byId.put("holding_defend", FitRole.builder().id("holding_defend").baseRole("holding").focus("Defend").name("Holding (Defend)").positions(List.of("CDM")).build());
         when(roles.fitRolesById()).thenReturn(byId);
         RoleFitRouter router = mock(RoleFitRouter.class);
         // LM/RM 64; CDM 72 + (OVR − 68): projeksiyonda OVR artınca CDM Güç'ü de artar.
@@ -66,7 +71,21 @@ class ConversionGateTest {
             return new PlanProjector.PlanProjection(p.toBuilder().overall(p.getOverall() + 10).build(), p.getOverall() + 10);
         });
         return new PositionAdviceService(roles, router, mock(CareerService.class), mock(PlayerService.class), overall, new PositionProperties(), scorer,
-                new DevelopmentPlans(new ObjectMapper()), projector, new DevelopmentRecommender.Config(), mock(UserTacticService.class), mock(SpoilerPolicy.class), mock(org.springframework.beans.factory.ObjectProvider.class));
+                new DevelopmentPlans(new ObjectMapper()), projector, new DevelopmentRecommender.Config(), mock(UserTacticService.class), mock(SpoilerPolicy.class), mock(org.springframework.beans.factory.ObjectProvider.class),
+                fitProperties(excluded));
+    }
+
+    static com.fcareer.fitengine.configuration.FitEngineProperties fitProperties(List<String> excluded) {
+        com.fcareer.fitengine.configuration.FitEngineProperties p = new com.fcareer.fitengine.configuration.FitEngineProperties();
+        p.setRecommendationExcludedRoles(excluded);
+        return p;
+    }
+
+    /** Karar: öneri dışı roller dönüşüm hedefi olamaz (Lab'da seçilebilir, uyum hesabında kalır). Varsayılan liste wide_midfielder|Defend. */
+    @Test
+    void excludedRoleCannotBeAConversionTarget() {
+        assertThat(service(List.of("holding|Defend")).advise(List.of(lm(28, 70)), PositionAdviceService.TeamContext.NONE).get(0).getConversion()).isNull();
+        assertThat(new com.fcareer.fitengine.configuration.FitEngineProperties().getRecommendationExcludedRoles()).containsExactly("wide_midfielder|Defend");
     }
 
     private static FitPlayer lm(int age, Integer potential) {

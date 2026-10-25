@@ -127,6 +127,13 @@ class DevelopmentRecommendationIntegrationTest {
         JsonNode recs = call(token, "POST", "/api/v1/careers/" + careerId + "/development/recommendations", Map.of("weakSlots", weak));
 
         assertThat(recs.isArray() && recs.size() > 0).as("kadroda kapsamda genç var").isTrue();
+        // Karar: hedefler yalnız ana taktik (yoksa başlangıç önerisi) mevkilerinden; öneri dışı roller (wide_midfielder|Defend) hedef olamaz.
+        java.util.Set<String> tacticPositions = new java.util.HashSet<>();
+        call(token, "GET", "/api/v1/careers/" + careerId + "/starter-tactic", null).get("slots").forEach((s) -> tacticPositions.add(s.get("position").asText()));
+        recs.findValues("options").forEach((opts) -> opts.forEach((o) -> {
+            assertThat(tacticPositions).as(o.toString()).contains(o.get("position").asText());
+            assertThat(o.get("roleId").asText()).isNotEqualTo("wide_midfielder_defend");
+        }));
         boolean slotOptionSeen = false;
         for (JsonNode r : recs) {
             assertThat(r.get("age").asInt()).isLessThanOrEqualTo(23);
