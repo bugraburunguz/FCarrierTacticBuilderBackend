@@ -140,6 +140,66 @@ class AcademyIntegrationTest {
         assertThat(data(token, "/api/v1/careers/" + careerId + "/academy", 200).get("players")).hasSize(7);
     }
 
+    /** ACADEMY-b (güncel brief): satır durumu, plan etiketi, oyuncu paneli (Ne yapmalıyım? · Hangi mevkide? · Takımdaki yeri) ve Gelişim genç listesi. */
+    @Test
+    void academyRowsCarryStatusAndThePlayerPanelAnswersThreeQuestions() throws Exception {
+        String token = support.register();
+        long careerId = support.premiumCareer(token, null);
+        importFixture(token, careerId);
+        JsonNode academy = data(token, "/api/v1/careers/" + careerId + "/academy", 200);
+        long kyleId = -1;
+        for (JsonNode p : academy.get("players")) {
+            assertThat(p.path("status").asText()).isIn("READY", "GROWING", "WAITING");
+            assertThat(p.path("status").asText().equals("READY")).as(p.path("name").asText()).isEqualTo(!p.path("promote").isNull());
+            assertThat(p.has("conversionPosition")).isTrue();
+            if (!p.path("plan").isNull()) {
+                assertThat(p.at("/plan/label").asText()).isNotBlank();
+            }
+            if (p.path("name").asText().equals("Kyle Preston")) {
+                kyleId = p.path("playerId").asLong();
+            }
+        }
+
+        JsonNode detail = data(token, "/api/v1/careers/" + careerId + "/youth/" + kyleId, 200);
+        assertThat(detail.path("name").asText()).isEqualTo("Kyle Preston");
+        assertThat(detail.at("/advice/sentence").asText()).isNotBlank();
+        JsonNode plans = detail.at("/advice/plans");
+        assertThat(plans.size()).isBetween(1, 3);
+        assertThat(plans.get(0).path("label").asText()).isEqualTo("Dengeli");
+        plans.forEach((p) -> {
+            assertThat(p.path("position").asText()).isNotBlank();
+            assertThat(p.path("overall1").asInt()).isBetween(40, 99);
+            assertThat(p.path("overall2").asInt()).isGreaterThanOrEqualTo(p.path("overall1").asInt());
+        });
+        assertThat(detail.at("/advice/estimated").asBoolean()).isTrue();
+        assertThat(detail.at("/position/bestPosition").asText()).isNotBlank();
+        assertThat(detail.at("/team/position").asText()).isNotBlank();
+        assertThat(detail.at("/team/source").asText()).isIn("MAIN", "AUTO");
+        assertThat(detail.at("/team/strengths")).hasSize(3);
+        // Motor terimi yok.
+        assertThat(detail.toString()).doesNotContain("levelFit").doesNotContain("currentFit");
+
+        // Panel yalnız bu kariyerin altyapı ya da kadro oyuncusu için; yabancıya ve kapsam dışı oyuncuya 404.
+        String stranger = support.register();
+        data(stranger, "/api/v1/careers/" + careerId + "/youth/" + kyleId, 404);
+        Long outsider = jdbc.queryForObject("SELECT b.id FROM base_player b WHERE b.owner_career_id IS NULL AND b.id NOT IN "
+                + "(SELECT base_player_id FROM user_player_state WHERE career_id = ?) ORDER BY b.id LIMIT 1", Long.class, careerId);
+        data(token, "/api/v1/careers/" + careerId + "/youth/" + outsider, 404);
+
+        // Gelişim genç listesi: A takımda ≤ 23 yaş ve potansiyeli OVR'den ≥ 5 yüksek (kiralıktakiler dahil); altyapı oyuncusu yok.
+        JsonNode youth = data(token, "/api/v1/careers/" + careerId + "/youth", 200);
+        Set<Long> academyIds = new HashSet<>();
+        academy.get("players").forEach((p) -> academyIds.add(p.get("playerId").asLong()));
+        youth.forEach((p) -> {
+            assertThat(p.path("age").asInt()).isLessThanOrEqualTo(23);
+            assertThat(p.path("potential").asInt() - p.path("overall").asInt()).isGreaterThanOrEqualTo(5);
+            assertThat(academyIds).doesNotContain(p.path("playerId").asLong());
+        });
+        if (youth.size() > 0) {
+            data(token, "/api/v1/careers/" + careerId + "/youth/" + youth.get(0).path("playerId").asLong(), 200);
+        }
+    }
+
     @Test
     void scoutRangeModeMasksAcademyPotentialAndUnverifiedPotentialFields() throws Exception {
         String token = support.register();
@@ -158,6 +218,15 @@ class AcademyIntegrationTest {
             assertThat(p.get("potentialVariance").isNull()).isTrue();
             assertThat(p.get("swingLowPotential").isNull()).isTrue();
         }
+        // ACADEMY-b: yeni uçlar da maskeli (genç listesi ve panel).
+        long playerId = academy.get("players").get(0).path("playerId").asLong();
+        JsonNode detail = data(token, "/api/v1/careers/" + careerId + "/youth/" + playerId, 200);
+        assertThat(detail.get("potential").isNull()).isTrue();
+        assertThat(detail.get("potentialRange").asText()).matches("\\d+–\\d+");
+        data(token, "/api/v1/careers/" + careerId + "/youth", 200).forEach((p) -> {
+            assertThat(p.get("potential").isNull()).isTrue();
+            assertThat(p.get("potentialRange").asText()).matches("\\d+–\\d+");
+        });
     }
 
     @Test
