@@ -85,7 +85,8 @@ public class DevelopmentRecommender {
                 .map((p) -> ranged && Objects.nonNull(p.getPotential()) ? p.toBuilder().potential(SpoilerPolicy.low(p.getPotential())).build() : p).toList();
         Map<Long, FitPlayer> byId = players.stream().collect(Collectors.toMap(FitPlayer::getId, Function.identity(), (a, b) -> a));
         List<FitPlayer> candidates = players.stream().filter(this::inScope).toList();
-        Map<Long, PlayerPositionAdvice> advice = positionAdvice.advise(candidates).stream()
+        // Dönüşüm adayı, Kadro/Roller ile aynı eşikten (ilk 11'in alt üçte biri; gençte 2 sezonluk tahmin).
+        Map<Long, PlayerPositionAdvice> advice = positionAdvice.advise(candidates, positionAdvice.startingElevenCutoff(userId, careerId, players)).stream()
                 .collect(Collectors.toMap(PlayerPositionAdvice::getPlayerId, Function.identity(), (a, b) -> a));
         // Aynı slot iki kez gelirse tek hesap.
         List<WeakSlot> slots = Objects.isNull(weakSlots) ? List.of() : weakSlots.stream().distinct().toList();

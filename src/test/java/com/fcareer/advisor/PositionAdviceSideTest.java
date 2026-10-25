@@ -63,7 +63,8 @@ class PositionAdviceSideTest {
         SideScorer scorer = mock(SideScorer.class);
         when(scorer.sideBests(any(), anyString(), anyString(), any())).thenReturn(sides);
         return new PositionAdviceService(roles, router, mock(CareerService.class), mock(PlayerService.class), overallService, properties, scorer,
-                new DevelopmentPlans(new ObjectMapper()));
+                new DevelopmentPlans(new ObjectMapper()), mock(com.fcareer.development.plan.PlanProjector.class), new com.fcareer.development.recommend.DevelopmentRecommender.Config(),
+                mock(com.fcareer.usertactic.UserTacticService.class), mock(com.fcareer.career.desk.SpoilerPolicy.class));
     }
 
     private static FitPlayer player(List<String> positions, String foot) {

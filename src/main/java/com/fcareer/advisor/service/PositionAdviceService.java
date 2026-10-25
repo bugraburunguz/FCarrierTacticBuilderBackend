@@ -3,7 +3,12 @@ package com.fcareer.advisor.service;
 import com.fcareer.advisor.configuration.PositionProperties;
 import com.fcareer.advisor.model.response.AdvisorResponses.Conversion;
 import com.fcareer.advisor.model.response.AdvisorResponses.PlayerPositionAdvice;
+import com.fcareer.career.desk.SpoilerPolicy;
 import com.fcareer.development.plan.DevelopmentPlans;
+import com.fcareer.development.plan.PlanProjector;
+import com.fcareer.development.recommend.DevelopmentRecommender;
+import com.fcareer.usertactic.UserTacticService;
+import com.fcareer.usertactic.model.UserTacticModels;
 import com.fcareer.advisor.model.response.AdvisorResponses.PositionOption;
 import com.fcareer.career.service.CareerService;
 import com.fcareer.catalog.service.PlayerService;
@@ -34,6 +39,9 @@ public class PositionAdviceService {
     private static final int MAX_POSITION_DROP = 6;
     private static final List<String> OUTFIELD_POSITIONS = List.of("LB", "RB", "CB", "CDM", "CM", "CAM", "LM", "RM", "LW", "RW", "ST");
     private static final String GOALKEEPER = "GK";
+    private static final int BOTTOM_THIRD = 3;
+    private static final int ELEVEN = 11;
+    private static final int YOUTH_SEASONS = 2;
 
     private final RoleService roleService;
     private final RoleFitRouter roleFitRouter;
@@ -43,16 +51,77 @@ public class PositionAdviceService {
     private final PositionProperties positionProperties;
     private final SideScorer sideScorer;
     private final DevelopmentPlans developmentPlans;
+    private final PlanProjector planProjector;
+    private final DevelopmentRecommender.Config youth;
+    private final UserTacticService userTactics;
+    private final SpoilerPolicy spoilerPolicy;
 
     public List<PlayerPositionAdvice> forCareer(Long userId, Long careerId) {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
         if (squad.playerIds().isEmpty()) {
             return List.of();
         }
-        return advise(playerService.fitPlayers(squad.playerIds(), squad.gameVersionId(), careerId));
+        // Spoiler: SCOUT_RANGE kariyerinde gençlerin tahmini bandın alt sınırıyla (DevelopmentRecommender ile aynı).
+        boolean ranged = spoilerPolicy.ranged(careerId);
+        List<FitPlayer> players = playerService.fitPlayers(squad.playerIds(), squad.gameVersionId(), careerId).stream()
+                .map((p) -> ranged && Objects.nonNull(p.getPotential()) ? p.toBuilder().potential(SpoilerPolicy.low(p.getPotential())).build() : p).toList();
+        return advise(players, startingElevenCutoff(userId, careerId, players));
     }
 
     public List<PlayerPositionAdvice> advise(List<FitPlayer> players) {
+        return advise(players, null);
+    }
+
+    /**
+     * FIT-3 kararı (2): takımın ilk 11'inin Güç alt üçte birinin üst sınırı (ilk 11 küçükten büyüğe, ⌊n/3⌋. değer). Dönüşüm önerilen mevkideki Güç bunu
+     * geçmeli. Üçte bir boşsa eşik yok.
+     */
+    public static Double lowerThirdCutoff(List<Double> strengths) {
+        List<Double> sorted = strengths.stream().sorted().toList();
+        int bottom = sorted.size() / BOTTOM_THIRD;
+        return bottom == 0 ? null : sorted.get(bottom - 1);
+    }
+
+    /** İlk 11: ana taktiğin dizilişi (slot rolüyle Güç); yoksa her oyuncunun listelenen mevkideki en iyi Güç'üne göre ilk 11. */
+    public Double startingElevenCutoff(Long userId, Long careerId, List<FitPlayer> players) {
+        Map<Long, FitPlayer> byId = players.stream().collect(java.util.stream.Collectors.toMap(FitPlayer::getId, (p) -> p, (a, b) -> a));
+        Map<String, FitRole> roles = roleService.fitRolesById();
+        UserTacticModels.UserTactic main = userTactics.main(userId, careerId);
+        List<Double> strengths = new ArrayList<>();
+        if (Objects.nonNull(main) && Objects.nonNull(main.lineup()) && Objects.nonNull(main.slots())) {
+            for (Map<String, Object> slot : main.slots()) {
+                FitPlayer p = byId.get(main.lineup().get(String.valueOf(slot.get("slot"))));
+                FitRole role = roles.get(String.valueOf(slot.get("roleId")));
+                if (Objects.nonNull(p) && Objects.nonNull(role)) {
+                    strengths.add(roleFitRouter.forCareer(p, role, null, String.valueOf(slot.get("position"))).getScore());
+                }
+            }
+        }
+        if (strengths.isEmpty()) {
+            players.stream().map((p) -> bestListed(p, roles)).filter(Objects::nonNull).sorted(Comparator.reverseOrder()).limit(ELEVEN).forEach(strengths::add);
+        }
+        return lowerThirdCutoff(strengths);
+    }
+
+    private Double bestListed(FitPlayer player, Map<String, FitRole> roles) {
+        return player.getPositions().stream().flatMap((pos) -> roles.values().stream().filter((r) -> r.getPositions().contains(pos))
+                .map((r) -> roleFitRouter.forCareer(player, r, null, pos).getScore())).max(Double::compare).orElse(null);
+    }
+
+    /** Dönüşüm adayı mevkide ölçülen Güç: gençte (≤ maxAge, POT ≥ OVR + minHeadroom) o mevkinin planıyla 2 sezon sonraki en iyi rol Güç'ü. */
+    private double conversionStrength(FitPlayer player, PositionOption option, Map<String, FitRole> roles) {
+        boolean young = Objects.nonNull(player.getAge()) && Objects.nonNull(player.getPotential()) && player.getAge() <= youth.getMaxAge()
+                && player.getPotential() - player.getOverall() >= youth.getMinHeadroom();
+        if (!young) {
+            return option.getScore();
+        }
+        String pos = option.getPosition();
+        FitPlayer grown = planProjector.project(player, developmentPlans.positionPlan(pos).orElse(developmentPlans.general()), YOUTH_SEASONS).grown();
+        return roles.values().stream().filter((r) -> r.getPositions().contains(pos)).mapToDouble((r) -> roleFitRouter.forCareer(grown, r, null, pos).getScore())
+                .max().orElse(option.getScore());
+    }
+
+    public List<PlayerPositionAdvice> advise(List<FitPlayer> players, Double startingCutoff) {
         Map<String, FitRole> roles = roleService.fitRolesById();
         List<PlayerPositionAdvice> advice = new ArrayList<>();
         for (FitPlayer player : players) {
@@ -88,7 +157,8 @@ public class PositionAdviceService {
             Map.Entry<String, Integer> bestOverall = side.position().equals(picked.getKey()) ? picked : Map.entry(side.position(), positionOveralls.get(side.position()));
             Conversion conversion = keeper ? null : ConversionRule.find(options, player.getPositions(), positionOveralls, player.getOverall(),
                     positionProperties.getConversionGain(), positionProperties.getConversionMaxOverallDrop(),
-                    (pos) -> developmentPlans.positionPlan(pos).map((plan) -> pos + " mevki planı")).orElse(null);
+                    (pos) -> developmentPlans.positionPlan(pos).map((plan) -> pos + " mevki planı"),
+                    (o) -> Objects.isNull(startingCutoff) || conversionStrength(player, o, roles) > startingCutoff).orElse(null);
             advice.add(PlayerPositionAdvice.builder().playerId(player.getId()).playerName(player.getName())
                     .listedPositions(player.getPositions()).best(options.stream().limit(POSITIONS_SHOWN).toList())
                     .note(note(options)).ownPositionBest(isOwnBest(options))

@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * FIT-3 madde 12: en iyi mevki v2 — rol bazlı dönüşüm. "En iyi mevki" EA'nın mevki OVR formülünden kalır; öneri her mevkideki en iyi rol Güç'üne bakar
@@ -25,12 +26,20 @@ public final class ConversionRule {
 
     public static Optional<Conversion> find(List<PositionOption> options, List<String> listed, Map<String, Integer> overalls, int overall, double gain,
                                             int maxOverallDrop, Function<String, Optional<String>> positionPlanName) {
+        return find(options, listed, overalls, overall, gain, maxOverallDrop, positionPlanName, (o) -> true);
+    }
+
+    /** eligible (FIT-3 kararı 2): aday mevki takımın ilk 11'i ölçüsünde güçlü mü (alt üçte biri geçiyor mu; gençte 2 sezonluk tahminle). */
+    public static Optional<Conversion> find(List<PositionOption> options, List<String> listed, Map<String, Integer> overalls, int overall, double gain,
+                                            int maxOverallDrop, Function<String, Optional<String>> positionPlanName, Predicate<PositionOption> eligible) {
         Set<String> zone = new HashSet<>(listed);
         listed.forEach((p) -> Optional.ofNullable(SideChoice.mirror(p)).ifPresent(zone::add));
         Optional<PositionOption> from = options.stream().filter((o) -> zone.contains(o.getPosition())).max(Comparator.comparingDouble(PositionOption::getScore));
         // Önce EA OVR koşulu, sonra en yüksek Güç (en iyi mevki OVR'ye takılırsa ikinci aday denenir).
         Optional<PositionOption> to = options.stream().filter((o) -> !zone.contains(o.getPosition()))
                 .filter((o) -> Objects.nonNull(overalls.get(o.getPosition())) && overalls.get(o.getPosition()) >= overall - maxOverallDrop)
+                .filter((o) -> o.getScore() - from.map(PositionOption::getScore).orElse(Double.MAX_VALUE) >= gain)
+                .filter(eligible)
                 .max(Comparator.comparingDouble(PositionOption::getScore));
         if (from.isEmpty() || to.isEmpty()) {
             return Optional.empty();
