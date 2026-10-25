@@ -144,16 +144,20 @@ public class FitEngineV3 {
 
     private double playstyleBonus(FitPlayer player, String baseRole, List<Contribution> out) {
         JsonNode cap = seeds.modifiers().path("psCap");
+        List<Contribution> raw = new ArrayList<>();
         double sum = 0;
         for (RoleSeeds.RolePlaystyle ps : seeds.playstyles(baseRole)) {
             Integer level = Objects.isNull(player.getPlaystyles()) ? null : player.getPlaystyles().get(ps.playstyle());
             if (Objects.nonNull(level)) {
                 double points = ps.weight() * (level >= FitPlayer.PLAYSTYLE_PLUS ? cap.path("psPlusMultiplier").asInt() : 1);
-                out.add(new Contribution("playstyle", ps.playstyle(), points));
+                raw.add(new Contribution("playstyle", ps.playstyle(), points));
                 sum += points;
             }
         }
         double capped = Math.min(sum, cap.path("maxTotal").asDouble());
+        // FIT-1 madde 4: tavan kırptıysa katkılar orantılı ölçeklenir; "Nedenler" toplamı gerçek etkiye eşit olur.
+        double scale = sum > 0 && capped < sum ? capped / sum : 1.0;
+        raw.forEach((c) -> out.add(new Contribution(c.term(), c.key(), c.points() * scale)));
         return capped;
     }
 
