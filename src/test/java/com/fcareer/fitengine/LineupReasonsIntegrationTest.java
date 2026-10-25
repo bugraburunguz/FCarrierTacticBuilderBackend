@@ -79,6 +79,11 @@ class LineupReasonsIntegrationTest {
             reasons.forEach(r -> assertThat(r.asText()).matches("\\S+ [+-]\\d+\\.\\d"));
         });
 
+        // FIT-1 madde 2: slot başına iki eksenli sınıf (etiket gibi ücretsiz; gerekçeli zayıf halka listesi ücretli kalır).
+        List<String> classes = bySlot.values().stream().map(s -> s.path("weakClass").asText()).toList();
+        assertThat(classes).allMatch(c -> List.of("KALITE_ACIGI", "ROL_UYUMSUZ", "IKISI", "UYGUN").contains(c));
+        assertThat(classes.stream().filter(c -> c.equals("KALITE_ACIGI") || c.equals("IKISI"))).as("11'de alt üçte bir = 3").hasSize(3);
+
         for (String slotId : List.of("GK", "LST")) {
             JsonNode slot = bySlot.get(slotId);
             JsonNode single = post(token, "/api/v1/fit/role", Map.of("playerId", slot.get("playerId").asLong(), "roleId", slot.get("roleId").asText(),

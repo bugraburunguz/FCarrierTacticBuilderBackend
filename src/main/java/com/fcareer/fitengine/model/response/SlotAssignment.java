@@ -24,6 +24,8 @@ public class SlotAssignment {
     private Double combined;
     private Double setupDelta;
     private RoleFitResponse roleFit;
+    /** FIT-1 madde 2: iki eksenli zayıf halka sınıfı (KALITE_ACIGI, ROL_UYUMSUZ, IKISI, UYGUN); yalnız /fit/lineup, oyuncu dizili slotlarda. */
+    private String weakClass;
     private IntentFitResponse intentFit;
     private List<DepthEntry> depth;
 }
