@@ -132,6 +132,12 @@ public class TacticCodeService {
     }
 
     /** EA'nın izin verdiği (mevki, rol, focus) kombinasyonları: rol seçici yalnız bunları göstermelidir (TAC-02). */
+    /** FIT-2: (mevki, temel rol, odak) oyunda var mı (EA rol listesi; allowedRoles ile aynı eşleme). */
+    public boolean inGame(String position, FitRole role) {
+        return codec.roles().stream().anyMatch(r -> r.position().equals(position) && normalize(r.name()).equals(normalize(role.getBaseRole()))
+                && focusIndex(r, role.getFocus()) >= 0);
+    }
+
     public List<Map<String, String>> allowedRoles() {
         List<Map<String, String>> allowed = new ArrayList<>();
         for (EaCodecData.Role role : codec.roles()) {

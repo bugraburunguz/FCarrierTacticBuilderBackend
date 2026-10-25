@@ -39,6 +39,7 @@ class RateLimitFilterTest {
         properties.getRateLimit().setAuthPerMinute(3);
         properties.getRateLimit().setSolverPerMinute(2);
         properties.getRateLimit().setAnalysisPerMinute(5);
+        properties.getRateLimit().setTacticAnalysisPerMinute(5);
         filter = new RateLimitFilter(properties, counter, new MessageService(messages), new ObjectMapper(),
                 Clock.fixed(Instant.parse("2026-10-05T12:00:00Z"), ZoneOffset.UTC));
     }
@@ -75,15 +76,23 @@ class RateLimitFilterTest {
         assertThat(run("/api/v1/me/password", "10.0.0.9").getStatus()).isEqualTo(429);
     }
 
-    /** E3-7b: /tactics/analysis ücretsiz ama sınırlıdır: kendi kovası (analysis:) ve dakikada analysisPerMinute. */
+    /**
+     * E3-7b → FIT-2 kararı: /tactics/analysis ücretsiz ama sınırlıdır ve artık kendi kovasında (tactic-analysis:, dakikada tacticAnalysisPerMinute).
+     * Lab'da her değişiklik hem /fit/lineup hem /tactics/analysis attığı için ortak kova yarı hızda dolardı.
+     */
     @Test
-    void theFreeTacticAnalysisHasItsOwnBucketAndIsLimited() throws Exception {
+    void theFreeTacticAnalysisHasItsOwnBucketSeparateFromLineup() throws Exception {
         when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(5L);
         assertThat(run("/api/v1/tactics/analysis", "10.0.0.1").getStatus()).isEqualTo(200);
-        verify(counter).increment(org.mockito.ArgumentMatchers.contains("analysis:"), eq(Duration.ofMinutes(1)));
-
+        verify(counter).increment(org.mockito.ArgumentMatchers.startsWith(com.fcareer.common.constants.KeyConstants.RATE_LIMIT_PREFIX + "tactic-analysis:"), eq(Duration.ofMinutes(1)));
         when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(6L);
         assertThat(run("/api/v1/tactics/analysis", "10.0.0.1").getStatus()).isEqualTo(429);
+
+        // Diziliş kovası dolu olsa da analiz geçer (ayrı sayaç anahtarı).
+        when(counter.increment(org.mockito.ArgumentMatchers.contains(":analysis:"), eq(Duration.ofMinutes(1)))).thenReturn(999L);
+        when(counter.increment(org.mockito.ArgumentMatchers.contains("tactic-analysis:"), eq(Duration.ofMinutes(1)))).thenReturn(1L);
+        assertThat(run("/api/v1/fit/lineup", "10.0.0.1").getStatus()).isEqualTo(429);
+        assertThat(run("/api/v1/tactics/analysis", "10.0.0.1").getStatus()).isEqualTo(200);
     }
 
     /** GUV-2 (F8): pahalı ama ücretsiz uçlar (diziliş, replika uygula, öneri önizlemesi, başlangıç önerisi) analiz kovasında. */
@@ -128,6 +137,7 @@ class RateLimitFilterTest {
     void defaultsMatchTheDecision() {
         SecurityProperties.RateLimit defaults = new SecurityProperties().getRateLimit();
         assertThat(defaults.getAnalysisPerMinute()).isEqualTo(60);
+        assertThat(defaults.getTacticAnalysisPerMinute()).as("FIT-2 kararı").isEqualTo(60);
         assertThat(defaults.getImportPerHour()).isEqualTo(10);
         assertThat(defaults.getAuthPerMinute()).isEqualTo(10);
         assertThat(defaults.getApiPerMinute()).isEqualTo(300);

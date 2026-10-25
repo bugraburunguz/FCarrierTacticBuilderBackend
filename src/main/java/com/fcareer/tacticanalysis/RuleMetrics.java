@@ -30,6 +30,10 @@ public class RuleMetrics {
     private static final long BACK_LINE_COVER = 3;
     private static final String PARAM_SIDE = "side";
     private static final String PARAM_MIN = "min";
+    private static final String PARAM_ROLES = "roles";
+    private static final Set<String> CENTRE_FORWARDS = Set.of("ST", "CF");
+    /** Kutuya geç gelen adayı: merkez orta saha (kanatlar ve forvetler hariç). */
+    private static final Set<String> MIDFIELD = Set.of("CDM", "CM", "CAM");
 
     private final MetricsCalculator calculator;
 
@@ -62,6 +66,18 @@ public class RuleMetrics {
             case "SIDE_WINGER_W_MAX" -> max(ctx, side(params, WINGERS), (p) -> p.m().w());
             case "SIDE_FULLBACK_DYFWD_MAX" -> max(ctx, side(params, FULLBACKS), (p) -> p.m().dyFwd());
             case "SIDE_DEF_DUTY_MAX" -> max(ctx, side(params, union(FULLBACKS, WINGERS)), (p) -> p.m().d());
+            // FIT-2 madde 7 (fit_engine_spec §5): kontra riski, yaratıcılık, santrfor yalnızlığı.
+            // 3+ stoperli hatta bekler zaten ileri çıkar (FULLBACKS_DYFWD_MIN ile aynı gerekçe): kural dörtlü savunma içindir.
+            case "OVERLAPPING_FULLBACK_COUNT" -> ctx.outfield().stream().filter((p) -> "CB".equals(p.position())).count() >= BACK_LINE_COVER ? OptionalDouble.empty()
+                    : OptionalDouble.of(ctx.outfield().stream().filter((p) -> FULLBACKS.contains(p.position()) && p.m().dyFwd() >= number(params, PARAM_MIN)).count());
+            case "CREATIVE_ROLE_COUNT" -> OptionalDouble.of(ctx.outfield().stream().filter(rolesIn(params)).count());
+            case "CREATIVE_VISION_AVG" -> average(ctx, rolesIn(params).and((p) -> p.player() != null), (p) -> p.player().attr(Attr.VISION));
+            case "CENTRE_FORWARD_COUNT" -> OptionalDouble.of(ctx.outfield().stream().filter((p) -> CENTRE_FORWARDS.contains(p.position())).count());
+            case "WINGERS_CUTIN_MIN" -> ctx.outfield().stream().filter((p) -> WINGERS.contains(p.position())).count() < 2 ? OptionalDouble.empty()
+                    : ctx.outfield().stream().filter((p) -> WINGERS.contains(p.position())).mapToDouble((p) -> p.m().cutIn()).min();
+            // Eşiği geçen ya da seed'de açıkça sayılan (`roles`: box_to_box, box_crasher) merkez orta saha.
+            case "LATE_RUNNER_COUNT" -> OptionalDouble.of(ctx.outfield().stream().filter((p) -> MIDFIELD.contains(p.position())
+                    && (p.m().runBehind() >= number(params, PARAM_MIN) || (params.containsKey(PARAM_ROLES) && rolesIn(params).test(p)))).count());
             default -> throw new IllegalArgumentException("bilinmeyen metrik: " + metric);
         };
     }
@@ -74,6 +90,12 @@ public class RuleMetrics {
         OptionalDouble left = max(ctx, (p) -> p.side() == Side.LEFT && FULLBACKS.contains(p.position()), (p) -> p.m().dyFwd());
         OptionalDouble right = max(ctx, (p) -> p.side() == Side.RIGHT && FULLBACKS.contains(p.position()), (p) -> p.m().dyFwd());
         return left.isPresent() && right.isPresent() ? OptionalDouble.of(Math.min(left.getAsDouble(), right.getAsDouble())) : OptionalDouble.empty();
+    }
+
+    /** Seed'deki rol listesi (`params.roles`, virgülle ayrılmış temel rol adları; örn. yaratıcı roller, kutuya geç gelenler). */
+    private static Predicate<Placed> rolesIn(Map<String, Object> params) {
+        Set<String> roles = Set.of(String.valueOf(params.get(PARAM_ROLES)).split(","));
+        return (p) -> roles.contains(p.m().role());
     }
 
     private static Set<String> union(Set<String> a, Set<String> b) {

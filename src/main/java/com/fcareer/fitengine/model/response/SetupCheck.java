@@ -13,6 +13,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SetupCheck {
+    /** FIT-2 madde 7: seed'deki kontrol kimliği (seed/setup-checks.fc27.json). */
+    private String id;
     private String title;
     private WeaponState status;
     private String detail;

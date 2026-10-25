@@ -102,6 +102,66 @@ class LineupReasonsIntegrationTest {
     }
 
     @Test
+    void roleAlternativesInOneRequestOnlyWhenAsked() throws Exception {
+        // FIT-2 madde 6: tek /fit/lineup isteği her dizili slot için o mevkinin tüm rollerini bu oyuncuya göre sıralı döner (11 ayrı çağrı yok).
+        String token = support.register();
+        long careerId = support.premiumCareer(token, null);
+        Map<String, Object> tactic = Map.of("formation", "4-4-2");
+        JsonNode free = post(token, "/api/v1/fit/lineup", Map.of("careerId", careerId, "tactic", tactic));
+        Map<String, Long> locked = new LinkedHashMap<>();
+        free.get("slots").forEach(s -> locked.put(s.get("slotId").asText(), s.get("playerId").asLong()));
+        assertThat(free.findValues("roleAlternatives")).as("istenmedikçe yok").isEmpty();
+
+        JsonNode batch = post(token, "/api/v1/fit/lineup", Map.of("careerId", careerId, "tactic", tactic, "locked", locked, "roleAlternatives", true));
+        // İnceleme: öneri ve seçici yalnız oyunda o mevkide olan rollerden (EA listesi; seçilemeyen rol taslağa girmesin).
+        var ea = mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/tactics/ea-roles").header("Authorization", "Bearer " + token))
+                .andReturn().getResponse().getContentAsString();
+        java.util.Set<String> inGame = new java.util.HashSet<>();
+        objectMapper.readTree(ea).at("/data").forEach(r -> inGame.add(r.get("position").asText() + "|" + norm(r.get("baseRole").asText()) + "|" + norm(r.get("focus").asText())));
+        Map<String, String> baseOf = new HashMap<>();
+        Map<String, String> focusOf = new HashMap<>();
+        objectMapper.readTree(mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/roles").header("Authorization", "Bearer " + token))
+                .andReturn().getResponse().getContentAsString()).at("/data").forEach(r -> {
+                    baseOf.put(r.get("id").asText(), r.get("baseRole").asText());
+                    focusOf.put(r.get("id").asText(), r.get("focus").asText());
+                });
+
+        batch.get("slots").forEach(s -> s.get("roleAlternatives").forEach(a -> {
+            String id = a.get("roleId").asText();
+            assertThat(inGame).as(s.get("position").asText() + " " + id).contains(s.get("position").asText() + "|" + norm(baseOf.get(id)) + "|" + norm(focusOf.get(id)));
+        }));
+        batch.get("slots").forEach(s -> {
+            String slotId = s.get("slotId").asText();
+            JsonNode alts = s.get("roleAlternatives");
+            assertThat(alts.isArray() && alts.size() >= 2).as(slotId).isTrue();
+            List<String> ids = new ArrayList<>();
+            List<Double> normed = new ArrayList<>();
+            List<Double> unnormed = new ArrayList<>();
+            alts.forEach(a -> {
+                ids.add(a.get("roleId").asText());
+                if (a.hasNonNull("levelFit")) {
+                    assertThat(unnormed).as(slotId + " normsuz roller sonda").isEmpty();
+                    normed.add(a.get("levelFit").asDouble());
+                } else {
+                    unnormed.add(a.get("currentFit").asDouble());
+                }
+            });
+            assertThat(ids).as(slotId + " mevcut rol listede").contains(s.get("roleId").asText());
+            assertThat(normed).as(slotId + " oturma azalan").isSortedAccordingTo(java.util.Comparator.reverseOrder());
+            assertThat(unnormed).as(slotId + " normsuzlar Güç azalan").isSortedAccordingTo(java.util.Comparator.reverseOrder());
+            JsonNode current = alts.get(ids.indexOf(s.get("roleId").asText()));
+            assertThat(current.get("currentFit").asDouble()).as(slotId + " mevcut rolün Güç'ü slotla aynı").isEqualTo(s.at("/roleFit/currentFit").asDouble());
+            if (s.hasNonNull("betterRole")) {
+                assertThat(s.at("/betterRole/roleId").asText()).isEqualTo(ids.get(0)).isNotEqualTo(s.get("roleId").asText());
+            }
+        });
+    }
+
+    private static String norm(String text) {
+        return text.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]", "");
+    }
+
+    @Test
     void partialLockClassifiesOnlyLockedSlots() throws Exception {
         // FIT-1 inceleme: çözücünün yedekle doldurduğu kilitsiz slotlar (web göstermez) alt üçte biri ve medyanı kaydırmamalı.
         String token = support.register();

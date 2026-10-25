@@ -23,6 +23,7 @@ public class FitEngineProperties {
     private String careerEngineVersion = "v3";
     private V3 v3 = new V3();
     private WeakLink weakLink = new WeakLink();
+    private RoleSuggest roleSuggest = new RoleSuggest();
     private DefensiveGate defensiveGate = new DefensiveGate();
     private double outOfPositionPenalty = 15;
     private double globalFloorPenaltyPerPoint = 0.8;
@@ -51,6 +52,13 @@ public class FitEngineProperties {
         private double roleFitMin = 40;
         /** Güç (currentFit) takımın en düşük bu dilimindeyse kalite açığı (11'de 3). */
         private double qualityLowerFraction = 1.0 / 3;
+    }
+
+    /** FIT-2 madde 6 (verified:false): "Daha uygun rol" rozeti için en iyi rolün mevcut rolden en az bu kadar puan daha iyi oturması gerekir. */
+    @Getter
+    @Setter
+    public static class RoleSuggest {
+        private double minGain = 10;
     }
 
     @Getter

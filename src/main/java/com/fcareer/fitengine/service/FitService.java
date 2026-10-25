@@ -17,6 +17,7 @@ import com.fcareer.fitengine.model.request.SquadFitRequest;
 import com.fcareer.fitengine.model.response.AttributeGap;
 import com.fcareer.fitengine.model.response.FitRoleResult;
 import com.fcareer.fitengine.model.response.PlayerRoleFit;
+import com.fcareer.fitengine.model.response.RoleAlternative;
 import com.fcareer.fitengine.model.response.RoleFitResponse;
 import com.fcareer.fitengine.model.response.SlotAssignment;
 import com.fcareer.fitengine.model.response.SquadFitResponse;
@@ -31,6 +32,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -54,6 +57,7 @@ public class FitService {
     private final RoleFitV3Service roleFitV3Service;
     private final FitEngineProperties fitProperties;
     private final WeakLinkClassifier weakLinkClassifier;
+    private final RoleSuggestService roleSuggestService;
 
     public FitRoleResult roleFit(FitRoleRequest request) {
         FitPlayer player = playerService.fitPlayers(List.of(request.getPlayerId()), request.getGameVersionId()).get(0);
@@ -146,7 +150,19 @@ public class FitService {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, request.getCareerId());
         List<FitPlayer> players = playerService.fitPlayers(squad.playerIds(), squad.gameVersionId(), request.getCareerId());
         List<IntentProfile> slots = tacticResolver.resolve(request.getTactic()).slots();
-        return withWeakClasses(withoutPaidInsights(squadFitService.solveBest(players, slots, fitProperties.getCareerEngineVersion(), request.getLocked())), request.getLocked());
+        SquadFitResponse response = withWeakClasses(withoutPaidInsights(squadFitService.solveBest(players, slots, fitProperties.getCareerEngineVersion(), request.getLocked())), request.getLocked());
+        return Boolean.TRUE.equals(request.getRoleAlternatives()) ? withRoleAlternatives(response, players) : response;
+    }
+
+    /** FIT-2 madde 6: sınıflanan (dizili) her slot için rol alternatifleri ve eşiği geçen "daha uygun rol". */
+    private SquadFitResponse withRoleAlternatives(SquadFitResponse response, List<FitPlayer> players) {
+        Map<Long, FitPlayer> byId = players.stream().collect(Collectors.toMap(FitPlayer::getId, Function.identity(), (a, b) -> a));
+        response.getSlots().stream().filter(s -> Objects.nonNull(s.getWeakClass()) && byId.containsKey(s.getPlayerId())).forEach(s -> {
+            List<RoleAlternative> ranked = roleSuggestService.alternatives(byId.get(s.getPlayerId()), s.getPosition());
+            s.setRoleAlternatives(ranked);
+            s.setBetterRole(RoleSuggestService.better(s.getRoleId(), ranked, fitProperties.getRoleSuggest().getMinGain()).orElse(null));
+        });
+        return response;
     }
 
     /**

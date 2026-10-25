@@ -150,7 +150,10 @@
       "recommendation": {
         "code": "LOWER_LINE_OR_FASTER_CBS",
         "text": "Hattı düşür ya da daha hızlı stoper(ler) kullan."
-      }
+      },
+      "suppressedBy": [
+        "counter_risk_overlap"
+      ]
     },
     {
       "id": "no_box_target",
@@ -477,6 +480,109 @@
       "recommendation": {
         "code": "ADD_WIDTH",
         "text": "Bir kanadı Winger ya da beki Wingback yap."
+      }
+    },
+    {
+      "id": "counter_risk_overlap",
+      "title": "Kontra riski yüksek",
+      "severity": "RISK",
+      "foreach": [],
+      "requires": [
+        "players"
+      ],
+      "when": [
+        {
+          "metric": "OVERLAPPING_FULLBACK_COUNT",
+          "params": {
+            "min": 20
+          },
+          "op": "GTE",
+          "value": 2
+        },
+        {
+          "metric": "CB_PACE_AVG",
+          "params": {},
+          "op": "LT",
+          "value": 66
+        },
+        {
+          "metric": "ANCHOR_COUNT",
+          "params": {},
+          "op": "EQ",
+          "value": 1
+        }
+      ],
+      "text": "Kontra riski yüksek: {e0} bek sürekli bindiriyor, stoperlerin ortalama hızı {e1} (eşik {t1}) ve önlerinde tek çapa var; top kaybında arkada açık kalır.",
+      "recommendation": {
+        "code": "SECOND_PIVOT_OR_LOWER_LINE",
+        "text": "İkinci bir pivot ekle, hattı düşür ya da hızlı bir stoper kullan."
+      }
+    },
+    {
+      "id": "creativity_low",
+      "title": "Yaratıcılık yetersiz",
+      "severity": "WARN",
+      "foreach": [],
+      "requires": [
+        "players"
+      ],
+      "when": [
+        {
+          "metric": "CREATIVE_ROLE_COUNT",
+          "params": {
+            "roles": "deep_lying_playmaker,playmaker,classic_10,wide_playmaker,false_9"
+          },
+          "op": "GTE",
+          "value": 3
+        },
+        {
+          "metric": "CREATIVE_VISION_AVG",
+          "params": {
+            "roles": "deep_lying_playmaker,playmaker,classic_10,wide_playmaker,false_9"
+          },
+          "op": "LT",
+          "value": 68
+        }
+      ],
+      "text": "Yaratıcılık yetersiz: {e0} yaratıcı rol var ama bu oyuncuların ortalama vizyonu {e1} (eşik {t1}); zayıf rakibi açar, iyilerde tıkanır.",
+      "recommendation": {
+        "code": "FEWER_CREATORS_OR_BETTER_VISION",
+        "text": "Yaratıcı rollerden birini koşu ya da savunma rolüne çevir veya vizyonu yüksek bir oyuncu koy."
+      }
+    },
+    {
+      "id": "striker_isolated",
+      "title": "Santrfor yalnız",
+      "severity": "WARN",
+      "foreach": [],
+      "requires": [],
+      "when": [
+        {
+          "metric": "CENTRE_FORWARD_COUNT",
+          "params": {},
+          "op": "EQ",
+          "value": 1
+        },
+        {
+          "metric": "WINGERS_CUTIN_MIN",
+          "params": {},
+          "op": "GTE",
+          "value": 0.6
+        },
+        {
+          "metric": "LATE_RUNNER_COUNT",
+          "params": {
+            "min": 0.35,
+            "roles": "box_to_box,box_crasher"
+          },
+          "op": "EQ",
+          "value": 0
+        }
+      ],
+      "text": "Santrfor yalnız: tek forvet var, iki kanat da içe kat ediyor ve kutuya geç gelen orta saha yok.",
+      "recommendation": {
+        "code": "ADD_LATE_RUNNER",
+        "text": "Bir orta sahayı kutuya koşan role (Box Crasher, Half Winger, Shadow Striker) çevir ya da ikinci forvet ekle."
       }
     }
   ]
