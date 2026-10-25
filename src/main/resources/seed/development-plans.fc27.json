@@ -1,0 +1,1190 @@
+{
+  "_source": "Buğra, FC 27 kariyer modu gelişim planı ekranı (elle girildi, 2026-10-25)",
+  "verified": true,
+  "general": [
+    {
+      "id": "plan_dengeli",
+      "name": "Dengeli",
+      "distribution": "uniform",
+      "roleFamiliarity": null,
+      "note": "Role+ ve kaleci uygulaması doğrulanmadı"
+    }
+  ],
+  "positionPlans": [
+    {
+      "id": "pos_rb",
+      "name": "Sağ bek",
+      "positions": [
+        "RB"
+      ],
+      "attributes": [
+        "SprintSpeed",
+        "Crossing",
+        "Reactions",
+        "BallControl",
+        "DefAwareness",
+        "StandingTackle",
+        "SlidingTackle",
+        "Stamina"
+      ],
+      "roleFamiliarity": false,
+      "position": "RB"
+    },
+    {
+      "id": "pos_lb",
+      "name": "Sol bek",
+      "positions": [
+        "LB"
+      ],
+      "attributes": [
+        "SprintSpeed",
+        "Crossing",
+        "Reactions",
+        "BallControl",
+        "DefAwareness",
+        "StandingTackle",
+        "SlidingTackle",
+        "Stamina"
+      ],
+      "roleFamiliarity": false,
+      "position": "LB"
+    },
+    {
+      "id": "pos_cb",
+      "name": "Stoper",
+      "positions": [
+        "CB"
+      ],
+      "attributes": [
+        "Interceptions",
+        "Heading",
+        "DefAwareness",
+        "StandingTackle",
+        "Jumping",
+        "Strength",
+        "Aggression"
+      ],
+      "roleFamiliarity": false,
+      "position": "CB"
+    },
+    {
+      "id": "pos_cdm",
+      "name": "Defansif orta saha",
+      "positions": [
+        "CDM"
+      ],
+      "attributes": [
+        "Vision",
+        "LongPassing",
+        "ShortPassing",
+        "BallControl",
+        "Interceptions",
+        "DefAwareness",
+        "StandingTackle",
+        "Strength",
+        "Aggression"
+      ],
+      "roleFamiliarity": false,
+      "position": "CDM"
+    },
+    {
+      "id": "pos_cm",
+      "name": "Merkez orta saha",
+      "positions": [
+        "CM"
+      ],
+      "attributes": [
+        "Finishing",
+        "Positioning",
+        "LongShots",
+        "Vision",
+        "LongPassing",
+        "ShortPassing",
+        "BallControl",
+        "Dribbling"
+      ],
+      "roleFamiliarity": false,
+      "position": "CM"
+    },
+    {
+      "id": "pos_cam",
+      "name": "Ofansif orta saha",
+      "positions": [
+        "CAM"
+      ],
+      "attributes": [
+        "Finishing",
+        "Positioning",
+        "LongShots",
+        "Vision",
+        "LongPassing",
+        "ShortPassing",
+        "Agility",
+        "BallControl",
+        "Dribbling"
+      ],
+      "roleFamiliarity": false,
+      "position": "CAM"
+    },
+    {
+      "id": "pos_rm",
+      "name": "Sağ orta saha",
+      "positions": [
+        "RM"
+      ],
+      "attributes": [
+        "Acceleration",
+        "Finishing",
+        "Crossing",
+        "LongPassing",
+        "ShortPassing",
+        "BallControl",
+        "Dribbling"
+      ],
+      "roleFamiliarity": false,
+      "position": "RM"
+    },
+    {
+      "id": "pos_lm",
+      "name": "Sol orta saha",
+      "positions": [
+        "LM"
+      ],
+      "attributes": [
+        "Acceleration",
+        "Finishing",
+        "Crossing",
+        "LongPassing",
+        "ShortPassing",
+        "BallControl",
+        "Dribbling"
+      ],
+      "roleFamiliarity": false,
+      "position": "LM"
+    },
+    {
+      "id": "pos_rw",
+      "name": "Sağ kanat",
+      "positions": [
+        "RW"
+      ],
+      "attributes": [
+        "Acceleration",
+        "Finishing",
+        "Crossing",
+        "LongShots",
+        "Vision",
+        "ShortPassing",
+        "Agility",
+        "BallControl",
+        "Dribbling"
+      ],
+      "roleFamiliarity": false,
+      "position": "RW"
+    },
+    {
+      "id": "pos_lw",
+      "name": "Sol kanat",
+      "positions": [
+        "LW"
+      ],
+      "attributes": [
+        "Acceleration",
+        "Finishing",
+        "Crossing",
+        "LongShots",
+        "Vision",
+        "ShortPassing",
+        "Agility",
+        "BallControl",
+        "Dribbling"
+      ],
+      "roleFamiliarity": false,
+      "position": "LW"
+    },
+    {
+      "id": "pos_st",
+      "name": "Santrfor",
+      "positions": [
+        "ST"
+      ],
+      "attributes": [
+        "Finishing",
+        "Positioning",
+        "ShotPower",
+        "LongShots",
+        "Volleys",
+        "BallControl",
+        "Dribbling",
+        "Heading",
+        "Strength"
+      ],
+      "roleFamiliarity": false,
+      "position": "ST"
+    }
+  ],
+  "rolePlans": [
+    {
+      "id": "goalkeeper",
+      "name": "Goalkeeper",
+      "positions": [
+        "GK"
+      ],
+      "attributes": [
+        "GKDiving",
+        "GKHandling",
+        "GKReflexes"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "goalkeeper"
+    },
+    {
+      "id": "sweeper_keeper",
+      "name": "Sweeper Keeper",
+      "positions": [
+        "GK"
+      ],
+      "attributes": [
+        "GKDiving",
+        "GKKicking",
+        "GKReflexes"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "sweeper_keeper"
+    },
+    {
+      "id": "ball_playing_keeper",
+      "name": "Ball-Playing Keeper",
+      "positions": [
+        "GK"
+      ],
+      "attributes": [
+        "GKHandling",
+        "GKKicking",
+        "GKReflexes",
+        "GKPositioning"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "ball_playing_keeper"
+    },
+    {
+      "id": "fullback",
+      "name": "Fullback",
+      "positions": [
+        "RB",
+        "LB"
+      ],
+      "attributes": [
+        "Acceleration",
+        "Balance",
+        "Interceptions",
+        "Heading",
+        "DefAwareness",
+        "StandingTackle",
+        "SlidingTackle",
+        "Strength",
+        "Aggression"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "fullback",
+      "extraVsPosition": [
+        "Acceleration",
+        "Balance",
+        "Interceptions",
+        "Heading",
+        "Strength",
+        "Aggression"
+      ]
+    },
+    {
+      "id": "wingback",
+      "name": "Wingback",
+      "positions": [
+        "RB",
+        "LB"
+      ],
+      "attributes": [
+        "SprintSpeed",
+        "Acceleration",
+        "Crossing",
+        "LongPassing",
+        "Agility",
+        "Interceptions",
+        "Heading",
+        "StandingTackle",
+        "Stamina"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "wingback",
+      "extraVsPosition": [
+        "Acceleration",
+        "LongPassing",
+        "Agility",
+        "Interceptions",
+        "Heading"
+      ]
+    },
+    {
+      "id": "attacking_wingback",
+      "name": "Attacking Wingback",
+      "positions": [
+        "RB",
+        "LB"
+      ],
+      "attributes": [
+        "SprintSpeed",
+        "Acceleration",
+        "Positioning",
+        "Crossing",
+        "ShortPassing",
+        "Reactions",
+        "BallControl",
+        "Dribbling",
+        "Interceptions"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "attacking_wingback",
+      "extraVsPosition": [
+        "Acceleration",
+        "Positioning",
+        "ShortPassing",
+        "Dribbling",
+        "Interceptions"
+      ]
+    },
+    {
+      "id": "inverted_wingback",
+      "name": "Inverted Wingback",
+      "positions": [
+        "RB",
+        "LB"
+      ],
+      "attributes": [
+        "Agility",
+        "Reactions",
+        "BallControl",
+        "Dribbling",
+        "Interceptions",
+        "DefAwareness",
+        "StandingTackle",
+        "Stamina",
+        "Strength"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "inverted_wingback",
+      "extraVsPosition": [
+        "Agility",
+        "Dribbling",
+        "Interceptions",
+        "Strength"
+      ]
+    },
+    {
+      "id": "falseback",
+      "name": "Falseback",
+      "positions": [
+        "RB",
+        "LB"
+      ],
+      "attributes": [
+        "Vision",
+        "LongPassing",
+        "ShortPassing",
+        "Composure",
+        "BallControl",
+        "Interceptions",
+        "DefAwareness",
+        "SlidingTackle",
+        "Stamina"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "falseback",
+      "extraVsPosition": [
+        "Vision",
+        "LongPassing",
+        "ShortPassing",
+        "Composure",
+        "Interceptions"
+      ]
+    },
+    {
+      "id": "defender",
+      "name": "Defender",
+      "positions": [
+        "CB"
+      ],
+      "attributes": [
+        "SprintSpeed",
+        "Balance",
+        "Composure",
+        "Heading",
+        "DefAwareness",
+        "SlidingTackle",
+        "Jumping",
+        "Strength",
+        "Aggression"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "defender",
+      "extraVsPosition": [
+        "SprintSpeed",
+        "Balance",
+        "Composure",
+        "SlidingTackle"
+      ]
+    },
+    {
+      "id": "stopper",
+      "name": "Stopper",
+      "positions": [
+        "CB"
+      ],
+      "attributes": [
+        "SprintSpeed",
+        "ShotPower",
+        "Balance",
+        "Reactions",
+        "DefAwareness",
+        "StandingTackle",
+        "Jumping",
+        "Strength",
+        "Aggression"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "stopper",
+      "extraVsPosition": [
+        "SprintSpeed",
+        "ShotPower",
+        "Balance",
+        "Reactions"
+      ]
+    },
+    {
+      "id": "ball_playing_defender",
+      "name": "Ball-Playing Defender",
+      "positions": [
+        "CB"
+      ],
+      "attributes": [
+        "LongPassing",
+        "ShortPassing",
+        "Reactions",
+        "Composure",
+        "BallControl",
+        "Dribbling",
+        "Interceptions",
+        "DefAwareness",
+        "StandingTackle"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "ball_playing_defender",
+      "extraVsPosition": [
+        "LongPassing",
+        "ShortPassing",
+        "Reactions",
+        "Composure",
+        "BallControl",
+        "Dribbling"
+      ]
+    },
+    {
+      "id": "wide_back",
+      "name": "Wide Back",
+      "positions": [
+        "CB"
+      ],
+      "attributes": [
+        "SprintSpeed",
+        "Acceleration",
+        "ShortPassing",
+        "Agility",
+        "Interceptions",
+        "DefAwareness",
+        "SlidingTackle",
+        "Stamina",
+        "Strength"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "wide_back",
+      "extraVsPosition": [
+        "SprintSpeed",
+        "Acceleration",
+        "ShortPassing",
+        "Agility",
+        "SlidingTackle",
+        "Stamina"
+      ]
+    },
+    {
+      "id": "holding",
+      "name": "Holding",
+      "positions": [
+        "CDM"
+      ],
+      "attributes": [
+        "SprintSpeed",
+        "ShotPower",
+        "LongPassing",
+        "Agility",
+        "Interceptions",
+        "DefAwareness",
+        "StandingTackle",
+        "Strength",
+        "Aggression"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "holding",
+      "extraVsPosition": [
+        "SprintSpeed",
+        "ShotPower",
+        "Agility"
+      ]
+    },
+    {
+      "id": "deep_lying_playmaker",
+      "name": "Deep-Lying Playmaker",
+      "positions": [
+        "CDM"
+      ],
+      "attributes": [
+        "LongShots",
+        "Vision",
+        "Crossing",
+        "LongPassing",
+        "ShortPassing",
+        "Reactions",
+        "Composure",
+        "BallControl",
+        "DefAwareness"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "deep_lying_playmaker",
+      "extraVsPosition": [
+        "LongShots",
+        "Crossing",
+        "Reactions",
+        "Composure"
+      ]
+    },
+    {
+      "id": "centre_half",
+      "name": "Centre Half",
+      "positions": [
+        "CDM"
+      ],
+      "attributes": [
+        "Balance",
+        "Interceptions",
+        "Heading",
+        "DefAwareness",
+        "StandingTackle",
+        "SlidingTackle",
+        "Stamina",
+        "Strength",
+        "Aggression"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "centre_half",
+      "extraVsPosition": [
+        "Balance",
+        "Heading",
+        "SlidingTackle",
+        "Stamina"
+      ]
+    },
+    {
+      "id": "wide_half",
+      "name": "Wide Half",
+      "positions": [
+        "CDM"
+      ],
+      "attributes": [
+        "SprintSpeed",
+        "Acceleration",
+        "Vision",
+        "ShortPassing",
+        "Agility",
+        "Reactions",
+        "BallControl",
+        "Interceptions",
+        "Stamina"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "wide_half",
+      "extraVsPosition": [
+        "SprintSpeed",
+        "Acceleration",
+        "Agility",
+        "Reactions",
+        "Stamina"
+      ]
+    },
+    {
+      "id": "box_crasher",
+      "name": "Box Crasher",
+      "positions": [
+        "CDM"
+      ],
+      "attributes": [
+        "Finishing",
+        "ShotPower",
+        "Reactions",
+        "BallControl",
+        "Interceptions",
+        "DefAwareness",
+        "Stamina",
+        "Strength",
+        "Aggression"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "box_crasher",
+      "extraVsPosition": [
+        "Finishing",
+        "ShotPower",
+        "Reactions",
+        "Stamina"
+      ]
+    },
+    {
+      "id": "holding",
+      "name": "Holding",
+      "positions": [
+        "CM"
+      ],
+      "attributes": [
+        "ShortPassing",
+        "Reactions",
+        "BallControl",
+        "Interceptions",
+        "DefAwareness",
+        "StandingTackle",
+        "Stamina",
+        "Strength",
+        "Aggression"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "holding",
+      "extraVsPosition": [
+        "Reactions",
+        "Interceptions",
+        "DefAwareness",
+        "StandingTackle",
+        "Stamina",
+        "Strength",
+        "Aggression"
+      ]
+    },
+    {
+      "id": "deep_lying_playmaker",
+      "name": "Deep-Lying Playmaker",
+      "positions": [
+        "CM"
+      ],
+      "attributes": [
+        "Finishing",
+        "LongShots",
+        "Vision",
+        "LongPassing",
+        "ShortPassing",
+        "Balance",
+        "Composure",
+        "Interceptions",
+        "DefAwareness"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "deep_lying_playmaker",
+      "extraVsPosition": [
+        "Balance",
+        "Composure",
+        "Interceptions",
+        "DefAwareness"
+      ]
+    },
+    {
+      "id": "box_to_box",
+      "name": "Box-to-Box",
+      "positions": [
+        "CM"
+      ],
+      "attributes": [
+        "SprintSpeed",
+        "ShotPower",
+        "LongShots",
+        "LongPassing",
+        "BallControl",
+        "Dribbling",
+        "Interceptions",
+        "StandingTackle",
+        "Stamina"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "box_to_box",
+      "extraVsPosition": [
+        "SprintSpeed",
+        "ShotPower",
+        "Interceptions",
+        "StandingTackle",
+        "Stamina"
+      ]
+    },
+    {
+      "id": "playmaker",
+      "name": "Playmaker",
+      "positions": [
+        "CM"
+      ],
+      "attributes": [
+        "Finishing",
+        "Positioning",
+        "LongShots",
+        "Vision",
+        "LongPassing",
+        "ShortPassing",
+        "Agility",
+        "Reactions",
+        "BallControl"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "playmaker",
+      "extraVsPosition": [
+        "Agility",
+        "Reactions"
+      ]
+    },
+    {
+      "id": "half_winger",
+      "name": "Half Winger",
+      "positions": [
+        "CM"
+      ],
+      "attributes": [
+        "SprintSpeed",
+        "Acceleration",
+        "Positioning",
+        "Crossing",
+        "LongPassing",
+        "Reactions",
+        "BallControl",
+        "Dribbling",
+        "Stamina"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "half_winger",
+      "extraVsPosition": [
+        "SprintSpeed",
+        "Acceleration",
+        "Crossing",
+        "Reactions",
+        "Stamina"
+      ]
+    },
+    {
+      "id": "classic_10",
+      "name": "Classic 10",
+      "positions": [
+        "CAM"
+      ],
+      "attributes": [
+        "Acceleration",
+        "LongShots",
+        "Vision",
+        "Crossing",
+        "ShortPassing",
+        "Agility",
+        "Balance",
+        "Composure",
+        "BallControl"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "classic_10",
+      "extraVsPosition": [
+        "Acceleration",
+        "Crossing",
+        "Balance",
+        "Composure"
+      ]
+    },
+    {
+      "id": "playmaker_cam",
+      "name": "Playmaker",
+      "positions": [
+        "CAM"
+      ],
+      "attributes": [
+        "SprintSpeed",
+        "ShotPower",
+        "LongShots",
+        "Vision",
+        "LongPassing",
+        "ShortPassing",
+        "Balance",
+        "Composure",
+        "Dribbling"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "playmaker",
+      "extraVsPosition": [
+        "SprintSpeed",
+        "ShotPower",
+        "Balance",
+        "Composure"
+      ]
+    },
+    {
+      "id": "half_winger_cam",
+      "name": "Half Winger",
+      "positions": [
+        "CAM"
+      ],
+      "attributes": [
+        "SprintSpeed",
+        "Acceleration",
+        "Vision",
+        "Crossing",
+        "Balance",
+        "Reactions",
+        "BallControl",
+        "Dribbling",
+        "Stamina"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "half_winger",
+      "extraVsPosition": [
+        "SprintSpeed",
+        "Acceleration",
+        "Crossing",
+        "Balance",
+        "Reactions",
+        "Stamina"
+      ]
+    },
+    {
+      "id": "shadow_striker",
+      "name": "Shadow Striker",
+      "positions": [
+        "CAM"
+      ],
+      "attributes": [
+        "Acceleration",
+        "Finishing",
+        "Positioning",
+        "ShotPower",
+        "Volleys",
+        "Reactions",
+        "BallControl",
+        "Dribbling",
+        "Heading"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "shadow_striker",
+      "extraVsPosition": [
+        "Acceleration",
+        "ShotPower",
+        "Volleys",
+        "Reactions",
+        "Heading"
+      ]
+    },
+    {
+      "id": "winger",
+      "name": "Winger",
+      "positions": [
+        "LM",
+        "RM"
+      ],
+      "attributes": [
+        "SprintSpeed",
+        "Acceleration",
+        "Crossing",
+        "Curve",
+        "Agility",
+        "Balance",
+        "BallControl",
+        "Dribbling",
+        "Stamina"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "winger",
+      "extraVsPosition": [
+        "SprintSpeed",
+        "Curve",
+        "Agility",
+        "Balance",
+        "Stamina"
+      ]
+    },
+    {
+      "id": "wide_playmaker",
+      "name": "Wide Playmaker",
+      "positions": [
+        "LM",
+        "RM"
+      ],
+      "attributes": [
+        "LongShots",
+        "Vision",
+        "Crossing",
+        "LongPassing",
+        "ShortPassing",
+        "Reactions",
+        "Composure",
+        "BallControl",
+        "Strength"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "wide_playmaker",
+      "extraVsPosition": [
+        "LongShots",
+        "Vision",
+        "Reactions",
+        "Composure",
+        "Strength"
+      ]
+    },
+    {
+      "id": "wide_midfielder",
+      "name": "Wide Midfielder",
+      "positions": [
+        "LM",
+        "RM"
+      ],
+      "attributes": [
+        "SprintSpeed",
+        "Acceleration",
+        "Crossing",
+        "LongPassing",
+        "Reactions",
+        "BallControl",
+        "Interceptions",
+        "SlidingTackle",
+        "Stamina"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "wide_midfielder",
+      "extraVsPosition": [
+        "SprintSpeed",
+        "Reactions",
+        "Interceptions",
+        "SlidingTackle",
+        "Stamina"
+      ]
+    },
+    {
+      "id": "inside_forward",
+      "name": "Inside Forward",
+      "positions": [
+        "LM",
+        "RM"
+      ],
+      "attributes": [
+        "Acceleration",
+        "Finishing",
+        "Positioning",
+        "LongShots",
+        "Volleys",
+        "Reactions",
+        "BallControl",
+        "Dribbling",
+        "Heading"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "inside_forward",
+      "extraVsPosition": [
+        "Positioning",
+        "LongShots",
+        "Volleys",
+        "Reactions",
+        "Heading"
+      ]
+    },
+    {
+      "id": "winger_rwlw",
+      "name": "Winger",
+      "positions": [
+        "RW",
+        "LW"
+      ],
+      "attributes": [
+        "SprintSpeed",
+        "Acceleration",
+        "Crossing",
+        "Curve",
+        "Agility",
+        "BallControl",
+        "Dribbling",
+        "Interceptions",
+        "Stamina"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "winger",
+      "extraVsPosition": [
+        "SprintSpeed",
+        "Curve",
+        "Interceptions",
+        "Stamina"
+      ]
+    },
+    {
+      "id": "wide_playmaker_rwlw",
+      "name": "Wide Playmaker",
+      "positions": [
+        "RW",
+        "LW"
+      ],
+      "attributes": [
+        "Positioning",
+        "LongShots",
+        "Vision",
+        "Crossing",
+        "LongPassing",
+        "ShortPassing",
+        "Agility",
+        "Composure",
+        "BallControl"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "wide_playmaker",
+      "extraVsPosition": [
+        "Positioning",
+        "LongPassing",
+        "Composure"
+      ]
+    },
+    {
+      "id": "inside_forward_rwlw",
+      "name": "Inside Forward",
+      "positions": [
+        "RW",
+        "LW"
+      ],
+      "attributes": [
+        "Acceleration",
+        "Finishing",
+        "Positioning",
+        "LongShots",
+        "Volleys",
+        "Agility",
+        "Balance",
+        "Reactions",
+        "BallControl"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "inside_forward",
+      "extraVsPosition": [
+        "Positioning",
+        "Volleys",
+        "Balance",
+        "Reactions"
+      ]
+    },
+    {
+      "id": "advanced_forward",
+      "name": "Advanced Forward",
+      "positions": [
+        "ST"
+      ],
+      "attributes": [
+        "SprintSpeed",
+        "Finishing",
+        "Positioning",
+        "ShotPower",
+        "LongShots",
+        "ShortPassing",
+        "Balance",
+        "Stamina",
+        "Aggression"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "advanced_forward",
+      "extraVsPosition": [
+        "SprintSpeed",
+        "ShortPassing",
+        "Balance",
+        "Stamina",
+        "Aggression"
+      ]
+    },
+    {
+      "id": "poacher",
+      "name": "Poacher",
+      "positions": [
+        "ST"
+      ],
+      "attributes": [
+        "Acceleration",
+        "Finishing",
+        "Positioning",
+        "ShotPower",
+        "Volleys",
+        "Agility",
+        "Reactions",
+        "Interceptions",
+        "Aggression"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "poacher",
+      "extraVsPosition": [
+        "Acceleration",
+        "Agility",
+        "Reactions",
+        "Interceptions",
+        "Aggression"
+      ]
+    },
+    {
+      "id": "target_forward",
+      "name": "Target Forward",
+      "positions": [
+        "ST"
+      ],
+      "attributes": [
+        "Positioning",
+        "ShotPower",
+        "ShortPassing",
+        "Agility",
+        "Balance",
+        "Composure",
+        "BallControl",
+        "Heading",
+        "Strength"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "target_forward",
+      "extraVsPosition": [
+        "ShortPassing",
+        "Agility",
+        "Balance",
+        "Composure"
+      ]
+    },
+    {
+      "id": "false_9",
+      "name": "False 9",
+      "positions": [
+        "ST"
+      ],
+      "attributes": [
+        "Acceleration",
+        "Positioning",
+        "ShotPower",
+        "LongShots",
+        "Vision",
+        "LongPassing",
+        "ShortPassing",
+        "BallControl",
+        "Dribbling"
+      ],
+      "roleFamiliarity": true,
+      "baseRole": "false_9",
+      "extraVsPosition": [
+        "Acceleration",
+        "Vision",
+        "LongPassing",
+        "ShortPassing"
+      ]
+    }
+  ],
+  "_issues": [],
+  "_fix": "false_9: 2. attribute 'ofan' → Positioning (Buğra, FIT-3 prompt); backups/fit-3-development-plans-seed.py",
+  "growthVerified": false
+}

@@ -8,7 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -27,6 +29,7 @@ public class GrowthProjector {
     private static final int MAX_ATTR = 99;
     private static final Set<Attr> PHYSICAL = Set.of(Attr.ACCELERATION, Attr.SPRINT_SPEED, Attr.AGILITY, Attr.BALANCE, Attr.JUMPING, Attr.STAMINA, Attr.STRENGTH);
     private static final Set<Attr> HARD_TO_TRAIN = Set.of(Attr.ACCELERATION, Attr.SPRINT_SPEED, Attr.AGILITY, Attr.BALANCE, Attr.JUMPING);
+    private static final Set<Attr> GOALKEEPING = Set.of(Attr.GK_DIVING, Attr.GK_HANDLING, Attr.GK_KICKING, Attr.GK_POSITIONING, Attr.GK_REFLEXES);
 
     @Getter
     @Setter
@@ -50,6 +53,10 @@ public class GrowthProjector {
         private double declineBase = 1.0;
         private double declineStep = 0.4;
         private double ovrPerPhysical = 0.6;
+        /** FIT-3 madde 9 (verified:false): mevki/rol planında sezon kazancı bütçesinin plan attribute'larına giden payı; kalanı diğerlerine eşit. */
+        private double planShare = 0.7;
+        /** FIT-3 madde 9 (verified:false): rol planı Role+ ailesini kaç sezonda bir kademe artırır (Role+ → Role++). */
+        private int familiaritySeasonsPerLevel = 1;
     }
 
     public record Projection(int projectedRating, FitPlayer grown) {
@@ -79,6 +86,40 @@ public class GrowthProjector {
                 .valueEur(player.getValueEur()).gender(player.getGender()).preferredFoot(player.getPreferredFoot()).weakFoot(player.getWeakFoot())
                 .skillMoves(player.getSkillMoves()).heightCm(player.getHeightCm()).roleFamiliarity(player.getRoleFamiliarity()).build();
         return new Projection(projected, grown);
+    }
+
+    /**
+     * FIT-3 madde 9: plan farkındalıklı bir sezon. Plan boşsa (Dengeli) {@link #project(FitPlayer)} aynen. Planlıysa sezon bütçesi
+     * (kazanç × ilgili attribute sayısı; saha planında kaleci attribute'ları hariç) `planShare` ile plana, kalanı diğerlerine eşit bölünür.
+     * Hız grubu 0,3× ve 99 tavanı aynen; düşüş yaşında plan etkisizdir. projectedRating bugünkü tanım (OVR + kazanç); mevki OVR etkisi
+     * çağıran tarafta position-overall-weights ile hesaplanır.
+     */
+    public Projection project(FitPlayer player, Collection<Attr> plan) {
+        if (plan.isEmpty() || physicalDecline(player) > 0) {
+            return project(player);
+        }
+        int gain = seasonGain(player);
+        if (gain <= 0) {
+            return new Projection(player.getOverall(), player);
+        }
+        boolean goalkeeperPlan = plan.stream().anyMatch(GOALKEEPING::contains);
+        List<Attr> relevant = player.getAttrs().keySet().stream().filter((a) -> goalkeeperPlan || !GOALKEEPING.contains(a)).toList();
+        long inPlan = relevant.stream().filter(plan::contains).count();
+        long others = relevant.size() - inPlan;
+        double budget = (double) gain * relevant.size();
+        double perPlan = inPlan == 0 ? 0 : config.getPlanShare() * budget / inPlan;
+        double perOther = others == 0 ? 0 : (1 - config.getPlanShare()) * budget / others;
+        Map<Attr, Integer> attrs = new EnumMap<>(Attr.class);
+        player.getAttrs().forEach((attr, value) -> {
+            double base = !relevant.contains(attr) ? 0 : plan.contains(attr) ? perPlan : perOther;
+            attrs.put(attr, Math.min(MAX_ATTR, value + (int) Math.round(base * (HARD_TO_TRAIN.contains(attr) ? config.getHardToTrain() : 1.0))));
+        });
+        int projected = Math.min(MAX_ATTR, player.getOverall() + gain);
+        return new Projection(projected, copy(player, attrs, projected));
+    }
+
+    public Config config() {
+        return config;
     }
 
     private int physicalDecline(FitPlayer player) {
