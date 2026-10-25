@@ -2,6 +2,7 @@ target/
 *.iml
 .idea/
 .vscode/
+.DS_Store
 *.log
 .env
 ml-service/.venv/
