@@ -140,6 +140,13 @@ public class DevelopmentRecommender {
                 option(player, plan, position, rolesOf(plan.baseRole(), position), balanced2, null, academySeasons).ifPresent(options::add);
             }
         }
+        if (Objects.nonNull(advice) && Objects.nonNull(advice.getConversion())) {
+            String position = advice.getConversion().getPosition();
+            plans.positionPlan(position).flatMap((plan) -> option(player, plan, position, rolesAt(position), balanced2, null, academySeasons)).ifPresent(options::add);
+        }
+        // GROWTH-CAL: kanat/bek hedefinin tarafı FIT-3 taraf kuralıyla (en iyi mevki); karşı taraf seçenekleri çıkar. Takımın zayıf slot seçenekleri
+        // filtrelenmez (slot doldurma önerisi kaybolmasın); en iyi mevki listede değilse filtre yok (listedeki bütün kanat seçenekleri düşmesin).
+        List<Option> sided = new ArrayList<>(preferSide(options, sideTarget(Objects.isNull(advice) ? null : advice.getBestOverallPosition(), player.getPositions())));
         for (WeakSlot slot : slots) {
             if (Objects.equals(slot.playerId(), player.getId()) || Objects.isNull(slot.roleId())) {
                 continue;
@@ -149,14 +156,8 @@ public class DevelopmentRecommender {
                 continue;
             }
             plans.rolePlan(role.getBaseRole(), slot.position()).flatMap((plan) -> option(player, plan, slot.position(), List.of(role), balanced2,
-                    Objects.isNull(slot.playerId()) ? null : byId.get(slot.playerId()), academySeasons)).ifPresent(options::add);
+                    Objects.isNull(slot.playerId()) ? null : byId.get(slot.playerId()), academySeasons)).ifPresent(sided::add);
         }
-        if (Objects.nonNull(advice) && Objects.nonNull(advice.getConversion())) {
-            String position = advice.getConversion().getPosition();
-            plans.positionPlan(position).flatMap((plan) -> option(player, plan, position, rolesAt(position), balanced2, null, academySeasons)).ifPresent(options::add);
-        }
-        // GROWTH-CAL: kanat/bek hedefinin tarafı FIT-3 taraf kuralıyla (en iyi mevki); karşı taraf seçenekleri çıkar.
-        List<Option> sided = preferSide(options, Objects.isNull(advice) ? null : advice.getBestOverallPosition());
         List<Option> distinct = sided.stream().collect(Collectors.toMap((o) -> o.planKey() + "@" + o.position() + "@" + o.roleId(), Function.identity(), (a, b) -> a))
                 .values().stream().sorted(Comparator.comparingDouble(Option::gain).reversed()).toList();
         Decision decision = decide(distinct, config.getMinGain(), config.getClearTargetGap());
@@ -249,6 +250,11 @@ public class DevelopmentRecommender {
         Set<String> otherSide = LEFT.contains(bestPosition) ? RIGHT : LEFT;
         String group = positionGroup(bestPosition);
         return options.stream().filter((o) -> !(positionGroup(o.position()).equals(group) && otherSide.contains(o.position()))).toList();
+    }
+
+    /** Taraf filtresinin hedefi: en iyi mevki oyuncunun listelediği mevkilerden biriyse o; değilse filtre yok (null). */
+    public static String sideTarget(String bestPosition, List<String> listedPositions) {
+        return Objects.nonNull(bestPosition) && Objects.nonNull(listedPositions) && listedPositions.contains(bestPosition) ? bestPosition : null;
     }
 
     /** Eşik kuralı tek başına (net hedef aranmaz). */

@@ -63,6 +63,9 @@ class DevelopmentRecommendationTest {
         assertThat(DevelopmentRecommender.decide(right, 2.0, 5.0).chosen().position()).isEqualTo("RW");
         assertThat(DevelopmentRecommender.preferSide(both, "CAM")).as("en iyi mevki kanatta değilse dokunulmaz").isEqualTo(both);
         assertThat(DevelopmentRecommender.preferSide(both, null)).isEqualTo(both);
+        // En iyi mevki listede değilse (ayna taraf seçilmiş) filtre uygulanmaz: listedeki kanat seçenekleri düşmez.
+        assertThat(DevelopmentRecommender.sideTarget("LW", List.of("RW", "RM"))).isNull();
+        assertThat(DevelopmentRecommender.sideTarget("RW", List.of("RW", "RM"))).isEqualTo("RW");
     }
 
     /** Karar: 2 sezon sonraki en iyi rol, farklı mevkideki ikinci en iyiden ≥ 5 öndeyse "net hedef" → o rol planı; değilse Dengeli + gerekçe. */

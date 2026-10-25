@@ -133,12 +133,7 @@ public class AcademyAdvisor {
     /**
      * Oyuncu kimliği → satır önerisi. promotable: altyapı oyuncusu ("A takıma al" yalnız onlara). Sahiplik çağıranda (requireOwned) ve
      * squadPlayerIds'te doğrulanır; kimlikler çağıranın bu kariyerden okuduğu oyunculardır.
-     */
-    public Map<Long, Advice> advise(Long userId, Long careerId, List<Long> ids, boolean promotable) {
-        return advise(userId, careerId, ids, promotable, Timing.NONE);
-    }
-
-    /**
+     *
      * GROWTH-CAL madde 2: A takıma alma en az minPromotionAge (16) yaşında. Altında öneri yok, tarihli bilgi notu var (kıyas o tarihteki tahminle).
      * Kıyas aynı ufukta: gencin tahmini Güç'ü ile yedeğin aynı ufuktaki tahmini Güç'ü (yedeğin gelişimi ve yaşlanması dahil). Masa işi ve "Hazır"
      * durumu bu öneriden.
@@ -218,12 +213,7 @@ public class AcademyAdvisor {
                 .map((p) -> new Backup(p.getName(), best(projector.project(p, plans.general(), seasons).grown(), position))).toList();
     }
 
-    /** ACADEMY-b paneli: Ne yapmalıyım? · Hangi mevkide? · Takımdaki yeri. Hepsi tahmin. */
-    public Optional<Detail> detail(Long userId, Long careerId, Long playerId) {
-        return detail(userId, careerId, playerId, false, Timing.NONE);
-    }
-
-    /** academy: altyapı oyuncusu (16 yaşına ya da 1 sezona kadar altyapı tavanı, sonra A takım); kadro genci baştan A takım. */
+    /** ACADEMY-b paneli: Ne yapmalıyım? · Hangi mevkide? · Takımdaki yeri. Hepsi tahmin. academy: altyapı oyuncusu (16 yaşına ya da 1 sezona kadar altyapı tavanı, sonra A takım); kadro genci baştan A takım. */
     public Optional<Detail> detail(Long userId, Long careerId, Long playerId, boolean academy, Timing timing) {
         Context ctx = context(userId, careerId, List.of(playerId), academy ? PROMOTE_SEASONS : 0);
         if (ctx.targets().isEmpty()) {
@@ -349,7 +339,6 @@ public class AcademyAdvisor {
         return long_ && stalled ? "WAITING" : "GROWING";
     }
 
-    /** İlk geçtiği sezon (1'den); eşik yoksa 1 (boş yer); hiç geçmezse null. */
     /** Aynı ufukta: sezon i'de gencin Güç'ü, rakibin aynı sezondaki tahmini Güç'ünü geçiyorsa; rakip yoksa 1 (boş yer); geçmezse null. */
     public static Integer seasonToPass(List<Double> strengths, List<Double> thresholds) {
         if (Objects.isNull(thresholds)) {
@@ -363,6 +352,7 @@ public class AcademyAdvisor {
         return null;
     }
 
+    /** Sabit eşik (rakip değişmez sayılırsa): ilk geçtiği sezon; eşik yoksa 1 (boş yer); hiç geçmezse null. */
     public static Integer seasonToPass(List<Double> strengths, Double threshold) {
         if (Objects.isNull(threshold)) {
             return 1;
