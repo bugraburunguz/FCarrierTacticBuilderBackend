@@ -48,6 +48,42 @@ class AcademyIntegrationTest {
     private IngestionService ingestionService;
     @Autowired
     private JdbcTemplate jdbc;
+    @Autowired
+    private com.fcareer.career.academy.AcademyProperties academyProperties;
+
+    /**
+     * Karar (2026-10-25): "Bekliyor" eşiği 12 ay (config, verified:false). Tek içe aktarmada "OVR artmadı" ölçülemez: Bekliyor hiç gösterilmez,
+     * yalnız Hazır/Gelişiyor. İkinci içe aktarmada OVR artmamışsa eşiği geçen (Hazır olmayan) oyuncu Bekliyor olur. Eşik testte 1 aya indirilir
+     * (fixture'da 12 ayı geçen tek oyuncu zaten Hazır).
+     */
+    @Test
+    void waitingNeedsTwoImportsAndTheMonthsThreshold() throws Exception {
+        assertThat(academyProperties.getWaitingMonths()).as("config değeri").isEqualTo(12);
+        int original = academyProperties.getWaitingMonths();
+        academyProperties.setWaitingMonths(1);
+        try {
+            String token = support.register();
+            long careerId = support.premiumCareer(token, null);
+            importFixture(token, careerId);
+            JsonNode once = data(token, "/api/v1/careers/" + careerId + "/academy", 200).get("players");
+            once.forEach((p) -> assertThat(p.path("status").asText()).as(p.path("name").asText()).isIn("READY", "GROWING"));
+
+            importFixture(token, careerId);
+            JsonNode twice = data(token, "/api/v1/careers/" + careerId + "/academy", 200).get("players");
+            List<String> waiting = new ArrayList<>();
+            twice.forEach((p) -> {
+                if (p.path("status").asText().equals("WAITING")) {
+                    waiting.add(p.path("name").asText());
+                }
+                if (p.path("promote").isNull()) {
+                    assertThat(p.path("status").asText()).as("OVR aynı, eşik geçildi: " + p.path("name").asText()).isEqualTo("WAITING");
+                }
+            });
+            assertThat(waiting).isNotEmpty();
+        } finally {
+            academyProperties.setWaitingMonths(original);
+        }
+    }
 
     private CareerTestSupport support;
 

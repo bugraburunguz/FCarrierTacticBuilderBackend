@@ -34,6 +34,11 @@ spring:
       max-request-size: 66MB
 
 fcareer:
+  academy:
+    # ACADEMY-b kararı (verified:false): "Bekliyor" = altyapıda en az bu kadar ay ve son içe aktarmalarda OVR artışı yok.
+    # Tek içe aktarmada artış ölçülemez: Bekliyor gösterilmez (yalnız Hazır/Gelişiyor).
+    waiting-months: 12
+    stall-imports: 2
   fit:
     # FIT-3 kararı (verified:false): öneri dışı roller ("baseRole|Focus"). Dönüşüm ve gelişim önerisi hedefi olamaz; Lab'da elle seçilebilir,
     # uyum hesabında kalır. Vektör kalibrasyonundan sonra listeden çıkar.
