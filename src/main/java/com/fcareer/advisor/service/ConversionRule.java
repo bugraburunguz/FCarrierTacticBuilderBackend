@@ -28,14 +28,17 @@ public final class ConversionRule {
         Set<String> zone = new HashSet<>(listed);
         listed.forEach((p) -> Optional.ofNullable(SideChoice.mirror(p)).ifPresent(zone::add));
         Optional<PositionOption> from = options.stream().filter((o) -> zone.contains(o.getPosition())).max(Comparator.comparingDouble(PositionOption::getScore));
-        Optional<PositionOption> to = options.stream().filter((o) -> !zone.contains(o.getPosition())).max(Comparator.comparingDouble(PositionOption::getScore));
+        // Önce EA OVR koşulu, sonra en yüksek Güç (en iyi mevki OVR'ye takılırsa ikinci aday denenir).
+        Optional<PositionOption> to = options.stream().filter((o) -> !zone.contains(o.getPosition()))
+                .filter((o) -> Objects.nonNull(overalls.get(o.getPosition())) && overalls.get(o.getPosition()) >= overall - maxOverallDrop)
+                .max(Comparator.comparingDouble(PositionOption::getScore));
         if (from.isEmpty() || to.isEmpty()) {
             return Optional.empty();
         }
         PositionOption a = from.get();
         PositionOption b = to.get();
         Integer overallAt = overalls.get(b.getPosition());
-        if (b.getScore() - a.getScore() < gain || Objects.isNull(overallAt) || overallAt < overall - maxOverallDrop) {
+        if (b.getScore() - a.getScore() < gain) {
             return Optional.empty();
         }
         Optional<String> plan = positionPlanName.apply(b.getPosition());

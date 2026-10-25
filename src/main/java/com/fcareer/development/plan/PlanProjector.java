@@ -43,7 +43,9 @@ public class PlanProjector {
                 continue;
             }
             GrowthProjector.Projection step = growth.project(current, plan.attributes());
-            overall = Math.min(MAX_OVERALL, Math.max(1, overall + formulaDelta(current, step.grown())));
+            // Dengeli ile aynı tavan: potansiyel (bilinmiyorsa 99).
+            int cap = Objects.isNull(player.getPotential()) ? MAX_OVERALL : Math.min(MAX_OVERALL, Math.max(overall, player.getPotential()));
+            overall = Math.min(cap, Math.max(1, overall + formulaDelta(current, step.grown())));
             current = withOverall(step.grown(), overall, familiarity(player, plan, season));
         }
         return new PlanProjection(current, overall);

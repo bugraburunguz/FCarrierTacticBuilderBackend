@@ -44,7 +44,7 @@ public class DevelopmentController {
     /** FIT-3 madde 11: 23 yaş ve altı, potansiyeli OVR'den ≥ 5 yüksek oyuncular için plan önerisi (tahmin · kalibre edilmedi). Sahiplik servis katmanında. */
     @PostMapping("/careers/{careerId}/development/recommendations")
     public List<DevelopmentRecommender.PlayerRecommendation> recommendations(@AuthenticationPrincipal AuthUser user, @PathVariable Long careerId,
-                                                                            @RequestBody(required = false) RecommendationRequest request) {
+                                                                            @jakarta.validation.Valid @RequestBody(required = false) RecommendationRequest request) {
         return recommender.recommend(user.id(), careerId, request == null ? List.of() : request.weakSlots());
     }
 

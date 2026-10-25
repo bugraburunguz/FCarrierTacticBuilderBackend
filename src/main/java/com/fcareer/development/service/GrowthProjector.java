@@ -90,7 +90,8 @@ public class GrowthProjector {
 
     /**
      * FIT-3 madde 9: plan farkındalıklı bir sezon. Plan boşsa (Dengeli) {@link #project(FitPlayer)} aynen. Planlıysa sezon bütçesi
-     * (kazanç × ilgili attribute sayısı; saha planında kaleci attribute'ları hariç) `planShare` ile plana, kalanı diğerlerine eşit bölünür.
+     * (kazanç × planın alanındaki attribute sayısı: saha planında saha, kaleci planında kaleci attribute'ları) `planShare` ile plana, kalanı alandaki
+     * diğerlerine eşit bölünür.
      * Hız grubu 0,3× ve 99 tavanı aynen; düşüş yaşında plan etkisizdir. projectedRating bugünkü tanım (OVR + kazanç); mevki OVR etkisi
      * çağıran tarafta position-overall-weights ile hesaplanır.
      */
@@ -103,7 +104,8 @@ public class GrowthProjector {
             return new Projection(player.getOverall(), player);
         }
         boolean goalkeeperPlan = plan.stream().anyMatch(GOALKEEPING::contains);
-        List<Attr> relevant = player.getAttrs().keySet().stream().filter((a) -> goalkeeperPlan || !GOALKEEPING.contains(a)).toList();
+        // Bütçe planın alanında: kaleci planı yalnız kaleci attribute'ları, saha planı yalnız saha attribute'ları.
+        List<Attr> relevant = player.getAttrs().keySet().stream().filter((a) -> goalkeeperPlan == GOALKEEPING.contains(a)).toList();
         long inPlan = relevant.stream().filter(plan::contains).count();
         long others = relevant.size() - inPlan;
         double budget = (double) gain * relevant.size();

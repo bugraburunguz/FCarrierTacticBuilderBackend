@@ -2,6 +2,7 @@ package com.fcareer.development.recommend;
 
 import com.fcareer.advisor.model.response.AdvisorResponses.PlayerPositionAdvice;
 import com.fcareer.advisor.service.PositionAdviceService;
+import com.fcareer.career.desk.SpoilerPolicy;
 import com.fcareer.career.service.CareerService;
 import com.fcareer.catalog.service.PlayerService;
 import com.fcareer.development.plan.DevelopmentPlans;
@@ -74,15 +75,20 @@ public class DevelopmentRecommender {
     private final DevelopmentPlans plans;
     private final PlanProjector projector;
     private final PositionAdviceService positionAdvice;
+    private final SpoilerPolicy spoilerPolicy;
 
     public List<PlayerRecommendation> recommend(Long userId, Long careerId, List<WeakSlot> weakSlots) {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
-        List<FitPlayer> players = playerService.fitPlayers(squad.playerIds(), squad.gameVersionId(), careerId);
+        // Spoiler (13 İlke 4): SCOUT_RANGE kariyerinde kesin potansiyel yerine bandın alt sınırı (kapsam ve tahmin ondan; baş boşluk geri hesaplanamaz).
+        boolean ranged = spoilerPolicy.ranged(careerId);
+        List<FitPlayer> players = playerService.fitPlayers(squad.playerIds(), squad.gameVersionId(), careerId).stream()
+                .map((p) -> ranged && Objects.nonNull(p.getPotential()) ? p.toBuilder().potential(SpoilerPolicy.low(p.getPotential())).build() : p).toList();
         Map<Long, FitPlayer> byId = players.stream().collect(Collectors.toMap(FitPlayer::getId, Function.identity(), (a, b) -> a));
         List<FitPlayer> candidates = players.stream().filter(this::inScope).toList();
         Map<Long, PlayerPositionAdvice> advice = positionAdvice.advise(candidates).stream()
                 .collect(Collectors.toMap(PlayerPositionAdvice::getPlayerId, Function.identity(), (a, b) -> a));
-        List<WeakSlot> slots = Objects.isNull(weakSlots) ? List.of() : weakSlots;
+        // Aynı slot iki kez gelirse tek hesap.
+        List<WeakSlot> slots = Objects.isNull(weakSlots) ? List.of() : weakSlots.stream().distinct().toList();
         List<PlayerRecommendation> out = candidates.stream().map((p) -> recommend(p, slots, byId, advice.get(p.getId()))).toList();
         log.info("Development recommendations careerId : {} candidates : {}", careerId, out.size());
         return out;
@@ -95,12 +101,11 @@ public class DevelopmentRecommender {
 
     private PlayerRecommendation recommend(FitPlayer player, List<WeakSlot> slots, Map<Long, FitPlayer> byId, PlayerPositionAdvice advice) {
         Plan balanced = plans.general();
-        FitPlayer balanced1 = projector.project(player, balanced, 1).grown();
         FitPlayer balanced2 = projector.project(player, balanced, SEASONS).grown();
         List<Option> options = new ArrayList<>();
         for (String position : player.getPositions()) {
             for (Plan plan : plans.rolePlans(position)) {
-                option(player, plan, position, rolesOf(plan.baseRole(), position), balanced1, balanced2, null).ifPresent(options::add);
+                option(player, plan, position, rolesOf(plan.baseRole(), position), balanced2, null).ifPresent(options::add);
             }
         }
         for (WeakSlot slot : slots) {
@@ -111,12 +116,12 @@ public class DevelopmentRecommender {
             if (Objects.isNull(role)) {
                 continue;
             }
-            plans.rolePlan(role.getBaseRole(), slot.position()).flatMap((plan) -> option(player, plan, slot.position(), List.of(role), balanced1, balanced2,
+            plans.rolePlan(role.getBaseRole(), slot.position()).flatMap((plan) -> option(player, plan, slot.position(), List.of(role), balanced2,
                     Objects.isNull(slot.playerId()) ? null : byId.get(slot.playerId()))).ifPresent(options::add);
         }
         if (Objects.nonNull(advice) && Objects.nonNull(advice.getConversion())) {
             String position = advice.getConversion().getPosition();
-            plans.positionPlan(position).flatMap((plan) -> option(player, plan, position, rolesAt(position), balanced1, balanced2, null)).ifPresent(options::add);
+            plans.positionPlan(position).flatMap((plan) -> option(player, plan, position, rolesAt(position), balanced2, null)).ifPresent(options::add);
         }
         List<Option> distinct = options.stream().collect(Collectors.toMap((o) -> o.planKey() + "@" + o.position() + "@" + o.roleId(), Function.identity(), (a, b) -> a))
                 .values().stream().sorted(Comparator.comparingDouble(Option::gain).reversed()).toList();
@@ -128,7 +133,7 @@ public class DevelopmentRecommender {
     }
 
     /** Plan, hedef mevkideki aday rollerden 2. sezonda en güçlüsünde değerlendirilir; Dengeli aynı rolde. */
-    private Optional<Option> option(FitPlayer player, Plan plan, String position, List<FitRole> roles, FitPlayer balanced1, FitPlayer balanced2, FitPlayer incumbent) {
+    private Optional<Option> option(FitPlayer player, Plan plan, String position, List<FitRole> roles, FitPlayer balanced2, FitPlayer incumbent) {
         if (roles.isEmpty()) {
             return Optional.empty();
         }

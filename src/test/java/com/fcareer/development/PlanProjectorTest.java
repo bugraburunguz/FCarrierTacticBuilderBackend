@@ -54,6 +54,13 @@ class PlanProjectorTest {
     }
 
     @Test
+    void plannedOverallNeverPassesPotential() {
+        // İnceleme: Dengeli OVR'yi potansiyelle sınırlıyor; planlı yol da aynı tavanı kullanmalı.
+        FitPlayer striker = player("ST").toBuilder().potential(70).build();
+        assertThat(projector.project(striker, plans.positionPlan("ST").orElseThrow(), 2).overall()).isLessThanOrEqualTo(70);
+    }
+
+    @Test
     void plannedOverallFollowsThePositionFormula() {
         FitPlayer striker = player("ST");
         int stPlan = projector.project(striker, plans.positionPlan("ST").orElseThrow(), 1).overall();

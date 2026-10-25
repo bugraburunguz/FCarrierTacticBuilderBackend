@@ -59,6 +59,16 @@ class GrowthPlanDistributionTest {
     }
 
     @Test
+    void goalkeeperPlanBudgetsOnlyGoalkeepingAttributes() {
+        // İnceleme: kaleci planı bütçesi 34 attribute'tan değil yalnız 5 kaleci attribute'undan (yoksa 3 attribute'a ~8× kazanç yığılıyordu).
+        // 23 yaş, 70→76: kazanç 2; bütçe 2 × 5 = 10; plan (3): round(0,7 × 10 / 3) = 2 · diğer kaleci (2): round(0,3 × 10 / 2) = 2 · saha: değişmez.
+        Map<Attr, Integer> grown = projector.project(player(23, 70, 76, 60), List.of(Attr.GK_DIVING, Attr.GK_HANDLING, Attr.GK_REFLEXES)).grown().getAttrs();
+        assertThat(grown.get(Attr.GK_DIVING)).isEqualTo(62);
+        assertThat(grown.get(Attr.GK_KICKING)).isEqualTo(62);
+        assertThat(grown.get(Attr.FINISHING)).isEqualTo(60);
+    }
+
+    @Test
     void planShareIsConfigurable() {
         GrowthProjector.Config config = new GrowthProjector.Config();
         config.setPlanShare(1.0);

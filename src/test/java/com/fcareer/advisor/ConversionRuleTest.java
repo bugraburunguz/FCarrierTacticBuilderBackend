@@ -50,6 +50,15 @@ class ConversionRuleTest {
     }
 
     @Test
+    void secondBestPositionIsUsedWhenTheBestFailsTheOverallCondition() {
+        // İnceleme: en yüksek Güç'lü mevki OVR eşiğine takılınca, eşikleri geçen ikinci mevki önerilir.
+        List<PositionOption> two = List.of(option("CDM", "Holding (Defend)", 80, false), option("CM", "Box to Box (Balanced)", 70, false),
+                option("LM", "Winger (Balanced)", 64, true));
+        Optional<Conversion> c = ConversionRule.find(two, List.of("LM"), Map.of("CDM", 66, "CM", 69, "LM", 70), 70, 5, 3, (pos) -> Optional.empty());
+        assertThat(c).map(Conversion::getPosition).contains("CM");
+    }
+
+    @Test
     void mirrorSideIsNotAConversion() {
         List<PositionOption> mirror = List.of(option("RM", "Winger (Balanced)", 75, false), option("LM", "Winger (Balanced)", 64, true));
         assertThat(ConversionRule.find(mirror, List.of("LM"), Map.of("RM", 70, "LM", 70), 70, 5, 3, (pos) -> Optional.empty())).isEmpty();
