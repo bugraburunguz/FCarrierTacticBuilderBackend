@@ -45,6 +45,13 @@ class DevelopmentPlanReportTest {
         assertThat(report.build().differences()).filteredOn((d) -> d.position().equals("GK")).allSatisfy((d) -> assertThat(d.extra()).isNotEmpty());
     }
 
+    /** Opt-in: `mvn test -Dtest=DevelopmentPlanReportTest -Dplan.report=true` → target/development-plan-report.md (Buğra'ya tablo). */
+    @Test
+    @org.junit.jupiter.api.condition.EnabledIfSystemProperty(named = "plan.report", matches = "true")
+    void writeReport() throws Exception {
+        java.nio.file.Files.writeString(java.nio.file.Path.of("target/development-plan-report.md"), report.markdown(report.build()));
+    }
+
     @Test
     void markdownListsTheMismatchTables() {
         String md = report.markdown(report.build());
