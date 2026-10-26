@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -29,16 +30,18 @@ public class GrowthRecentService {
     @Transactional(readOnly = true)
     public List<Row> recent(Long userId, Long careerId) {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
+        Map<Long, Long> eaIds = repository.eaIds(careerId, squad.ownedIds());
         List<GrowthTrackRepository.SnapshotRef> refs = repository.refs(careerId);
         int base = GrowthRecent.baseIndex(refs.stream().map(GrowthTrackRepository.SnapshotRef::gameDate).toList(), properties.getRecentWindowMonths());
-        if (base < 0) {
+        if (base < 0 || eaIds.isEmpty()) {
             return List.of();
         }
-        List<GrowthReport.Dated> chain = refs.subList(base, refs.size()).stream().map((r) -> repository.load(r.id()).orElseThrow())
+        // Arada silinen görüntü (kariyer silme, seyreltme) atlanır; görüntüler yalnız kadroya indirilir.
+        List<GrowthReport.Dated> chain = refs.subList(base, refs.size()).stream().flatMap((r) -> repository.load(r.id()).stream())
                 .map((s) -> new GrowthReport.Dated(s.gameDate(), GrowthSnapshotCodec.decode(s.data()))).toList();
-        Map<Long, GrowthRecent.Change> changes = GrowthRecent.compute(chain);
+        Map<Long, GrowthRecent.Change> changes = GrowthRecent.compute(GrowthRecent.only(chain, new HashSet<>(eaIds.values())));
         List<Row> rows = new ArrayList<>();
-        repository.eaIds(careerId, squad.ownedIds()).forEach((playerId, ea) -> {
+        eaIds.forEach((playerId, ea) -> {
             GrowthRecent.Change c = changes.get(ea);
             if (Objects.nonNull(c)) {
                 rows.add(new Row(playerId, c.months(), c.overallDelta(), c.matches()));

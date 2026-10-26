@@ -49,4 +49,19 @@ class GrowthRecentTest {
                 new GrowthReport.Dated(LocalDate.of(2027, 9, 2), List.of(player(10, 70, null, null))));
         assertThat(GrowthRecent.compute(chain).get(10L).months()).isEqualTo(1);
     }
+
+    @Test
+    void monthsRoundToTheNearestMonth() {
+        List<GrowthReport.Dated> chain = List.of(new GrowthReport.Dated(LocalDate.of(2027, 3, 20), List.of(player(10, 70, null, null))),
+                new GrowthReport.Dated(LocalDate.of(2027, 9, 19), List.of(player(10, 70, null, null))));
+        assertThat(GrowthRecent.compute(chain).get(10L).months()).as("6 aya bir gün eksik: 6, 5 değil").isEqualTo(6);
+    }
+
+    @Test
+    void onlyTheRequestedPlayersAreKept() {
+        List<GrowthReport.Dated> chain = List.of(new GrowthReport.Dated(NOW.minusMonths(3), List.of(player(10, 70, 4, 3), player(11, 80, 4, 4))),
+                new GrowthReport.Dated(NOW, List.of(player(10, 73, 20, 18), player(11, 79, 20, 10))));
+        assertThat(GrowthRecent.only(chain, java.util.Set.of(10L)).get(1).players()).extracting(TrackedPlayer::playerId).containsExactly(10L);
+        assertThat(GrowthRecent.compute(GrowthRecent.only(chain, java.util.Set.of(10L)))).containsOnlyKeys(10L);
+    }
 }
