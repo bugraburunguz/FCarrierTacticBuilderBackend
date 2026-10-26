@@ -200,6 +200,19 @@ class GrowthTrackIntegrationTest {
 
         String other = support.register();
         assertThat(mockMvc.perform(get(recent).header("Authorization", "Bearer " + other)).andReturn().getResponse().getStatus()).isEqualTo(404);
+
+        // Önbellek (career_id, data_version + görüntü listesi ve yazılma zamanı): hiçbiri değişmeden veri değişse de sonuç önbellekten (isabet kanıtı).
+        List<TrackedPlayer> higher = lower.stream().map((p) -> new TrackedPlayer(p.playerId(), p.teamId(), p.age(), p.position(), p.overall() + 3, p.potential(), p.form(),
+                p.leagueApps(), p.teamMatches(), p.matches(), p.attrs())).toList();
+        jdbc.update("UPDATE career_growth_snapshot SET data = ? WHERE id = ?", GrowthSnapshotCodec.encode(higher), id);
+        assertThat(support.json(get(recent), token).at("/data/0/overallDelta").asInt()).as("önbellekten").isEqualTo(2);
+        // Aynı ay yeniden yazım (upsert created_at = now(); içe aktarma sonra geri alınsa da sürüm artmaz): yeniden hesap.
+        jdbc.update("UPDATE career_growth_snapshot SET created_at = now() + INTERVAL '1 second' WHERE id = ?", id);
+        assertThat(support.json(get(recent), token).at("/data/0/overallDelta").asInt()).as("yeniden yazılan görüntü: yeniden hesap (taban 3 yüksek → −1)").isEqualTo(-1);
+        // Sürüm artınca da yeniden hesap.
+        jdbc.update("UPDATE career_growth_snapshot SET data = ? WHERE id = ?", GrowthSnapshotCodec.encode(lower), id);
+        jdbc.update("UPDATE career SET data_version = data_version + 1 WHERE id = ?", careerId);
+        assertThat(support.json(get(recent), token).at("/data/0/overallDelta").asInt()).as("yeni sürüm: yeniden hesap").isEqualTo(2);
     }
 
     /** Rapor örneği (GTR-a kabulü): boş olmayan çıktı target/'a yazılır. */
