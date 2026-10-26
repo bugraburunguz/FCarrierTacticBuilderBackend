@@ -61,10 +61,14 @@ public class GrowthTrackRepository {
                 (rs, i) -> new Snapshot(rs.getLong("id"), rs.getDate("game_date").toLocalDate(), rs.getBytes("data"))).stream().findFirst();
     }
 
-    /** GTR-b önbellek anahtarı: career.data_version (içe aktarma ve elle düzenlemede artar). */
-    public long dataVersion(long careerId) {
-        List<Long> version = jdbc.queryForList("SELECT data_version FROM career WHERE id = :c", Map.of("c", careerId), Long.class);
-        return version.isEmpty() || Objects.isNull(version.get(0)) ? 0 : version.get(0);
+    /**
+     * GTR-b önbellek anahtarının parçası: kariyerin en son görüntü yazımı (upsert created_at = now()). Aynı ayın görüntüsü yeniden yazılınca (içe aktarma
+     * sonra geri alınsa ve data_version artmasa da) değişir. Görüntü yoksa null.
+     */
+    public java.time.Instant lastWritten(long careerId) {
+        List<java.sql.Timestamp> at = jdbc.queryForList("SELECT max(created_at) FROM career_growth_snapshot WHERE career_id = :c", Map.of("c", careerId),
+                java.sql.Timestamp.class);
+        return at.isEmpty() || Objects.isNull(at.get(0)) ? null : at.get(0).toInstant();
     }
 
     /** GTR-b: base_player kimliği → görüntüdeki EA kimliği (resmi oyuncu ea_resource_id; bu kariyerin üretilmiş oyuncusu career_source_id). */
