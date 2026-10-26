@@ -286,16 +286,17 @@ public class DevelopmentRecommender {
             byKey.put(plan.key(), plan);
         }
         int balancedLoss = now - overallAt(balanced1, position);
+        double balancedStrengthLoss = round1(fitNow - roleFit.calculate(balanced1, target.role(), null, position).getCurrentFit());
         Optional<VeteranOption> chosen = chooseVeteran(options);
         if (chosen.isEmpty()) {
-            return balancedRecommendation(p, List.of(), p.getName() + " · Dengeli plan: plansız tahmini " + signed(balancedLoss) + " OVR · tahmin", "NO_OVERLAP",
-                    AgeGroup.VETERAN);
+            return balancedRecommendation(p, List.of(), p.getName() + " · Dengeli plan: plansız tahmini " + signed(balancedLoss) + " OVR / "
+                    + signedStrength(balancedStrengthLoss) + " Güç · tahmin", "NO_OVERLAP", AgeGroup.VETERAN);
         }
         FitPlayer balanced2 = projector.project(p, plans.general(), SEASONS).grown();
         // Rol listesi tek (mevcut rol), boş olamaz.
         Option option = option(p, byKey.get(chosen.get().planKey()), position, List.of(target.role()), balanced2, null, 0).orElseThrow();
         return new PlayerRecommendation(p.getId(), p.getName(), p.getAge(), p.getOverall(), false, option, List.of(option),
-                veteranText(p.getName(), balancedLoss, chosen.get()), true, "SLOW_DECLINE", AgeGroup.VETERAN.name());
+                veteranText(p.getName(), balancedLoss, balancedStrengthLoss, chosen.get()), true, "SLOW_DECLINE", AgeGroup.VETERAN.name());
     }
 
     /** Mevkideki OVR (mevki formülü; bilinmezse genel OVR). */
@@ -338,9 +339,17 @@ public class DevelopmentRecommender {
     }
 
     /** "Vardy · Plansız tahmini −3 OVR, ST · Poacher planıyla −1 (bitiricilik ve pozisyon alma korunur) · tahmin". */
-    public static String veteranText(String player, int balancedLoss, VeteranOption option) {
+    public static String veteranText(String player, int balancedLoss, double balancedStrengthLoss, VeteranOption option) {
         String kept = option.protectedAttrs().isEmpty() ? "" : " (" + String.join(" ve ", option.protectedAttrs()) + " korunur)";
-        return player + " · Plansız tahmini " + signed(balancedLoss) + " OVR, " + option.label() + " planıyla " + signed(option.ovrLoss()) + kept + " · tahmin";
+        return player + " · Plansız tahmini " + signed(balancedLoss) + " OVR / " + signedStrength(balancedStrengthLoss) + " Güç, " + option.label() + " planıyla "
+                + signed(option.ovrLoss()) + " OVR / " + signedStrength(option.strengthLoss()) + " Güç" + kept + " · tahmin";
+    }
+
+    /** Güç kaybı tek ondalık, virgüllü: 2.6 → "−2,6", 0 → "±0", −0.4 (artış) → "+0,4". */
+    private static String signedStrength(double loss) {
+        double r = round1(loss);
+        String abs = String.format(TR, "%.1f", Math.abs(r));
+        return r > 0 ? "−" + abs : r == 0 ? "±0" : "+" + abs;
     }
 
     public static String noDeclineText(String player) {
