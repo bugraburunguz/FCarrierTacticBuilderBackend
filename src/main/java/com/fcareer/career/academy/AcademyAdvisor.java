@@ -235,6 +235,15 @@ public class AcademyAdvisor {
             String target = pos.getConversion().getPosition();
             plans.positionPlan(target).map((p) -> planRow(player, p, target + " mevki", "POSITION", target, academySeasons)).ifPresent(rows::add);
         }
+        // GT-a: önerilen plan (ör. tecrübeliye mevki planı) karşılaştırmada her zaman satır olarak var.
+        if (Objects.nonNull(rec) && Objects.nonNull(rec.recommended()) && !rec.balanced()) {
+            Option o = rec.recommended();
+            boolean listed = rows.stream().anyMatch((r) -> r.position().equals(o.position()) && r.kind().equals(o.kind()));
+            if (!listed) {
+                String label = "POSITION".equals(o.kind()) ? o.position() + " mevki" : o.position() + " · " + o.roleName();
+                plans.byKey(o.planKey()).map((p) -> planRow(player, p, label, o.kind(), o.position(), academySeasons)).ifPresent(rows::add);
+            }
+        }
         // GT-a: Zirve ve Tecrübelilerde varsayım yaş kuralı (kazanç tavanı değil).
         boolean grown = Objects.isNull(rec) || Objects.isNull(rec.ageGroup()) || "YOUTH".equals(rec.ageGroup());
         WhatToDo whatToDo = new WhatToDo(sentence(rec, rows), rows, true,
@@ -318,6 +327,12 @@ public class AcademyAdvisor {
             PlanRow chosen = rows.stream().filter((r) -> r.position().equals(o.position()) && r.kind().equals(o.kind())).findFirst()
                     .or(() -> rows.stream().filter((r) -> r.position().equals(o.position()) && !"GENERAL".equals(r.kind())).findFirst()).orElse(rows.get(0));
             String label = "POSITION".equals(o.kind()) ? o.position() + " mevki" : o.position() + " · " + o.roleName();
+            // GT-a: tecrübelide cümle satırdaki gerekçeyle aynı ölçüden (1 sezon sonraki mevki OVR kaybı).
+            if ("VETERAN".equals(rec.ageGroup())) {
+                String reason = rec.text().startsWith(rec.playerName() + " · ") ? rec.text().substring(rec.playerName().length() + 3) : rec.text();
+                reason = reason.endsWith(" · tahmin") ? reason.substring(0, reason.length() - " · tahmin".length()) : reason;
+                return label + " planını seç: " + reason.substring(0, 1).toLowerCase(new Locale("tr")) + reason.substring(1) + ".";
+            }
             return String.format(Locale.ROOT, "%s planını seç: 2 sezonda %s OVR %d (Dengeli %d).", label, chosen.position(), chosen.overall2(), rows.get(0).overall2());
         }
         // GT-a: Dengeli'nin nedeni yaş bölümüne göre.

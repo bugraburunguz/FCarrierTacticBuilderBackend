@@ -154,11 +154,12 @@ public class DevelopmentRecommender {
         // Aynı slot iki kez gelirse tek hesap.
         List<WeakSlot> slots = Objects.isNull(weakSlots) ? List.of() : weakSlots.stream().distinct().toList();
         Map<Long, PositionAdviceService.LineupRole> lineup = Objects.isNull(only) ? Map.of() : positionAdvice.lineupRoles(userId, careerId);
+        // Altyapı oyuncusunda (academySeasons > 0) kapsam bugünkü gibi: gelişim payı az gence öneri yok.
         List<PlayerRecommendation> out = candidates.stream().map((p) -> switch (ageGroup(p.getAge(), config)) {
-            case YOUTH -> inScope(p) ? recommend(p, slots, byId, advice.get(p.getId()), inTactic, academySeasons) : lowHeadroom(p);
+            case YOUTH -> inScope(p) ? recommend(p, slots, byId, advice.get(p.getId()), inTactic, academySeasons) : academySeasons > 0 ? null : lowHeadroom(p);
             case PEAK -> peak(p, currentRole(p, lineup.get(p.getId()), advice.get(p.getId())));
             case VETERAN -> veteran(p, currentRole(p, lineup.get(p.getId()), advice.get(p.getId())));
-        }).toList();
+        }).filter(Objects::nonNull).toList();
         log.info("Development recommendations careerId : {} candidates : {}", careerId, out.size());
         return out;
     }
@@ -223,7 +224,8 @@ public class DevelopmentRecommender {
     private Target currentRole(FitPlayer p, PositionAdviceService.LineupRole slot, PlayerPositionAdvice advice) {
         if (Objects.nonNull(slot) && Objects.nonNull(slot.roleId())) {
             FitRole role = roleService.fitRolesById().get(slot.roleId());
-            if (Objects.nonNull(role)) {
+            // Öneri dışı rol (FIT-3) öneri hedefi olamaz: o zaman en iyi mevkideki en güçlü role düşülür.
+            if (Objects.nonNull(role) && !fitProperties.recommendationExcluded(role)) {
                 return new Target(slot.position(), role);
             }
         }
@@ -290,11 +292,9 @@ public class DevelopmentRecommender {
                     AgeGroup.VETERAN);
         }
         FitPlayer balanced2 = projector.project(p, plans.general(), SEASONS).grown();
-        Optional<Option> option = option(p, byKey.get(chosen.get().planKey()), position, List.of(target.role()), balanced2, null, 0);
-        if (option.isEmpty()) {
-            return balancedRecommendation(p, List.of(), noDeclineText(p.getName()), "NO_OPTIONS", AgeGroup.VETERAN);
-        }
-        return new PlayerRecommendation(p.getId(), p.getName(), p.getAge(), p.getOverall(), false, option.get(), List.of(option.get()),
+        // Rol listesi tek (mevcut rol), boş olamaz.
+        Option option = option(p, byKey.get(chosen.get().planKey()), position, List.of(target.role()), balanced2, null, 0).orElseThrow();
+        return new PlayerRecommendation(p.getId(), p.getName(), p.getAge(), p.getOverall(), false, option, List.of(option),
                 veteranText(p.getName(), balancedLoss, chosen.get()), true, "SLOW_DECLINE", AgeGroup.VETERAN.name());
     }
 

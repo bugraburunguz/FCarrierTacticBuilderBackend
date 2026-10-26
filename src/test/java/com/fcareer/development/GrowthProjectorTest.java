@@ -109,7 +109,12 @@ class GrowthProjectorTest {
         assertThat(60 - withPlan.get(Attr.SHORT_PASSING)).as("plan attribute'u yavaş düşer").isLessThan(60 - balanced.get(Attr.SHORT_PASSING));
         assertThat(60 - withPlan.get(Attr.FINISHING)).isLessThan(60 - balanced.get(Attr.FINISHING));
         assertThat(60 - withPlan.get(Attr.DRIBBLING)).as("plan dışı daha çok düşer").isGreaterThanOrEqualTo(60 - balanced.get(Attr.DRIBBLING));
-        assertThat(total(withPlan)).as("toplam düşüş aynı (yuvarlama payı)").isCloseTo(total(balanced), org.assertj.core.api.Assertions.within(3));
+        assertThat(total(withPlan)).as("toplam düşüş aynı").isEqualTo(total(balanced));
+        // Çarpan: 38 yaşında bitiricilik (zihinsel 35 + gecikme 2 = 37) 1,4 puan yerine 0,5 × 1,4.
+        assertThat(projector.declines(old, plan).get(Attr.FINISHING)).isCloseTo(0.7, org.assertj.core.api.Assertions.within(1e-9));
+        // Saha oyuncusunda kaleci attribute'ları düşmez, korunan puan onlara gitmez.
+        assertThat(withPlan.get(Attr.GK_DIVING)).isEqualTo(60);
+        assertThat(balanced.get(Attr.GK_REFLEXES)).isEqualTo(60);
         assertThat(planned.projectedRating()).as("kart OVR yaş kuralıyla").isEqualTo(projector.project(old).projectedRating());
         // Gecikme: 33 yaşında teknik grup başladı ama plandaki pas (33 + 2 = 35'te başlar) henüz düşmez.
         assertThat(projector.project(player(33, 80, 80), plan).grown().getAttrs().get(Attr.SHORT_PASSING)).isEqualTo(60);

@@ -30,6 +30,7 @@ import java.util.Set;
 public class GrowthProjector {
 
     private static final int MAX_ATTR = 99;
+    private static final String GOALKEEPER_POSITION = "GK";
     public static final Set<Attr> PHYSICAL = Set.of(Attr.ACCELERATION, Attr.SPRINT_SPEED, Attr.AGILITY, Attr.BALANCE, Attr.JUMPING, Attr.STAMINA, Attr.STRENGTH);
     /** GT-a: teknik düşüş grubu (pas, dribling, şut, top kesme, kafa, kaleci); geri kalan (zihinsel ve bitiricilik) en geç düşer. */
     public static final Set<Attr> TECHNICAL = Set.of(Attr.BALL_CONTROL, Attr.DRIBBLING, Attr.SHORT_PASSING, Attr.LONG_PASSING, Attr.CROSSING, Attr.CURVE,
@@ -215,8 +216,10 @@ public class GrowthProjector {
             return out;
         }
         int age = player.getAge();
+        // Saha oyuncusunda kaleci attribute'ları düşmez ve korunan puan onlara dağılmaz (kalibrasyon da onları hariç tutar).
+        boolean keeper = player.getPositions().contains(GOALKEEPER_POSITION);
         Map<Attr, Double> balanced = new EnumMap<>(Attr.class);
-        player.getAttrs().keySet().forEach((attr) -> balanced.put(attr, groupDecline(age, startAge(group(attr)))));
+        player.getAttrs().keySet().forEach((attr) -> balanced.put(attr, !keeper && GOALKEEPING.contains(attr) ? 0 : groupDecline(age, startAge(group(attr)))));
         if (plan.isEmpty()) {
             return balanced;
         }
@@ -225,7 +228,7 @@ public class GrowthProjector {
         double others = 0;
         for (Attr attr : player.getAttrs().keySet()) {
             if (plan.contains(attr)) {
-                double slowed = groupDecline(age, startAge(group(attr)) + config.getPlanDeclineDelay()) * config.getPlanDeclineFactor();
+                double slowed = balanced.get(attr) == 0 ? 0 : groupDecline(age, startAge(group(attr)) + config.getPlanDeclineDelay()) * config.getPlanDeclineFactor();
                 out.put(attr, slowed);
                 inPlan += slowed;
             } else {
@@ -243,10 +246,16 @@ public class GrowthProjector {
 
     /** Düşüş sezonu: attribute'lar düşüş kadar azalır (en az 1); kart OVR yaş kuralıyla (Dengeli grup düşüşlerinden), plandan bağımsız. */
     private Projection decline(FitPlayer player, Collection<Attr> plan) {
-        Map<Attr, Integer> points = rounded(declines(player, List.of()));
+        Map<Attr, Double> balanced = declines(player, List.of());
+        Map<Attr, Integer> points = rounded(balanced);
         if (!plan.isEmpty()) {
-            // Planlı dağılım Dengeli'nin tam sayı toplamına yuvarlanır (en büyük kalan): plan toplamı değiştirmez.
-            points = roundedTo(declines(player, plan), points.values().stream().mapToInt(Integer::intValue).sum());
+            // Planlı dağılım Dengeli'nin tam sayı toplamına yuvarlanır (en büyük kalan): plan toplamı değiştirmez. Plan düşen bütün attribute'ları
+            // kapsıyorsa dağıtılacak yer yok: toplam planlı düşüşün kendisi.
+            Map<Attr, Double> planned = declines(player, plan);
+            double plannedSum = planned.values().stream().mapToDouble(Double::doubleValue).sum();
+            double balancedSum = balanced.values().stream().mapToDouble(Double::doubleValue).sum();
+            int total = plannedSum < balancedSum - 1e-9 ? (int) Math.round(plannedSum) : points.values().stream().mapToInt(Integer::intValue).sum();
+            points = roundedTo(planned, total);
         }
         Map<Attr, Integer> drop = points;
         Map<Attr, Integer> attrs = new EnumMap<>(Attr.class);
@@ -265,15 +274,23 @@ public class GrowthProjector {
         return out;
     }
 
-    /** Değerleri toplamı `total` olacak biçimde tam sayıya yuvarlar: önce aşağı, kalan puanlar en büyük kesirli kısma. */
+    /**
+     * Değerleri toplamı `total` olacak biçimde tam sayıya yuvarlar: önce aşağı, eksik puanlar en büyük kesirli kısma, fazla puanlar en küçük kesirli
+     * kısımdan geri alınır. Yalnız düşüşü sıfırdan büyük attribute'lar puan alır.
+     */
     private static Map<Attr, Integer> roundedTo(Map<Attr, Double> values, int total) {
         Map<Attr, Integer> out = new EnumMap<>(Attr.class);
         values.forEach((attr, v) -> out.put(attr, (int) Math.floor(v)));
         int left = total - out.values().stream().mapToInt(Integer::intValue).sum();
-        List<Attr> byRemainder = values.keySet().stream()
-                .sorted(java.util.Comparator.comparingDouble((Attr a) -> values.get(a) - Math.floor(values.get(a))).reversed().thenComparing(Enum::ordinal)).toList();
-        for (int i = 0; i < left && i < byRemainder.size(); i++) {
-            out.merge(byRemainder.get(i), 1, Integer::sum);
+        java.util.Comparator<Attr> byRemainder = java.util.Comparator.comparingDouble((Attr a) -> values.get(a) - Math.floor(values.get(a))).thenComparing(Enum::ordinal);
+        List<Attr> declining = values.keySet().stream().filter((a) -> values.get(a) > 0).toList();
+        List<Attr> up = declining.stream().sorted(byRemainder.reversed()).toList();
+        for (int i = 0; i < left && !up.isEmpty(); i++) {
+            out.merge(up.get(i % up.size()), 1, Integer::sum);
+        }
+        List<Attr> down = declining.stream().filter((a) -> out.get(a) > 0).sorted(byRemainder).toList();
+        for (int i = 0; i < -left && i < down.size(); i++) {
+            out.merge(down.get(i), -1, Integer::sum);
         }
         return out;
     }

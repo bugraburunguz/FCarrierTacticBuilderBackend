@@ -80,6 +80,7 @@ class OwnershipMatrixIntegrationTest {
                 new Call(HttpMethod.GET, "/api/v1/careers/" + c + "/squad", null),
                 new Call(HttpMethod.GET, "/api/v1/careers/" + c + "/academy", null),
                 new Call(HttpMethod.GET, "/api/v1/careers/" + c + "/youth", null),
+                new Call(HttpMethod.GET, "/api/v1/careers/" + c + "/training", null),
                 new Call(HttpMethod.GET, "/api/v1/careers/" + c + "/youth/" + squadPlayer, null),
                 new Call(HttpMethod.GET, "/api/v1/careers/" + c + "/events", null),
                 new Call(HttpMethod.GET, "/api/v1/careers/" + c + "/moves", null),
