@@ -43,10 +43,10 @@ public class ManagerService {
     private final ClubFitCalculator fitCalculator;
     private final PlayerService playerService;
 
+    /** Profil yoksa null (yanıtta data null, hata değil; ana taktikteki kural). */
     @Transactional(readOnly = true)
     public ProfileView profile(Long userId) {
-        ManagerProfile profile = repository.profile(userId).orElseThrow(() -> new NotFoundException(PROFILE, userId));
-        return view(profile);
+        return repository.profile(userId).map(this::view).orElse(null);
     }
 
     @Transactional

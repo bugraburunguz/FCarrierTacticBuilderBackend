@@ -23,6 +23,7 @@ public class ManagerController {
 
     private final ManagerService service;
 
+    /** Kayıtlı profil; yoksa data null (200). */
     @GetMapping(API_V1 + "/me/manager-profile")
     public ProfileView profile(@AuthenticationPrincipal AuthUser user) {
         return service.profile(user.id());
