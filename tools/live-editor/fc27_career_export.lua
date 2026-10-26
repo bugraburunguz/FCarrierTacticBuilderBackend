@@ -9,7 +9,7 @@ require 'imports/other/helpers'
 local UserMgr = require 'imports/career_mode/FCECareerModeUserManager'
 local SYNC_URL, SYNC_TOKEN = nil, nil          -- site kişisel script üretirken doldurur (opsiyonel)
 local PROBE = false                            -- true = yalnız tüm tabloların şemasını dök
-local MARK, VER, SCHEMA_V, MAX_CHUNK = "FCX2", "2.0.3", 2, 16000   -- 2.0.1: boolean'lar JSON'da; 2.0.2: bütçe, kadro kiralık/ön sözleşme, DBMAP; 2.0.3: previousteam
+local MARK, VER, SCHEMA_V, MAX_CHUNK = "FCX2", "2.0.4", 2, 16000   -- 2.0.1: boolean'lar JSON'da; 2.0.2: bütçe, kadro kiralık/ön sözleşme, DBMAP; 2.0.3: previousteam; 2.0.4: maç notu ve gelişim geçmişi (GTR-a)
 
 local function safe(f, ...) if type(f) ~= "function" then return nil end local ok, v = pcall(f, ...) if ok then return v end end
 local function nrec(t) local n = t.written_records if n < 0 then n = n + 65536 end return n end
@@ -71,7 +71,10 @@ local TABLES = { {"players",1}, {"teams",1}, {"teamplayerlinks",1}, {"leagues"},
   {"editedplayernames"}, {"dcplayernames"}, {"manager"}, {"formations"}, {"playerloans",0,1}, {"career_users",0,1},
   {"career_calendar",0,1}, {"career_playercontract",0,1}, {"career_presignedcontract",0,1}, {"career_youthplayers",0,1},
   -- 2.0.3: oyun kariyer kiralıklarını tabloya yazmaz; kalıcı transferde previousteam'e ayrıldığı kulübü yazar (sunucu kiralığı buradan ayırır).
-  {"previousteam",0,1} }
+  {"previousteam",0,1},
+  -- 2.0.4 (GTR-a): oynama süresi. teamplayerlinks.leagueappearances kariyerde 0 kalıyor; oyuncu başına maç notu geçmişi ve sezonluk gelişim burada.
+  -- Şemaları doğrulanmadı (verified:false): sunucu tabloyu ham alır, maç sayısını career_playermatchratinghistory satırlarından sayar.
+  {"career_playermatchratinghistory",0,1}, {"career_playergrowthuserseason",0,1} }
 
 local meta = {} for k, v in pairs(ctx) do meta[#meta + 1] = jstr(k) .. ":" .. jval(v) end
 local metaJson = string.format('{"schema":"fccareer.le-export","schemaVersion":%d,"script":"%s","context":{%s}}', SCHEMA_V, VER, table.concat(meta, ","))

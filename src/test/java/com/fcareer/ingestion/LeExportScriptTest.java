@@ -32,7 +32,7 @@ class LeExportScriptTest {
     void speaksTheV2ProtocolTheBackendParses() throws Exception {
         String lua = script();
 
-        assertThat(lua).contains("\"FCX2\"").contains("\"FCX2\", \"2.0.3\", 2,").contains("fccareer.le-export");
+        assertThat(lua).contains("\"FCX2\"").contains("\"FCX2\", \"2.0.4\", 2,").contains("fccareer.le-export");
         for (String kind : new String[]{"META", "HEADER", "CHUNK", "END", "ERROR", "DONE"}) {
             assertThat(lua).contains("emit(\"" + kind + "\"");
         }
@@ -56,6 +56,12 @@ class LeExportScriptTest {
     @Test
     void exportsPreviousTeamInCareer() throws Exception {
         assertThat(script()).contains("{\"previousteam\",0,1}");
+    }
+
+    /** 2.0.4 (GTR-a): leagueappearances kariyerde 0 kalıyor; oynama süresi için maç notu geçmişi ve sezonluk gelişim kariyerde dışa aktarılır. */
+    @Test
+    void exportsPlayingTimeTablesInCareer() throws Exception {
+        assertThat(script()).contains("{\"career_playermatchratinghistory\",0,1}").contains("{\"career_playergrowthuserseason\",0,1}");
     }
 
     /** 2.0.0 jval() boolean'ı null yazıyordu: META'da "inCareer":null → sunucu kariyer dışı sanıyordu. */
