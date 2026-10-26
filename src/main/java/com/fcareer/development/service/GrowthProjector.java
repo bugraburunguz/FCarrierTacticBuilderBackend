@@ -57,7 +57,14 @@ public class GrowthProjector {
         private double planShare = 0.45;
         /** FIT-3 madde 9 (verified:false): rol planı Role+ ailesini kaç sezonda bir kademe artırır (Role+ → Role++). */
         private int familiaritySeasonsPerLevel = 1;
+        /** GROWTH-CAL (verified:false, kaynak: Buğra oyun tecrübesi, ölçülmedi): altyapıdaki (A takımda değil) oyuncunun sezon OVR kazancı tavanı. */
+        private int academyMaxGain = 5;
+        /** GROWTH-CAL (verified:false, ölçülmedi): A takımdaki oyuncunun sezon OVR kazancı tavanı; kalibrasyon raporu gerçek veri verince ayarlanır. */
+        private int firstTeamMaxGain = 8;
     }
+
+    /** Oyuncunun o sezon nerede geliştiği: altyapı (tavan academyMaxGain) ya da A takım (tavan firstTeamMaxGain). */
+    public enum Stage { ACADEMY, FIRST_TEAM }
 
     public record Projection(int projectedRating, FitPlayer grown) {
     }
@@ -70,11 +77,15 @@ public class GrowthProjector {
     }
 
     public Projection project(FitPlayer player) {
+        return project(player, Stage.FIRST_TEAM);
+    }
+
+    public Projection project(FitPlayer player, Stage stage) {
         int decline = physicalDecline(player);
         if (decline > 0) {
             return decline(player, decline);
         }
-        int gain = seasonGain(player);
+        int gain = seasonGain(player, stage);
         if (gain <= 0) {
             return new Projection(player.getOverall(), player);
         }
@@ -96,14 +107,18 @@ public class GrowthProjector {
      * çağıran tarafta position-overall-weights ile hesaplanır.
      */
     public Projection project(FitPlayer player, Collection<Attr> plan) {
+        return project(player, plan, Stage.FIRST_TEAM);
+    }
+
+    public Projection project(FitPlayer player, Collection<Attr> plan, Stage stage) {
         if (plan.isEmpty() || physicalDecline(player) > 0) {
-            return project(player);
+            return project(player, stage);
         }
-        int gain = seasonGain(player);
+        int gain = seasonGain(player, stage);
         if (gain <= 0) {
             return new Projection(player.getOverall(), player);
         }
-        return apply(player, increments(player, plan), Math.min(MAX_ATTR, player.getOverall() + gain));
+        return apply(player, increments(player, plan, stage), Math.min(MAX_ATTR, player.getOverall() + gain));
     }
 
     /**
@@ -111,7 +126,11 @@ public class GrowthProjector {
      * kazanç yoksa boş. Plan ölçeklemesi (ana mevkide OVR artışını Dengeli'ye eşitleme) çağıran tarafta: PlanProjector.
      */
     public Map<Attr, Double> increments(FitPlayer player, Collection<Attr> plan) {
-        int gain = physicalDecline(player) > 0 ? 0 : seasonGain(player);
+        return increments(player, plan, Stage.FIRST_TEAM);
+    }
+
+    public Map<Attr, Double> increments(FitPlayer player, Collection<Attr> plan, Stage stage) {
+        int gain = physicalDecline(player) > 0 ? 0 : seasonGain(player, stage);
         Map<Attr, Double> out = new EnumMap<>(Attr.class);
         if (gain <= 0) {
             return out;
@@ -163,12 +182,14 @@ public class GrowthProjector {
                 .skillMoves(player.getSkillMoves()).heightCm(player.getHeightCm()).roleFamiliarity(player.getRoleFamiliarity()).build();
     }
 
-    private int seasonGain(FitPlayer player) {
+    /** Sezon kazancı: kalan boşluk × yaş çarpanı, aşamanın tavanıyla sınırlı (tavan plan dağılımından önce; plan toplamı değiştirmez). */
+    private int seasonGain(FitPlayer player, Stage stage) {
         if (Objects.isNull(player.getPotential()) || Objects.isNull(player.getAge())) {
             return 0;
         }
         int headroom = Math.max(0, Math.min(MAX_ATTR, player.getPotential()) - player.getOverall());
-        return (int) Math.round(headroom * ageFactor(player.getAge()));
+        int cap = stage == Stage.ACADEMY ? config.getAcademyMaxGain() : config.getFirstTeamMaxGain();
+        return Math.min(cap, (int) Math.round(headroom * ageFactor(player.getAge())));
     }
 
     private double ageFactor(int age) {

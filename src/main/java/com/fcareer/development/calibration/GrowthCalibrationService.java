@@ -29,8 +29,14 @@ public class GrowthCalibrationService {
         }
         long to = ids.get(0);
         long from = ids.get(1);
-        Calibration c = GrowthCalibration.summarize(repository.players(from), repository.players(to), growth.config().getHardToTrain());
-        log.info("Growth calibration careerId : {} from : {} to : {} players : {}", careerId, from, to, c.players());
-        return GrowthCalibration.withSnapshots(c, from, to);
+        List<GrowthCalibration.SnapshotPlayer> before = repository.players(from);
+        List<GrowthCalibration.SnapshotPlayer> after = repository.players(to);
+        Calibration c = GrowthCalibration.summarize(before, after, growth.config().getHardToTrain());
+        // GROWTH-CAL: altyapı/A takım × yaş için gerçek artış ve önerilen tavan; config otomatik değişmez.
+        Long interval = repository.intervalDays(from, to);
+        List<GrowthCalibration.StageBand> bands = GrowthCalibration.stageBands(before, after, repository.academyTeamId(careerId), interval,
+                growth.config().getAcademyMaxGain(), growth.config().getFirstTeamMaxGain());
+        log.info("Growth calibration careerId : {} from : {} to : {} players : {} stageBands : {}", careerId, from, to, c.players(), bands.size());
+        return GrowthCalibration.withSnapshots(GrowthCalibration.withStageBands(c, bands, interval), from, to);
     }
 }

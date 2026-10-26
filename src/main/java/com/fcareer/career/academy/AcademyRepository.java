@@ -22,8 +22,10 @@ public class AcademyRepository {
     public record Team(Integer teamId, String name) {
     }
 
+    /** dob ve gameDate (GROWTH-CAL): 16 yaş terfi tarihi ve ufku için. */
     public record Row(long playerId, String name, Integer age, List<String> positions, Integer overall, Integer potential,
-                      Integer monthsInSquad, Integer playerTier, Integer potentialVariance, Integer swingLowPotential) {
+                      Integer monthsInSquad, Integer playerTier, Integer potentialVariance, Integer swingLowPotential,
+                      java.time.LocalDate dob, java.time.LocalDate gameDate) {
     }
 
     public Optional<Team> team(long careerId) {
@@ -39,7 +41,8 @@ public class AcademyRepository {
                 SELECT cp.player_id, b.full_name, cp.positions, cp.ovr, cp.pot,
                        CASE WHEN COALESCE(cp.dob, b.dob) IS NULL THEN NULL
                             ELSE date_part('year', age(COALESCE(k.current_game_date, CURRENT_DATE), COALESCE(cp.dob, b.dob)))::int END AS age,
-                       y.months_in_squad, y.player_tier, y.potential_variance, y.swing_low_potential
+                       y.months_in_squad, y.player_tier, y.potential_variance, y.swing_low_potential,
+                       COALESCE(cp.dob, b.dob) AS dob, k.current_game_date AS game_date
                   FROM career_player cp
                   JOIN career k ON k.id = cp.career_id
                   JOIN base_player b ON b.id = cp.player_id
@@ -83,6 +86,7 @@ public class AcademyRepository {
                 rs.getLong("player_id"), rs.getString("full_name"), rs.getObject("age", Integer.class),
                 Arrays.asList((String[]) rs.getArray("positions").getArray()), rs.getObject("ovr", Integer.class), rs.getObject("pot", Integer.class),
                 rs.getObject("months_in_squad", Integer.class), rs.getObject("player_tier", Integer.class),
-                rs.getObject("potential_variance", Integer.class), rs.getObject("swing_low_potential", Integer.class));
+                rs.getObject("potential_variance", Integer.class), rs.getObject("swing_low_potential", Integer.class),
+                rs.getObject("dob", java.time.LocalDate.class), rs.getObject("game_date", java.time.LocalDate.class));
     }
 }

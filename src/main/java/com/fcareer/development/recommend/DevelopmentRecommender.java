@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -91,10 +92,19 @@ public class DevelopmentRecommender {
      * squadPlayerIds'te doğrulanır; oyuncuları çağıran aynı kariyerden yükler.
      */
     public List<PlayerRecommendation> recommendFor(Long userId, Long careerId, List<FitPlayer> players) {
-        return recommend(userId, careerId, List.of(), players);
+        return recommendFor(userId, careerId, players, 0);
+    }
+
+    /** GROWTH-CAL: academySeasons — tahminde kaç sezon altyapıda sayılır (altyapı oyuncusu 1: ikinci sezon A takımda; kadro genci 0). */
+    public List<PlayerRecommendation> recommendFor(Long userId, Long careerId, List<FitPlayer> players, int academySeasons) {
+        return recommend(userId, careerId, List.of(), players, academySeasons);
     }
 
     private List<PlayerRecommendation> recommend(Long userId, Long careerId, List<WeakSlot> weakSlots, List<FitPlayer> only) {
+        return recommend(userId, careerId, weakSlots, only, 0);
+    }
+
+    private List<PlayerRecommendation> recommend(Long userId, Long careerId, List<WeakSlot> weakSlots, List<FitPlayer> only, int academySeasons) {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
         // Spoiler (13 İlke 4): SCOUT_RANGE kariyerinde kesin potansiyel yerine bandın alt sınırı (kapsam ve tahmin ondan; baş boşluk geri hesaplanamaz).
         boolean ranged = spoilerPolicy.ranged(careerId);
@@ -110,7 +120,7 @@ public class DevelopmentRecommender {
         Predicate<String> inTactic = (pos) -> Objects.isNull(team.tacticPositions()) || team.tacticPositions().isEmpty() || team.tacticPositions().contains(pos);
         // Aynı slot iki kez gelirse tek hesap.
         List<WeakSlot> slots = Objects.isNull(weakSlots) ? List.of() : weakSlots.stream().distinct().toList();
-        List<PlayerRecommendation> out = candidates.stream().map((p) -> recommend(p, slots, byId, advice.get(p.getId()), inTactic)).toList();
+        List<PlayerRecommendation> out = candidates.stream().map((p) -> recommend(p, slots, byId, advice.get(p.getId()), inTactic, academySeasons)).toList();
         log.info("Development recommendations careerId : {} candidates : {}", careerId, out.size());
         return out;
     }
@@ -120,15 +130,23 @@ public class DevelopmentRecommender {
                 && p.getAge() <= config.getMaxAge() && p.getPotential() - p.getOverall() >= config.getMinHeadroom();
     }
 
-    private PlayerRecommendation recommend(FitPlayer player, List<WeakSlot> slots, Map<Long, FitPlayer> byId, PlayerPositionAdvice advice, Predicate<String> inTactic) {
+    private PlayerRecommendation recommend(FitPlayer player, List<WeakSlot> slots, Map<Long, FitPlayer> byId, PlayerPositionAdvice advice, Predicate<String> inTactic,
+                                           int academySeasons) {
         Plan balanced = plans.general();
-        FitPlayer balanced2 = projector.project(player, balanced, SEASONS).grown();
+        FitPlayer balanced2 = projector.project(player, balanced, SEASONS, academySeasons).grown();
         List<Option> options = new ArrayList<>();
         for (String position : player.getPositions().stream().filter(inTactic).toList()) {
             for (Plan plan : plans.rolePlans(position)) {
-                option(player, plan, position, rolesOf(plan.baseRole(), position), balanced2, null).ifPresent(options::add);
+                option(player, plan, position, rolesOf(plan.baseRole(), position), balanced2, null, academySeasons).ifPresent(options::add);
             }
         }
+        if (Objects.nonNull(advice) && Objects.nonNull(advice.getConversion())) {
+            String position = advice.getConversion().getPosition();
+            plans.positionPlan(position).flatMap((plan) -> option(player, plan, position, rolesAt(position), balanced2, null, academySeasons)).ifPresent(options::add);
+        }
+        // GROWTH-CAL: kanat/bek hedefinin tarafı FIT-3 taraf kuralıyla (en iyi mevki); karşı taraf seçenekleri çıkar. Takımın zayıf slot seçenekleri
+        // filtrelenmez (slot doldurma önerisi kaybolmasın); en iyi mevki listede değilse filtre yok (listedeki bütün kanat seçenekleri düşmesin).
+        List<Option> sided = new ArrayList<>(preferSide(options, sideTarget(Objects.isNull(advice) ? null : advice.getBestOverallPosition(), player.getPositions())));
         for (WeakSlot slot : slots) {
             if (Objects.equals(slot.playerId(), player.getId()) || Objects.isNull(slot.roleId())) {
                 continue;
@@ -138,29 +156,25 @@ public class DevelopmentRecommender {
                 continue;
             }
             plans.rolePlan(role.getBaseRole(), slot.position()).flatMap((plan) -> option(player, plan, slot.position(), List.of(role), balanced2,
-                    Objects.isNull(slot.playerId()) ? null : byId.get(slot.playerId()))).ifPresent(options::add);
+                    Objects.isNull(slot.playerId()) ? null : byId.get(slot.playerId()), academySeasons)).ifPresent(sided::add);
         }
-        if (Objects.nonNull(advice) && Objects.nonNull(advice.getConversion())) {
-            String position = advice.getConversion().getPosition();
-            plans.positionPlan(position).flatMap((plan) -> option(player, plan, position, rolesAt(position), balanced2, null)).ifPresent(options::add);
-        }
-        List<Option> distinct = options.stream().collect(Collectors.toMap((o) -> o.planKey() + "@" + o.position() + "@" + o.roleId(), Function.identity(), (a, b) -> a))
+        List<Option> distinct = sided.stream().collect(Collectors.toMap((o) -> o.planKey() + "@" + o.position() + "@" + o.roleId(), Function.identity(), (a, b) -> a))
                 .values().stream().sorted(Comparator.comparingDouble(Option::gain).reversed()).toList();
         Decision decision = decide(distinct, config.getMinGain(), config.getClearTargetGap());
         // "Dengeli yeterli" metni kararın dayandığı hedefin (2 sezon sonra en güçlü) farkını yazar, en büyük farkı değil.
         double bestGain = Objects.isNull(decision.best()) ? 0 : decision.best().gain();
         String text = Objects.nonNull(decision.chosen()) ? text(player.getName(), decision.chosen())
-                : "NO_CLEAR_TARGET".equals(decision.reason()) ? noClearTargetText(player.getName()) : balancedText(player.getName(), bestGain);
+                : "NO_CLEAR_TARGET".equals(decision.reason()) ? noClearTargetText(player.getName(), decision) : balancedText(player.getName(), bestGain);
         return new PlayerRecommendation(player.getId(), player.getName(), player.getAge(), player.getOverall(), Objects.isNull(decision.chosen()), decision.chosen(),
                 distinct.stream().limit(OPTIONS_SHOWN).toList(), text, true, decision.reason());
     }
 
     /** Plan, hedef mevkideki aday rollerden 2. sezonda en güçlüsünde değerlendirilir; Dengeli aynı rolde. */
-    private Optional<Option> option(FitPlayer player, Plan plan, String position, List<FitRole> roles, FitPlayer balanced2, FitPlayer incumbent) {
+    private Optional<Option> option(FitPlayer player, Plan plan, String position, List<FitRole> roles, FitPlayer balanced2, FitPlayer incumbent, int academySeasons) {
         if (roles.isEmpty()) {
             return Optional.empty();
         }
-        FitPlayer planned2 = projector.project(player, plan, SEASONS).grown();
+        FitPlayer planned2 = projector.project(player, plan, SEASONS, academySeasons).grown();
         FitRole role = null;
         RoleFitResponse best = null;
         for (FitRole r : roles) {
@@ -170,7 +184,7 @@ public class DevelopmentRecommender {
                 role = r;
             }
         }
-        double strength1 = roleFit.calculate(projector.project(player, plan, 1).grown(), role, null, position).getCurrentFit();
+        double strength1 = roleFit.calculate(projector.project(player, plan, 1, academySeasons).grown(), role, null, position).getCurrentFit();
         double balancedStrength2 = roleFit.calculate(balanced2, role, null, position).getCurrentFit();
         Double incumbentStrength = Objects.isNull(incumbent) ? null
                 : roleFit.calculate(projector.project(incumbent, plans.general(), SEASONS).grown(), role, null, position).getCurrentFit();
@@ -190,9 +204,14 @@ public class DevelopmentRecommender {
     }
 
     /** chosen null → Dengeli; best: 2 sezon sonra en güçlü hedef (metin onun farkını yazar); reason: CLEAR_TARGET, NO_CLEAR_TARGET, SMALL_GAIN, NO_OPTIONS. */
-    public record Decision(Option chosen, String reason, Option best) {
+    /** other: NO_CLEAR_TARGET'ta en iyi hedefe yakın kalan, başka gruptaki en iyi seçenek (gerekçe grupları adıyla yazar). */
+    public record Decision(Option chosen, String reason, Option best, Option other) {
         public Decision(Option chosen, String reason) {
-            this(chosen, reason, chosen);
+            this(chosen, reason, chosen, null);
+        }
+
+        public Decision(Option chosen, String reason, Option best) {
+            this(chosen, reason, best, null);
         }
     }
 
@@ -206,11 +225,41 @@ public class DevelopmentRecommender {
         if (best.isEmpty()) {
             return new Decision(null, "NO_OPTIONS");
         }
-        Optional<Option> otherPosition = special.stream().filter((o) -> !o.position().equals(best.get().position())).max(Comparator.comparingDouble(Option::strength2));
+        // GROWTH-CAL: kıyas farklı mevki GRUBUndaki en iyi rolle (kanat hücum LW/RW/LM/RM ve bek LB/RB tek grup; birbirine hep yakın çıkıyorlar).
+        String bestGroup = positionGroup(best.get().position());
+        Optional<Option> otherPosition = special.stream().filter((o) -> !positionGroup(o.position()).equals(bestGroup)).max(Comparator.comparingDouble(Option::strength2));
         if (otherPosition.isPresent() && best.get().strength2() - otherPosition.get().strength2() < clearTargetGap) {
-            return new Decision(null, "NO_CLEAR_TARGET", best.get());
+            return new Decision(null, "NO_CLEAR_TARGET", best.get(), otherPosition.get());
         }
         return best.get().gain() >= minGain ? new Decision(best.get(), "CLEAR_TARGET") : new Decision(null, "SMALL_GAIN", best.get());
+    }
+
+    private static final Set<String> WING = Set.of("LW", "RW", "LM", "RM");
+    private static final Set<String> FULLBACK = Set.of("LB", "RB");
+    private static final Set<String> LEFT = Set.of("LW", "LM", "LB");
+    private static final Set<String> RIGHT = Set.of("RW", "RM", "RB");
+
+    /** "Net hedef" kıyasının bölge grubu: kanat hücum (LW, RW, LM, RM), bek (LB, RB); diğer mevkiler kendi başına. */
+    public static String positionGroup(String position) {
+        return WING.contains(position) ? "WING" : FULLBACK.contains(position) ? "FULLBACK" : position;
+    }
+
+    /**
+     * Hedefin tarafı FIT-3 taraf kuralıyla: oyuncunun en iyi mevkisi (PositionAdviceService, taraf gerekçeli) kanat ya da bekteyse, aynı gruptaki karşı
+     * tarafın seçenekleri çıkarılır. En iyi mevki kanat/bek değilse ya da bilinmiyorsa liste aynen.
+     */
+    public static List<Option> preferSide(List<Option> options, String bestPosition) {
+        if (Objects.isNull(bestPosition) || !(WING.contains(bestPosition) || FULLBACK.contains(bestPosition))) {
+            return options;
+        }
+        Set<String> otherSide = LEFT.contains(bestPosition) ? RIGHT : LEFT;
+        String group = positionGroup(bestPosition);
+        return options.stream().filter((o) -> !(positionGroup(o.position()).equals(group) && otherSide.contains(o.position()))).toList();
+    }
+
+    /** Taraf filtresinin hedefi: en iyi mevki oyuncunun listelediği mevkilerden biriyse o; değilse filtre yok (null). */
+    public static String sideTarget(String bestPosition, List<String> listedPositions) {
+        return Objects.nonNull(bestPosition) && Objects.nonNull(listedPositions) && listedPositions.contains(bestPosition) ? bestPosition : null;
     }
 
     /** Eşik kuralı tek başına (net hedef aranmaz). */
@@ -218,8 +267,18 @@ public class DevelopmentRecommender {
         return Optional.ofNullable(decide(options, minGain, 0).chosen());
     }
 
-    public static String noClearTargetText(String player) {
-        return player + " · Dengeli plan: Henüz net bir mevkisi yok, esnek gelişsin";
+    /** Gerekçede grup adı: Kanat (LW/RW/LM/RM), Bek (LB/RB); diğerleri mevki kısaltması. */
+    public static String groupLabel(String position) {
+        String group = positionGroup(position);
+        return "WING".equals(group) ? "Kanat" : "FULLBACK".equals(group) ? "Bek" : position;
+    }
+
+    /** Karar: iki grup arasında kalan oyuncuya "Kanat ve CAM arasında, ikisinde de yakın"; gruplar bilinmiyorsa eski metin. */
+    public static String noClearTargetText(String player, Decision decision) {
+        if (Objects.isNull(decision) || Objects.isNull(decision.best()) || Objects.isNull(decision.other())) {
+            return player + " · Dengeli plan: Henüz net bir mevkisi yok, esnek gelişsin";
+        }
+        return player + " · Dengeli plan: " + groupLabel(decision.best().position()) + " ve " + groupLabel(decision.other().position()) + " arasında, ikisinde de yakın";
     }
 
     /** "Figueiredo · CDM Deep-Lying Playmaker planı → 2 sezonda CDM gücü 71 (Dengeli: 67; Nyoni'nin tahmini 68)". */

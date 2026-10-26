@@ -27,7 +27,52 @@ public final class GrowthCalibration {
     private GrowthCalibration() {
     }
 
-    public record SnapshotPlayer(long playerId, Integer age, Integer overall, Map<Attr, Integer> attrs) {
+    /** teamId (GROWTH-CAL): görüntüdeki takım; altyapı/A takım ayrımı için. */
+    public record SnapshotPlayer(long playerId, Integer age, Integer overall, Map<Attr, Integer> attrs, Integer teamId) {
+        public SnapshotPlayer(long playerId, Integer age, Integer overall, Map<Attr, Integer> attrs) {
+            this(playerId, age, overall, attrs, null);
+        }
+    }
+
+    /**
+     * GROWTH-CAL: altyapı (önceki görüntüde altyapı takımında) ya da A takım × yaş bandı için gerçek OVR artışı ve önerilen tavan (sezona ölçekli
+     * 90. yüzdelik, yuvarlanmış). configCap config'teki tavan; config otomatik değişmez. perSeasonScale: 365 / aradaki gün (bilinmiyorsa 1).
+     */
+    public record StageBand(String stage, String label, int players, double meanDelta, int maxDelta, double perSeasonScale, int suggestedCap, int configCap) {
+    }
+
+    /** Gelişim yaşları (≤ 23) için yaş bantları. */
+    private static final int[][] YOUTH_BANDS = {{0, 15}, {16, 17}, {18, 19}, {20, 21}, {22, 23}};
+    private static final double P90 = 0.9;
+    private static final double DAYS_PER_SEASON = 365.0;
+    private static final long MIN_INTERVAL_DAYS = 30;
+    public static final String ACADEMY = "ALTYAPI";
+    public static final String FIRST_TEAM = "A_TAKIM";
+
+    public static List<StageBand> stageBands(List<SnapshotPlayer> before, List<SnapshotPlayer> after, Integer academyTeamId, Long intervalDays,
+                                             int academyCap, int firstTeamCap) {
+        Map<Long, SnapshotPlayer> earlier = before.stream().collect(Collectors.toMap(SnapshotPlayer::playerId, Function.identity(), (a, b) -> a));
+        double scale = Objects.nonNull(intervalDays) && intervalDays >= MIN_INTERVAL_DAYS ? DAYS_PER_SEASON / intervalDays : 1.0;
+        List<StageBand> out = new ArrayList<>();
+        for (String stage : List.of(ACADEMY, FIRST_TEAM)) {
+            for (int[] band : YOUTH_BANDS) {
+                List<Integer> deltas = after.stream().filter((p) -> earlier.containsKey(p.playerId()) && Objects.nonNull(p.overall())).map((p) -> {
+                    SnapshotPlayer b = earlier.get(p.playerId());
+                    boolean academy = Objects.nonNull(academyTeamId) && academyTeamId.equals(b.teamId());
+                    boolean inStage = ACADEMY.equals(stage) == academy;
+                    boolean inBand = Objects.nonNull(b.age()) && b.age() >= band[0] && b.age() <= band[1] && Objects.nonNull(b.overall());
+                    return inStage && inBand ? p.overall() - b.overall() : null;
+                }).filter(Objects::nonNull).sorted().toList();
+                if (deltas.isEmpty()) {
+                    continue;
+                }
+                int p90 = deltas.get((int) Math.ceil(P90 * deltas.size()) - 1);
+                String label = band[0] == 0 ? "≤" + band[1] : band[0] + "-" + band[1];
+                out.add(new StageBand(stage, label, deltas.size(), round(deltas.stream().mapToInt(Integer::intValue).average().orElse(0)),
+                        deltas.get(deltas.size() - 1), round(scale), (int) Math.round(p90 * scale), ACADEMY.equals(stage) ? academyCap : firstTeamCap));
+            }
+        }
+        return out;
     }
 
     public record AttributeGain(Attr attr, double meanDelta) {
@@ -36,12 +81,25 @@ public final class GrowthCalibration {
     public record AgeBand(String label, int players, double meanOverallDelta) {
     }
 
+    /** stageBands/intervalDays (GROWTH-CAL): altyapı/A takım × yaş için gerçek artış ve önerilen tavan; aradaki oyun günü (bilinmiyorsa null). */
     public record Calibration(String status, String message, Long fromSnapshot, Long toSnapshot, int players, int growingPlayers, double meanOverallDelta,
-                              List<AttributeGain> attributes, List<AgeBand> ageBands, Double hardToTrainRatio, double modelHardToTrain) {
+                              List<AttributeGain> attributes, List<AgeBand> ageBands, Double hardToTrainRatio, double modelHardToTrain,
+                              List<StageBand> stageBands, Long intervalDays) {
+        public Calibration(String status, String message, Long fromSnapshot, Long toSnapshot, int players, int growingPlayers, double meanOverallDelta,
+                           List<AttributeGain> attributes, List<AgeBand> ageBands, Double hardToTrainRatio, double modelHardToTrain) {
+            this(status, message, fromSnapshot, toSnapshot, players, growingPlayers, meanOverallDelta, attributes, ageBands, hardToTrainRatio, modelHardToTrain,
+                    List.of(), null);
+        }
     }
 
     public static Calibration noData() {
         return new Calibration("NO_DATA", NO_DATA, null, null, 0, 0, 0, List.of(), List.of(), null, 0);
+    }
+
+    /** GROWTH-CAL: altyapı/A takım bantlarını ve aralığı rapora ekler. */
+    public static Calibration withStageBands(Calibration c, List<StageBand> bands, Long intervalDays) {
+        return new Calibration(c.status(), c.message(), c.fromSnapshot(), c.toSnapshot(), c.players(), c.growingPlayers(), c.meanOverallDelta(), c.attributes(),
+                c.ageBands(), c.hardToTrainRatio(), c.modelHardToTrain(), bands, intervalDays);
     }
 
     public static Calibration summarize(List<SnapshotPlayer> before, List<SnapshotPlayer> after, double modelHardToTrain) {
@@ -80,7 +138,7 @@ public final class GrowthCalibration {
 
     public static Calibration withSnapshots(Calibration c, long from, long to) {
         return new Calibration(c.status(), c.message(), from, to, c.players(), c.growingPlayers(), c.meanOverallDelta(), c.attributes(), c.ageBands(),
-                c.hardToTrainRatio(), c.modelHardToTrain());
+                c.hardToTrainRatio(), c.modelHardToTrain(), c.stageBands(), c.intervalDays());
     }
 
     private static double round(double v) {
