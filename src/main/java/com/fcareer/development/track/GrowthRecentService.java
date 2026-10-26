@@ -6,7 +6,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -27,11 +29,39 @@ public class GrowthRecentService {
     public record Row(long playerId, int months, int overallDelta, Integer matches) {
     }
 
+    /**
+     * Önbellek anahtarı (career_id, data_version); görüntü listesi ve kadro da aynı olmalı: görüntü ayrı transaction'da (REQUIRES_NEW) içe aktarmanın
+     * sürüm artışından önce görünür olur; satış/alış olayı sürümü artırmaz. Ölçüm (GrowthRecentCostReportTest, 7 görüntü × 22 bin oyuncu): istek ~2 sn ve ~60 MB ayırma; giriş birkaç KB.
+     */
+    private record Cached(long dataVersion, List<GrowthTrackRepository.SnapshotRef> refs, Map<Long, Long> eaIds, List<Row> rows) {
+    }
+
+    public static final int CACHE_SIZE = 64;
+
+    // En son kullanılan CACHE_SIZE kariyer (ClubStrengthService ile aynı kalıp).
+    private final Map<Long, Cached> cache = Collections.synchronizedMap(new LinkedHashMap<>(CACHE_SIZE, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<Long, Cached> eldest) {
+            return size() > CACHE_SIZE;
+        }
+    });
+
     @Transactional(readOnly = true)
     public List<Row> recent(Long userId, Long careerId) {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
+        long version = repository.dataVersion(careerId);
         Map<Long, Long> eaIds = repository.eaIds(careerId, squad.ownedIds());
         List<GrowthTrackRepository.SnapshotRef> refs = repository.refs(careerId);
+        Cached cached = cache.get(careerId);
+        if (Objects.nonNull(cached) && cached.dataVersion() == version && cached.refs().equals(refs) && cached.eaIds().equals(eaIds)) {
+            return cached.rows();
+        }
+        List<Row> rows = compute(eaIds, refs);
+        cache.put(careerId, new Cached(version, refs, eaIds, rows));
+        return rows;
+    }
+
+    private List<Row> compute(Map<Long, Long> eaIds, List<GrowthTrackRepository.SnapshotRef> refs) {
         int base = GrowthRecent.baseIndex(refs.stream().map(GrowthTrackRepository.SnapshotRef::gameDate).toList(), properties.getRecentWindowMonths());
         if (base < 0 || eaIds.isEmpty()) {
             return List.of();
@@ -47,6 +77,6 @@ public class GrowthRecentService {
                 rows.add(new Row(playerId, c.months(), c.overallDelta(), c.matches()));
             }
         });
-        return rows;
+        return List.copyOf(rows);
     }
 }

@@ -200,6 +200,14 @@ class GrowthTrackIntegrationTest {
 
         String other = support.register();
         assertThat(mockMvc.perform(get(recent).header("Authorization", "Bearer " + other)).andReturn().getResponse().getStatus()).isEqualTo(404);
+
+        // Önbellek (career_id, data_version): sürüm aynıyken görüntüler yeniden açılmaz (taban görüntüsü değişse de sonuç aynı); sürüm artınca yeniden hesaplanır.
+        List<TrackedPlayer> higher = lower.stream().map((p) -> new TrackedPlayer(p.playerId(), p.teamId(), p.age(), p.position(), p.overall() + 3, p.potential(), p.form(),
+                p.leagueApps(), p.teamMatches(), p.matches(), p.attrs())).toList();
+        jdbc.update("UPDATE career_growth_snapshot SET data = ? WHERE id = ?", GrowthSnapshotCodec.encode(higher), id);
+        assertThat(support.json(get(recent), token).at("/data/0/overallDelta").asInt()).as("önbellekten").isEqualTo(2);
+        jdbc.update("UPDATE career SET data_version = data_version + 1 WHERE id = ?", careerId);
+        assertThat(support.json(get(recent), token).at("/data/0/overallDelta").asInt()).as("yeni sürüm: yeniden hesap (taban 3 yüksek → −1)").isEqualTo(-1);
     }
 
     /** Rapor örneği (GTR-a kabulü): boş olmayan çıktı target/'a yazılır. */

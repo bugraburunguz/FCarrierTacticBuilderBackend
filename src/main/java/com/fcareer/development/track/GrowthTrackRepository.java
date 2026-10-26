@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /** GTR-a: career_growth_snapshot (V49). Aynı oyun ayı tek satır: yeni içe aktarma o ayın görüntüsünü değiştirir. */
@@ -58,6 +59,12 @@ public class GrowthTrackRepository {
     public Optional<Snapshot> load(long id) {
         return jdbc.query("SELECT id, game_date, data FROM career_growth_snapshot WHERE id = :id", Map.of("id", id),
                 (rs, i) -> new Snapshot(rs.getLong("id"), rs.getDate("game_date").toLocalDate(), rs.getBytes("data"))).stream().findFirst();
+    }
+
+    /** GTR-b önbellek anahtarı: career.data_version (içe aktarma ve elle düzenlemede artar). */
+    public long dataVersion(long careerId) {
+        List<Long> version = jdbc.queryForList("SELECT data_version FROM career WHERE id = :c", Map.of("c", careerId), Long.class);
+        return version.isEmpty() || Objects.isNull(version.get(0)) ? 0 : version.get(0);
     }
 
     /** GTR-b: base_player kimliği → görüntüdeki EA kimliği (resmi oyuncu ea_resource_id; bu kariyerin üretilmiş oyuncusu career_source_id). */
