@@ -133,10 +133,11 @@ class DevelopmentRecommendationTest {
         DevelopmentRecommender.VeteranOption tie = new DevelopmentRecommender.VeteranOption("role:target:ST", "ST · Target", 0.42, 2, 1.9, List.of("bitiricilik", "kafa"));
         assertThat(DevelopmentRecommender.chooseVeteran(List.of(position, tie, poacher))).contains(poacher);
         assertThat(DevelopmentRecommender.chooseVeteran(List.of(new DevelopmentRecommender.VeteranOption("x", "x", 0, 0, 0, List.of())))).as("örtüşme yok").isEmpty();
-        assertThat(DevelopmentRecommender.veteranText("Vardy", 3, poacher))
-                .isEqualTo("Vardy · Plansız tahmini −3 OVR, ST · Poacher planıyla −1 (bitiricilik ve pozisyon alma korunur) · tahmin");
-        assertThat(DevelopmentRecommender.veteranText("Vardy", 1, new DevelopmentRecommender.VeteranOption("pos_st", "ST mevki", 0.3, 0, 0.1, List.of("bitiricilik"))))
-                .isEqualTo("Vardy · Plansız tahmini −1 OVR, ST mevki planıyla ±0 (bitiricilik korunur) · tahmin");
+        // GT-a düzeltmesi: gerekçe OVR farkına ek olarak Güç farkını da yazar.
+        assertThat(DevelopmentRecommender.veteranText("Vardy", 3, 2.6, poacher))
+                .isEqualTo("Vardy · Plansız tahmini −3 OVR / −2,6 Güç, ST · Poacher planıyla −1 OVR / −1,2 Güç (bitiricilik ve pozisyon alma korunur) · tahmin");
+        assertThat(DevelopmentRecommender.veteranText("Vardy", 1, 0.4, new DevelopmentRecommender.VeteranOption("pos_st", "ST mevki", 0.3, 0, 0.0, List.of("bitiricilik"))))
+                .isEqualTo("Vardy · Plansız tahmini −1 OVR / −0,4 Güç, ST mevki planıyla ±0 OVR / ±0 Güç (bitiricilik korunur) · tahmin");
         assertThat(DevelopmentRecommender.noDeclineText("Vardy")).isEqualTo("Vardy · Dengeli plan: düşüş henüz başlamadı");
     }
 

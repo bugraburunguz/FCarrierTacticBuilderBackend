@@ -57,11 +57,12 @@ fcareer:
     academy-max-gain: 5
     first-team-max-gain: 8
     # GT-a (verified:false, kaynak: Buğra oyun tecrübesi, ölçülmedi): düşüş başlangıç yaşları — fiziksel önce, teknik (pas, dribling, şut) sonra,
-    # zihinsel ve bitiricilik en geç. Plan attribute'ları plan-decline-delay yıl geç ve plan-decline-factor kadar yavaş düşer (toplam aynı).
+    # zihinsel ve bitiricilik en geç. Yaşla kaybedilen toplam attribute puanı Dengeli ile aynı; plan bu kaybı plan attribute'larından
+    # (plan-decline-delay yıl geç, plan-decline-factor kadar yavaş) plan dışına kaydırır. Kart OVR attribute'lardan (ana mevki formülü), zorlanmaz.
     # Kalibrasyon raporundaki declineBands gerçek düşüşü yaşa göre gösterir; değerler otomatik değişmez.
-    decline-from-age: 32
-    technical-decline-from-age: 33
-    mental-decline-from-age: 35
+    decline-from-age: 30
+    technical-decline-from-age: 32
+    mental-decline-from-age: 34
     plan-decline-delay: 2
     plan-decline-factor: 0.5
   development:

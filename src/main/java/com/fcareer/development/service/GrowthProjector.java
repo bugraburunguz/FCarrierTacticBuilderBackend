@@ -1,5 +1,6 @@
 package com.fcareer.development.service;
 
+import com.fcareer.catalog.service.PositionOverallService;
 import com.fcareer.fitengine.model.Attr;
 import com.fcareer.fitengine.model.FitPlayer;
 import lombok.Getter;
@@ -21,9 +22,10 @@ import java.util.Set;
  *   attribute artışı = round(kazanç × trainability), hız/çeviklik grubu 0,3×, diğerleri 1,0×, 99'da kırpılır.
  * Düşüş (GT-a, gruplar sırayla): fiziksel (hız, çeviklik, dayanıklılık, güç, sıçrama, denge) yaş ≥ declineFromAge, teknik (pas, dribling, şut, top
  *   kesme, kafa, kaleci) yaş ≥ technicalDeclineFromAge, zihinsel ve bitiricilik yaş ≥ mentalDeclineFromAge; her grup sezonda
- *   declineBase + declineStep×(yaş − başlangıç) puan düşer. OVR düşüşü = Σ grup × ovrPer{grup} (yaş kuralı; plan değiştirmez).
- *   Plan: plan attribute'ları planDeclineDelay yıl geç ve planDeclineFactor kadar yavaş düşer; aradaki fark plan dışı düşen attribute'lara dağılır
- *   (plan dağılımı değiştirir, toplamı değil).
+ *   declineBase + declineStep×(yaş − başlangıç) puan düşer. Yaşa göre kaybedilen toplam attribute puanı Dengeli ile aynı; plan bu kaybı plan
+ *   attribute'larından (planDeclineDelay yıl geç, planDeclineFactor kadar yavaş) plan dışı attribute'lara kaydırır. Kart OVR zorlanmaz:
+ *   eski OVR − ana mevki formülündeki ağırlıklı kayıp (mevkide ağır attribute'ları koruyan plan daha az düşer; düşüş artışa dönmez).
+ *   Mevki formülü yoksa (birim test kurucusu) OVR düşüşü = Σ grup × ovrPer{grup} yaklaşımı.
  * POT ya da yaş bilinmiyorsa büyüme/düşüş yok (tahmin uydurulmaz). Katsayılar `verified:false` ilk kalibrasyondur.
  */
 @Component
@@ -64,14 +66,15 @@ public class GrowthProjector {
         private int age6 = 29;
         private double factor6 = 0.05;
         private double hardToTrain = 0.3;
-        private int declineFromAge = 32;
+        /** GT-a (verified:false, kaynak: Buğra oyun tecrübesi, ölçülmedi): fiziksel düşüş başlangıcı. */
+        private int declineFromAge = 30;
         private double declineBase = 1.0;
         private double declineStep = 0.4;
         private double ovrPerPhysical = 0.6;
         /** GT-a (verified:false, kaynak: Buğra oyun tecrübesi, ölçülmedi): teknik grubun ve zihinsel/bitiricilik grubunun düşüş başlangıç yaşı. */
-        private int technicalDeclineFromAge = 33;
-        private int mentalDeclineFromAge = 35;
-        /** GT-a (verified:false): grup düşüş puanı başına OVR düşüşü (fiziksel ovrPerPhysical). */
+        private int technicalDeclineFromAge = 32;
+        private int mentalDeclineFromAge = 34;
+        /** GT-a (verified:false): mevki formülü olmadan grup düşüş puanı başına OVR düşüşü yaklaşımı (fiziksel ovrPerPhysical). */
         private double ovrPerTechnical = 0.3;
         private double ovrPerMental = 0.2;
         /** GT-a (verified:false): plan attribute'ları kaç yıl geç ve hangi çarpanla düşer. */
@@ -94,10 +97,17 @@ public class GrowthProjector {
     }
 
     private final Config config;
+    /** Kart OVR'yi düşen attribute'lardan hesaplamak için ana mevki formülü; null → grup yaklaşımı. */
+    private final PositionOverallService positionOverall;
+
+    public GrowthProjector(Config config) {
+        this(config, null);
+    }
 
     @Autowired
-    public GrowthProjector(Config config) {
+    public GrowthProjector(Config config, PositionOverallService positionOverall) {
         this.config = config;
+        this.positionOverall = positionOverall;
     }
 
     public Projection project(FitPlayer player) {
@@ -126,7 +136,8 @@ public class GrowthProjector {
      * FIT-3 madde 9: plan farkındalıklı bir sezon. Plan boşsa (Dengeli) {@link #project(FitPlayer)} aynen. Planlıysa sezon bütçesi
      * (kazanç × planın alanındaki attribute sayısı: saha planında saha, kaleci planında kaleci attribute'ları) `planShare` ile plana, kalanı alandaki
      * diğerlerine eşit bölünür.
-     * Hız grubu 0,3× ve 99 tavanı aynen. Düşüş yaşında (GT-a) plan attribute'ları geç ve yavaş düşer, kart OVR Dengeli ile aynı. projectedRating
+     * Hız grubu 0,3× ve 99 tavanı aynen. Düşüş yaşında (GT-a) plan attribute'ları geç ve yavaş düşer, kayıp plan dışına kayar; kart OVR
+     * attribute'lardan. projectedRating
      * bugünkü tanım (OVR + kazanç); mevki OVR etkisi çağıran tarafta position-overall-weights ile hesaplanır.
      */
     public Projection project(FitPlayer player, Collection<Attr> plan) {
@@ -208,7 +219,8 @@ public class GrowthProjector {
 
     /**
      * Bir sezonun attribute düşüşleri (yuvarlamadan önce). Plan boşsa Dengeli. Planlıysa plan attribute'ları planDeclineDelay yıl geç ve
-     * planDeclineFactor kadar yavaş düşer; korunan puan plan dışı, düşmekte olan attribute'lara oranla dağılır (toplam Dengeli ile aynı).
+     * planDeclineFactor kadar yavaş düşer; korunan puan plan dışı, düşmekte olan attribute'lara oranla kayar (toplam Dengeli ile aynı). Plan düşen
+     * bütün attribute'ları kapsıyorsa kayıp plan dışı attribute'lara eşit kayar.
      */
     public Map<Attr, Double> declines(FitPlayer player, Collection<Attr> plan) {
         Map<Attr, Double> out = new EnumMap<>(Attr.class);
@@ -235,37 +247,45 @@ public class GrowthProjector {
                 others += balanced.get(attr);
             }
         }
-        double scale = others > 0 ? Math.max(0, total - inPlan) / others : 0;
+        double shifted = Math.max(0, total - inPlan);
+        List<Attr> eligible = player.getAttrs().keySet().stream().filter((a) -> !plan.contains(a) && (keeper || !GOALKEEPING.contains(a))).toList();
         for (Attr attr : player.getAttrs().keySet()) {
             if (!plan.contains(attr)) {
-                out.put(attr, balanced.get(attr) * scale);
+                double share = others > 0 ? balanced.get(attr) / others : eligible.contains(attr) ? 1.0 / eligible.size() : 0;
+                out.put(attr, shifted * share);
             }
         }
         return out;
     }
 
-    /** Düşüş sezonu: attribute'lar düşüş kadar azalır (en az 1); kart OVR yaş kuralıyla (Dengeli grup düşüşlerinden), plandan bağımsız. */
+    /**
+     * Düşüş sezonu: attribute'lar düşüş kadar azalır (en az 1). Planlı dağılım Dengeli'nin tam sayı toplamına yuvarlanır (en büyük kalan). Kart OVR
+     * attribute'lardan: eski OVR − ana mevki formülündeki ağırlıklı kayıp; hiç artmaz.
+     */
     private Projection decline(FitPlayer player, Collection<Attr> plan) {
-        Map<Attr, Double> balanced = declines(player, List.of());
-        Map<Attr, Integer> points = rounded(balanced);
+        Map<Attr, Integer> points = rounded(declines(player, List.of()));
         if (!plan.isEmpty()) {
-            // Planlı dağılım Dengeli'nin tam sayı toplamına yuvarlanır (en büyük kalan): plan toplamı değiştirmez. Plan düşen bütün attribute'ları
-            // kapsıyorsa dağıtılacak yer yok: toplam planlı düşüşün kendisi.
-            Map<Attr, Double> planned = declines(player, plan);
-            double plannedSum = planned.values().stream().mapToDouble(Double::doubleValue).sum();
-            double balancedSum = balanced.values().stream().mapToDouble(Double::doubleValue).sum();
-            int total = plannedSum < balancedSum - 1e-9 ? (int) Math.round(plannedSum) : points.values().stream().mapToInt(Integer::intValue).sum();
-            points = roundedTo(planned, total);
+            points = roundedTo(declines(player, plan), points.values().stream().mapToInt(Integer::intValue).sum());
         }
         Map<Attr, Integer> drop = points;
         Map<Attr, Integer> attrs = new EnumMap<>(Attr.class);
         player.getAttrs().forEach((attr, value) -> attrs.put(attr, Math.max(1, value - drop.getOrDefault(attr, 0))));
-        int age = player.getAge();
-        double ovrLoss = config.getOvrPerPhysical() * Math.round(groupDecline(age, config.getDeclineFromAge()))
-                + config.getOvrPerTechnical() * Math.round(groupDecline(age, config.getTechnicalDeclineFromAge()))
-                + config.getOvrPerMental() * Math.round(groupDecline(age, config.getMentalDeclineFromAge()));
-        int projected = Math.max(1, player.getOverall() - (int) Math.round(ovrLoss));
+        int projected = Math.max(1, Math.min(player.getOverall(), player.getOverall() - (int) Math.round(overallLoss(player, attrs))));
         return new Projection(projected, copy(player, attrs, projected));
+    }
+
+    /** Ana mevki formülünde (doğrusal) ağırlıklı attribute kaybı; formül yoksa grup yaklaşımı (ovrPer{grup} × grup düşüşü). */
+    private double overallLoss(FitPlayer player, Map<Attr, Integer> after) {
+        String main = player.getPositions().isEmpty() ? GOALKEEPER_POSITION : player.getPositions().get(0);
+        Map<Attr, Double> weights = Objects.isNull(positionOverall) ? Map.of() : positionOverall.weights(main);
+        if (weights.isEmpty()) {
+            int age = player.getAge();
+            return config.getOvrPerPhysical() * Math.round(groupDecline(age, config.getDeclineFromAge()))
+                    + config.getOvrPerTechnical() * Math.round(groupDecline(age, config.getTechnicalDeclineFromAge()))
+                    + config.getOvrPerMental() * Math.round(groupDecline(age, config.getMentalDeclineFromAge()));
+        }
+        return weights.entrySet().stream().filter((e) -> after.containsKey(e.getKey()))
+                .mapToDouble((e) -> e.getValue() * (player.getAttrs().get(e.getKey()) - after.get(e.getKey()))).sum();
     }
 
     private static Map<Attr, Integer> rounded(Map<Attr, Double> values) {

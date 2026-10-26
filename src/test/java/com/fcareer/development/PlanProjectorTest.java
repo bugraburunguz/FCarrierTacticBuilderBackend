@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class PlanProjectorTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
-    private final GrowthProjector growth = new GrowthProjector(new GrowthProjector.Config());
+    private final GrowthProjector growth = new GrowthProjector(new GrowthProjector.Config(), PositionOverallFixture.loaded(MAPPER));
     private final DevelopmentPlans plans = new DevelopmentPlans(MAPPER);
     private static final PositionOverallService OVERALL = PositionOverallFixture.loaded(MAPPER);
     private final PlanProjector projector = new PlanProjector(growth, OVERALL);
@@ -88,15 +88,20 @@ class PlanProjectorTest {
                 .isGreaterThan(planned.getAttrs().get(Attr.STAMINA) - 62);
     }
 
-    /** GT-a madde 2: düşüş yaşında plan etkili — plan attribute'ları Dengeli'den yavaş düşer; kart OVR yaş kuralıyla, Dengeli ile aynı. */
+    /**
+     * GT-a düzeltmesi: düşüş yaşında plan etkili — plan attribute'ları Dengeli'den yavaş düşer, kayıp plan dışına kayar; kart OVR attribute'lardan
+     * (ST'yi koruyan Poacher planıyla Dengeli'den az düşer, ama hiç artmaz).
+     */
     @Test
-    void inDeclineAPlanProtectsItsAttributesAndKeepsTheBalancedOverall() {
+    void inDeclineAPlanProtectsItsAttributesAndTheOverallFollowsThem() {
         FitPlayer veteran = player("ST").toBuilder().age(36).overall(80).potential(80).build();
         Plan poacher = plans.rolePlan("poacher", "ST").orElseThrow();
         PlanProjection balanced = projector.project(veteran, plans.general(), 1);
         PlanProjection planned = projector.project(veteran, poacher, 1);
-        assertThat(planned.overall()).isEqualTo(balanced.overall());
-        assertThat(planned.overall()).isLessThan(80);
+        assertThat(balanced.overall()).isLessThan(80);
+        assertThat(planned.overall()).as("Poacher ST'nin ağır attribute'larını korur").isGreaterThan(balanced.overall());
+        assertThat(planned.overall()).as("düşüş artışa dönmez").isLessThanOrEqualTo(80);
+        assertThat(projector.project(veteran, poacher, 2).overall()).as("iki sezonda da plan önde").isGreaterThan(projector.project(veteran, plans.general(), 2).overall());
         assertThat(planned.grown().getAttrs().get(Attr.FINISHING)).as("Poacher planı bitiriciliği korur").isGreaterThan(balanced.grown().getAttrs().get(Attr.FINISHING));
         assertThat(planned.grown().getRoleFamiliarity()).containsEntry("poacher", 1);
     }

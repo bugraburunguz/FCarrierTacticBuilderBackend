@@ -20,6 +20,8 @@ import java.util.Objects;
  * Mevki/rol planı yalnız dağılımı değiştirir (karar): kazancın `planShare` kadarı plan attribute'larına, ama artışlar ana mevki formülündeki ağırlıklı
  * toplam Dengeli'ninkine eşit olacak biçimde ölçeklenir; OVR Dengeli'ninkiyle aynı. Rol planı Role+ ailesini `familiaritySeasonsPerLevel` sezonda bir
  * kademe artırır (en çok Role++).
+ * GT-a: düşüş yıllarında bu eşitleme yok — plan kaybı plan dışına kaydırır, kart OVR attribute'lardan (GrowthProjector); "toplam aynı" kuralı yalnız
+ * gelişim yıllarında OVR için geçerli.
  */
 @Component
 @RequiredArgsConstructor
@@ -57,10 +59,11 @@ public class PlanProjector {
                 overall = balancedOverall;
                 continue;
             }
-            // GT-a: düşüş yılında plan attribute'ları geç ve yavaş düşer; kart OVR Dengeli'ninki (yaş kuralı).
+            // GT-a: düşüş yılında plan kaybı plan dışına kaydırır; kart OVR attribute'lardan (mevkide ağırları koruyan plan daha az düşer).
             if (growth.declining(current)) {
-                overall = balancedOverall;
-                current = withOverall(growth.project(current, plan.attributes(), stage).grown(), overall, familiarity(player, plan, season));
+                GrowthProjector.Projection planned = growth.project(current, plan.attributes(), stage);
+                overall = planned.projectedRating();
+                current = withOverall(planned.grown(), overall, familiarity(player, plan, season));
                 continue;
             }
             // Karar: plan yalnız dağılımı değiştirir. Ana mevkide tahmini OVR artışı Dengeli ile aynı: artışlar, ana mevki formülündeki (doğrusal)
