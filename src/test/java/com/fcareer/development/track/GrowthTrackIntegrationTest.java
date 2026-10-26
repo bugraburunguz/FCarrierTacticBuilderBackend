@@ -115,9 +115,32 @@ class GrowthTrackIntegrationTest {
         assertThat(csv.getContentType()).startsWith("text/csv");
         assertThat(csv.getContentAsString()).startsWith("boyut,grup,n,");
 
-        // Yalnız admin.
+        // Yalnız admin; oturumsuz istek reddedilir.
         assertThat(mockMvc.perform(get("/api/v1/admin/careers/" + careerId + "/growth-report").header("Authorization", "Bearer " + token)).andReturn()
                 .getResponse().getStatus()).isEqualTo(403);
+        assertThat(mockMvc.perform(get("/api/v1/admin/careers/" + careerId + "/growth-report")).andReturn().getResponse().getStatus()).isEqualTo(401);
+        // Tek görüntülük aralık ya da ters aralık: rapor yok (404).
+        assertThat(mockMvc.perform(get("/api/v1/admin/careers/" + careerId + "/growth-report").param("from", "2027-01-01").header("Authorization", "Bearer " + admin))
+                .andReturn().getResponse().getStatus()).isEqualTo(404);
+        assertThat(mockMvc.perform(get("/api/v1/admin/careers/" + careerId + "/growth-report").param("from", "2027-09-01").param("to", "2026-01-01")
+                .header("Authorization", "Bearer " + admin)).andReturn().getResponse().getStatus()).isEqualTo(404);
+    }
+
+    /** Görüntü yalnız ölçüm içindir: yazılamazsa (ör. gövde bozuk) içe aktarma yine başarılı. */
+    @Test
+    void aSnapshotFailureDoesNotAbortTheImport() throws Exception {
+        String token = support.register();
+        long careerId = support.premiumCareer(token, null);
+        careers.add(new Object[] {token, careerId});
+        // NOT VALID: ortak test veritabanındaki mevcut satırlar denetlenmez, yalnız bu içe aktarmanın yazımı reddedilir.
+        jdbc.execute("ALTER TABLE career_growth_snapshot ADD CONSTRAINT growth_test_block CHECK (player_count < 0) NOT VALID");
+        try {
+            importFixture(token, careerId);
+            assertThat(snapshots(careerId)).isZero();
+            assertThat(jdbc.queryForObject("SELECT count(*) FROM career_player_data WHERE career_id = ?", Integer.class, careerId)).isPositive();
+        } finally {
+            jdbc.execute("ALTER TABLE career_growth_snapshot DROP CONSTRAINT growth_test_block");
+        }
     }
 
     @Test

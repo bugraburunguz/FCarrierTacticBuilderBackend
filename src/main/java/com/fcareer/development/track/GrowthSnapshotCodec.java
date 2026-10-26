@@ -30,17 +30,17 @@ public final class GrowthSnapshotCodec {
             for (TrackedPlayer p : players) {
                 out.writeLong(p.playerId());
                 out.writeInt(orUnknown(p.teamId()));
-                out.writeByte(orUnknown(p.age()));
+                out.writeByte(fitByte(orUnknown(p.age())));
                 out.writeUTF(Objects.requireNonNullElse(p.position(), ""));
-                out.writeByte(p.overall());
-                out.writeByte(orUnknown(p.potential()));
-                out.writeByte(orUnknown(p.form()));
-                out.writeShort(orUnknown(p.leagueApps()));
-                out.writeShort(orUnknown(p.teamMatches()));
-                out.writeShort(orUnknown(p.matches()));
-                out.writeByte(p.attrs().length);
+                out.writeByte(fitByte(p.overall()));
+                out.writeByte(fitByte(orUnknown(p.potential())));
+                out.writeByte(fitByte(orUnknown(p.form())));
+                out.writeShort(fitShort(orUnknown(p.leagueApps())));
+                out.writeShort(fitShort(orUnknown(p.teamMatches())));
+                out.writeShort(fitShort(orUnknown(p.matches())));
+                out.writeByte(fitByte(p.attrs().length));
                 for (int v : p.attrs()) {
-                    out.writeByte(v);
+                    out.writeByte(fitByte(v));
                 }
             }
         } catch (IOException e) {
@@ -74,6 +74,21 @@ public final class GrowthSnapshotCodec {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    /** İşaretli bayt: -1 bilinmiyor, 0..127 değer; aralık dışı sessizce bozulmasın. */
+    private static int fitByte(int value) {
+        if (value < UNKNOWN || value > Byte.MAX_VALUE) {
+            throw new IllegalArgumentException("Anlık görüntü alanı bayt aralığı dışında: " + value);
+        }
+        return value;
+    }
+
+    private static int fitShort(int value) {
+        if (value < UNKNOWN || value > Short.MAX_VALUE) {
+            throw new IllegalArgumentException("Anlık görüntü alanı short aralığı dışında: " + value);
+        }
+        return value;
     }
 
     private static int orUnknown(Integer value) {

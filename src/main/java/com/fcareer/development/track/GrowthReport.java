@@ -59,20 +59,35 @@ public final class GrowthReport {
         return (double) playerMatches / teamMatches < properties.getRegularFromRatio() ? "LOW" : "REGULAR";
     }
 
+    /** Oyun tarihli anlık görüntü (rapor zinciri: ilk ve son görüntü kıyaslanır, oynama aradakilerden toplanır). */
+    public record Dated(LocalDate date, List<TrackedPlayer> players) {
+    }
+
     public static Report build(List<TrackedPlayer> before, List<TrackedPlayer> after, LocalDate from, LocalDate to, GrowthProjector projector,
                                GrowthTrackProperties properties) {
-        long days = ChronoUnit.DAYS.between(from, to);
+        return build(List.of(new Dated(from, before), new Dated(to, after)), projector, properties);
+    }
+
+    /** chain eskiden yeniye (en az iki görüntü). */
+    public static Report build(List<Dated> chain, GrowthProjector projector, GrowthTrackProperties properties) {
+        Dated first = chain.get(0);
+        Dated last = chain.get(chain.size() - 1);
+        long days = ChronoUnit.DAYS.between(first.date(), last.date());
         double fraction = days / DAYS_PER_SEASON;
-        Map<Long, TrackedPlayer> earlier = before.stream().collect(Collectors.toMap(TrackedPlayer::playerId, Function.identity(), (a, b) -> a));
+        Map<Long, int[]> play = periodPlay(chain.stream().map(Dated::players).toList());
+        Map<Long, TrackedPlayer> earlier = first.players().stream().collect(Collectors.toMap(TrackedPlayer::playerId, Function.identity(), (a, b) -> a));
         List<Pair> pairs = new ArrayList<>();
-        for (TrackedPlayer b : after) {
+        for (TrackedPlayer b : last.players()) {
             TrackedPlayer a = earlier.get(b.playerId());
             if (Objects.isNull(a)) {
                 continue;
             }
-            pairs.add(new Pair(a, b, predicted(a, projector) * fraction, playBucket(periodCount(a.matches(), b.matches()), periodCount(a.teamMatches(), b.teamMatches()),
-                    properties)));
+            int[] counts = play.get(b.playerId());
+            pairs.add(new Pair(a, b, predicted(a, projector) * fraction,
+                    Objects.isNull(counts) ? UNKNOWN : playBucket(counts[0], counts[1], properties)));
         }
+        LocalDate from = first.date();
+        LocalDate to = last.date();
         Map<String, List<Group>> groups = new LinkedHashMap<>();
         groups.put("age", group(pairs, (p) -> ageBand(p.before().age())));
         groups.put("play", group(pairs, Pair::play));
@@ -82,11 +97,35 @@ public final class GrowthReport {
         return new Report(from, to, days, days < DAYS_PER_SEASON, pairs.size(), groups);
     }
 
-    /** Dönemdeki sayı: sonraki − önceki; sezon başında sıfırlandıysa (negatif) sonraki değer. Biri bilinmiyorsa bilinmiyor. */
-    private static Integer periodCount(Integer before, Integer after) {
-        if (Objects.isNull(before) || Objects.isNull(after)) {
-            return after;
+    /**
+     * Dönemde oyuncu maçı ve takım maçı ({oyuncu, takım}), ardışık görüntü adımlarının toplamı. Lig sayaçları sezon başında sıfırlanır: adımda sonraki <
+     * önceki ise adımın değeri sonraki. Takım değişen adımda takım sayısı yeni takımın sayacı (verified:false). Bir adımda değerlerden biri bilinmiyorsa ya da
+     * oyuncu bir görüntüde yoksa oyuncu bilinmiyor (null). Adım aralığı sezonu aşarsa sıfırlama kaçabilir; aylık görüntülerle bu olmaz.
+     */
+    public static Map<Long, int[]> periodPlay(List<List<TrackedPlayer>> chain) {
+        Map<Long, int[]> totals = new java.util.HashMap<>();
+        java.util.Set<Long> unknown = new java.util.HashSet<>();
+        for (int i = 1; i < chain.size(); i++) {
+            Map<Long, TrackedPlayer> prev = chain.get(i - 1).stream().collect(Collectors.toMap(TrackedPlayer::playerId, Function.identity(), (a, b) -> a));
+            for (TrackedPlayer b : chain.get(i)) {
+                TrackedPlayer a = prev.get(b.playerId());
+                if (Objects.isNull(a) || Objects.isNull(a.matches()) || Objects.isNull(b.matches()) || Objects.isNull(a.teamMatches())
+                        || Objects.isNull(b.teamMatches())) {
+                    unknown.add(b.playerId());
+                    continue;
+                }
+                int player = step(a.matches(), b.matches());
+                int team = Objects.equals(a.teamId(), b.teamId()) ? step(a.teamMatches(), b.teamMatches()) : b.teamMatches();
+                int[] sum = totals.computeIfAbsent(b.playerId(), (k) -> new int[2]);
+                sum[0] += player;
+                sum[1] += team;
+            }
         }
+        unknown.forEach(totals::remove);
+        return totals;
+    }
+
+    private static int step(int before, int after) {
         return after >= before ? after - before : after;
     }
 

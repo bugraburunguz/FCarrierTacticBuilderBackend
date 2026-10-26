@@ -30,9 +30,12 @@ public class GrowthTrackService {
     private final GrowthTrackProperties properties;
     private final GrowthProjector projector;
 
-    /** Kariyer içi içe aktarmanın tabloları; oyun tarihi yoksa görüntü yazılmaz (yaş ve ay bilinemez). */
-    @Transactional
-    public void record(long careerId, LocalDate gameDate, Map<String, List<Map<String, String>>> tables, Map<Long, Integer> playerTeam) {
+    /**
+     * Kariyer içi içe aktarmanın tabloları; oyun tarihi yoksa görüntü yazılmaz (yaş ve ay bilinemez). Ayrı transaction (REQUIRES_NEW): görüntü yalnız
+     * ölçüm içindir; yazımındaki bir hata içe aktarmayı geri almaz (çağıran yakalar ve loglar). saveUid: farklı save'den içe aktarma loglanır.
+     */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    public void record(long careerId, LocalDate gameDate, String saveUid, Map<String, List<Map<String, String>>> tables, Map<Long, Integer> playerTeam) {
         if (!properties.isEnabled() || Objects.isNull(gameDate)) {
             return;
         }
@@ -40,9 +43,18 @@ public class GrowthTrackService {
         List<TrackedPlayer> players = GrowthSnapshotBuilder.build(gameDate, tables.get("players"), tables.get("teamplayerlinks"), tables.get("leagueteamlinks"),
                 tables.get("career_playermatchratinghistory"), playerTeam);
         byte[] data = GrowthSnapshotCodec.encode(players);
-        repository.upsert(careerId, gameDate, players.size(), data);
-        List<Long> thinned = toThin(repository.refs(careerId), properties.getMaxSnapshots(), properties.getKeepRecent());
+        String previousSave = repository.lastSaveUid(careerId);
+        if (Objects.nonNull(previousSave) && Objects.nonNull(saveUid) && !previousSave.equals(saveUid)) {
+            log.warn("Growth snapshot from another save careerId : {} gameDate : {}", careerId, gameDate);
+        }
+        repository.upsert(careerId, gameDate, saveUid, players.size(), data);
+        List<GrowthTrackRepository.SnapshotRef> refs = repository.refs(careerId);
+        List<Long> thinned = toThin(refs, properties.getMaxSnapshots(), properties.getKeepRecent());
         repository.delete(thinned);
+        if (refs.size() - thinned.size() > properties.getMaxSnapshots()) {
+            log.warn("Growth snapshot cap not reached careerId : {} kept : {} max : {} keepRecent : {}", careerId, refs.size() - thinned.size(),
+                    properties.getMaxSnapshots(), properties.getKeepRecent());
+        }
         log.info("Growth snapshot careerId : {} gameDate : {} players : {} bytes : {} thinned : {} ms : {}", careerId, gameDate, players.size(), data.length,
                 thinned.size(), Duration.ofNanos(System.nanoTime() - started).toMillis());
     }
@@ -85,8 +97,10 @@ public class GrowthTrackService {
         if (Objects.isNull(start) || Objects.isNull(end) || start.id() == end.id() || end.gameDate().isBefore(start.gameDate())) {
             throw new NotFoundException(CAREER_SNAPSHOT, careerId);
         }
-        GrowthTrackRepository.Snapshot a = repository.load(start.id()).orElseThrow();
-        GrowthTrackRepository.Snapshot b = repository.load(end.id()).orElseThrow();
-        return GrowthReport.build(GrowthSnapshotCodec.decode(a.data()), GrowthSnapshotCodec.decode(b.data()), a.gameDate(), b.gameDate(), projector, properties);
+        // Oynama ara görüntülerden toplanır (sezon sıfırlaması adım adım); en çok maxSnapshots görüntü açılır.
+        List<GrowthReport.Dated> chain = refs.stream().filter((r) -> !r.gameDate().isBefore(start.gameDate()) && !r.gameDate().isAfter(end.gameDate()))
+                .map((r) -> repository.load(r.id()).orElseThrow())
+                .map((s) -> new GrowthReport.Dated(s.gameDate(), GrowthSnapshotCodec.decode(s.data()))).toList();
+        return GrowthReport.build(chain, projector, properties);
     }
 }

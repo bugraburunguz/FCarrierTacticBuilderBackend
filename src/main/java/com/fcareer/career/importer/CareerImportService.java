@@ -200,9 +200,15 @@ public class CareerImportService {
             }
         });
         int contracts = careerPlayerWriter.applyContracts(careerId, tables.get("players"), allLoans, eaToBase);
-        // GTR-a: kariyer içi içe aktarmada bütün kulüplerin anlık görüntüsü (aynı ay tek, en çok 60); ana menü export'u yazılmaz.
+        // GTR-a: kariyer içi içe aktarmada bütün kulüplerin anlık görüntüsü (aynı ay tek, en çok 60); ana menü export'u yazılmaz. Görüntü yalnız
+        // ölçüm içindir: ayrı transaction'da yazılır, hatası içe aktarmayı geri almaz.
         if (Objects.isNull(context) || context.inCareer()) {
-            growthTrackService.record(careerId, Objects.isNull(context) ? null : context.gameDate(), tables, playerTeam);
+            try {
+                growthTrackService.record(careerId, Objects.isNull(context) ? null : context.gameDate(), Objects.isNull(context) ? null : context.saveUid(),
+                        tables, playerTeam);
+            } catch (RuntimeException e) {
+                log.warn("Growth snapshot skipped careerId : {}", careerId, e);
+            }
         }
         log.info("Career import done careerId : {} players : {} teams : {} freeAgents : {} unmatched : {}",
                 careerId, playerRows.size(), teamParams.size(), freeAgents, unmatched);

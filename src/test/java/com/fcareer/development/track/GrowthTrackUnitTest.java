@@ -59,6 +59,26 @@ class GrowthTrackUnitTest {
         assertThat(snapshot.get(1).age()).isEqualTo(19);
         // Maç notu tablosu yoksa maç sayısı bilinmiyor (0 değil).
         assertThat(GrowthSnapshotBuilder.build(LocalDate.of(2027, 9, 19), players, links, leagueLinks, null, playerTeam).get(0).matches()).isNull();
+        // Tabloda geçmeyen oyuncu da bilinmiyor: tablo (171 satır) yalnız kullanıcının kadrosunu kapsıyor olabilir; 0 yazılırsa "oynamadı" sanılır.
+        assertThat(GrowthSnapshotBuilder.build(LocalDate.of(2027, 9, 19), players, links, leagueLinks, List.of(row("playerid", 8, "rating", 60)), playerTeam)
+                .get(0).matches()).isNull();
+    }
+
+    @Test
+    void aPlayerWithoutPositionOrBirthdateIsStillTracked() {
+        List<TrackedPlayer> snapshot = GrowthSnapshotBuilder.build(LocalDate.of(2027, 9, 19), List.of(row("playerid", 7, "overallrating", 70)), List.of(),
+                List.of(), null, Map.of(7L, 100));
+        assertThat(snapshot).singleElement().satisfies((p) -> {
+            assertThat(p.position()).isNull();
+            assertThat(p.age()).isNull();
+        });
+    }
+
+    @Test
+    void theCodecRejectsValuesOutsideItsRange() {
+        int[] attrs = TrackedPlayer.attrArray(Map.of());
+        TrackedPlayer tooHigh = new TrackedPlayer(1, 1, 20, "ST", 130, 80, 3, 0, 0, null, attrs);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> GrowthSnapshotCodec.encode(List.of(tooHigh))).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

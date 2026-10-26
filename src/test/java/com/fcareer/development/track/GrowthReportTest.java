@@ -23,7 +23,7 @@ class GrowthReportTest {
     private final GrowthProjector projector = new GrowthProjector(new GrowthProjector.Config(), PositionOverallFixture.loaded(new ObjectMapper()));
     private final GrowthTrackProperties props = new GrowthTrackProperties();
 
-    private static TrackedPlayer p(long id, int team, int age, int ovr, int pot, Integer matches, int teamMatches, int attr) {
+    private static TrackedPlayer p(long id, int team, int age, int ovr, int pot, Integer matches, Integer teamMatches, int attr) {
         Map<Attr, Integer> attrs = new EnumMap<>(Attr.class);
         for (Attr a : Attr.values()) {
             attrs.put(a, attr);
@@ -71,6 +71,32 @@ class GrowthReportTest {
         assertThat(half.partial()).isTrue();
         assertThat(half.days()).isEqualTo(182);
         assertThat(group(half, "age", "≤19").meanPredicted()).isCloseTo(group(full, "age", "≤19").meanPredicted() * 182 / 366.0, within(0.05));
+    }
+
+    /**
+     * Oynama dönemi ara görüntüler üzerinden toplanır: lig maç sayaçları sezon başında sıfırlanır (sonraki < önceki → sonraki değer), takım değiştiren
+     * oyuncuda takım sayacı yeni takımınki. Bir uçta sayı bilinmiyorsa (eski betik) o adım bilinmiyor; oran şişmez.
+     */
+    @Test
+    void playIsSummedOverTheChainAcrossSeasonResetsAndUnknownStaysUnknown() {
+        TrackedPlayer start = p(1, 10, 25, 70, 72, 20, 30, 70);
+        TrackedPlayer seasonEnd = p(1, 10, 25, 70, 72, 34, 38, 70);
+        TrackedPlayer nextSeason = p(1, 10, 26, 71, 72, 3, 4, 71);
+        GrowthReport.Report chain = GrowthReport.build(List.of(
+                new GrowthReport.Dated(LocalDate.of(2027, 3, 1), List.of(start)),
+                new GrowthReport.Dated(LocalDate.of(2027, 6, 1), List.of(seasonEnd)),
+                new GrowthReport.Dated(LocalDate.of(2027, 9, 1), List.of(nextSeason))), projector, props);
+        // 14 + 3 = 17 maç / 8 + 4 = 12 takım maçı → düzenli.
+        assertThat(chain.groups().get("play")).extracting(GrowthReport.Group::key).containsExactly("REGULAR");
+        assertThat(GrowthReport.periodPlay(List.of(List.of(start), List.of(seasonEnd), List.of(nextSeason))).get(1L)).containsExactly(17, 12);
+        // Takım değişimi: yeni takımın sayacı.
+        TrackedPlayer moved = p(1, 99, 25, 70, 72, 25, 9, 70);
+        assertThat(GrowthReport.periodPlay(List.of(List.of(start), List.of(moved))).get(1L)).containsExactly(5, 9);
+        // Bir uç bilinmiyorsa (2.0.3 betiği: matches null) bilinmiyor.
+        TrackedPlayer old = p(1, 10, 25, 70, 72, null, 30, 70);
+        assertThat(GrowthReport.periodPlay(List.of(List.of(old), List.of(seasonEnd))).get(1L)).isNull();
+        assertThat(GrowthReport.build(List.of(old), List.of(seasonEnd), LocalDate.of(2027, 3, 1), LocalDate.of(2027, 6, 1), projector, props)
+                .groups().get("play")).extracting(GrowthReport.Group::key).containsExactly("UNKNOWN");
     }
 
     @Test

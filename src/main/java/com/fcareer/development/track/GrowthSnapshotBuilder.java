@@ -19,7 +19,7 @@ import static com.fcareer.career.importer.CsvStream.toLong;
 /**
  * GTR-a: export tablolarından anlık görüntü. Kapsam: kulübü olan (playerTeam: içe aktarmanın kulüp bağı; milli takım değil) bütün oyuncular.
  * Oynama alanları kulüp bağından (form, leagueappearances) ve takımın lig maç sayısından; maç sayısı career_playermatchratinghistory'den (oyuncu
- * başına satır = maç, verified:false; tablo yoksa bilinmiyor).
+ * başına satır = maç, verified:false; tablo yoksa ya da oyuncu tabloda geçmiyorsa bilinmiyor).
  */
 public final class GrowthSnapshotBuilder {
 
@@ -69,9 +69,13 @@ public final class GrowthSnapshotBuilder {
                     attrs.put(attr, v);
                 }
             });
-            out.add(new TrackedPlayer(id, team, age(toInt(r.get("birthdate")), gameDate), DumpMappings.POSITION_BY_CODE.get(toInt(r.get("preferredposition1"))),
+            Integer positionCode = toInt(r.get("preferredposition1"));
+            // Maç sayısı yalnız tabloda geçen oyuncuya: tablo (kariyer kaydında ~170 satır) büyük olasılıkla yalnız kullanıcının kadrosunu kapsıyor;
+            // geçmeyene 0 yazmak "oynamadı" ile karışır ve blob'da kalıcı olur.
+            out.add(new TrackedPlayer(id, team, age(toInt(r.get("birthdate")), gameDate),
+                    Objects.isNull(positionCode) ? null : DumpMappings.POSITION_BY_CODE.get(positionCode),
                     overall, toInt(r.get("potential")), toInt(link.get("form")), toInt(link.get("leagueappearances")), teamMatches.get(team),
-                    Objects.isNull(matches) ? null : matches.getOrDefault(id, 0), TrackedPlayer.attrArray(attrs)));
+                    Objects.isNull(matches) ? null : matches.get(id), TrackedPlayer.attrArray(attrs)));
         }
         out.sort(Comparator.comparingLong(TrackedPlayer::playerId));
         return out;
