@@ -48,6 +48,6 @@ Eski Azerlottery standardı `docs/archive/backend-standard.md` altında, referan
   `grep -E '^(DB_PASSWORD|JWT_SECRET|ML_SHARED_SECRET)=' .env | cut -d= -f1`
 - Veri silme protokolü: dry-run → git dışında yedek (`../backups`) → tek transaction → kullanıcı onayı.
   `docker compose down -v`, `DROP`, `TRUNCATE`, `DELETE` onaysız çalıştırılmaz.
-- Ortam: macOS (Apple Silicon, arm64). Proje kökü `/Users/user/Desktop/Projects/FCarrierTacticBuilder`
+- Ortam: macOS (Apple Silicon, arm64). Proje kökü `/Users/user/Desktop/FCarrierTacticBuilder`
   (backend `main`, web `v3`, yedekler `backups/` git dışı). JDK 17: `~/.zshrc` jenv ile `JAVA_HOME`'u ayarlar;
   `.zshrc` okumayan shell'de `JAVA_HOME=$(/usr/libexec/java_home -v 17)` ver.
