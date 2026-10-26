@@ -150,8 +150,23 @@ class ManagerRulesTest {
 
     @Test
     void evidenceLinesUseRealNumbers() {
-        Candidate x = new Candidate(1, "Kulüp", 1, "EFL League One", 45, 70, 5, 5, 4, 24, 68.4, 12_000_000L, true, 45, Difficulty.MEDIUM);
-        assertThat(rules.evidence(x)).containsExactly("Kadro gücü ligde 4. (ort. OVR 68)", "Tahmini transfer bütçesi €12,0 Mn, ligin üst çeyreği",
+        // Karar: kulüp değeri ve tahmini bütçe birlikte; üst çeyrek kulüp değerine göre.
+        Candidate x = new Candidate(1, "Kulüp", 1, "EFL League One", 45, 70, 5, 5, 4, 24, 68.4, 12_000_000L, true, 45, Difficulty.MEDIUM, 4_730_000_000L);
+        assertThat(rules.evidence(x)).containsExactly("Kadro gücü ligde 4. (ort. OVR 68)", "Kulüp değeri €4,7 Mr · tahmini bütçe ~€12,0 Mn, ligin üst çeyreği",
                 "21 yaş altı 5 yüksek potansiyelli oyuncu");
+        Candidate small = new Candidate(2, "Küçük", 1, "Lig", 45, 70, 5, 0, 4, 24, 60.0, 480_000L, false, 45, Difficulty.MEDIUM, 5_500_000L);
+        assertThat(rules.evidence(small).get(1)).isEqualTo("Kulüp değeri €5,5 Mn · tahmini bütçe ~€480 Bin");
+        Candidate unknown = new Candidate(3, "Bilinmez", 1, "Lig", 45, 70, 5, 0, 4, 24, 60.0, null, false, 45, Difficulty.MEDIUM, null);
+        assertThat(rules.evidence(unknown).get(1)).isEqualTo("Kulüp değeri ve bütçe bilinmiyor");
+    }
+
+    /** Karar: "Bütçesi güçlü" kulüp değerine göre sıralanır (liginde kulüp değeri üst çeyrekte olanlar arasında en değerli). */
+    @Test
+    void strongBudgetIsRankedByClubWorth() {
+        Candidate rich = new Candidate(1, "Değerli", 1, "Lig 1", 45, 60, 4, 0, 6, 20, 66.0, 2_000_000L, true, 45, Difficulty.MEDIUM, 900_000_000L);
+        Candidate fit = new Candidate(2, "Uyumlu", 2, "Lig 2", 45, 85, 4, 0, 6, 20, 66.0, 9_000_000L, true, 45, Difficulty.MEDIUM, 300_000_000L);
+        ManagerRules.Selection s = rules.select(List.of(rich, fit), 50, List.of(Priority.FINANCIAL), Difficulty.MEDIUM);
+        assertThat(s.cards().get(0).category()).isEqualTo(Category.STRONG_BUDGET);
+        assertThat(s.cards().get(0).candidate().clubId()).as("uyum değil kulüp değeri").isEqualTo(1);
     }
 }

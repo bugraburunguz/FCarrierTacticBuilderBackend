@@ -38,6 +38,7 @@ public class ManagerRules {
             Category.SAFE, Category.DREAM);
     private static final Map<Priority, Category> PRIORITY_CATEGORY = Map.of(Priority.YOUTH, Category.YOUTH_PROJECT, Priority.QUICK_SUCCESS, Category.SAFE,
             Priority.FINANCIAL, Category.STRONG_BUDGET, Priority.RESCUE, Category.RESCUE);
+    private static final double BILLION = 1_000_000_000d;
     private static final double MILLION = 1_000_000d;
     private static final double THOUSAND = 1_000d;
 
@@ -51,11 +52,17 @@ public class ManagerRules {
 
     /**
      * Aday: need 0–100 (ihtiyaç), squadFit Takım gücü, youthDevelopment 0–10, youngCount (≤ 21 yaş, POT − OVR ≥ 10), squadRank ligdeki kadro gücü
-     * sırası (1 en güçlü), leagueSize, avgOvr (en iyi 11), budgetEur (tahmini), budgetTopQuartile (liginde üst çeyrek), strengthPct kadro gücünün
-     * aynı cinsiyetteki yüzdeliği, difficulty.
+     * sırası (1 en güçlü), leagueSize, avgOvr (en iyi 11), budgetEur (tahmini transfer bütçesi), budgetTopQuartile (karar: kulüp değeri liginde üst
+     * çeyrekte), strengthPct kadro gücünün aynı cinsiyetteki yüzdeliği, difficulty, clubWorthEur (export'taki kulüp değeri).
      */
     public record Candidate(long clubId, String clubName, Integer leagueId, String league, int need, double squadFit, int youthDevelopment, int youngCount,
-                            int squadRank, int leagueSize, double avgOvr, Long budgetEur, boolean budgetTopQuartile, int strengthPct, Difficulty difficulty) {
+                            int squadRank, int leagueSize, double avgOvr, Long budgetEur, boolean budgetTopQuartile, int strengthPct, Difficulty difficulty,
+                            Long clubWorthEur) {
+        public Candidate(long clubId, String clubName, Integer leagueId, String league, int need, double squadFit, int youthDevelopment, int youngCount,
+                         int squadRank, int leagueSize, double avgOvr, Long budgetEur, boolean budgetTopQuartile, int strengthPct, Difficulty difficulty) {
+            this(clubId, clubName, leagueId, league, need, squadFit, youthDevelopment, youngCount, squadRank, leagueSize, avgOvr, budgetEur, budgetTopQuartile,
+                    strengthPct, difficulty, null);
+        }
     }
 
     public record Picked(Category category, Candidate candidate) {
@@ -198,6 +205,8 @@ public class ManagerRules {
         DEFAULT_ORDER.forEach((cat) -> score.put(cat, fit));
         score.put(Category.YOUTH_PROJECT, (c) -> c.youthDevelopment() * 2 + c.youngCount() * 3 + preference(c.difficulty(), preferred));
         score.put(Category.RESCUE, (c) -> c.need() - c.strengthPct() + preference(c.difficulty(), preferred));
+        // Karar: "Bütçesi güçlü" kulüp değerine göre (tahmini bütçe yalnız gösterim).
+        score.put(Category.STRONG_BUDGET, (c) -> Objects.isNull(c.clubWorthEur()) ? 0 : c.clubWorthEur());
         for (Category category : order(priorities)) {
             List<Candidate> eligible = candidates.stream().filter(rules.get(category)).toList();
             List<Candidate> free = eligible.stream().filter((c) -> !usedClubs.contains(c.clubId())).toList();
@@ -229,7 +238,7 @@ public class ManagerRules {
             case BEST_FIT -> "İtibar aralığında ve filtrelerde kulüp yok.";
             case YOUTH_PROJECT -> "Altyapı gelişimi yüksek ve genç yetenekli kulüp yok.";
             case RESCUE -> "Kadrosu itibarının belirgin gerisinde kalmış kulüp yok.";
-            case STRONG_BUDGET -> "Bütçesi liginin üst çeyreğinde olan kulüp yok.";
+            case STRONG_BUDGET -> "Kulüp değeri liginin üst çeyreğinde olan kulüp yok.";
             case SAFE -> "İtibarına yakın ve kadrosu ligin üst üçte birinde olan kulüp yok.";
             case DREAM -> "İtibarının biraz üstünde (hayal) kulüp yok.";
         };
@@ -238,14 +247,21 @@ public class ManagerRules {
     /** 3 kanıt satırı, gerçek veriden: kadro gücü sırası, tahmini bütçe, genç yetenek sayısı. */
     public List<String> evidence(Candidate c) {
         String squad = String.format(Locale.ROOT, "Kadro gücü ligde %d. (ort. OVR %d)", c.squadRank(), Math.round(c.avgOvr()));
-        String budget = Objects.isNull(c.budgetEur()) ? "Tahmini transfer bütçesi bilinmiyor"
-                : "Tahmini transfer bütçesi " + money(c.budgetEur()) + (c.budgetTopQuartile() ? ", ligin üst çeyreği" : "");
+        // Karar: "Kulüp değeri €X · tahmini bütçe ~€Y"; üst çeyrek kulüp değerine göre.
+        String worth = Objects.isNull(c.clubWorthEur()) ? null : "Kulüp değeri " + money(c.clubWorthEur());
+        String estimate = Objects.isNull(c.budgetEur()) ? null : "tahmini bütçe ~" + money(c.budgetEur());
+        String budget = Objects.isNull(worth) && Objects.isNull(estimate) ? "Kulüp değeri ve bütçe bilinmiyor"
+                : (Objects.isNull(worth) ? "Kulüp değeri bilinmiyor" : worth) + " · " + (Objects.isNull(estimate) ? "tahmini bütçe bilinmiyor" : estimate)
+                + (c.budgetTopQuartile() ? ", ligin üst çeyreği" : "");
         String youth = c.youngCount() > 0 ? properties.getYoungMaxAge() + " yaş altı " + c.youngCount() + " yüksek potansiyelli oyuncu"
                 : properties.getYoungMaxAge() + " yaş altı yüksek potansiyelli oyuncu yok";
         return List.of(squad, budget, youth);
     }
 
     private static String money(long eur) {
+        if (eur >= BILLION) {
+            return String.format(new Locale("tr"), "€%.1f Mr", eur / BILLION);
+        }
         if (eur >= MILLION) {
             return String.format(new Locale("tr"), "€%.1f Mn", eur / MILLION);
         }

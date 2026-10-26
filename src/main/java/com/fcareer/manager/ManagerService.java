@@ -98,15 +98,16 @@ public class ManagerService {
         stats.stream().collect(Collectors.groupingBy((s) -> Objects.requireNonNullElse(s.leagueId(), -1))).values().forEach((league) -> {
             List<ClubStat> byStrength = league.stream().sorted(Comparator.comparingDouble(ClubStat::avgOvr).reversed()).toList();
             List<ClubStat> byPrestige = league.stream().sorted(Comparator.comparingInt(ClubStat::domestic).reversed()).toList();
-            List<Long> budgets = league.stream().map(ClubStat::topValueEur).sorted().toList();
-            long cut = budgets.get((int) Math.floor((budgets.size() - 1) * QUARTILE));
+            // Karar: "üst çeyrek" kulüp değerine göre (tahmini bütçe yalnız gösterim).
+            List<Long> worths = league.stream().map((s) -> Objects.requireNonNullElse(s.clubWorthEur(), 0L)).sorted().toList();
+            long cut = worths.get((int) Math.floor((worths.size() - 1) * QUARTILE));
             int third = (int) Math.ceil(league.size() / 3.0);
             for (int i = 0; i < byStrength.size(); i++) {
                 squadRank.put(byStrength.get(i).clubId(), i + 1);
                 leagueSize.put(byStrength.get(i).clubId(), league.size());
                 prestigious.put(byPrestige.get(i).clubId(), i < third);
             }
-            league.forEach((s) -> budgetTop.put(s.clubId(), s.topValueEur() > 0 && s.topValueEur() >= cut));
+            league.forEach((s) -> budgetTop.put(s.clubId(), Objects.nonNull(s.clubWorthEur()) && s.clubWorthEur() > 0 && s.clubWorthEur() >= cut));
         });
 
         // Aday havuzu: itibar aralığı (ilgi + hayal) ve filtreler; kaba sıra ihtiyacın itibara yakınlığı; ilk poolSize kulüp için uyum.
@@ -127,7 +128,8 @@ public class ManagerService {
             Long budget = Math.round(s.topValueEur() * properties.getBudgetShare());
             candidates.add(new Candidate(s.clubId(), s.name(), s.leagueId(), s.league(), need, fit.squadFit(), s.youthDevelopment(), s.youngCount(),
                     squadRank.get(s.clubId()), leagueSize.get(s.clubId()), s.avgOvr(), budget > 0 ? budget : null, budgetTop.get(s.clubId()),
-                    strengthPct.get(s.clubId()), rules.difficulty(squadRank.get(s.clubId()), leagueSize.get(s.clubId()), prestigious.get(s.clubId()), need, reputation)));
+                    strengthPct.get(s.clubId()), rules.difficulty(squadRank.get(s.clubId()), leagueSize.get(s.clubId()), prestigious.get(s.clubId()), need, reputation),
+                    s.clubWorthEur()));
         }
         ManagerRules.Selection selection = rules.select(candidates, reputation, profile.priorities(), profile.difficulty());
         List<Card> cards = selection.cards().stream().map((p) -> {
