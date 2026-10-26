@@ -36,7 +36,10 @@ public class GrowthCalibrationService {
         Long interval = repository.intervalDays(from, to);
         List<GrowthCalibration.StageBand> bands = GrowthCalibration.stageBands(before, after, repository.academyTeamId(careerId), interval,
                 growth.config().getAcademyMaxGain(), growth.config().getFirstTeamMaxGain());
-        log.info("Growth calibration careerId : {} from : {} to : {} players : {} stageBands : {}", careerId, from, to, c.players(), bands.size());
-        return GrowthCalibration.withSnapshots(GrowthCalibration.withStageBands(c, bands, interval), from, to);
+        // GT-a: yaş grubuna göre gerçek düşüş (fiziksel/teknik/zihinsel); başlangıç yaşları otomatik değişmez.
+        List<GrowthCalibration.DeclineBand> declines = GrowthCalibration.declineBands(before, after, interval);
+        log.info("Growth calibration careerId : {} from : {} to : {} players : {} stageBands : {} declineBands : {}", careerId, from, to, c.players(), bands.size(),
+                declines.size());
+        return GrowthCalibration.withSnapshots(GrowthCalibration.withDeclineBands(GrowthCalibration.withStageBands(c, bands, interval), declines), from, to);
     }
 }

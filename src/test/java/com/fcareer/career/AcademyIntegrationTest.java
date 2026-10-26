@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -264,6 +265,38 @@ class AcademyIntegrationTest {
         if (youth.size() > 0) {
             data(token, "/api/v1/careers/" + careerId + "/youth/" + youth.get(0).path("playerId").asLong(), 200);
         }
+
+        // GT-a: tüm takım antrenman planı (tek içe aktarmayla): A takımın her oyuncusu yaş bölümüyle, tek önerilen plan ve tek satır gerekçe.
+        JsonNode training = data(token, "/api/v1/careers/" + careerId + "/training", 200);        Map<String, Integer> groups = new java.util.HashMap<>();
+        Set<Long> youthIds = new HashSet<>();
+        youth.forEach((p) -> youthIds.add(p.get("playerId").asLong()));
+        training.forEach((p) -> {
+            String group = p.path("ageGroup").asText();
+            int age = p.path("age").asInt();
+            assertThat(group).as(p.path("name").asText()).isEqualTo(age <= 23 ? "YOUTH" : age <= 29 ? "PEAK" : "VETERAN");
+            groups.merge(group, 1, Integer::sum);
+            assertThat(academyIds).doesNotContain(p.path("playerId").asLong());
+            assertThat(p.at("/plan/label").asText()).as(p.path("name").asText()).isNotBlank();
+            assertThat(p.at("/plan/text").asText()).as("tek satır gerekçe").isNotBlank().doesNotContain("\n");
+            if (p.path("loanedOut").asBoolean()) {
+                assertThat(group).as("kiralıktakilerden yalnız gençler (mevcut hâliyle)").isEqualTo("YOUTH");
+            }
+            if (group.equals("VETERAN")) {
+                assertThat(p.at("/plan/text").asText()).matches(".*(· tahmin|düşüş henüz başlamadı)$");
+            }
+        });
+        assertThat(groups).as("üç yaş bölümü").containsKeys("YOUTH", "PEAK", "VETERAN");
+        youthIds.forEach((id) -> assertThat(training.findValues("playerId").stream().map(JsonNode::asLong)).as("gençler bugünkü listeden").contains(id));
+        // Tecrübeli oyuncunun paneli de açılır.
+        for (JsonNode p : training) {
+            if (p.path("ageGroup").asText().equals("VETERAN")) {
+                JsonNode panel = data(token, "/api/v1/careers/" + careerId + "/youth/" + p.path("playerId").asLong(), 200);
+                assertThat(panel.at("/advice/sentence").asText()).isNotBlank();
+                assertThat(panel.at("/advice/assumption").asText()).startsWith("Tahmin: yaş kuralıyla");
+                break;
+            }
+        }
+        data(stranger, "/api/v1/careers/" + careerId + "/training", 404);
     }
 
     @Test

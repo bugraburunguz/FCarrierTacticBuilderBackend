@@ -57,6 +57,12 @@ public class PlanProjector {
                 overall = balancedOverall;
                 continue;
             }
+            // GT-a: düşüş yılında plan attribute'ları geç ve yavaş düşer; kart OVR Dengeli'ninki (yaş kuralı).
+            if (growth.declining(current)) {
+                overall = balancedOverall;
+                current = withOverall(growth.project(current, plan.attributes(), stage).grown(), overall, familiarity(player, plan, season));
+                continue;
+            }
             // Karar: plan yalnız dağılımı değiştirir. Ana mevkide tahmini OVR artışı Dengeli ile aynı: artışlar, ana mevki formülündeki (doğrusal)
             // ağırlıklı toplam Dengeli'ninkine eşit olacak biçimde ölçeklenir; OVR Dengeli'nin OVR'si.
             Map<Attr, Double> planned = growth.increments(current, plan.attributes(), stage);

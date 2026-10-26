@@ -96,6 +96,50 @@ class DevelopmentRecommendationTest {
                 .as("grup bilinmiyorsa eski metin").isEqualTo("Genç · Dengeli plan: Henüz net bir mevkisi yok, esnek gelişsin");
     }
 
+    /** GT-a madde 1: kadro yaşa göre üç bölüm — Gençler (≤ 23), Zirve (24–29), Tecrübeliler (30+); sınırlar config'te. */
+    @Test
+    void squadSplitsIntoThreeAgeGroups() {
+        DevelopmentRecommender.Config config = new DevelopmentRecommender.Config();
+        assertThat(config.getVeteranFromAge()).isEqualTo(30);
+        assertThat(DevelopmentRecommender.ageGroup(17, config)).isEqualTo(DevelopmentRecommender.AgeGroup.YOUTH);
+        assertThat(DevelopmentRecommender.ageGroup(23, config)).isEqualTo(DevelopmentRecommender.AgeGroup.YOUTH);
+        assertThat(DevelopmentRecommender.ageGroup(24, config)).isEqualTo(DevelopmentRecommender.AgeGroup.PEAK);
+        assertThat(DevelopmentRecommender.ageGroup(29, config)).isEqualTo(DevelopmentRecommender.AgeGroup.PEAK);
+        assertThat(DevelopmentRecommender.ageGroup(30, config)).isEqualTo(DevelopmentRecommender.AgeGroup.VETERAN);
+        assertThat(DevelopmentRecommender.ageGroup(null, config)).isNull();
+    }
+
+    /** GT-a madde 3, Zirve: mevcut rolünde Rol oturması düşükse (WEAK, WRONG_ROLE) "rolde incel" rol planı; değilse Dengeli. */
+    @Test
+    void peakPlayersRefineTheirRoleOnlyWhenTheFitIsLow() {
+        assertThat(DevelopmentRecommender.refinesRole("WEAK")).isTrue();
+        assertThat(DevelopmentRecommender.refinesRole("WRONG_ROLE")).isTrue();
+        assertThat(DevelopmentRecommender.refinesRole("AT_LEVEL")).isFalse();
+        assertThat(DevelopmentRecommender.refinesRole("GOOD")).isFalse();
+        assertThat(DevelopmentRecommender.refinesRole(null)).isFalse();
+        assertThat(DevelopmentRecommender.peakText("Okafor", "CM", "Box-to-Box", 41.6, true)).isEqualTo("Okafor · CM Box-to-Box planı: rol oturması %42, rolde incelsin");
+        assertThat(DevelopmentRecommender.peakText("Okafor", "CM", "Box-to-Box", 71.2, false)).isEqualTo("Okafor · Dengeli plan: CM Box-to-Box rolünde oturması iyi (%71)");
+        assertThat(DevelopmentRecommender.peakText("Okafor", "CM", "Box-to-Box", null, false)).as("oturma bilinmiyorsa").isEqualTo("Okafor · Dengeli plan: CM Box-to-Box rolünü korusun");
+    }
+
+    /**
+     * GT-a madde 3, Tecrübeliler: rolünde en ağır ve düşüşteki attribute'larla en çok örtüşen plan; eşitlikte 1 sezon sonraki kayıp en az olan. Örtüşme yoksa
+     * plan önerilmez (Dengeli).
+     */
+    @Test
+    void veteransGetThePlanThatOverlapsTheirHeaviestDecliningAttributes() {
+        DevelopmentRecommender.VeteranOption poacher = new DevelopmentRecommender.VeteranOption("role:poacher:ST", "ST · Poacher", 0.42, 1, 1.2, List.of("bitiricilik", "pozisyon alma"));
+        DevelopmentRecommender.VeteranOption position = new DevelopmentRecommender.VeteranOption("pos_st", "ST mevki", 0.30, 2, 2.0, List.of("bitiricilik"));
+        DevelopmentRecommender.VeteranOption tie = new DevelopmentRecommender.VeteranOption("role:target:ST", "ST · Target", 0.42, 2, 1.9, List.of("bitiricilik", "kafa"));
+        assertThat(DevelopmentRecommender.chooseVeteran(List.of(position, tie, poacher))).contains(poacher);
+        assertThat(DevelopmentRecommender.chooseVeteran(List.of(new DevelopmentRecommender.VeteranOption("x", "x", 0, 0, 0, List.of())))).as("örtüşme yok").isEmpty();
+        assertThat(DevelopmentRecommender.veteranText("Vardy", 3, poacher))
+                .isEqualTo("Vardy · Plansız tahmini −3 OVR, ST · Poacher planıyla −1 (bitiricilik ve pozisyon alma korunur) · tahmin");
+        assertThat(DevelopmentRecommender.veteranText("Vardy", 1, new DevelopmentRecommender.VeteranOption("pos_st", "ST mevki", 0.3, 0, 0.1, List.of("bitiricilik"))))
+                .isEqualTo("Vardy · Plansız tahmini −1 OVR, ST mevki planıyla ±0 (bitiricilik korunur) · tahmin");
+        assertThat(DevelopmentRecommender.noDeclineText("Vardy")).isEqualTo("Vardy · Dengeli plan: düşüş henüz başlamadı");
+    }
+
     @Test
     void textReadsLikeTheBrief() {
         Option chosen = new Option("role:deep_lying_playmaker:CDM", "Deep-Lying Playmaker", "ROLE", "CDM", "deep_lying_playmaker_build_up",

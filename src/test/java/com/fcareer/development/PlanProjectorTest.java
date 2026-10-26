@@ -88,6 +88,19 @@ class PlanProjectorTest {
                 .isGreaterThan(planned.getAttrs().get(Attr.STAMINA) - 62);
     }
 
+    /** GT-a madde 2: düşüş yaşında plan etkili — plan attribute'ları Dengeli'den yavaş düşer; kart OVR yaş kuralıyla, Dengeli ile aynı. */
+    @Test
+    void inDeclineAPlanProtectsItsAttributesAndKeepsTheBalancedOverall() {
+        FitPlayer veteran = player("ST").toBuilder().age(36).overall(80).potential(80).build();
+        Plan poacher = plans.rolePlan("poacher", "ST").orElseThrow();
+        PlanProjection balanced = projector.project(veteran, plans.general(), 1);
+        PlanProjection planned = projector.project(veteran, poacher, 1);
+        assertThat(planned.overall()).isEqualTo(balanced.overall());
+        assertThat(planned.overall()).isLessThan(80);
+        assertThat(planned.grown().getAttrs().get(Attr.FINISHING)).as("Poacher planı bitiriciliği korur").isGreaterThan(balanced.grown().getAttrs().get(Attr.FINISHING));
+        assertThat(planned.grown().getRoleFamiliarity()).containsEntry("poacher", 1);
+    }
+
     private static double gain(Map<Attr, Double> w, FitPlayer before, FitPlayer after) {
         return w.entrySet().stream().mapToDouble((e) -> e.getValue() * (after.getAttrs().get(e.getKey()) - before.getAttrs().get(e.getKey()))).sum();
     }

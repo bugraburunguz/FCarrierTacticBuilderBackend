@@ -1,5 +1,6 @@
 package com.fcareer.development.calibration;
 
+import com.fcareer.development.service.GrowthProjector;
 import com.fcareer.fitengine.model.Attr;
 
 import java.util.ArrayList;
@@ -81,15 +82,54 @@ public final class GrowthCalibration {
     public record AgeBand(String label, int players, double meanOverallDelta) {
     }
 
-    /** stageBands/intervalDays (GROWTH-CAL): altyapı/A takım × yaş için gerçek artış ve önerilen tavan; aradaki oyun günü (bilinmiyorsa null). */
+    /**
+     * stageBands/intervalDays (GROWTH-CAL): altyapı/A takım × yaş için gerçek artış ve önerilen tavan; aradaki oyun günü (bilinmiyorsa null).
+     * declineBands (GT-a): yaş grubuna göre gerçek düşüş.
+     */
     public record Calibration(String status, String message, Long fromSnapshot, Long toSnapshot, int players, int growingPlayers, double meanOverallDelta,
                               List<AttributeGain> attributes, List<AgeBand> ageBands, Double hardToTrainRatio, double modelHardToTrain,
-                              List<StageBand> stageBands, Long intervalDays) {
+                              List<StageBand> stageBands, Long intervalDays, List<DeclineBand> declineBands) {
         public Calibration(String status, String message, Long fromSnapshot, Long toSnapshot, int players, int growingPlayers, double meanOverallDelta,
                            List<AttributeGain> attributes, List<AgeBand> ageBands, Double hardToTrainRatio, double modelHardToTrain) {
             this(status, message, fromSnapshot, toSnapshot, players, growingPlayers, meanOverallDelta, attributes, ageBands, hardToTrainRatio, modelHardToTrain,
-                    List.of(), null);
+                    List.of(), null, List.of());
         }
+    }
+
+    /**
+     * GT-a madde 4: yaş grubunda (24–29, 30–31, 32–33, 34+) sezona ölçekli ortalama OVR değişimi ve attribute grubu (fiziksel, teknik, zihinsel) başına
+     * ortalama attribute değişimi. Modelin düşüş başlangıç yaşlarıyla kıyas için; config otomatik değişmez.
+     */
+    public record DeclineBand(String label, int players, double meanOverallDelta, double physical, double technical, double mental) {
+    }
+
+    private static final int[][] DECLINE_BANDS = {{24, 29}, {30, 31}, {32, 33}, {34, 99}};
+
+    public static List<DeclineBand> declineBands(List<SnapshotPlayer> before, List<SnapshotPlayer> after, Long intervalDays) {
+        Map<Long, SnapshotPlayer> earlier = before.stream().collect(Collectors.toMap(SnapshotPlayer::playerId, Function.identity(), (a, b) -> a));
+        double scale = Objects.nonNull(intervalDays) && intervalDays >= MIN_INTERVAL_DAYS ? DAYS_PER_SEASON / intervalDays : 1.0;
+        List<DeclineBand> out = new ArrayList<>();
+        for (int[] band : DECLINE_BANDS) {
+            List<SnapshotPlayer[]> pairs = after.stream().filter((p) -> earlier.containsKey(p.playerId()) && Objects.nonNull(p.overall())).map((p) -> new SnapshotPlayer[]{earlier.get(p.playerId()), p})
+                    .filter((x) -> Objects.nonNull(x[0].age()) && Objects.nonNull(x[0].overall()) && x[0].age() >= band[0] && x[0].age() <= band[1]).toList();
+            if (pairs.isEmpty()) {
+                continue;
+            }
+            String label = band[1] == 99 ? band[0] + "+" : band[0] + "-" + band[1];
+            double ovr = pairs.stream().mapToInt((x) -> x[1].overall() - x[0].overall()).average().orElse(0);
+            out.add(new DeclineBand(label, pairs.size(), round(ovr * scale), groupDelta(pairs, GrowthProjector.DeclineGroup.PHYSICAL, scale),
+                    groupDelta(pairs, GrowthProjector.DeclineGroup.TECHNICAL, scale), groupDelta(pairs, GrowthProjector.DeclineGroup.MENTAL, scale)));
+        }
+        return out;
+    }
+
+    /** Gruptaki attribute'ların oyuncu başına ortalama değişimi (kaleci attribute'ları hariç). */
+    private static double groupDelta(List<SnapshotPlayer[]> pairs, GrowthProjector.DeclineGroup group, double scale) {
+        return round(pairs.stream().mapToDouble((x) -> {
+            List<Attr> attrs = java.util.Arrays.stream(Attr.values()).filter((a) -> !GOALKEEPING.contains(a) && GrowthProjector.group(a) == group
+                    && x[0].attrs().containsKey(a) && x[1].attrs().containsKey(a)).toList();
+            return attrs.isEmpty() ? 0 : attrs.stream().mapToInt((a) -> x[1].attrs().get(a) - x[0].attrs().get(a)).average().orElse(0);
+        }).average().orElse(0) * scale);
     }
 
     public static Calibration noData() {
@@ -99,7 +139,13 @@ public final class GrowthCalibration {
     /** GROWTH-CAL: altyapı/A takım bantlarını ve aralığı rapora ekler. */
     public static Calibration withStageBands(Calibration c, List<StageBand> bands, Long intervalDays) {
         return new Calibration(c.status(), c.message(), c.fromSnapshot(), c.toSnapshot(), c.players(), c.growingPlayers(), c.meanOverallDelta(), c.attributes(),
-                c.ageBands(), c.hardToTrainRatio(), c.modelHardToTrain(), bands, intervalDays);
+                c.ageBands(), c.hardToTrainRatio(), c.modelHardToTrain(), bands, intervalDays, c.declineBands());
+    }
+
+    /** GT-a: yaş grubu düşüş bantlarını rapora ekler. */
+    public static Calibration withDeclineBands(Calibration c, List<DeclineBand> bands) {
+        return new Calibration(c.status(), c.message(), c.fromSnapshot(), c.toSnapshot(), c.players(), c.growingPlayers(), c.meanOverallDelta(), c.attributes(),
+                c.ageBands(), c.hardToTrainRatio(), c.modelHardToTrain(), c.stageBands(), c.intervalDays(), bands);
     }
 
     public static Calibration summarize(List<SnapshotPlayer> before, List<SnapshotPlayer> after, double modelHardToTrain) {
@@ -138,7 +184,7 @@ public final class GrowthCalibration {
 
     public static Calibration withSnapshots(Calibration c, long from, long to) {
         return new Calibration(c.status(), c.message(), from, to, c.players(), c.growingPlayers(), c.meanOverallDelta(), c.attributes(), c.ageBands(),
-                c.hardToTrainRatio(), c.modelHardToTrain(), c.stageBands(), c.intervalDays());
+                c.hardToTrainRatio(), c.modelHardToTrain(), c.stageBands(), c.intervalDays(), c.declineBands());
     }
 
     private static double round(double v) {
