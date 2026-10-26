@@ -178,8 +178,15 @@ class AcademyIntegrationTest {
         // GROWTH-CAL madde 2: fixture'daki 7 gencin hepsi 15 yaşında → "A takıma al" önerisi yok; yerine 16. doğum gününün tarihli notu.
         for (JsonNode p : academy.get("players")) {
             assertThat(p.path("promote").isNull()).as(p.path("name").asText()).isTrue();
-            assertThat(p.at("/promoteInfo/text").asText()).matches("16 yaşında A takıma alınabilir · \\d{2}\\.\\d{2}\\.\\d{4}");
-            assertThat(p.at("/promoteInfo/eligibleOn").asText()).matches("\\d{4}-\\d{2}-\\d{2}");
+            // Karar: satırda not yalnız o tarihte (aynı ufukta) yedeği geçecek gençte; diğerlerinde not yok.
+            if (!p.path("promoteInfo").isNull()) {
+                assertThat(p.at("/promoteInfo/text").asText()).matches("16 yaşında A takıma alınabilir · \\d{2}\\.\\d{2}\\.\\d{4}");
+                JsonNode backup = p.at("/promoteInfo/backupStrength");
+                assertThat(backup.isNull() || p.at("/promoteInfo/strength").asDouble() > backup.asDouble()).as(p.path("name").asText()).isTrue();
+            }
+            // Tarih her 16 yaş altı gencin panelinde küçük satır olarak.
+            JsonNode panel = data(token, "/api/v1/careers/" + careerId + "/youth/" + p.path("playerId").asLong(), 200);
+            assertThat(panel.path("eligibleText").asText()).matches("16 yaşında A takıma alınabilir · \\d{2}\\.\\d{2}\\.\\d{4}");
             assertThat(p.path("status").asText()).isNotEqualTo("READY");
         }
         assertThat(jdbc.queryForList("SELECT name FROM career_team WHERE career_id = ?", String.class, careerId)).noneMatch((n) -> n.startsWith("*"));

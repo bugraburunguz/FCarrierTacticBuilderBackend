@@ -33,9 +33,21 @@ public class GrowthCalibrationRepository {
     }
 
     public List<SnapshotPlayer> players(long snapshotId) {
-        return jdbc.query("SELECT base_player_id, age, overall, attrs::text AS attrs FROM career_snapshot_player WHERE snapshot_id = :s AND attrs IS NOT NULL",
+        return jdbc.query("SELECT base_player_id, age, overall, team_id, attrs::text AS attrs FROM career_snapshot_player WHERE snapshot_id = :s AND attrs IS NOT NULL",
                 Map.of("s", snapshotId), (rs, i) -> new SnapshotPlayer(rs.getLong("base_player_id"), (Integer) rs.getObject("age"), (Integer) rs.getObject("overall"),
-                        attrs(rs.getString("attrs"))));
+                        attrs(rs.getString("attrs")), (Integer) rs.getObject("team_id")));
+    }
+
+    /** GROWTH-CAL: iki görüntü arasındaki oyun günü (oyun tarihi bilinmiyorsa null). */
+    public Long intervalDays(long fromSnapshot, long toSnapshot) {
+        return jdbc.queryForObject("""
+                SELECT (SELECT game_date FROM career_snapshot WHERE id = :to) - (SELECT game_date FROM career_snapshot WHERE id = :from)""",
+                Map.of("from", fromSnapshot, "to", toSnapshot), (rs, i) -> rs.getObject(1) == null ? null : rs.getLong(1));
+    }
+
+    /** GROWTH-CAL: kariyerin altyapı takımı (ACADEMY-a; bulunamadıysa null). */
+    public Integer academyTeamId(long careerId) {
+        return jdbc.queryForObject("SELECT academy_team_id FROM career WHERE id = :c", Map.of("c", careerId), Integer.class);
     }
 
     /** attrs JSONB anahtarları Attr sütun adı (sprint_speed ...); attribute olmayan alanlar (weak_foot, playstyles ...) atlanır. */

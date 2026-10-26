@@ -53,7 +53,7 @@ public class AcademyService {
     /** Panel: oyuncunun satırı + üç bölüm. academy: altyapı oyuncusu mu (yoksa kadro genci). */
     public record YouthDetail(long playerId, String name, Integer age, List<String> positions, Integer overall, Integer potential, String potentialRange,
                               Integer monthsInSquad, boolean academy, AcademyAdvisor.WhatToDo advice, AcademyAdvisor.WhichPosition position,
-                              AcademyAdvisor.TeamPlace team) {
+                              AcademyAdvisor.TeamPlace team, String eligibleText) {
     }
 
     @Transactional(readOnly = true)
@@ -96,7 +96,14 @@ public class AcademyService {
         boolean ranged = spoilerPolicy.ranged(careerId);
         return new YouthDetail(row.playerId(), row.name(), row.age(), row.positions(), row.overall(), ranged ? null : row.potential(),
                 ranged && Objects.nonNull(row.potential()) ? SpoilerPolicy.range(row.potential()) : null, row.monthsInSquad(), academy,
-                detail.advice(), detail.position(), detail.team());
+                detail.advice(), detail.position(), detail.team(), eligibleText(row, academy));
+    }
+
+    /** Karar: 16 yaş altı altyapı gencinin terfi tarihi panelde küçük satır olarak (satırda yalnız yedeği geçecekse). */
+    private String eligibleText(Row row, boolean academy) {
+        java.time.LocalDate on = AcademyAdvisor.eligibleOn(row.dob(), properties.getMinPromotionAge());
+        boolean young = academy && Objects.nonNull(row.age()) && row.age() < properties.getMinPromotionAge();
+        return young && Objects.nonNull(on) ? AcademyAdvisor.eligibleText(on, properties.getMinPromotionAge()) : null;
     }
 
     private List<AcademyPlayer> players(Long userId, Long careerId, List<Row> rows, boolean academy, Set<Long> loanedOut) {

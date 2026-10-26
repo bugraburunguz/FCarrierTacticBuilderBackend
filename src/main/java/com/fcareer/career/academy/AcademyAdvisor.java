@@ -155,10 +155,6 @@ public class AcademyAdvisor {
             LocalDate eligible = timing.eligibleOn().get(player.getId());
             boolean young = Objects.nonNull(player.getAge()) && player.getAge() < minAge;
             Optional<String> target = promotable ? target(player, pos, ctx.slotPositions()) : Optional.empty();
-            if (promotable && young && Objects.nonNull(eligible) && target.isEmpty()) {
-                // Taktikte uygun slot yok: kıyas yok ama tarihli not yine çıkar.
-                info = new PromoteInfo(eligible, eligibleText(eligible, minAge), null, null, null, null);
-            }
             if (target.isPresent()) {
                 String at = target.get();
                 int horizon = young && Objects.nonNull(eligible) ? seasonsUntil(timing.gameDate(), eligible) : PROMOTE_SEASONS;
@@ -186,7 +182,8 @@ public class AcademyAdvisor {
             return PromotionDecision.NONE;
         }
         if (age < minAge) {
-            return PromotionDecision.INFO;
+            // Karar: satırda tarihli not yalnız o tarihte (aynı ufukta) yedeği geçecekse; değilse not yok (tarih panelde).
+            return promotes(strength, projectedBackup) ? PromotionDecision.INFO : PromotionDecision.NONE;
         }
         return promotes(strength, projectedBackup) ? PromotionDecision.PROMOTE : PromotionDecision.NONE;
     }

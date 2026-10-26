@@ -47,7 +47,14 @@ class DevelopmentRecommendationTest {
         assertThat(d.chosen().position()).isEqualTo("RW");
         // CAM/LW listeli oyuncu: gruplar arası kıyas (CAM 75 – LW 72 = 3 < 5).
         List<Option> mixed = List.of(at("role:shadow:CAM", "CAM", 75, 65), at("role:winger:LW", "LW", 72, 65));
-        assertThat(DevelopmentRecommender.decide(mixed, 2.0, 5.0).reason()).isEqualTo("NO_CLEAR_TARGET");
+        DevelopmentRecommender.Decision between = DevelopmentRecommender.decide(mixed, 2.0, 5.0);
+        assertThat(between.reason()).isEqualTo("NO_CLEAR_TARGET");
+        // Karar: iki grup arasında kalan oyuncunun gerekçesi grupları adıyla yazar.
+        assertThat(between.other().position()).isEqualTo("LW");
+        assertThat(DevelopmentRecommender.noClearTargetText("Genç", between)).isEqualTo("Genç · Dengeli plan: CAM ve Kanat arasında, ikisinde de yakın");
+        assertThat(DevelopmentRecommender.groupLabel("RB")).isEqualTo("Bek");
+        assertThat(DevelopmentRecommender.groupLabel("LM")).isEqualTo("Kanat");
+        assertThat(DevelopmentRecommender.groupLabel("CM")).isEqualTo("CM");
         List<Option> fullback = List.of(at("role:fb:LB", "LB", 74, 65), at("role:fb:RB", "RB", 73, 65), at("role:cb:CB", "CB", 66, 60));
         assertThat(DevelopmentRecommender.decide(fullback, 2.0, 5.0).reason()).as("bek grubu").isEqualTo("CLEAR_TARGET");
         assertThat(DevelopmentRecommender.positionGroup("LM")).isEqualTo(DevelopmentRecommender.positionGroup("RW"));
@@ -84,7 +91,9 @@ class DevelopmentRecommendationTest {
         DevelopmentRecommender.Decision small = DevelopmentRecommender.decide(List.of(at("role:holding:CDM", "CDM", 71, 70), at("role:box_crasher:CDM", "CDM", 66, 56)), 2.0, 5.0);
         assertThat(small.reason()).isEqualTo("SMALL_GAIN");
         assertThat(small.best().gain()).isEqualTo(1.0);
-        assertThat(DevelopmentRecommender.noClearTargetText("Genç")).isEqualTo("Genç · Dengeli plan: Henüz net bir mevkisi yok, esnek gelişsin");
+        assertThat(DevelopmentRecommender.noClearTargetText("Genç", d)).isEqualTo("Genç · Dengeli plan: CDM ve CM arasında, ikisinde de yakın");
+        assertThat(DevelopmentRecommender.noClearTargetText("Genç", new DevelopmentRecommender.Decision(null, "NO_CLEAR_TARGET")))
+                .as("grup bilinmiyorsa eski metin").isEqualTo("Genç · Dengeli plan: Henüz net bir mevkisi yok, esnek gelişsin");
     }
 
     @Test

@@ -52,6 +52,9 @@ class AcademyAdvisorTest {
     @Test
     void promotionNeedsSixteenAndBeatsTheProjectedBackup() {
         assertThat(AcademyAdvisor.decision(15, 16, 70.0, b("Yedek", 60))).isEqualTo(AcademyAdvisor.PromotionDecision.INFO);
+        // Karar: 16 yaş altında not yalnız o tarihte yedeği geçecekse (geçmezse satırda not yok; tarih panelde).
+        assertThat(AcademyAdvisor.decision(15, 16, 58.0, b("Yedek", 60))).isEqualTo(AcademyAdvisor.PromotionDecision.NONE);
+        assertThat(AcademyAdvisor.decision(15, 16, 58.0, null)).as("yedek yok: yer var").isEqualTo(AcademyAdvisor.PromotionDecision.INFO);
         assertThat(AcademyAdvisor.decision(16, 16, 66.0, b("Yedek", 64))).isEqualTo(AcademyAdvisor.PromotionDecision.PROMOTE);
         assertThat(AcademyAdvisor.decision(16, 16, 66.0, b("Yedek", 67))).as("yedek gelişiyorsa öneri kalkar").isEqualTo(AcademyAdvisor.PromotionDecision.NONE);
         assertThat(AcademyAdvisor.decision(null, 16, 66.0, null)).as("yaş bilinmiyorsa öneri yok").isEqualTo(AcademyAdvisor.PromotionDecision.NONE);

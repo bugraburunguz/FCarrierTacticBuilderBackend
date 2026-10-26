@@ -45,6 +45,39 @@ class GrowthCalibrationTest {
         assertThat(c.growingPlayers()).as("artışı olan oyuncu").isEqualTo(1);
     }
 
+    private static SnapshotPlayer t(long id, int age, int ovr, Integer team) {
+        return new SnapshotPlayer(id, age, ovr, Map.of(), team);
+    }
+
+    /**
+     * GROWTH-CAL kararı: yaşa ve altyapı/A takım ayrımına göre gerçek OVR artışı ve önerilen tavan (sezona göre ölçekli 90. yüzdelik,
+     * yuvarlanmış). Config otomatik değişmez; rapor config'teki tavanı da yazar.
+     */
+    @Test
+    void reportsRealGainsAndASuggestedCapByStageAndAge() {
+        List<SnapshotPlayer> before = List.of(t(1, 15, 50, 99), t(2, 15, 52, 99), t(3, 15, 54, 99), t(4, 19, 60, 7), t(5, 19, 62, 7), t(6, 19, 64, 7), t(7, 30, 80, 7));
+        List<SnapshotPlayer> after = List.of(t(1, 16, 53, 99), t(2, 16, 56, 99), t(3, 16, 59, 7), t(4, 20, 66, 7), t(5, 20, 70, 7), t(6, 20, 74, 7), t(7, 31, 79, 7));
+        List<GrowthCalibration.StageBand> bands = GrowthCalibration.stageBands(before, after, 99, 365L, 5, 8);
+        GrowthCalibration.StageBand academy = bands.stream().filter((b) -> b.stage().equals("ALTYAPI")).findFirst().orElseThrow();
+        assertThat(academy.label()).isEqualTo("≤15");
+        assertThat(academy.players()).as("altyapı = önceki görüntüde altyapı takımında").isEqualTo(3);
+        assertThat(academy.meanDelta()).isEqualTo(4.0);
+        assertThat(academy.maxDelta()).isEqualTo(5);
+        assertThat(academy.suggestedCap()).isEqualTo(5);
+        assertThat(academy.configCap()).isEqualTo(5);
+        GrowthCalibration.StageBand first = bands.stream().filter((b) -> b.stage().equals("A_TAKIM") && b.label().equals("18-19")).findFirst().orElseThrow();
+        assertThat(first.meanDelta()).isEqualTo(8.0);
+        assertThat(first.suggestedCap()).as("90. yüzdelik +10").isEqualTo(10);
+        assertThat(first.configCap()).isEqualTo(8);
+        assertThat(bands).as("yalnız gelişim yaşları (≤ 23)").noneMatch((b) -> b.label().startsWith("30"));
+        // Aralık yarım sezonsa artış sezona ölçeklenir (×2).
+        GrowthCalibration.StageBand half = GrowthCalibration.stageBands(before, after, 99, 182L, 5, 8).stream()
+                .filter((b) -> b.stage().equals("ALTYAPI")).findFirst().orElseThrow();
+        assertThat(half.suggestedCap()).isEqualTo(10);
+        // Oyun tarihi bilinmiyorsa ölçeksiz.
+        assertThat(GrowthCalibration.stageBands(before, after, 99, null, 5, 8).get(0).suggestedCap()).isEqualTo(5);
+    }
+
     @Test
     void lessThanTwoImportsMeansNoData() {
         Calibration none = GrowthCalibration.noData();

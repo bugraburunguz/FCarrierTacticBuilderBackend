@@ -164,7 +164,7 @@ public class DevelopmentRecommender {
         // "Dengeli yeterli" metni kararın dayandığı hedefin (2 sezon sonra en güçlü) farkını yazar, en büyük farkı değil.
         double bestGain = Objects.isNull(decision.best()) ? 0 : decision.best().gain();
         String text = Objects.nonNull(decision.chosen()) ? text(player.getName(), decision.chosen())
-                : "NO_CLEAR_TARGET".equals(decision.reason()) ? noClearTargetText(player.getName()) : balancedText(player.getName(), bestGain);
+                : "NO_CLEAR_TARGET".equals(decision.reason()) ? noClearTargetText(player.getName(), decision) : balancedText(player.getName(), bestGain);
         return new PlayerRecommendation(player.getId(), player.getName(), player.getAge(), player.getOverall(), Objects.isNull(decision.chosen()), decision.chosen(),
                 distinct.stream().limit(OPTIONS_SHOWN).toList(), text, true, decision.reason());
     }
@@ -204,9 +204,14 @@ public class DevelopmentRecommender {
     }
 
     /** chosen null → Dengeli; best: 2 sezon sonra en güçlü hedef (metin onun farkını yazar); reason: CLEAR_TARGET, NO_CLEAR_TARGET, SMALL_GAIN, NO_OPTIONS. */
-    public record Decision(Option chosen, String reason, Option best) {
+    /** other: NO_CLEAR_TARGET'ta en iyi hedefe yakın kalan, başka gruptaki en iyi seçenek (gerekçe grupları adıyla yazar). */
+    public record Decision(Option chosen, String reason, Option best, Option other) {
         public Decision(Option chosen, String reason) {
-            this(chosen, reason, chosen);
+            this(chosen, reason, chosen, null);
+        }
+
+        public Decision(Option chosen, String reason, Option best) {
+            this(chosen, reason, best, null);
         }
     }
 
@@ -224,7 +229,7 @@ public class DevelopmentRecommender {
         String bestGroup = positionGroup(best.get().position());
         Optional<Option> otherPosition = special.stream().filter((o) -> !positionGroup(o.position()).equals(bestGroup)).max(Comparator.comparingDouble(Option::strength2));
         if (otherPosition.isPresent() && best.get().strength2() - otherPosition.get().strength2() < clearTargetGap) {
-            return new Decision(null, "NO_CLEAR_TARGET", best.get());
+            return new Decision(null, "NO_CLEAR_TARGET", best.get(), otherPosition.get());
         }
         return best.get().gain() >= minGain ? new Decision(best.get(), "CLEAR_TARGET") : new Decision(null, "SMALL_GAIN", best.get());
     }
@@ -262,8 +267,18 @@ public class DevelopmentRecommender {
         return Optional.ofNullable(decide(options, minGain, 0).chosen());
     }
 
-    public static String noClearTargetText(String player) {
-        return player + " · Dengeli plan: Henüz net bir mevkisi yok, esnek gelişsin";
+    /** Gerekçede grup adı: Kanat (LW/RW/LM/RM), Bek (LB/RB); diğerleri mevki kısaltması. */
+    public static String groupLabel(String position) {
+        String group = positionGroup(position);
+        return "WING".equals(group) ? "Kanat" : "FULLBACK".equals(group) ? "Bek" : position;
+    }
+
+    /** Karar: iki grup arasında kalan oyuncuya "Kanat ve CAM arasında, ikisinde de yakın"; gruplar bilinmiyorsa eski metin. */
+    public static String noClearTargetText(String player, Decision decision) {
+        if (Objects.isNull(decision) || Objects.isNull(decision.best()) || Objects.isNull(decision.other())) {
+            return player + " · Dengeli plan: Henüz net bir mevkisi yok, esnek gelişsin";
+        }
+        return player + " · Dengeli plan: " + groupLabel(decision.best().position()) + " ve " + groupLabel(decision.other().position()) + " arasında, ikisinde de yakın";
     }
 
     /** "Figueiredo · CDM Deep-Lying Playmaker planı → 2 sezonda CDM gücü 71 (Dengeli: 67; Nyoni'nin tahmini 68)". */
