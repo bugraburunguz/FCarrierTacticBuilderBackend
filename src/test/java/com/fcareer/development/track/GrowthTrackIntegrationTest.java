@@ -163,6 +163,45 @@ class GrowthTrackIntegrationTest {
         assertThat(snapshots(careerId)).isZero();
     }
 
+    /**
+     * GTR-b: oyuncunun Gelişim satırı. Tek görüntüde liste boş. İkinci görüntüde taban 3 ay önce; tabandaki OVR'ler 2 düşürülür, her kadro oyuncusu
+     * +2 OVR alır. Maç tablosu bu export'ta yok: maç null. Kimlikler kadro (base_player) kimliği; başkasının kariyeri 404.
+     */
+    @Test
+    void recentChangesPerSquadPlayer() throws Exception {
+        String token = support.register();
+        long careerId = support.premiumCareer(token, null);
+        careers.add(new Object[] {token, careerId});
+        importFixture(token, careerId);
+        String recent = "/api/v1/careers/" + careerId + "/growth-recent";
+        assertThat(support.json(get(recent), token).at("/data").size()).as("tek görüntü").isZero();
+
+        long id = jdbc.queryForObject("SELECT id FROM career_growth_snapshot WHERE career_id = ?", Long.class, careerId);
+        List<TrackedPlayer> lower = GrowthSnapshotCodec.decode(jdbc.queryForObject("SELECT data FROM career_growth_snapshot WHERE id = ?", byte[].class, id)).stream()
+                .map((p) -> new TrackedPlayer(p.playerId(), p.teamId(), p.age(), p.position(), p.overall() - 2, p.potential(), p.form(), p.leagueApps(),
+                        p.teamMatches(), p.matches(), p.attrs())).toList();
+        jdbc.update("""
+                UPDATE career_growth_snapshot SET game_date = game_date - INTERVAL '3 month', data = ?,
+                       month_key = EXTRACT(YEAR FROM game_date - INTERVAL '3 month') * 100 + EXTRACT(MONTH FROM game_date - INTERVAL '3 month') WHERE id = ?""",
+                GrowthSnapshotCodec.encode(lower), id);
+        importFixture(token, careerId);
+
+        JsonNode rows = support.json(get(recent), token).at("/data");
+        List<Long> squad = jdbc.queryForList("SELECT base_player_id FROM user_player_state WHERE career_id = ?", Long.class, careerId);
+        List<Long> rowIds = new ArrayList<>();
+        rows.forEach((r) -> rowIds.add(r.path("playerId").asLong()));
+        assertThat(rowIds).as("kadronun büyük kısmı eşleşir").hasSizeGreaterThan(squad.size() / 2);
+        assertThat(squad).as("yalnız kadro oyuncuları, base_player kimliğiyle").containsAll(rowIds);
+        rows.forEach((r) -> {
+            assertThat(r.path("months").asInt()).isEqualTo(3);
+            assertThat(r.path("overallDelta").asInt()).isEqualTo(2);
+            assertThat(r.path("matches").isNull()).isTrue();
+        });
+
+        String other = support.register();
+        assertThat(mockMvc.perform(get(recent).header("Authorization", "Bearer " + other)).andReturn().getResponse().getStatus()).isEqualTo(404);
+    }
+
     /** Rapor örneği (GTR-a kabulü): boş olmayan çıktı target/'a yazılır. */
     private static void writeSample(JsonNode report) throws java.io.IOException {
         java.nio.file.Files.writeString(java.nio.file.Path.of("target/gtr-a-report-sample.json"), report.toPrettyString());

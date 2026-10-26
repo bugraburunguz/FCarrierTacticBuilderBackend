@@ -59,4 +59,22 @@ public class GrowthTrackRepository {
         return jdbc.query("SELECT id, game_date, data FROM career_growth_snapshot WHERE id = :id", Map.of("id", id),
                 (rs, i) -> new Snapshot(rs.getLong("id"), rs.getDate("game_date").toLocalDate(), rs.getBytes("data"))).stream().findFirst();
     }
+
+    /** GTR-b: base_player kimliği → görüntüdeki EA kimliği (resmi oyuncu ea_resource_id; bu kariyerin üretilmiş oyuncusu career_source_id). */
+    public Map<Long, Long> eaIds(long careerId, List<Long> basePlayerIds) {
+        Map<Long, Long> out = new java.util.HashMap<>();
+        if (basePlayerIds.isEmpty()) {
+            return out;
+        }
+        jdbc.query("""
+                SELECT id, CASE WHEN owner_career_id = :c THEN career_source_id ELSE ea_resource_id END AS ea FROM base_player
+                 WHERE id IN (:ids) AND (owner_career_id IS NULL OR owner_career_id = :c)""",
+                new MapSqlParameterSource().addValue("c", careerId).addValue("ids", basePlayerIds), (rs) -> {
+                    long ea = rs.getLong("ea");
+                    if (!rs.wasNull()) {
+                        out.put(rs.getLong("id"), ea);
+                    }
+                });
+        return out;
+    }
 }

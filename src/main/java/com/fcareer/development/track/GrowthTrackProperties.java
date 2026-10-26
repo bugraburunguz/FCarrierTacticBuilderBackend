@@ -19,4 +19,6 @@ public class GrowthTrackProperties {
     private int keepRecent = 12;
     /** Oynama kovası: dönemde oyuncu maçı / takım maçı oranı. 0 → oynamadı; bu orandan küçük → az; büyük ya da eşit → düzenli. */
     private double regularFromRatio = 0.5;
+    /** GTR-b: Gelişim satırının penceresi (ay); taban, son görüntüden en çok bu kadar önceki en eski görüntü. */
+    private int recentWindowMonths = 6;
 }
