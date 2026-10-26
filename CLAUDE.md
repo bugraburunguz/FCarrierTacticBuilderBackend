@@ -30,7 +30,7 @@ Eski Azerlottery standardı `docs/archive/backend-standard.md` altında, referan
   `/careers/{id}/recommendations`, `/recommend/slot`, `/advisor/squad`, `/advisor/tactic` (maliyetler `fcareer.billing.*-cost`).
 
 ## Çalıştırma / test
-- `mvn test`: entegrasyon testleri zonky gömülü Postgres ile (Docker gerekmez, Testcontainers yok); token depoları, sayaç ve önbellek üretimdekiyle aynı. Opt-in (varsayılan atlanır): `-Dea.live=true`, `-Dml.live=true`, `-Drole.validation=true` (`.ps`), `-Drole.candidates=…`, `-Dacceptance.report=true`.
+- `mvn test`: entegrasyon testleri zonky gömülü Postgres ile (Docker gerekmez, Testcontainers yok); token depoları, sayaç ve önbellek üretimdekiyle aynı. Opt-in (varsayılan atlanır): `-Dea.live=true`, `-Dml.live=true`, `-Drole.validation=true` (`.ps`), `-Drole.candidates=…`, `-Dacceptance.report=true`, `-Dgtr.footprint=<export>` (içe aktarma süre/bellek), `-Dgtr.cost=<export>` (growth-recent süre/bellek, soğuk ve önbellekten).
   `RoleSignalRegressionTest` git dışı LE dökümü (`ml-service/data/fc27-dump`) yoksa atlanır; CI'da her zaman atlanır. ML: `cd ml-service && python -m pytest`.
 - Dev: README'deki `DevApplication` akışı.
 
