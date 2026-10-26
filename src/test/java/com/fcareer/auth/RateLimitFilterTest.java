@@ -95,6 +95,20 @@ class RateLimitFilterTest {
         assertThat(run("/api/v1/tactics/analysis", "10.0.0.1").getStatus()).isEqualTo(200);
     }
 
+    /**
+     * MGR-a inceleme: kulüp önerisi önbelleğe düşmezse ~50 kulüp için Takım gücü hesaplar (yerelde ~13 sn CPU); analiz kovasının 60/dk'sı tek
+     * örnek backend'i doyurur. Kendi dar kovası (manager:, dakikada managerPerMinute = 5).
+     */
+    @Test
+    void clubRecommendationsHaveTheirOwnNarrowBucket() throws Exception {
+        assertThat(new com.fcareer.auth.configuration.SecurityProperties().getRateLimit().getManagerPerMinute()).isEqualTo(5);
+        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(5L);
+        assertThat(run("/api/v1/manager/club-recommendations", "10.0.0.1").getStatus()).isEqualTo(200);
+        verify(counter).increment(org.mockito.ArgumentMatchers.startsWith(com.fcareer.common.constants.KeyConstants.RATE_LIMIT_PREFIX + "manager:"), eq(Duration.ofMinutes(1)));
+        when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(6L);
+        assertThat(run("/api/v1/manager/club-recommendations", "10.0.0.1").getStatus()).isEqualTo(429);
+    }
+
     /** GUV-2 (F8): pahalı ama ücretsiz uçlar (diziliş, replika uygula, öneri önizlemesi, başlangıç önerisi) analiz kovasında. */
     @Test
     void expensiveFreeEndpointsShareTheAnalysisBucket() throws Exception {

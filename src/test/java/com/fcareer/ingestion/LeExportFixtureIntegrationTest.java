@@ -94,6 +94,34 @@ class LeExportFixtureIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT count(*) FROM league WHERE name IN ('Erkekler - Diğer', 'Erkek Milli', 'Kadın Milli Kup.', 'DÜNYA LİGİ') OR name LIKE '*LeagueName%'", Integer.class)).isZero();
     }
 
+    /**
+     * MGR-a madde 1: katalog içe aktarması kulüp profilini (club_profile) doldurur — prestij (1–10), popülerlik, kulüp değeri (export bin € → €),
+     * altyapı gelişimi (0–10) ve lig seviyesi (leagues.level). Transfer bütçesi export'ta yok: NULL. Katalog dışı takımlara profil yazılmaz.
+     */
+    @Test
+    void catalogImportFillsClubProfiles() throws Exception {
+        Map<String, List<Map<String, String>>> tables = tables();
+        importer.importMissing(tables, GAME_VERSION, false, true);
+        Map<String, String> arsenal = tables.get("teams").stream().filter((r) -> "1".equals(r.get("teamid"))).findFirst().orElseThrow();
+        Map<String, Object> profile = jdbc.queryForMap("""
+                SELECT p.* FROM club_profile p JOIN club c ON c.id = p.club_id WHERE c.ea_team_id = 1 AND p.game_version_id = ?""", GAME_VERSION);
+        assertThat(((Number) profile.get("domestic_prestige")).intValue()).isEqualTo(Integer.parseInt(arsenal.get("domesticprestige")));
+        assertThat(((Number) profile.get("international_prestige")).intValue()).isEqualTo(Integer.parseInt(arsenal.get("internationalprestige")));
+        assertThat(((Number) profile.get("popularity")).intValue()).isEqualTo(Integer.parseInt(arsenal.get("popularity")));
+        assertThat(((Number) profile.get("youth_development")).intValue()).isEqualTo(Integer.parseInt(arsenal.get("youthdevelopment")));
+        assertThat(((Number) profile.get("club_worth_eur")).longValue()).isEqualTo(Long.parseLong(arsenal.get("clubworth")) * 1000L);
+        assertThat(((Number) profile.get("league_level")).intValue()).as("Premier League seviye 1").isEqualTo(1);
+        assertThat(profile.get("transfer_budget_eur")).as("export'ta transfer bütçesi yok").isNull();
+
+        Set<Integer> excluded = teamsInLeague(tables, 76);
+        excluded.addAll(teamsInLeague(tables, 2028));
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM club_profile p JOIN club c ON c.id = p.club_id WHERE c.ea_team_id IN ("
+                + excluded.stream().map(String::valueOf).collect(Collectors.joining(",")) + ")", Integer.class)).isZero();
+        // Yeniden içe aktarma güncellenir, çoğaltmaz.
+        importer.importMissing(tables, GAME_VERSION, false, true);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM club_profile p JOIN club c ON c.id = p.club_id WHERE c.ea_team_id = 1", Integer.class)).isEqualTo(1);
+    }
+
     /** Ana menü dışa aktarımında 2255 "Klasik Lig" (Classic XI, Soccer Aid, … XI): efsane takımları transfer edilemez, kataloğa girmez. */
     @Test
     void classicXiTeamsAndTheirLegendsStayOutOfTheCatalog() throws Exception {

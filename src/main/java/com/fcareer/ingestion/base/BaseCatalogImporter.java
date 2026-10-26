@@ -171,8 +171,9 @@ public class BaseCatalogImporter {
         }
         int recorded = versioningService.recordCatalogVersion(gameVersionId, "LIVE_EDITOR_EXPORT", label, full, changes).isPresent() ? changes.size() : 0;
 
-        log.info("Base catalog import players : {} created : {} existing : {} noTeam : {} noPosition : {} changes : {}",
-                players.size(), ratings.size(), already, noTeam, noPosition, recorded);
+        int profiles = saveClubProfiles(tables, gameVersionId, excludedTeams);
+        log.info("Base catalog import players : {} created : {} existing : {} noTeam : {} noPosition : {} changes : {} clubProfiles : {}",
+                players.size(), ratings.size(), already, noTeam, noPosition, recorded, profiles);
         return new BaseImportResult(players.size(), already, ratings.size(), noTeam, noPosition,
                 nationalities.created(), clubs.createdClubs(), clubs.createdLeagues(), ratingUpdates.size(), recorded);
     }
@@ -667,6 +668,54 @@ public class BaseCatalogImporter {
             }
         }
         return names;
+    }
+
+    /** export'taki clubworth bin € cinsinden (Real Madrid 8.290.000 → €8,29 Mr; Port Vale 5.500 → €5,5 Mn). */
+    private static final long CLUB_WORTH_UNIT_EUR = 1_000L;
+
+    /**
+     * MGR-a: katalog düzeyinde kulüp profili (prestij, popülerlik, kulüp değeri, altyapı gelişimi, lig seviyesi). Yalnız katalogda olan kulüplere
+     * (club.ea_team_id) yazılır; katalog dışı (yer tutucu, milli, Erkekler - Diğer …) takımlara yazılmaz. Yeniden içe aktarmada güncellenir.
+     * Transfer bütçesi export'ta yok: NULL.
+     */
+    private int saveClubProfiles(Map<String, List<Map<String, String>>> tables, short gameVersionId, Set<Integer> excludedTeams) {
+        Map<Integer, Integer> levels = new HashMap<>();
+        tables.getOrDefault("leagues", List.of()).forEach((r) -> {
+            Integer id = toInt(r.get("leagueid"));
+            if (Objects.nonNull(id)) {
+                levels.put(id, toInt(r.get("level")));
+            }
+        });
+        Map<Integer, Integer> teamLevel = new HashMap<>();
+        tables.getOrDefault("leagueteamlinks", List.of()).forEach((r) -> {
+            Integer team = toInt(r.get("teamid"));
+            Integer league = toInt(r.get("leagueid"));
+            if (Objects.nonNull(team) && Objects.nonNull(league) && Objects.nonNull(levels.get(league))) {
+                teamLevel.put(team, levels.get(league));
+            }
+        });
+        List<SqlParameterSource> rows = new ArrayList<>();
+        for (Map<String, String> row : tables.getOrDefault("teams", List.of())) {
+            Integer teamId = toInt(row.get("teamid"));
+            if (Objects.isNull(teamId) || excludedTeams.contains(teamId) || isPlaceholderTeam(row.get("teamname"))) {
+                continue;
+            }
+            Long worth = toLong(row.get("clubworth"));
+            rows.add(new MapSqlParameterSource().addValue("team", teamId).addValue("gv", gameVersionId)
+                    .addValue("domestic", toInt(row.get("domesticprestige")), java.sql.Types.SMALLINT)
+                    .addValue("international", toInt(row.get("internationalprestige")), java.sql.Types.SMALLINT)
+                    .addValue("popularity", toInt(row.get("popularity")), java.sql.Types.SMALLINT)
+                    .addValue("worth", Objects.isNull(worth) ? null : worth * CLUB_WORTH_UNIT_EUR, java.sql.Types.BIGINT)
+                    .addValue("youth", toInt(row.get("youthdevelopment")), java.sql.Types.SMALLINT)
+                    .addValue("level", teamLevel.get(teamId), java.sql.Types.SMALLINT));
+        }
+        batch("""
+                INSERT INTO club_profile (club_id, game_version_id, domestic_prestige, international_prestige, popularity, club_worth_eur, youth_development, league_level)
+                SELECT c.id, :gv, :domestic, :international, :popularity, :worth, :youth, :level FROM club c WHERE c.ea_team_id = :team
+                ON CONFLICT (club_id, game_version_id) DO UPDATE SET domestic_prestige = EXCLUDED.domestic_prestige,
+                  international_prestige = EXCLUDED.international_prestige, popularity = EXCLUDED.popularity, club_worth_eur = EXCLUDED.club_worth_eur,
+                  youth_development = EXCLUDED.youth_development, league_level = EXCLUDED.league_level, updated_at = now()""", rows);
+        return rows.size();
     }
 
     public static String displayTeamName(String name, Integer teamId) {
