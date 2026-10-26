@@ -34,6 +34,16 @@ spring:
       max-request-size: 66MB
 
 fcareer:
+  manager:
+    # MGR-a (verified:false, kaynak: "FM esinli, kalibre edilmedi"). İtibar = geçmiş tabanı + diploma katkısı (en çok 100).
+    # Kulüp ihtiyacı = (0,6 × yurt içi + 0,4 × uluslararası prestij) − lig seviyesi düzeltmesi × (seviye − 1), aynı cinsiyette yüzdelik sıra.
+    # İlgi: ihtiyaç ≤ itibar + 10; hayal: (itibar + 10, itibar + 25]. Diğer eşikler ManagerProperties'te.
+    domestic-weight: 0.6
+    international-weight: 0.4
+    league-level-penalty: 1.0
+    interest-margin: 10
+    dream-margin: 25
+    pool-size: 40
   academy:
     # ACADEMY-b kararı (verified:false): "Bekliyor" = altyapıda en az bu kadar ay ve son içe aktarmalarda OVR artışı yok.
     # Tek içe aktarmada artış ölçülemez: Bekliyor gösterilmez (yalnız Hazır/Gelişiyor).
