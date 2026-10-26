@@ -30,7 +30,13 @@ public class AcademyController {
         return service.youth(user.id(), careerId);
     }
 
-    /** ACADEMY-b: oyuncu paneli (altyapı ya da kadro genci). */
+    /** GT-a: tüm takım antrenman planı (Gelişim): A takımın her oyuncusu yaş bölümüyle (Gençler, Zirve, Tecrübeliler). */
+    @GetMapping("/training")
+    public List<AcademyService.AcademyPlayer> training(@AuthenticationPrincipal AuthUser user, @PathVariable Long careerId) {
+        return service.training(user.id(), careerId);
+    }
+
+    /** ACADEMY-b: oyuncu paneli (altyapı ya da kadro oyuncusu). */
     @GetMapping("/youth/{playerId}")
     public AcademyService.YouthDetail detail(@AuthenticationPrincipal AuthUser user, @PathVariable Long careerId, @PathVariable Long playerId) {
         return service.detail(user.id(), careerId, playerId);

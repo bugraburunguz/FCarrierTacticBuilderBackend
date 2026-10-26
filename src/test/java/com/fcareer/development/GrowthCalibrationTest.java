@@ -78,6 +78,30 @@ class GrowthCalibrationTest {
         assertThat(GrowthCalibration.stageBands(before, after, 99, null, 5, 8).get(0).suggestedCap()).isEqualTo(5);
     }
 
+    /**
+     * GT-a madde 4: yaş grubuna göre gerçek düşüş — OVR ve attribute grubu (fiziksel, teknik, zihinsel) ortalaması, sezona ölçekli; modeldeki başlangıç
+     * yaşlarıyla kıyas için. Değerler otomatik değişmez.
+     */
+    @Test
+    void reportsRealDeclineByAgeGroupAndAttributeGroup() {
+        List<SnapshotPlayer> before = List.of(p(1, 33, 80, 70, Map.of()), p(2, 34, 78, 70, Map.of()), p(3, 26, 75, 70, Map.of()));
+        List<SnapshotPlayer> after = List.of(
+                p(1, 34, 78, 70, Map.of(Attr.SPRINT_SPEED, -4, Attr.STAMINA, -2, Attr.SHORT_PASSING, -1)),
+                p(2, 35, 76, 70, Map.of(Attr.SPRINT_SPEED, -2, Attr.STAMINA, -4, Attr.SHORT_PASSING, -1)),
+                p(3, 27, 75, 70, Map.of()));
+        List<GrowthCalibration.DeclineBand> bands = GrowthCalibration.declineBands(before, after, 365L);
+        GrowthCalibration.DeclineBand old = bands.stream().filter((b) -> b.label().equals("32-33")).findFirst().orElseThrow();
+        assertThat(old.players()).isEqualTo(1);
+        assertThat(old.meanOverallDelta()).isEqualTo(-2.0);
+        GrowthCalibration.DeclineBand older = bands.stream().filter((b) -> b.label().equals("34+")).findFirst().orElseThrow();
+        assertThat(older.meanOverallDelta()).isEqualTo(-2.0);
+        assertThat(older.physical()).as("fiziksel 7 attribute: (−2 −4) / 7").isCloseTo(-0.86, within(0.01));
+        assertThat(older.technical()).isLessThan(0);
+        assertThat(older.mental()).isEqualTo(0.0);
+        assertThat(bands).extracting(GrowthCalibration.DeclineBand::label).contains("24-29");
+        assertThat(bands).extracting(GrowthCalibration.DeclineBand::label).doesNotContain("30-31");
+    }
+
     @Test
     void lessThanTwoImportsMeansNoData() {
         Calibration none = GrowthCalibration.noData();

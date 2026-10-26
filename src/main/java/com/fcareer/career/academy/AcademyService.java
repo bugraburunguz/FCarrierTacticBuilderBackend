@@ -40,11 +40,14 @@ public class AcademyService {
 
     private static final AcademyAdvisor.Advice EMPTY_ADVICE = new AcademyAdvisor.Advice(null, null, null, null, null, null);
 
-    /** status: READY (Hazır), GROWING (Gelişiyor), WAITING (Bekliyor); kadro gençlerinde null. loanedOut: başka kulübe kiralık (Gelişim). */
+    /**
+     * status: READY (Hazır), GROWING (Gelişiyor), WAITING (Bekliyor); kadro gençlerinde null. loanedOut: başka kulübe kiralık (Gelişim). ageGroup (GT-a):
+     * YOUTH, PEAK, VETERAN.
+     */
     public record AcademyPlayer(long playerId, String name, Integer age, List<String> positions, Integer overall, Integer potential, String potentialRange,
                                 Integer monthsInSquad, Integer playerTier, Integer potentialVariance, Integer swingLowPotential, boolean youthVerified,
                                 String bestPosition, String sideReason, String conversionPosition, AcademyAdvisor.PlanAdvice plan, AcademyAdvisor.Promote promote,
-                                String status, boolean loanedOut, AcademyAdvisor.PromoteInfo promoteInfo) {
+                                String status, boolean loanedOut, AcademyAdvisor.PromoteInfo promoteInfo, String ageGroup) {
     }
 
     public record Academy(boolean found, Integer teamId, String name, String message, List<AcademyPlayer> players) {
@@ -75,11 +78,30 @@ public class AcademyService {
         loanedOut.removeAll(squad.playerIds());
         // Spoiler: aralık modunda kapsam bandın alt sınırıyla (listede olmak bant içi bilgi vermesin; önericiyle aynı kural).
         boolean ranged = spoilerPolicy.ranged(careerId);
+        List<Row> rows = repository.playersByIds(careerId, squad.ownedIds()).stream().filter((r) -> youthPlan(r, ranged)).toList();
+        return rows.isEmpty() ? List.of() : players(userId, careerId, rows, false, loanedOut);
+    }
+
+    /**
+     * GT-a: tüm takım antrenman planı. A takımın her oyuncusu (yaşı bilinen) yaş bölümüyle; kiralıktakilerden yalnız Gelişim gençleri (bugünkü kural).
+     * Altyapı oyuncuları burada yok (Altyapı ekranında).
+     */
+    @Transactional(readOnly = true)
+    public List<AcademyPlayer> training(Long userId, Long careerId) {
+        CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
+        Set<Long> loanedOut = new HashSet<>(squad.ownedIds());
+        loanedOut.removeAll(squad.playerIds());
+        boolean ranged = spoilerPolicy.ranged(careerId);
         List<Row> rows = repository.playersByIds(careerId, squad.ownedIds()).stream()
-                .filter((r) -> Objects.nonNull(r.age()) && Objects.nonNull(r.overall()) && Objects.nonNull(r.potential())
-                        && r.age() <= youth.getMaxAge() && (ranged ? SpoilerPolicy.low(r.potential()) : r.potential()) - r.overall() >= youth.getMinHeadroom())
+                .filter((r) -> Objects.nonNull(r.age()) && Objects.nonNull(r.overall()) && (!loanedOut.contains(r.playerId()) || youthPlan(r, ranged)))
                 .toList();
         return rows.isEmpty() ? List.of() : players(userId, careerId, rows, false, loanedOut);
+    }
+
+    /** Gelişim genci: ≤ maxAge yaş ve potansiyeli OVR'den ≥ minHeadroom yüksek (aralık modunda bandın alt sınırıyla). */
+    private boolean youthPlan(Row r, boolean ranged) {
+        return Objects.nonNull(r.age()) && Objects.nonNull(r.overall()) && Objects.nonNull(r.potential()) && r.age() <= youth.getMaxAge()
+                && (ranged ? SpoilerPolicy.low(r.potential()) : r.potential()) - r.overall() >= youth.getMinHeadroom();
     }
 
     /** Panel yalnız bu kariyerin altyapı ya da kadro oyuncusu için; başka oyuncu (ve başkasının kariyeri) 404. */
@@ -117,7 +139,8 @@ public class AcademyService {
             return new AcademyPlayer(r.playerId(), r.name(), r.age(), r.positions(), r.overall(),
                     ranged ? null : r.potential(), ranged && Objects.nonNull(r.potential()) ? SpoilerPolicy.range(r.potential()) : null,
                     r.monthsInSquad(), r.playerTier(), ranged ? null : r.potentialVariance(), ranged ? null : r.swingLowPotential(), false,
-                    a.bestPosition(), a.sideReason(), a.conversionPosition(), a.plan(), a.promote(), status, loanedOut.contains(r.playerId()), a.promoteInfo());
+                    a.bestPosition(), a.sideReason(), a.conversionPosition(), a.plan(), a.promote(), status, loanedOut.contains(r.playerId()), a.promoteInfo(),
+                    Optional.ofNullable(DevelopmentRecommender.ageGroup(r.age(), youth)).map(Enum::name).orElse(null));
         }).toList();
     }
 

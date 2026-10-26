@@ -102,6 +102,18 @@ public class PositionAdviceService {
         return Objects.nonNull(main) && Objects.nonNull(main.slots()) && !main.slots().isEmpty();
     }
 
+    /** GT-a: dizilen oyuncunun slotu (mevki, rol). */
+    public record LineupRole(String position, String roleId) {
+    }
+
+    /** GT-a: ana taktikte (yoksa başlangıç önerisinde) dizilen oyuncuların slot mevkisi ve rolü; dizilmeyen yok. */
+    public Map<Long, LineupRole> lineupRoles(Long userId, Long careerId) {
+        Map<Long, LineupRole> out = new java.util.HashMap<>();
+        tacticSlots(userId, careerId).stream().filter((s) -> Objects.nonNull(s.playerId()))
+                .forEach((s) -> out.putIfAbsent(s.playerId(), new LineupRole(s.position(), s.roleId())));
+        return out;
+    }
+
     /** ACADEMY-b: ana taktiğin (yoksa başlangıç önerisinin) slot mevkileri, tekrarlarıyla (iki CB slotu → iki "CB"). */
     public List<String> tacticSlotPositions(Long userId, Long careerId) {
         return tacticSlots(userId, careerId).stream().map(TacticSlot::position).toList();

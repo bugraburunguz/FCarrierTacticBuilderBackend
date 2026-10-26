@@ -56,6 +56,18 @@ fcareer:
     # Kalibrasyon raporu gerçek veri verince yeniden ayarlanır.
     academy-max-gain: 5
     first-team-max-gain: 8
+    # GT-a (verified:false, kaynak: Buğra oyun tecrübesi, ölçülmedi): düşüş başlangıç yaşları — fiziksel önce, teknik (pas, dribling, şut) sonra,
+    # zihinsel ve bitiricilik en geç. Plan attribute'ları plan-decline-delay yıl geç ve plan-decline-factor kadar yavaş düşer (toplam aynı).
+    # Kalibrasyon raporundaki declineBands gerçek düşüşü yaşa göre gösterir; değerler otomatik değişmez.
+    decline-from-age: 32
+    technical-decline-from-age: 33
+    mental-decline-from-age: 35
+    plan-decline-delay: 2
+    plan-decline-factor: 0.5
+  development:
+    recommend:
+      # GT-a (verified:false): Gelişim yaş bölümleri — Gençler ≤ max-age, Zirve arası, Tecrübeliler ≥ veteran-from-age.
+      veteran-from-age: 30
   fit:
     # FIT-3 kararı (verified:false): öneri dışı roller ("baseRole|Focus"). Dönüşüm ve gelişim önerisi hedefi olamaz; Lab'da elle seçilebilir,
     # uyum hesabında kalır. Vektör kalibrasyonundan sonra listeden çıkar.
