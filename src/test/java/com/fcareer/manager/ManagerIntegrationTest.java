@@ -101,7 +101,8 @@ class ManagerIntegrationTest {
     @Test
     void profileIsPerUserValidatedAndCarriesTheReputation() throws Exception {
         String token = support.register();
-        assertThat(status(get("/api/v1/me/manager-profile"), null, token)).as("profil yok").isEqualTo(404);
+        // Profil yok: hata değil, 200 + data null (ana taktikteki kural); istemci konsoluna 404 düşmez.
+        assertThat(data(get("/api/v1/me/manager-profile"), null, token).isNull()).as("profil yok → data null").isTrue();
         assertThat(status(get("/api/v1/me/manager-profile"), null, null)).isEqualTo(401);
 
         JsonNode saved = data(put("/api/v1/me/manager-profile"), PROFILE, token);
@@ -133,7 +134,7 @@ class ManagerIntegrationTest {
 
         // Sahiplik: başka kullanıcı kendi (boş) profilini görür.
         String other = support.register();
-        assertThat(status(get("/api/v1/me/manager-profile"), null, other)).isEqualTo(404);
+        assertThat(data(get("/api/v1/me/manager-profile"), null, other).isNull()).isTrue();
     }
 
     @Test
