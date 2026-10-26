@@ -69,6 +69,14 @@ fcareer:
     recommend:
       # GT-a (verified:false): Gelişim yaş bölümleri — Gençler ≤ max-age, Zirve arası, Tecrübeliler ≥ veteran-from-age.
       veteran-from-age: 30
+  growth-track:
+    # GTR-a (verified:false): kariyer içi içe aktarmada bütün kulüplerin anlık görüntüsü (aynı oyun ayı tek). Kariyer başına en çok max-snapshots;
+    # aşılırsa en eskiler seyreltilir (en eski ve en yeni keep-recent korunur). Oynama kovası: dönemde oyuncu maçı / takım maçı;
+    # 0 → oynamadı, < regular-from-ratio → az, ≥ → düzenli. Model değerleri bu işte değişmez.
+    enabled: true
+    max-snapshots: 60
+    keep-recent: 12
+    regular-from-ratio: 0.5
   fit:
     # FIT-3 kararı (verified:false): öneri dışı roller ("baseRole|Focus"). Dönüşüm ve gelişim önerisi hedefi olamaz; Lab'da elle seçilebilir,
     # uyum hesabında kalır. Vektör kalibrasyonundan sonra listeden çıkar.

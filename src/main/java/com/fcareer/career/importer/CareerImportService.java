@@ -51,6 +51,7 @@ public class CareerImportService {
     private final BaseCatalogImporter baseCatalogImporter;
     private final com.fcareer.ingestion.base.CareerPlayerWriter careerPlayerWriter;
     private final com.fcareer.career.desk.CareerDeskService careerDeskService;
+    private final com.fcareer.development.track.GrowthTrackService growthTrackService;
 
     @Transactional
     public ImportSummaryResponse importData(Long userId, Long careerId, MultipartFile logFile, Map<String, MultipartFile> csvs) {
@@ -199,6 +200,10 @@ public class CareerImportService {
             }
         });
         int contracts = careerPlayerWriter.applyContracts(careerId, tables.get("players"), allLoans, eaToBase);
+        // GTR-a: kariyer içi içe aktarmada bütün kulüplerin anlık görüntüsü (aynı ay tek, en çok 60); ana menü export'u yazılmaz.
+        if (Objects.isNull(context) || context.inCareer()) {
+            growthTrackService.record(careerId, Objects.isNull(context) ? null : context.gameDate(), tables, playerTeam);
+        }
         log.info("Career import done careerId : {} players : {} teams : {} freeAgents : {} unmatched : {}",
                 careerId, playerRows.size(), teamParams.size(), freeAgents, unmatched);
         Integer guessedTeam = guess.isEmpty() ? null : ((Number) guess.get(0).get("team_id")).intValue();
