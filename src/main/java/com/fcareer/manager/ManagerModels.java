@@ -44,9 +44,9 @@ public final class ManagerModels {
     public record RecommendationRequest(@jakarta.validation.Valid ManagerProfile profile, Integer leagueId, @Min(0) @Max(1) Integer gender) {
     }
 
-    /** Kart: kategori, kulüp, lig, zorluk, 3 kanıt satırı, beklenti metni; uyum için kullanılan formasyon/tarz ve Takım gücü. */
+    /** Kart: kategori, kulüp, lig, zorluk, 3 kanıt satırı, beklenti metni; uyum için kullanılan formasyon/tarz, Takım gücü ve ortalama Rol oturması. */
     public record Card(Category category, long clubId, String clubName, Integer leagueId, String league, Difficulty difficulty, List<String> evidence,
-                       String expectation, String formation, Style style, Double squadFit, int need, boolean dream) {
+                       String expectation, String formation, Style style, Double squadFit, Double roleFit, int need, boolean dream) {
     }
 
     public record MissingCategory(Category category, String reason) {

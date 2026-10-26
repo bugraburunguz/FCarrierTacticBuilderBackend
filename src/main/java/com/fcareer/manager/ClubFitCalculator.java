@@ -70,6 +70,9 @@ public class ClubFitCalculator {
         }
         List<FitPlayer> players = playerService.fitPlayers(ids, gameVersionId);
         String chosen = Objects.nonNull(formation) ? formation : best(players);
+        if (Objects.isNull(chosen)) {
+            return new ClubFit(null, null, null);
+        }
         TacticRequest tactic = TacticRequest.builder().formation(chosen).setup(ManagerRules.setup(style)).build();
         SquadFitResponse solved = squadFitService.solveBest(players, tacticResolver.resolve(tactic).slots(), fitProperties.getCareerEngineVersion());
         Double level = Objects.isNull(solved.getSlots()) ? null : solved.getSlots().stream()
@@ -81,7 +84,7 @@ public class ClubFitCalculator {
     private String best(List<FitPlayer> players) {
         FeasibilityService.SquadProfile profile = feasibilityService.profile(players, positionAdviceService.bestScores(players));
         List<FormationRanker.RankedFormation> ranked = formationRanker.rank(players, profile, formationRegistry.findAll());
-        return ranked.get(0).formation().id();
+        return ranked.isEmpty() ? null : ranked.get(0).formation().id();
     }
 
     /** Formasyon kimliği geçerli mi (profil doğrulaması). */

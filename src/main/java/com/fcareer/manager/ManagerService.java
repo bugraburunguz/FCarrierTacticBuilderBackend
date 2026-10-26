@@ -80,6 +80,9 @@ public class ManagerService {
         validate(profile);
         int reputation = rules.reputation(profile.background(), profile.licence());
         Integer leagueId = Objects.nonNull(request) && Objects.nonNull(request.leagueId()) ? request.leagueId() : profile.leagueId();
+        if (Objects.nonNull(leagueId) && !repository.leagueExists(leagueId)) {
+            throw new IllegalArgumentException("leagueId: bilinmeyen lig " + leagueId);
+        }
         int gender = Objects.nonNull(request) && Objects.nonNull(request.gender()) ? request.gender() : Objects.requireNonNullElse(profile.gender(), MEN);
         short gv = playerService.resolveGameVersion(null);
         if (repository.profileCount(gv) == 0) {
@@ -131,7 +134,8 @@ public class ManagerService {
             Candidate c = p.candidate();
             ClubFitCalculator.ClubFit fit = fits.get(c.clubId());
             return new Card(p.category(), c.clubId(), c.clubName(), c.leagueId(), c.league(), c.difficulty(), rules.evidence(c),
-                    rules.expectation(reputation, c.need()), fit.formation(), profile.style(), fit.squadFit(), c.need(), p.category() == ManagerModels.Category.DREAM);
+                    rules.expectation(reputation, c.need()), fit.formation(), profile.style(), fit.squadFit(), fit.levelFit(), c.need(),
+                    p.category() == ManagerModels.Category.DREAM);
         }).toList();
         List<MissingCategory> missing = selection.missing().stream().map((m) -> new MissingCategory(m.category(), m.reason())).toList();
         log.info("Manager club recommendations userId : {} reputation : {} pool : {} candidates : {} cards : {}", userId, reputation, pool.size(), candidates.size(), cards.size());

@@ -48,6 +48,8 @@ class ManagerIntegrationTest {
     private JdbcTemplate jdbc;
     @Autowired
     private ClubFitCalculator fitCalculator;
+    @Autowired
+    private ManagerRepository repository;
 
     private CareerTestSupport support;
 
@@ -167,6 +169,29 @@ class ManagerIntegrationTest {
         // Kayıtlı profille (gövdesiz) de çalışır.
         data(put("/api/v1/me/manager-profile"), PROFILE, token);
         assertThat(data(post("/api/v1/manager/club-recommendations"), Map.of(), token).path("cards").size()).isEqualTo(cards.size());
+    }
+
+    /** MGR-a inceleme: kariyerde üretilmiş oyuncular (owner_career_id) kulüp istatistiğine ve uyuma girmez; istekteki bilinmeyen lig 400. */
+    @Test
+    void generatedCareerPlayersStayOutOfTheCatalogStatsAndUnknownLeaguesAreRejected() throws Exception {
+        seedProfiles();
+        ManagerRepository repository = this.repository;
+        List<ManagerRepository.ClubStat> before = repository.clubStats((short) 27, 0, new ManagerProperties());
+        ManagerRepository.ClubStat club = before.get(0);
+        String token = support.register();
+        long career = support.premiumCareer(token, null);
+        for (int i = 0; i < 5; i++) {
+            Long generated = jdbc.queryForObject("INSERT INTO base_player (full_name, owner_career_id, dob) VALUES ('MGR Genç', ?, CURRENT_DATE - interval '17 years') RETURNING id",
+                    Long.class, career);
+            jdbc.update("INSERT INTO player_rating (base_player_id, game_version_id, club_id, overall, positions) VALUES (?, 27, ?, 99, '{ST}')", generated, club.clubId());
+        }
+        ManagerRepository.ClubStat after = repository.clubStats((short) 27, 0, new ManagerProperties()).stream()
+                .filter((s) -> s.clubId() == club.clubId()).findFirst().orElseThrow();
+        assertThat(after.players()).isEqualTo(club.players());
+        assertThat(after.avgOvr()).isEqualTo(club.avgOvr());
+        assertThat(after.youngCount()).isEqualTo(club.youngCount());
+
+        assertThat(status(post("/api/v1/manager/club-recommendations"), Map.of("profile", PROFILE, "leagueId", 987654), token)).isEqualTo(400);
     }
 
     @Test

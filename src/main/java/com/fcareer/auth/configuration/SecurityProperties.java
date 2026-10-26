@@ -45,6 +45,8 @@ public class SecurityProperties {
         private int analysisPerMinute = 60;
         /** FIT-2 kararı: taktik analizi (/tactics/analysis) kendi kovasında; Lab'da her değişiklik /fit/lineup'la birlikte gider. */
         private int tacticAnalysisPerMinute = 60;
+        /** MGR-a: kulüp önerisi (/manager/club-recommendations) kendi dar kovasında; önbellek dışı istek ~50 kulüp için Takım gücü hesaplar. */
+        private int managerPerMinute = 5;
         /** LE içe aktarma (/careers/{id}/import): her biri katalog kopyalar; kullanıcı başına saatte. */
         private int importPerHour = 10;
     }
