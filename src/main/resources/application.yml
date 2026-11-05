@@ -108,6 +108,10 @@ server:
   port: ${PORT:${SERVER_PORT:8080}}
   # PROD-PREP 6a: X-Forwarded-For işlenmez (istemci ekleyebilir). İstemci IP'si yalnız FCAREER_TRUST_PROXY=true iken X-Real-IP'den (ClientIp).
   forward-headers-strategy: none
+  # OPS-RAM: varsayılan 200 thread; tek örnek ve az kullanıcı için 40 yeter, thread yığını belleği sınırlanır.
+  tomcat:
+    threads:
+      max: 40
 
 management:
   health:
