@@ -249,7 +249,7 @@ oyuncudan yalnız 3'ü kariyer değeriyle aynı).
 
 ## 14. Backend bellek (maliyet)
 Railway belleği GB-dakika faturalar; backend maliyetinin neredeyse tamamı RAM. Dockerfile `JAVA_TOOL_OPTIONS` ile heap'i 512 MB'ta
-sınırlar ve boşta periyodik GC ile kullanılmayan heap'i işletim sistemine geri verir (G1PeriodicGCInterval, MaxHeapFreeRatio).
+sınırlar, `MALLOC_ARENA_MAX=2` ile glibc parçalanmasını keser, Tomcat en çok 40 thread açar (`server.tomcat.threads.max`) ve boşta periyodik GC ile kullanılmayan heap'i işletim sistemine geri verir (G1PeriodicGCInterval, MaxHeapFreeRatio).
 Log satırları salt okunur kompakt yapıda tutulur (OPS-03); kart görseli bellek önbelleği 32 MB (kalıcı kopya DB'de). Redis yok (OPS-02).
 Yerel ölçüm (21,7 bin oyunculu kariyer log'u, konteyner belleği):
 
@@ -258,6 +258,10 @@ Yerel ölçüm (21,7 bin oyunculu kariyer log'u, konteyner belleği):
 | Ayarsız | 1,35 GB | 1,35 GB (geri dönmüyordu) |
 | OPS-01 (768 MB tavan) | ~1,1 GB | ~0,5–0,6 GB |
 | OPS-03 (512 MB tavan, kompakt satırlar) | ~0,73 GB | ~0,49 GB |
+
+OPS-RAM ölçümü (2026-11-04): boşta RSS 426 MB, bunun ~280 MB'ı JVM sabit maliyeti (metaspace 115, G1 64, code cache 32, symbol 26, thread yığınları),
+canlı heap 55 MB. Kariyer içe aktarması tepe heap 270–340 MB. 384 MB tavanda OOM yok ama görüntü yazımı açık içe aktarma 7 sn → 95–185 sn
+(GC baskısı); tavan 512'de kaldı. Serial GC denenmedi: yalnız tam GC'de küçülür, içe aktarma sonrası heap ayrılmış kalırdı.
 
 İki eşzamanlı kariyer içe aktarması ve ana menü (temel katalog, 21,9 bin oyuncu) yüklemesi 384 MB heap'te de OOM'suz.
 - **Görmelisin:** deploy sonrası Metrics → Memory, içe aktarma tepelerinden sonra ~0,5 GB'a iner.
