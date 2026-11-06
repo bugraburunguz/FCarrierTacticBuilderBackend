@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -28,6 +29,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @IntegrationTest
 class OwnershipMatrixIntegrationTest {
+
+    /** Mock katalogun ilk oyuncusunun EA kimliği (CSV içe aktarma EA kimliğiyle eşler). */
+    private static final long MOCK_EA_ID = 900_000L;
 
     @Autowired
     private MockMvc mockMvc;
@@ -73,6 +77,13 @@ class OwnershipMatrixIntegrationTest {
         long event = support.json(MockMvcRequestBuilders.post("/api/v1/careers/" + c + "/events").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsBytes(Map.of("type", "BUY", "playerId", outsider, "feeEur", 1))), owner).at("/data/id").asLong();
         Map<String, Object> tactic = Map.of("formation", "4-4-2");
+        // İçe aktarma uçları premium ister: ikisi de abone olur ki yabancının 404'ü 402'den değil sahiplikten gelsin.
+        support.json(MockMvcRequestBuilders.post("/api/v1/billing/subscribe"), owner);
+        support.json(MockMvcRequestBuilders.post("/api/v1/billing/subscribe"), stranger);
+        // Takım profili (teams/{teamId}) içe aktarılmış takım ister: küçük bir CSV (takım 1) yüklenir.
+        var imported = support.importCsv(c, owner, MOCK_EA_ID + ",70,80\n", MOCK_EA_ID + ",1\n", null);
+        assertThat(imported.at("/success").asBoolean()).as(imported.toString()).isTrue();
+        MockMultipartFile emptyLog = new MockMultipartFile("log", "log.txt", "text/plain", new byte[0]);
 
         List<Call> calls = List.of(
                 new Call(HttpMethod.GET, "/api/v1/careers/" + c, null),
@@ -87,6 +98,10 @@ class OwnershipMatrixIntegrationTest {
                 new Call(HttpMethod.GET, "/api/v1/careers/" + c + "/moves", null),
                 new Call(HttpMethod.POST, "/api/v1/careers/" + c + "/events", Map.of("type", "PROMOTE", "playerId", outsider)),
                 new Call(HttpMethod.GET, "/api/v1/careers/" + c + "/teams", null),
+                new Call(HttpMethod.GET, "/api/v1/careers/" + c + "/teams/1", null),
+                new Call(HttpMethod.POST, "/api/v1/careers/" + c + "/import", emptyLog),
+                // Oyuncusu olmayan takım: sahibinde 422 (kadroyu yeniden kurmaz, sonraki çağrılar bozulmaz), yabancıda 404.
+                new Call(HttpMethod.POST, "/api/v1/careers/" + c + "/import/squad?teamId=111592", null),
                 new Call(HttpMethod.GET, "/api/v1/careers/" + c + "/snapshots", null),
                 new Call(HttpMethod.GET, "/api/v1/careers/" + c + "/snapshots/diff", null),
                 new Call(HttpMethod.GET, "/api/v1/careers/" + c + "/players/" + squadPlayer + "/history", null),
@@ -139,6 +154,10 @@ class OwnershipMatrixIntegrationTest {
     }
 
     private int status(Call call, String token) throws Exception {
+        if (call.body() instanceof MockMultipartFile file) {
+            return mockMvc.perform(MockMvcRequestBuilders.multipart(call.path()).file(file).header("Authorization", "Bearer " + token)
+                    .accept(MediaType.APPLICATION_JSON)).andReturn().getResponse().getStatus();
+        }
         MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.request(call.method(), call.path()).header("Authorization", "Bearer " + token)
                 .accept(MediaType.APPLICATION_JSON);
         if (call.body() != null) {
