@@ -2,9 +2,9 @@ package com.fcareer.career;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.ingestion.service.IngestionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,8 +31,6 @@ class UnknownBudgetIntegrationTest {
     @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
-    private ClubRepository clubRepository;
-    @Autowired
     private org.springframework.jdbc.core.JdbcTemplate jdbc;
     @Autowired
     private IngestionService ingestionService;
@@ -58,13 +56,13 @@ class UnknownBudgetIntegrationTest {
     @Test
     void aCareerCreatedWithoutABudgetKeepsItUnknownNotZero() throws Exception {
         String token = register();
-        JsonNode created = call(post("/api/v1/careers"), Map.of("clubId", clubRepository.findAll().get(0).getId()), token, 200).at("/data");
+        JsonNode created = call(post("/api/v1/careers"), Map.of("clubId", CareerTestSupport.catalogClubId(jdbc)), token, 200).at("/data");
         assertThat(created.has("budgetEur") && !created.get("budgetEur").isNull()).as(created.toString()).isFalse();
     }
 
     @Test
     void noBudgetOrAZeroBudgetDoesNotEmptyTheMarket() throws Exception {
-        int clubId = clubRepository.findAll().get(0).getId();
+        int clubId = CareerTestSupport.catalogClubId(jdbc);
         // Gerçekçi durum: herkesin bir değeri var; `valueMax=0` hepsini elerdi.
         jdbc.update("INSERT INTO player_valuation (base_player_id, game_version_id, source, value_eur, model_version) SELECT base_player_id, 27, 'MODELED', 2000000, 'eng02-test' FROM player_rating WHERE game_version_id = 27 ON CONFLICT DO NOTHING");
         try {

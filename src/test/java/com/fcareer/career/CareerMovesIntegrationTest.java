@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.ingestion.service.IngestionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,8 +38,6 @@ class CareerMovesIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private ClubRepository clubRepository;
-    @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
     private IngestionService ingestionService;
@@ -54,7 +51,7 @@ class CareerMovesIntegrationTest {
         if (basePlayerRepository.count() == 0) {
             ingestionService.run();
         }
-        support = new CareerTestSupport(mockMvc, objectMapper, clubRepository);
+        support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
     }
 
     /** Kulübün temel katalogdaki ilk n oyuncusunun EA kimliği (rastgele değil: id sırası). */
@@ -83,13 +80,14 @@ class CareerMovesIntegrationTest {
     void movesAreDerivedFromTheBaseRecordAndLoanRows() throws Exception {
         String token = support.register();
         long careerId = support.premiumCareer(token, null);
-        var us = clubRepository.findAll().get(0);
+        long usId = CareerTestSupport.catalogClubId(jdbc);
+        String usName = CareerTestSupport.catalogClubName(jdbc);
         long otherClubId = jdbc.queryForObject("""
                 SELECT r.club_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id AND b.owner_career_id IS NULL
                  WHERE r.game_version_id = 27 AND r.club_id <> ? GROUP BY r.club_id HAVING count(*) >= 3
-                 ORDER BY r.club_id LIMIT 1""", Long.class, us.getId());
+                 ORDER BY r.club_id LIMIT 1""", Long.class, usId);
         String otherName = jdbc.queryForObject("SELECT name FROM club WHERE id = ?", String.class, otherClubId);
-        List<Long> ours = basePlayersOf(us.getId(), 3);
+        List<Long> ours = basePlayersOf(usId, 3);
         List<Long> theirs = basePlayersOf(otherClubId, 3);
         long stays = ours.get(0);
         long soldOut = ours.get(1);
@@ -99,14 +97,14 @@ class CareerMovesIntegrationTest {
         long untouched = theirs.get(2);
 
         // Gerçek katalogda kulüplerin EA takım kimliği dolu (ör. Port Vale 1928); test kataloğunda boşsa benzersiz bir değer verilir.
-        int usTeam = eaTeamId(us.getId());
+        int usTeam = eaTeamId(usId);
         int otherTeam = eaTeamId(otherClubId);
         String players = String.join("\n", List.of(stays, soldOut, loanedOut, bought, loanedIn, untouched).stream().map(id -> id + ",70,75").toList());
         String links = String.join("\n", List.of(stays + "," + usTeam, soldOut + "," + otherTeam, loanedOut + "," + otherTeam, bought + "," + usTeam,
                 loanedIn + "," + usTeam, untouched + "," + otherTeam));
         var request = multipart("/api/v1/careers/" + careerId + "/import")
                 .file(csv("players", "playerid,overallrating,potential\n" + players))
-                .file(csv("teams", "teamid,teamname,overallrating,gender\n" + usTeam + ",\"" + us.getName() + "\",80,0\n" + otherTeam + ",\"" + otherName
+                .file(csv("teams", "teamid,teamname,overallrating,gender\n" + usTeam + ",\"" + usName + "\",80,0\n" + otherTeam + ",\"" + otherName
                         + "\",70,0\n111592,Serbest,60,0\n"))
                 .file(csv("teamplayerlinks", "playerid,teamid\n" + links))
                 .file(csv("playerloans", "playerid,teamidloanedfrom\n" + loanedIn + "," + otherTeam + "\n" + loanedOut + "," + usTeam));

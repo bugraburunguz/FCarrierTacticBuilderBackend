@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.catalog.service.PlayerService;
 import com.fcareer.fitengine.model.Attr;
 import com.fcareer.fitengine.model.FitPlayer;
@@ -37,8 +36,6 @@ class CareerFitPlayerFallbackIntegrationTest {
     @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
-    private ClubRepository clubRepository;
-    @Autowired
     private IngestionService ingestionService;
     @Autowired
     private PlayerService playerService;
@@ -52,7 +49,7 @@ class CareerFitPlayerFallbackIntegrationTest {
 
     @Test
     void recordAttributesWinAndAPlayerWithoutRecordAttributesFallsBackToTheCatalog() throws Exception {
-        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, clubRepository);
+        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
         long careerId = support.premiumCareer(support.register(), null);
         List<Long> squad = jdbc.queryForList("SELECT base_player_id FROM user_player_state WHERE career_id = ? ORDER BY base_player_id LIMIT 2", Long.class, careerId);
         long withAttrs = squad.get(0);

@@ -5,11 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.ingestion.service.IngestionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -30,7 +30,7 @@ class DevelopmentRecommendationIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private ClubRepository clubRepository;
+    private JdbcTemplate jdbc;
     @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
@@ -43,7 +43,7 @@ class DevelopmentRecommendationIntegrationTest {
         if (basePlayerRepository.count() == 0) {
             ingestionService.run();
         }
-        support = new CareerTestSupport(mockMvc, objectMapper, clubRepository);
+        support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
     }
 
     private JsonNode call(String token, String method, String path, Object body) throws Exception {
@@ -102,7 +102,8 @@ class DevelopmentRecommendationIntegrationTest {
         call(token, "PATCH_SPOILER", "/api/v1/careers/" + careerId, Map.of("spoilerMode", "SCOUT_RANGE"));
         JsonNode recs = call(token, "POST", "/api/v1/careers/" + careerId + "/development/recommendations", Map.of());
         List<Long> expected = squad.entrySet().stream()
-                .filter((e) -> e.getValue()[1] <= 23 && com.fcareer.career.desk.SpoilerPolicy.low(e.getValue()[0] + 6) - e.getValue()[0] >= 5)
+                // Fikstür potansiyeli 99'la sınırlar (youthCareer); beklenti de aynı sınırla hesaplanır (OVR 99 oyuncuda baş boşluk 0).
+                .filter((e) -> e.getValue()[1] <= 23 && com.fcareer.career.desk.SpoilerPolicy.low(Math.min(99, e.getValue()[0] + 6)) - e.getValue()[0] >= 5)
                 .map(Map.Entry::getKey).sorted().toList();
         List<Long> actual = new ArrayList<>();
         recs.forEach((r) -> actual.add(r.get("playerId").asLong()));

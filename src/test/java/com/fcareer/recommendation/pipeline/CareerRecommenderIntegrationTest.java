@@ -6,7 +6,6 @@ import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.career.service.CareerService;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.ingestion.service.IngestionService;
 import com.fcareer.recommendation.pipeline.CareerRecommender.Scored;
 import com.fcareer.recommendation.pipeline.model.CareerRecommendationRequest;
@@ -41,8 +40,6 @@ class CareerRecommenderIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private ClubRepository clubRepository;
-    @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
     private IngestionService ingestionService;
@@ -68,7 +65,7 @@ class CareerRecommenderIntegrationTest {
             levelNormsBuilder.rebuild((short) 27);
             levelFitService.refresh();
         }
-        support = new CareerTestSupport(mockMvc, objectMapper, clubRepository);
+        support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
     }
 
     private long userId(String token) {

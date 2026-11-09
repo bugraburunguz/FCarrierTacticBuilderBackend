@@ -3,7 +3,6 @@ package com.fcareer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.ingestion.service.IngestionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,8 +39,6 @@ class CareerImportIntegrationTest {
     @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
-    private ClubRepository clubRepository;
-    @Autowired
     private org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     @BeforeEach
@@ -54,16 +51,17 @@ class CareerImportIntegrationTest {
     @Test
     void importRequiresPremiumThenOverlaysRatingsFreeAgentsAndTeamProfile() throws Exception {
         String token = register();
-        var club = clubRepository.findAll().get(0);
+        int clubId = CareerTestSupport.catalogClubId(jdbc);
+        String clubName = CareerTestSupport.catalogClubName(jdbc);
         long careerId = json(post("/api/v1/careers").contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(Map.of("clubId", club.getId(), "budgetEur", 1_000_000))), token)
+                .content(objectMapper.writeValueAsString(Map.of("clubId", clubId, "budgetEur", 1_000_000))), token)
                 .at("/data/id").asLong();
 
-        JsonNode denied = upload(careerId, token, club.getName());
+        JsonNode denied = upload(careerId, token, clubName);
         assertThat(denied.at("/success").asBoolean()).isFalse();
 
         json(post("/api/v1/billing/subscribe"), token);
-        JsonNode result = upload(careerId, token, club.getName());
+        JsonNode result = upload(careerId, token, clubName);
         assertThat(result.at("/success").asBoolean()).as(result.toString()).isTrue();
         assertThat(result.at("/data/players").asInt()).isEqualTo(3);
         assertThat(result.at("/data/freeAgents").asInt()).isEqualTo(1);
@@ -87,7 +85,7 @@ class CareerImportIntegrationTest {
         assertThat(squad.at("/data/0/dynamicPotential").asInt()).isIn(95, 93);
 
         JsonNode profile = json(get("/api/v1/careers/" + careerId + "/teams/1"), token);
-        assertThat(profile.at("/data/team/name").asText()).isEqualTo(club.getName());
+        assertThat(profile.at("/data/team/name").asText()).isEqualTo(clubName);
         assertThat(profile.at("/data/weaknesses").toString()).contains("Savunma");
         assertThat(profile.at("/data/topPlayers")).hasSize(2);
         assertThat(json(get("/api/v1/careers/" + careerId + "/teams?q=Serbest"), token).at("/data")).isEmpty();
@@ -96,14 +94,15 @@ class CareerImportIntegrationTest {
     @Test
     void snapshotsKeepPositionsAttributesAndAgeAndAreNeverPrunedByDefault() throws Exception {
         String token = register();
-        var club = clubRepository.findAll().get(0);
+        int clubId = CareerTestSupport.catalogClubId(jdbc);
+        String clubName = CareerTestSupport.catalogClubName(jdbc);
         long careerId = json(post("/api/v1/careers").contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(Map.of("clubId", club.getId(), "budgetEur", 1_000_000))), token)
+                .content(objectMapper.writeValueAsString(Map.of("clubId", clubId, "budgetEur", 1_000_000))), token)
                 .at("/data/id").asLong();
         json(post("/api/v1/billing/subscribe"), token);
 
         for (int i = 0; i < 33; i++) {
-            assertThat(upload(careerId, token, club.getName()).at("/success").asBoolean()).isTrue();
+            assertThat(upload(careerId, token, clubName).at("/success").asBoolean()).isTrue();
         }
 
         assertThat(jdbc.queryForObject("SELECT count(*) FROM career_snapshot WHERE career_id = ?", Integer.class, careerId)).as("30'dan eski snapshot silinmez").isEqualTo(33);
@@ -117,19 +116,20 @@ class CareerImportIntegrationTest {
     @Test
     void secondImportKeepsAManuallyBuiltSquad() throws Exception {
         String token = register();
-        var club = clubRepository.findAll().get(0);
+        int clubId = CareerTestSupport.catalogClubId(jdbc);
+        String clubName = CareerTestSupport.catalogClubName(jdbc);
         long careerId = json(post("/api/v1/careers").contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(Map.of("clubId", club.getId(), "budgetEur", 1_000_000))), token)
+                .content(objectMapper.writeValueAsString(Map.of("clubId", clubId, "budgetEur", 1_000_000))), token)
                 .at("/data/id").asLong();
         json(post("/api/v1/billing/subscribe"), token);
 
-        assertThat(upload(careerId, token, club.getName()).at("/data/squadSynced").asInt()).as("ilk import kadroyu kurar").isEqualTo(2);
+        assertThat(upload(careerId, token, clubName).at("/data/squadSynced").asInt()).as("ilk import kadroyu kurar").isEqualTo(2);
 
         long manual = jdbc.queryForObject("SELECT id FROM base_player WHERE owner_career_id IS NULL AND id NOT IN (SELECT base_player_id FROM user_player_state WHERE career_id = ?) LIMIT 1", Long.class, careerId);
-        jdbc.update("INSERT INTO user_player_state (career_id, base_player_id, club_id, acquired_at, updated_at) VALUES (?, ?, ?, now(), now())", careerId, manual, club.getId());
+        jdbc.update("INSERT INTO user_player_state (career_id, base_player_id, club_id, acquired_at, updated_at) VALUES (?, ?, ?, now(), now())", careerId, manual, clubId);
         jdbc.update("INSERT INTO roster_event (career_id, base_player_id, type, fee_eur) VALUES (?, ?, 'BUY', 1000)", careerId, manual);
 
-        JsonNode second = upload(careerId, token, club.getName());
+        JsonNode second = upload(careerId, token, clubName);
 
         assertThat(second.at("/data/squadSynced").isMissingNode() || second.at("/data/squadSynced").isNull()).as("elle düzenlenmiş kadro yeniden kurulmaz").isTrue();
         assertThat(second.at("/data/guessedTeamId").asInt()).isEqualTo(1);
@@ -137,9 +137,9 @@ class CareerImportIntegrationTest {
     }
 
     private long premiumCareer(String token) throws Exception {
-        var club = clubRepository.findAll().get(0);
+        int clubId = CareerTestSupport.catalogClubId(jdbc);
         long careerId = json(post("/api/v1/careers").contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(Map.of("clubId", club.getId(), "budgetEur", 1_000_000))), token).at("/data/id").asLong();
+                .content(objectMapper.writeValueAsString(Map.of("clubId", clubId, "budgetEur", 1_000_000))), token).at("/data/id").asLong();
         json(post("/api/v1/billing/subscribe"), token);
         return careerId;
     }
@@ -148,7 +148,7 @@ class CareerImportIntegrationTest {
     void csvPathAcceptsLoansAndTheNameTablesNotJustTheFiveBaseTables() throws Exception {
         String token = register();
         long careerId = premiumCareer(token);
-        String club = clubRepository.findAll().get(0).getName();
+        String club = CareerTestSupport.catalogClubName(jdbc);
 
         JsonNode result = json(multipart("/api/v1/careers/" + careerId + "/import")
                 .file(file("players", "playerid,overallrating,potential\n" + FIRST_MOCK_ID + ",91,95\n" + (FIRST_MOCK_ID + 1) + ",90,93\n"))
@@ -166,7 +166,7 @@ class CareerImportIntegrationTest {
     void importWarnsWhenGeneratedCareerPlayersHaveNoPositionColumns() throws Exception {
         String token = register();
         long careerId = premiumCareer(token);
-        String club = clubRepository.findAll().get(0).getName();
+        String club = CareerTestSupport.catalogClubName(jdbc);
 
         JsonNode result = json(multipart("/api/v1/careers/" + careerId + "/import")
                 .file(file("players", "playerid,overallrating,potential\n" + FIRST_MOCK_ID + ",91,95\n460000,60,80\n460001,61,82\n"))
@@ -181,7 +181,7 @@ class CareerImportIntegrationTest {
     void importWarnsWhenTheExportWasNotTakenInsideACareer() throws Exception {
         String token = register();
         long careerId = premiumCareer(token);
-        String club = clubRepository.findAll().get(0).getName();
+        String club = CareerTestSupport.catalogClubName(jdbc);
 
         JsonNode result = json(multipart("/api/v1/careers/" + careerId + "/import")
                 .file(file("players", "playerid,overallrating,potential\n" + FIRST_MOCK_ID + ",91,95\n"))
@@ -230,7 +230,7 @@ class CareerImportIntegrationTest {
     void v2ExportDrivesTheUserTeamTheGameDateAndTheSnapshot() throws Exception {
         String token = register();
         long careerId = premiumCareer(token);
-        String club = clubRepository.findAll().get(0).getName();
+        String club = CareerTestSupport.catalogClubName(jdbc);
 
         JsonNode result = json(multipart("/api/v1/careers/" + careerId + "/import").file(file("log", fcx2Log(club, true, "2029-07-01", 77))), token);
 
@@ -250,7 +250,7 @@ class CareerImportIntegrationTest {
     void v2ExportWithWagesAndContractsReportsThemAndDoesNotWarn() throws Exception {
         String token = register();
         long careerId = premiumCareer(token);
-        String club = clubRepository.findAll().get(0).getName();
+        String club = CareerTestSupport.catalogClubName(jdbc);
         String log = fcx2Log(club, true, "2029-07-01", 77, "[\"playerid\",\"overallrating\",\"potential\",\"wage\",\"contractvaliduntil\"]",
                 java.util.List.of("[" + FIRST_MOCK_ID + ",91,95,11000,2030]", "[" + (FIRST_MOCK_ID + 1) + ",90,93,6500,2029]"));
 
@@ -265,7 +265,7 @@ class CareerImportIntegrationTest {
     void v2ExportTakenOutsideACareerWarnsAndCorruptExportsAreRejected() throws Exception {
         String token = register();
         long careerId = premiumCareer(token);
-        String club = clubRepository.findAll().get(0).getName();
+        String club = CareerTestSupport.catalogClubName(jdbc);
 
         JsonNode warned = json(multipart("/api/v1/careers/" + careerId + "/import").file(file("log", fcx2Log(club, false, "2029-07-01", 0))), token);
         assertThat(warned.at("/data/warnings").toString()).contains("NOT_IN_CAREER");
@@ -278,9 +278,10 @@ class CareerImportIntegrationTest {
     @Test
     void importAcceptsTheLiveEditorLogFileDirectly() throws Exception {
         String token = register();
-        var club = clubRepository.findAll().get(0);
+        int clubId = CareerTestSupport.catalogClubId(jdbc);
+        String clubName = CareerTestSupport.catalogClubName(jdbc);
         long careerId = json(post("/api/v1/careers").contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(Map.of("clubId", club.getId(), "budgetEur", 1_000_000))), token)
+                .content(objectMapper.writeValueAsString(Map.of("clubId", clubId, "budgetEur", 1_000_000))), token)
                 .at("/data/id").asLong();
         json(post("/api/v1/billing/subscribe"), token);
 
@@ -298,7 +299,7 @@ class CareerImportIntegrationTest {
                 prefix + "END" + tab + "playerloans" + tab + "1",
                 prefix + "BEGIN" + tab + "teams" + tab + "fields=3",
                 prefix + "HEADER" + tab + "teams" + tab + "teamid,teamname,overallrating",
-                prefix + "ROW" + tab + "teams" + tab + "1,\"" + club.getName() + "\",80",
+                prefix + "ROW" + tab + "teams" + tab + "1,\"" + clubName + "\",80",
                 prefix + "BEGIN" + tab + "teamplayerlinks" + tab + "fields=2",
                 prefix + "HEADER" + tab + "teamplayerlinks" + tab + "playerid,teamid",
                 prefix + "ROW" + tab + "teamplayerlinks" + tab + FIRST_MOCK_ID + ",1",

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.catalog.service.PlayerService;
 import com.fcareer.development.service.GrowthProjector;
 import com.fcareer.fitengine.model.FitPlayer;
@@ -37,8 +36,6 @@ class DevelopmentV3IntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private ClubRepository clubRepository;
-    @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
     private IngestionService ingestionService;
@@ -62,7 +59,7 @@ class DevelopmentV3IntegrationTest {
 
     @Test
     void careerDevelopmentPlanUsesTheV3EngineAndTheGrowthProjection() throws Exception {
-        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, clubRepository);
+        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
         String token = support.register();
         long careerId = support.premiumCareer(token, null);
         support.json(get("/api/v1/players?career=" + careerId + "&size=1"), token);

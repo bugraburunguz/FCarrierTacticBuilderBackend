@@ -2,9 +2,9 @@ package com.fcareer.career;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.ingestion.service.IngestionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,8 +34,6 @@ class CareerSquadIsolationIntegrationTest {
     @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
-    private ClubRepository clubRepository;
-    @Autowired
     private IngestionService ingestionService;
 
     @BeforeEach
@@ -51,7 +49,7 @@ class CareerSquadIsolationIntegrationTest {
 
     @Test
     void anotherCareersGeneratedPlayersNeverJoinANewCareersSquad() throws Exception {
-        int clubId = clubRepository.findAll().get(0).getId();
+        int clubId = CareerTestSupport.catalogClubId(jdbc);
         String owner = register();
         long ownerCareer = call(post("/api/v1/careers"), Map.of("clubId", clubId, "budgetEur", 1_000_000), owner, 200).at("/data/id").asLong();
         long generated = jdbc.queryForObject("INSERT INTO base_player (full_name, gender, owner_career_id) VALUES ('Generated Youth', 0, ?) RETURNING id", Long.class, ownerCareer);
@@ -69,7 +67,7 @@ class CareerSquadIsolationIntegrationTest {
     /** REVIEW F1: kadro olayı başka kariyerin ürettiği oyuncuyu kabul etmez (404) ve adını sızdırmaz. */
     @Test
     void rosterEventsRejectAnotherCareersGeneratedPlayer() throws Exception {
-        int clubId = clubRepository.findAll().get(0).getId();
+        int clubId = CareerTestSupport.catalogClubId(jdbc);
         String owner = register();
         long ownerCareer = call(post("/api/v1/careers"), Map.of("clubId", clubId, "budgetEur", 1_000_000), owner, 200).at("/data/id").asLong();
         long generated = jdbc.queryForObject("INSERT INTO base_player (full_name, gender, owner_career_id) VALUES ('Gizli Genç', 0, ?) RETURNING id", Long.class, ownerCareer);
