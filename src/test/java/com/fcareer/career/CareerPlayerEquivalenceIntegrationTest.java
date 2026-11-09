@@ -199,6 +199,9 @@ class CareerPlayerEquivalenceIntegrationTest {
         String token = register();
         long careerId = premiumCareer(token);
         String club = CareerTestSupport.catalogClubName(jdbc);
+        // Fikstür: katalogda serbest oyuncu kulübü (ea_team_id 111592/131368) yok. Paylaşılan context'te katalog içe aktarma testleri
+        // "Serbest Oyuncular" kulübünü yaratabiliyor; o zaman canlı serbest oyuncu o kulübe eşlenir ve sonuç test sırasına bağlı kalır.
+        jdbc.update("UPDATE club SET ea_team_id = NULL WHERE ea_team_id IN (111592, 131368)");
         MockHttpServletRequestBuilder upload = multipart("/api/v1/careers/" + careerId + "/import")
                 .file(file("players", "playerid,overallrating,potential\n" + (FIRST_MOCK_ID + 2) + ",77,80\n"))
                 .file(file("teams", "teamid,teamname,overallrating,gender\n1,\"" + club + "\",80,0\n111592,Serbest,60,0\n"))

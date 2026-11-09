@@ -124,7 +124,9 @@ class CareerDeskIntegrationTest {
         String token = register();
         long careerId = createCareer(token);
         long playerId = call(get("/api/v1/careers/" + careerId + "/squad"), null, token, 200).at("/data/0/player/id").asLong();
-        long target = basePlayerRepository.findAll().stream().filter(p -> p.getId() != playerId).findFirst().orElseThrow().getId();
+        // Hedef sıralı seçilir ve katalog oyuncusudur: sırasız findAll() başka bir kariyerin ürettiği (owner_career_id) oyuncuyu verebiliyordu.
+        long target = jdbc.queryForObject("SELECT id FROM base_player WHERE owner_career_id IS NULL AND retired_at IS NULL AND id <> ? ORDER BY id LIMIT 1",
+                Long.class, playerId);
 
         call(put("/api/v1/careers/" + careerId + "/tags/" + playerId), Map.of("tag", "FOR_SALE"), token, 200);
         call(put("/api/v1/careers/" + careerId + "/tags/" + playerId), Map.of("tag", "LOCKED"), token, 200);
