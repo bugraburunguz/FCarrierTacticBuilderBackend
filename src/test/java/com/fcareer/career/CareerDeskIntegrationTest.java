@@ -2,13 +2,14 @@ package com.fcareer.career;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.ingestion.service.IngestionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -34,7 +35,7 @@ class CareerDeskIntegrationTest {
     @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
-    private ClubRepository clubRepository;
+    private JdbcTemplate jdbc;
     @Autowired
     private IngestionService ingestionService;
 
@@ -207,7 +208,7 @@ class CareerDeskIntegrationTest {
     }
 
     private long createCareer(String token) throws Exception {
-        long clubId = clubRepository.findAll().get(0).getId();
+        long clubId = CareerTestSupport.catalogClubId(jdbc);
         return call(post("/api/v1/careers"), Map.of("clubId", clubId, "budgetEur", 5_000_000), token, 200).at("/data/id").asLong();
     }
 

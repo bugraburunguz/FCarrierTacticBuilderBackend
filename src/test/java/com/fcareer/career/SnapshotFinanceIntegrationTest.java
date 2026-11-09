@@ -6,7 +6,6 @@ import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.career.desk.CareerDeskService;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.ingestion.base.CareerPlayerWriter;
 import com.fcareer.ingestion.service.IngestionService;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,8 +32,6 @@ class SnapshotFinanceIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private ClubRepository clubRepository;
-    @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
     private IngestionService ingestionService;
@@ -54,7 +51,7 @@ class SnapshotFinanceIntegrationTest {
 
     @Test
     void snapshotRecordsBudgetAndSquadWageOnlyWhenEveryWageIsKnown() throws Exception {
-        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, clubRepository);
+        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
         String token = support.register();
         long careerId = support.premiumCareer(token, null);
         careerPlayerWriter.syncCareer(careerId);

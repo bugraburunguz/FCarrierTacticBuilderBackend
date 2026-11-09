@@ -2,9 +2,9 @@ package com.fcareer.career;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.ingestion.service.IngestionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,8 +39,6 @@ class CareerGameDateIntegrationTest {
     @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
-    private ClubRepository clubRepository;
-    @Autowired
     private IngestionService ingestionService;
 
     @BeforeEach
@@ -53,7 +51,7 @@ class CareerGameDateIntegrationTest {
     @Test
     void ageFollowsTheCareersGameDateInResultsAndFilters() throws Exception {
         String token = call(post("/api/v1/auth/register"), Map.of("email", "gd-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!", "privacyVersion", 1), null, 200).at("/data/accessToken").asText();
-        long careerId = call(post("/api/v1/careers"), Map.of("clubId", clubRepository.findAll().get(0).getId(), "budgetEur", 1_000_000), token, 200).at("/data/id").asLong();
+        long careerId = call(post("/api/v1/careers"), Map.of("clubId", CareerTestSupport.catalogClubId(jdbc), "budgetEur", 1_000_000), token, 200).at("/data/id").asLong();
         long playerId = call(get("/api/v1/careers/" + careerId + "/squad"), null, token, 200).at("/data/0/player/id").asLong();
         LocalDate dob = jdbc.queryForObject("SELECT dob FROM base_player WHERE id = ?", LocalDate.class, playerId);
         int realAge = Period.between(dob, LocalDate.now()).getYears();
@@ -63,7 +61,7 @@ class CareerGameDateIntegrationTest {
         JsonNode patched = call(patch("/api/v1/careers/" + careerId), Map.of("gameDate", GAME_DATE.toString()), token, 200);
         assertThat(patched.at("/data/gameDate").asText()).isEqualTo(GAME_DATE.toString());
 
-        long clubId = clubRepository.findAll().get(0).getId();
+        long clubId = CareerTestSupport.catalogClubId(jdbc);
         String base = "/api/v1/players?career=" + careerId + "&club=" + clubId + "&size=100";
         JsonNode items = call(get(base), null, token, 200).at("/data/items");
         JsonNode row = null;

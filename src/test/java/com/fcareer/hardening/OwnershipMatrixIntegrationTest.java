@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.ingestion.service.IngestionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,8 +33,6 @@ class OwnershipMatrixIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private ClubRepository clubRepository;
-    @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
     private IngestionService ingestionService;
@@ -58,12 +55,9 @@ class OwnershipMatrixIntegrationTest {
 
     @Test
     void everyCareerScopedEndpointHidesAnotherUsersCareer() throws Exception {
-        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, clubRepository);
+        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
         String owner = support.register();
-        // Kulüp açıkça (en kalabalık kadro) seçilir: "ilk kulüp" sırasızdır ve başka testler kulüp satırlarını güncelleyince kadrosuz kalabilir.
-        // Yalnız katalog oyuncuları sayılır: içe aktarmanın ürettiği (owner_career_id) oyuncular yeni kariyerin kadrosuna girmez.
-        Integer clubId = jdbc.queryForObject("SELECT r.club_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id WHERE r.game_version_id = 27 "
-                + "AND b.owner_career_id IS NULL GROUP BY r.club_id ORDER BY count(*) DESC, r.club_id LIMIT 1", Integer.class);
+        int clubId = CareerTestSupport.catalogClubId(jdbc);
         long c = support.json(MockMvcRequestBuilders.post("/api/v1/careers").contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsBytes(Map.of("clubId", clubId, "budgetEur", 5_000_000))), owner).at("/data/id").asLong();
         String stranger = support.register();

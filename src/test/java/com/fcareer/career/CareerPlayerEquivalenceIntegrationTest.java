@@ -2,9 +2,9 @@ package com.fcareer.career;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.fitengine.model.Attr;
 import com.fcareer.ingestion.service.IngestionService;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,8 +51,6 @@ class CareerPlayerEquivalenceIntegrationTest {
     @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
-    private ClubRepository clubRepository;
-    @Autowired
     private IngestionService ingestionService;
 
     @BeforeEach
@@ -96,7 +94,7 @@ class CareerPlayerEquivalenceIntegrationTest {
     void csvImportKeepsCareerPlayerEqualToTheLegacyRead() throws Exception {
         String token = register();
         long careerId = premiumCareer(token);
-        String club = clubRepository.findAll().get(0).getName();
+        String club = CareerTestSupport.catalogClubName(jdbc);
         MockHttpServletRequestBuilder upload = multipart("/api/v1/careers/" + careerId + "/import")
                 .file(file("players", "playerid,overallrating,potential\n" + FIRST_MOCK_ID + ",91,95\n" + (FIRST_MOCK_ID + 1) + ",90,93\n" + (FIRST_MOCK_ID + 2) + ",77,80\n"))
                 .file(file("teams", "teamid,teamname,overallrating,gender\n1,\"" + club + "\",80,0\n111592,Serbest,60,0\n"))
@@ -110,7 +108,7 @@ class CareerPlayerEquivalenceIntegrationTest {
     void liveEditorLogImportWithOverlayAttributesAndAGeneratedPlayerStaysEqual() throws Exception {
         String token = register();
         long careerId = premiumCareer(token);
-        String club = clubRepository.findAll().get(0).getName();
+        String club = CareerTestSupport.catalogClubName(jdbc);
         String tab = "\t";
         String prefix = "10:00:00.1" + tab + "INFO" + tab + "[LUA API] FCDUMP" + tab;
         String log = String.join("\n",
@@ -138,7 +136,7 @@ class CareerPlayerEquivalenceIntegrationTest {
     void contractYearWageAndLoanEndFromTheLiveEditorExportLandOnCareerPlayer() throws Exception {
         String token = register();
         long careerId = premiumCareer(token);
-        String club = clubRepository.findAll().get(0).getName();
+        String club = CareerTestSupport.catalogClubName(jdbc);
         String tab = "\t";
         String prefix = "10:00:00.1" + tab + "INFO" + tab + "[LUA API] FCDUMP" + tab;
         String log = String.join("\n",
@@ -179,7 +177,7 @@ class CareerPlayerEquivalenceIntegrationTest {
     void manualRatingUpdatesReachCareerPlayerToo() throws Exception {
         String token = register();
         long careerId = premiumCareer(token);
-        String club = clubRepository.findAll().get(0).getName();
+        String club = CareerTestSupport.catalogClubName(jdbc);
         MockHttpServletRequestBuilder upload = multipart("/api/v1/careers/" + careerId + "/import")
                 .file(file("players", "playerid,overallrating,potential\n" + FIRST_MOCK_ID + ",91,95\n"))
                 .file(file("teams", "teamid,teamname,overallrating,gender\n1,\"" + club + "\",80,0\n"))
@@ -200,7 +198,7 @@ class CareerPlayerEquivalenceIntegrationTest {
     void aLiveFreeAgentNeverFallsBackToACatalogClub() throws Exception {
         String token = register();
         long careerId = premiumCareer(token);
-        String club = clubRepository.findAll().get(0).getName();
+        String club = CareerTestSupport.catalogClubName(jdbc);
         MockHttpServletRequestBuilder upload = multipart("/api/v1/careers/" + careerId + "/import")
                 .file(file("players", "playerid,overallrating,potential\n" + (FIRST_MOCK_ID + 2) + ",77,80\n"))
                 .file(file("teams", "teamid,teamname,overallrating,gender\n1,\"" + club + "\",80,0\n111592,Serbest,60,0\n"))
@@ -215,9 +213,9 @@ class CareerPlayerEquivalenceIntegrationTest {
     }
 
     private long premiumCareer(String token) throws Exception {
-        var club = clubRepository.findAll().get(0);
+        long clubId = CareerTestSupport.catalogClubId(jdbc);
         long careerId = json(post("/api/v1/careers").contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(Map.of("clubId", club.getId(), "budgetEur", 1_000_000))), token).at("/data/id").asLong();
+                .content(objectMapper.writeValueAsString(Map.of("clubId", clubId, "budgetEur", 1_000_000))), token).at("/data/id").asLong();
         json(post("/api/v1/billing/subscribe"), token);
         return careerId;
     }

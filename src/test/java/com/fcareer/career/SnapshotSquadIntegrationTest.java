@@ -2,9 +2,9 @@ package com.fcareer.career;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.ingestion.service.IngestionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,8 +36,6 @@ class SnapshotSquadIntegrationTest {
     @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
-    private ClubRepository clubRepository;
-    @Autowired
     private IngestionService ingestionService;
     @Autowired
     private org.springframework.jdbc.core.JdbcTemplate jdbc;
@@ -53,7 +51,7 @@ class SnapshotSquadIntegrationTest {
     void snapshotsCarryTheSquadSizeAndWhoJoinedOrLeft() throws Exception {
         String token = call(post("/api/v1/auth/register"), Map.of("email", "snap-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!", "privacyVersion", 1), null, 200)
                 .at("/data/accessToken").asText();
-        long clubId = clubRepository.findAll().get(0).getId();
+        long clubId = CareerTestSupport.catalogClubId(jdbc);
         long careerId = call(post("/api/v1/careers"), Map.of("clubId", clubId, "budgetEur", 50_000_000), token, 200).at("/data/id").asLong();
         JsonNode squad = call(get("/api/v1/careers/" + careerId + "/squad"), null, token, 200).at("/data");
         int size = squad.size();
