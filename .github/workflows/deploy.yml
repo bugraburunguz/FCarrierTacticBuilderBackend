@@ -1,0 +1,39 @@
+# LS-5: main'e gelen her değişiklikte, "Backend Test" yeşil bitince backend'i VDS'e dağıtır. VDS_DEPLOY_KEY anahtarı
+# sunucuda yalnız love-site/deploy/vds/scripts/deploy-trigger.sh'i çalıştırabilir (forced command); iş yalnız hedefi söyler.
+# Kurulum: love-site deploy/vds/README.md, "Otomatik deploy (GitHub Actions)".
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ["Backend Test"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vds
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    # workflow_run: yalnız main'e push'tan gelen ve yeşil biten koşu (PR koşuları dağıtılmaz)
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Deploy to the VDS
+        env:
+          DEPLOY_KEY: ${{ secrets.VDS_DEPLOY_KEY }}
+          KNOWN_HOSTS: ${{ secrets.VDS_KNOWN_HOSTS }}
+          HOST: ${{ secrets.VDS_HOST }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key -o BatchMode=yes -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 "deploy@$HOST" fc-backend
