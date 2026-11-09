@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.ingestion.service.IngestionService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
@@ -47,8 +46,6 @@ class GrowthRecentCostReportTest {
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private ClubRepository clubRepository;
-    @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
     private IngestionService ingestionService;
@@ -60,7 +57,7 @@ class GrowthRecentCostReportTest {
         if (basePlayerRepository.count() == 0) {
             ingestionService.run();
         }
-        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, clubRepository);
+        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
         byte[] log = Files.readAllBytes(Path.of(System.getProperty("gtr.cost")));
         String token = support.register();
         long careerId = support.premiumCareer(token, null);

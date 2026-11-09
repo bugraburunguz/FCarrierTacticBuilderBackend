@@ -2,9 +2,9 @@ package com.fcareer.career;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.catalog.service.PlayerService;
 import com.fcareer.fitengine.model.FitPlayer;
 import com.fcareer.ingestion.service.IngestionService;
@@ -44,8 +44,6 @@ class GameDateAgesIntegrationTest {
     @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
-    private ClubRepository clubRepository;
-    @Autowired
     private IngestionService ingestionService;
 
     private String token;
@@ -57,7 +55,7 @@ class GameDateAgesIntegrationTest {
             ingestionService.run();
         }
         token = call(post("/api/v1/auth/register"), Map.of("email", "gda-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!", "privacyVersion", 1), null, 200).at("/data/accessToken").asText();
-        careerId = call(post("/api/v1/careers"), Map.of("clubId", clubRepository.findAll().get(0).getId(), "budgetEur", 5_000_000), token, 200).at("/data/id").asLong();
+        careerId = call(post("/api/v1/careers"), Map.of("clubId", CareerTestSupport.catalogClubId(jdbc), "budgetEur", 5_000_000), token, 200).at("/data/id").asLong();
         call(patch("/api/v1/careers/" + careerId), Map.of("gameDate", GAME_DATE.toString()), token, 200);
     }
 

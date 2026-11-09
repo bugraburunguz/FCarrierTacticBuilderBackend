@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.ingestion.service.IngestionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,8 +29,6 @@ class RoleFitNarrativeIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private ClubRepository clubRepository;
-    @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
     private IngestionService ingestionService;
@@ -45,7 +42,7 @@ class RoleFitNarrativeIntegrationTest {
         if (basePlayerRepository.count() == 0) {
             ingestionService.run();
         }
-        support = new CareerTestSupport(mockMvc, objectMapper, clubRepository);
+        support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
     }
 
     private JsonNode fit(String token, long playerId, String roleId, String version) throws Exception {

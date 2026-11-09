@@ -2,9 +2,9 @@ package com.fcareer.usertactic;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.ingestion.service.IngestionService;
 import com.fcareer.recommendation.pipeline.TacticSlotLookup;
 import com.fcareer.replica.ReplicaService;
@@ -40,8 +40,6 @@ class UserTacticIntegrationTest {
     @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
-    private ClubRepository clubRepository;
-    @Autowired
     private IngestionService ingestionService;
     @Autowired
     private ReplicaService replicas;
@@ -60,7 +58,7 @@ class UserTacticIntegrationTest {
     }
 
     private long career(String token) throws Exception {
-        return call(post("/api/v1/careers"), Map.of("clubId", clubRepository.findAll().get(0).getId(), "budgetEur", 5_000_000), token, 200).at("/data/id").asLong();
+        return call(post("/api/v1/careers"), Map.of("clubId", CareerTestSupport.catalogClubId(jdbc), "budgetEur", 5_000_000), token, 200).at("/data/id").asLong();
     }
 
     @Test

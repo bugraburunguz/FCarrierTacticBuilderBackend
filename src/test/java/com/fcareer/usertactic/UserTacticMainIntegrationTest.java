@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.ingestion.service.IngestionService;
 import com.fcareer.recommendation.pipeline.TacticSlotLookup;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,8 +36,6 @@ class UserTacticMainIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private ClubRepository clubRepository;
-    @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
     private IngestionService ingestionService;
@@ -54,7 +51,7 @@ class UserTacticMainIntegrationTest {
         if (basePlayerRepository.count() == 0) {
             ingestionService.run();
         }
-        support = new CareerTestSupport(mockMvc, objectMapper, clubRepository);
+        support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
     }
 
     private static Map<String, Object> tactic() {

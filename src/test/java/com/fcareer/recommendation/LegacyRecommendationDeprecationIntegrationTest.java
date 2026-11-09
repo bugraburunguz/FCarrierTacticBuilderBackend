@@ -4,12 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.catalog.repository.BasePlayerRepository;
 import com.fcareer.ingestion.service.IngestionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,7 +28,7 @@ class LegacyRecommendationDeprecationIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private ClubRepository clubRepository;
+    private JdbcTemplate jdbc;
     @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
@@ -47,7 +47,7 @@ class LegacyRecommendationDeprecationIntegrationTest {
 
     @Test
     void theLegacyRecommendationEndpointsCarryADeprecationHeaderPointingAtTheNewOne() throws Exception {
-        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, clubRepository);
+        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
         String token = support.register();
         long careerId = support.premiumCareer(token, null);
         for (String path : new String[]{"/api/v1/recommend/slot-view", "/api/v1/recommend/slot", "/api/v1/recommend/transfer-targets", "/api/v1/scouting/" + careerId + "/search"}) {
@@ -60,7 +60,7 @@ class LegacyRecommendationDeprecationIntegrationTest {
 
     @Test
     void theCreditCostsAreReadableSoTheUiCanSayHowManyCreditsWillBeSpent() throws Exception {
-        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, clubRepository);
+        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
         String token = support.register();
         JsonNode costs = support.json(get("/api/v1/billing/costs"), token);
         assertThat(costs.at("/data/recommend").asInt()).isPositive();

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.ingestion.service.IngestionService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
@@ -39,8 +38,6 @@ class VeteranPlanReportTest {
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private ClubRepository clubRepository;
-    @Autowired
     private BasePlayerRepository basePlayerRepository;
     @Autowired
     private IngestionService ingestionService;
@@ -50,7 +47,7 @@ class VeteranPlanReportTest {
         if (basePlayerRepository.count() == 0) {
             ingestionService.run();
         }
-        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, clubRepository);
+        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
         String token = support.register();
         long careerId = support.premiumCareer(token, null);
         byte[] log = Files.readAllBytes(Path.of(System.getProperty("gta.report")));
@@ -117,7 +114,7 @@ class VeteranPlanReportTest {
         if (basePlayerRepository.count() == 0) {
             ingestionService.run();
         }
-        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, clubRepository);
+        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
         String token = support.register();
         long careerId = support.premiumCareer(token, null);
         byte[] log = Files.readAllBytes(Path.of(System.getProperty("gta.report")));

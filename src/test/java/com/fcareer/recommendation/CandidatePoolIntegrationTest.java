@@ -6,7 +6,6 @@ import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.model.request.PlayerSearchRequest;
 import com.fcareer.catalog.model.response.PlayerSummaryResponse;
 import com.fcareer.catalog.repository.BasePlayerRepository;
-import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.catalog.repository.PlayerSearchRepository;
 import com.fcareer.fitengine.model.Attr;
 import com.fcareer.ingestion.service.IngestionService;
@@ -34,8 +33,6 @@ class CandidatePoolIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
-    private ClubRepository clubRepository;
-    @Autowired
     private PlayerSearchRepository searchRepository;
     @Autowired
     private BasePlayerRepository basePlayerRepository;
@@ -51,7 +48,7 @@ class CandidatePoolIntegrationTest {
         if (basePlayerRepository.count() == 0) {
             ingestionService.run();
         }
-        support = new CareerTestSupport(mockMvc, objectMapper, clubRepository);
+        support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
     }
 
     private PlayerSearchRequest.PlayerSearchRequestBuilder pool(long careerId) {
