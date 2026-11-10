@@ -122,6 +122,24 @@ class LeExportV2ParserTest {
         assertThat(export.tables().get("players")).hasSize(3);
     }
 
+    /** 2.0.5 (FCA-17): etiketli META ve FCAEV gelişim satırları ayrıştırmayı bozmaz; ay başı dışa aktarımlarından sonuncusu seçilir. */
+    @Test
+    void labelledMonthlyExportsAndGrowthEventLinesStillPickTheLastExport() {
+        List<String> log = new ArrayList<>();
+        String labelled = META.replace("\"userTeamIdMem\":121", "\"userTeamIdMem\":121,\"exportSeq\":1,\"realTime\":\"2026-11-10 21:34\",\"trigger\":\"month\"");
+        log.add(PREFIX + "META\t" + labelled.replace("2027-01-14", "2026-08-01"));
+        log.addAll(goodLog().subList(2, goodLog().size()));
+        log.add("10:00:01.0\tINFO\t[LUA API] FCAEV\tPLAYER_GROWTH\t2026-08-02\t2026-11-10 21:35");
+        log.add("10:00:02.0\tINFO\t[LUA API] FC Assist export #2 | oyun 2026-09-01 | 2026-11-10 21:40 | ay başı");
+        log.add(PREFIX + "META\t" + labelled.replace("\"exportSeq\":1", "\"exportSeq\":2").replace("2027-01-14", "2026-09-01"));
+        log.addAll(goodLog().subList(2, goodLog().size()));
+
+        LeExport export = parse(log);
+
+        assertThat(export.context().gameDate()).isEqualTo(LocalDate.of(2026, 9, 1));
+        assertThat(export.tables().get("players")).hasSize(3);
+    }
+
     @Test
     void aChecksumMismatchRejectsTheImportAndNamesTheTable() {
         List<String> log = goodLog();

@@ -32,7 +32,7 @@ class LeExportScriptTest {
     void speaksTheV2ProtocolTheBackendParses() throws Exception {
         String lua = script();
 
-        assertThat(lua).contains("\"FCX2\"").contains("\"FCX2\", \"2.0.4\", 2,").contains("fccareer.le-export");
+        assertThat(lua).contains("\"FCX2\"").contains("\"FCX2\", \"2.0.5\", 2,").contains("fccareer.le-export");
         for (String kind : new String[]{"META", "HEADER", "CHUNK", "END", "ERROR", "DONE"}) {
             assertThat(lua).contains("emit(\"" + kind + "\"");
         }
@@ -62,6 +62,39 @@ class LeExportScriptTest {
     @Test
     void exportsPlayingTimeTablesInCareer() throws Exception {
         assertThat(script()).contains("{\"career_playermatchratinghistory\",0,1}").contains("{\"career_playergrowthuserseason\",0,1}");
+    }
+
+    /**
+     * 2.0.5 (FCA-17): LE log dosyasının adını betik seçemez ve bir log birden çok dışa aktarım taşır. Her dışa aktarım META'ya sıra numarası,
+     * gerçek tarih-saat (dakikaya kadar) ve tetikleyiciyi (elle / ay başı) yazar; logda bunları okunur biçimde gösteren bir satır da bırakır.
+     */
+    @Test
+    void labelsEveryExportWithSequenceRealTimeAndTrigger() throws Exception {
+        String lua = script();
+
+        assertThat(lua).contains("ctx.exportSeq").contains("ctx.realTime").contains("ctx.trigger").contains("%Y-%m-%d %H:%M")
+                .contains("FC Assist export #");
+    }
+
+    /**
+     * 2.0.5 (FCA-17): betik bir kez çalıştırılınca oyun her ay döndüğünde (MONTH_PASSED, post olay) dışa aktarımı kendisi alır. LE oturumu
+     * boyunca tek dinleyici: tekrar çalıştırılınca eskisi kaldırılır. Aynı oyun ayı iki kez alınmaz. Otomatik dışa aktarım pencere açmaz.
+     */
+    @Test
+    void exportsAutomaticallyOnEveryMonthPassedWithOneListener() throws Exception {
+        String lua = script();
+
+        assertThat(lua).contains("AddEventHandler(\"post__CareerModeEvent\"").contains("ENUM_CM_EVENT_MSG_MONTH_PASSED")
+                .contains("safe(RemoveEventHandler, \"post__CareerModeEvent\", FCA_EVENT_HANDLER)").contains("FCA_LAST_AUTO_MONTH")
+                .contains("if trigger == \"manual\" then MessageBox(");
+    }
+
+    /** 2.0.5 (FCA-17, deneysel): oyunun gelişim olayı (PLAYER_GROWTH) oyun tarihiyle FCAEV satırı olarak loglanır; FCX2 ayrıştırıcısı bunu okumaz. */
+    @Test
+    void logsPlayerGrowthEventsOutsideTheFcx2Protocol() throws Exception {
+        String lua = script();
+
+        assertThat(lua).contains("ENUM_CM_EVENT_MSG_PLAYER_GROWTH").contains("\"FCAEV\"");
     }
 
     /** 2.0.0 jval() boolean'ı null yazıyordu: META'da "inCareer":null → sunucu kariyer dışı sanıyordu. */
