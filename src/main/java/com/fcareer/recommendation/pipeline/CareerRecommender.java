@@ -26,6 +26,7 @@ import com.fcareer.fitengine.service.FitEngineV3;
 import com.fcareer.fitengine.service.RoleFitV3Service;
 import com.fcareer.recommendation.pipeline.model.CareerRecommendationRequest;
 import com.fcareer.recommendation.pipeline.model.CareerRecommendationResponse;
+import com.fcareer.recommendation.pipeline.model.ReachableLeaguesResponse;
 import com.fcareer.roles.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -111,6 +112,17 @@ public class CareerRecommender {
         // FCA-5: erişilemeyen lig seçildiyse sonuç hep boş olurdu; ücret kesilmeden reddedilir.
         requireReachable(request.getLeagueId(), reachableLeagues(squad));
         return creditGuard.runCharged(userId, billingProperties.getRecommendCost(), CHARGE_REASON, () -> compute(squad, request));
+    }
+
+    /** FCA-6: ücretsiz; sahiplik squadPlayerIds ile (başkasının kariyeri 404). */
+    public ReachableLeaguesResponse reachable(Long userId, Long careerId) {
+        List<Integer> ids = reachableLeagueIds(careerService.squadPlayerIds(userId, careerId));
+        return new ReachableLeaguesResponse(Objects.nonNull(ids), Objects.isNull(ids) ? List.of() : ids);
+    }
+
+    /** Öneri isteğinin kullandığı erişilebilir lig listesi; kademe bilinmiyorsa null (kısıt yok). */
+    public List<Integer> reachableLeagueIds(CareerService.CareerSquad squad) {
+        return reachableLeagues(squad);
     }
 
     /** Lig süzgeci verilmiş ve kulübün erişilebilir lig listesi biliniyorsa lig o listede olmalı; liste bilinmiyorsa (kademe yok) kısıt yok. */
