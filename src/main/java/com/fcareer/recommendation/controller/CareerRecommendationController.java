@@ -6,9 +6,11 @@ import com.fcareer.career.desk.SpoilerPolicy;
 import com.fcareer.recommendation.pipeline.CareerRecommender;
 import com.fcareer.recommendation.pipeline.model.CareerRecommendationRequest;
 import com.fcareer.recommendation.pipeline.model.CareerRecommendationResponse;
+import com.fcareer.recommendation.pipeline.model.ReachableLeaguesResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,5 +38,11 @@ public class CareerRecommendationController {
             response.getResult().getLongShots().forEach((item) -> spoilerPolicy.mask(ranged, item.getPlayer()));
         }
         return response;
+    }
+
+    /** FCA-6: Transfer lig seçicisi için erişilebilir ligler (ücretsiz). */
+    @GetMapping("/reachable-leagues")
+    public ReachableLeaguesResponse reachableLeagues(@AuthenticationPrincipal AuthUser user, @PathVariable Long careerId) {
+        return recommender.reachable(user.id(), careerId);
     }
 }

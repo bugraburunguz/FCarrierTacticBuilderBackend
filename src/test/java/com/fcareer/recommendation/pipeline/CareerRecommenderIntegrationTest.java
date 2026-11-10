@@ -271,6 +271,29 @@ class CareerRecommenderIntegrationTest {
                 .as("istekteki 1 € bütçe kariyer bütçesinin yerine geçer: " + item.getPlayer().getName()).isTrue());
     }
 
+    /**
+     * FCA-6: Transfer lig seçicisi erişilemeyen ligleri baştan göstersin — ücretsiz uç, öneri isteğindeki 422 kuralıyla aynı liste.
+     * restricted=false: kulübün lig kademesi bilinmiyor, her lig seçilebilir (leagueIds boş).
+     */
+    @Test
+    void theReachableLeaguesEndpointMatchesTheRecommendationRule() throws Exception {
+        String token = support.register();
+        long careerId = support.premiumCareer(token, null);
+        JsonNode body = json(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/careers/" + careerId + "/recommendations/reachable-leagues"), token);
+        JsonNode data = body.at("/data");
+        assertThat(data.has("restricted")).as(body.toString()).isTrue();
+        List<Integer> ids = new java.util.ArrayList<>();
+        data.at("/leagueIds").forEach((n) -> ids.add(n.asInt()));
+        CareerService.CareerSquad squad = squad(careerId);
+        if (data.at("/restricted").asBoolean()) {
+            assertThat(ids).isNotEmpty();
+            ids.forEach((id) -> CareerRecommender.requireReachable(id, ids));
+        } else {
+            assertThat(ids).isEmpty();
+        }
+        assertThat(recommender.reachableLeagueIds(squad)).isEqualTo(data.at("/restricted").asBoolean() ? ids : null);
+    }
+
     /** FCA-5: Transfer ayrıntılı filtresi — lig ve uyruk aday havuzunu sunucuda süzer (ücretli istek; tarayıcı süzgeci yetmez). */
     @Test
     void theRequestCanNarrowCandidatesToOneLeagueAndOneNationality() throws Exception {

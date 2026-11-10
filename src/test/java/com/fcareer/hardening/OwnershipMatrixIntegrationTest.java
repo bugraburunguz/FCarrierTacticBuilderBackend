@@ -97,6 +97,7 @@ class OwnershipMatrixIntegrationTest {
                 new Call(HttpMethod.POST, "/api/v1/careers/" + c + "/backup", Map.of("version", 1)),
                 new Call(HttpMethod.GET, "/api/v1/careers/" + c + "/starter-tactic", null),
                 new Call(HttpMethod.POST, "/api/v1/careers/" + c + "/recommendations", Map.of("position", "ST")),
+                new Call(HttpMethod.GET, "/api/v1/careers/" + c + "/recommendations/reachable-leagues", null),
                 new Call(HttpMethod.POST, "/api/v1/scouting/" + c + "/search", Map.of("position", "ST", "roleId", "poacher_attack")),
                 new Call(HttpMethod.GET, "/api/v1/advisor/positions/" + c, null),
                 new Call(HttpMethod.POST, "/api/v1/careers/" + c + "/development/recommendations", Map.of()),
