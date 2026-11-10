@@ -110,7 +110,9 @@ public class CareerRecommender {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
         // FCA-5: erişilemeyen lig seçildiyse sonuç hep boş olurdu; ücret kesilmeden reddedilir.
         requireReachable(request.getLeagueId(), reachableLeagues(squad));
-        return creditGuard.runCharged(userId, billingProperties.getRecommendCost(), CHARGE_REASON, () -> compute(squad, request));
+        // FCA-7: ana listede hiç aday yoksa (süzgeç çok dar) kredi iade edilir.
+        return creditGuard.runCharged(userId, billingProperties.getRecommendCost(), CHARGE_REASON, () -> compute(squad, request),
+                (response) -> response.getItems().isEmpty());
     }
 
     /** Lig süzgeci verilmiş ve kulübün erişilebilir lig listesi biliniyorsa lig o listede olmalı; liste bilinmiyorsa (kademe yok) kısıt yok. */

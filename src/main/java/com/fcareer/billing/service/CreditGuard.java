@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 @Slf4j
@@ -13,9 +14,20 @@ import java.util.function.Supplier;
 @RequiredArgsConstructor
 public class CreditGuard {
 
+    /** Boş sonuç iadesinin kayıt nedeni eki (hata iadesi "_FAILED"). */
+    static final String REFUND_EMPTY_SUFFIX = "_EMPTY";
+
     private final CreditService creditService;
 
     public <T> CreditedResponse<T> runCharged(Long userId, int cost, String reason, Supplier<T> operation) {
+        return runCharged(userId, cost, reason, operation, (result) -> false);
+    }
+
+    /**
+     * FCA-7: `refundWhen` sonuç için doğruysa (ör. öneride hiç aday yok) iş başarılı olsa da kredi iade edilir; yanıtta charged 0.
+     * Hiç kredi düşmediyse (PREMIUM, beta) iade denenmez. İade başarısız olursa sonuç yine döner, ücret kesilmiş sayılır ve loglanır.
+     */
+    public <T> CreditedResponse<T> runCharged(Long userId, int cost, String reason, Supplier<T> operation, Predicate<T> refundWhen) {
         int charged = creditService.charge(userId, cost, reason);
         T result;
         try {
@@ -30,6 +42,14 @@ public class CreditGuard {
                 e.addSuppressed(refundError);
             }
             throw e;
+        }
+        if (charged > 0 && refundWhen.test(result)) {
+            try {
+                creditService.refund(userId, charged, reason + REFUND_EMPTY_SUFFIX);
+                charged = 0;
+            } catch (RuntimeException refundError) {
+                log.error("Empty-result refund failed userId : {} amount : {} reason : {}", userId, charged, reason, refundError);
+            }
         }
         CreditStatus status = creditService.status(userId);
         return CreditedResponse.<T>builder()

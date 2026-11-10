@@ -296,6 +296,28 @@ class CareerRecommenderIntegrationTest {
                 .as("yalnız seçilen uyruktan: " + i.getPlayer().getName()).isEqualTo(nationalityId));
     }
 
+    /** FCA-7: süzgeç sonucu boşsa (hiç aday yok) ücretsiz kullanıcının kredisi iade edilir; yanıtta charged 0. Dolu sonuçta ücret kalır. */
+    @Test
+    void anEmptyRecommendationIsRefundedAndAFullOneIsCharged() throws Exception {
+        String token = support.register();
+        long careerId = support.json(post("/api/v1/careers").contentType("application/json")
+                .content("{\"clubId\":" + CareerTestSupport.catalogClubId(jdbc) + "}"), token).at("/data/id").asLong();
+        int before = support.json(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/me"), token).at("/data/creditBalance").asInt();
+
+        JsonNode empty = json(post("/api/v1/careers/" + careerId + "/recommendations").contentType("application/json")
+                .content("{\"position\":\"ST\",\"nationalityId\":999999}"), token);
+        assertThat(empty.at("/data/result/items").size()).as(empty.toString()).isZero();
+        assertThat(empty.at("/data/charged").asInt()).isZero();
+        assertThat(support.json(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/me"), token).at("/data/creditBalance").asInt())
+                .as("boş sonuç: kredi iade").isEqualTo(before);
+
+        JsonNode full = json(post("/api/v1/careers/" + careerId + "/recommendations").contentType("application/json").content("{\"position\":\"ST\"}"), token);
+        assertThat(full.at("/data/result/items").size()).isPositive();
+        assertThat(full.at("/data/charged").asInt()).isPositive();
+        assertThat(support.json(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/v1/me"), token).at("/data/creditBalance").asInt())
+                .isEqualTo(before - full.at("/data/charged").asInt());
+    }
+
     /** FCA-5 inceleme: lig/uyruk kimliği pozitif olmalı (400, ücretli iş başlamadan). */
     @Test
     void aNonPositiveLeagueOrNationalityIdIsRejectedAsBadRequest() throws Exception {
