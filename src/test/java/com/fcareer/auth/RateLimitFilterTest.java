@@ -113,7 +113,7 @@ class RateLimitFilterTest {
     @Test
     void expensiveFreeEndpointsShareTheAnalysisBucket() throws Exception {
         for (String path : new String[] {"/api/v1/fit/lineup", "/api/v1/replicas/r-1/apply", "/api/v1/recommend/preview",
-                "/api/v1/recommend/slot-view", "/api/v1/careers/7/starter-tactic", "/api/v1/careers/7/development/recommendations", "/api/v1/careers/7/academy", "/api/v1/careers/7/youth", "/api/v1/careers/7/youth/12"}) {
+                "/api/v1/careers/7/starter-tactic", "/api/v1/careers/7/development/recommendations", "/api/v1/careers/7/academy", "/api/v1/careers/7/youth", "/api/v1/careers/7/youth/12"}) {
             when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(5L);
             assertThat(run(path, "10.0.0.1").getStatus()).as(path).isEqualTo(200);
             when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(6L);
@@ -122,6 +122,7 @@ class RateLimitFilterTest {
         verify(counter, org.mockito.Mockito.atLeast(10)).increment(org.mockito.ArgumentMatchers.contains("analysis:"), eq(Duration.ofMinutes(1)));
         when(counter.increment(anyString(), eq(Duration.ofMinutes(1)))).thenReturn(6L);
         assertThat(run("/api/v1/fit/role", "10.0.0.1").getStatus()).as("diğer fit uçları genel kovada").isEqualTo(200);
+        assertThat(run("/api/v1/recommend/slot-view", "10.0.0.1").getStatus()).as("FCA-10: kaldırılan uç analiz kovasında değil").isEqualTo(200);
     }
 
     /** GUV-2 (F8): LE içe aktarma (katalog kopyalar) kullanıcı başına saatlik kovada. */

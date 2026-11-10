@@ -91,30 +91,6 @@ public class PlayerSearchRepository {
         return jdbc.query(sql, params, (rs, i) -> new Candidate(rs.getLong("id"), rs.getInt("overall"), nullableLong(rs, "value_eur"), rs.getBoolean("free_agent")));
     }
 
-    public record LeagueQuality(int id, String name, double averageOverall) {
-    }
-
-    public List<LeagueQuality> leagueQuality(Short gameVersionId, Short gender, int minOverall, int minPlayers) {
-        String sql = """
-                SELECT l.id AS id, l.name AS name, AVG(r.overall) AS average
-                  FROM player_rating r
-                  JOIN base_player b ON b.id = r.base_player_id
-                  JOIN club c ON c.id = r.club_id
-                  JOIN league l ON l.id = c.league_id
-                 WHERE b.owner_career_id IS NULL AND r.overall >= :minOverall
-                   AND (CAST(:gameVersionId AS SMALLINT) IS NULL OR r.game_version_id = :gameVersionId)
-                   AND (CAST(:gender AS SMALLINT) IS NULL OR b.gender = :gender)
-                 GROUP BY l.id, l.name
-                HAVING COUNT(*) >= :minPlayers
-                """;
-        MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("gameVersionId", gameVersionId)
-                .addValue("gender", gender)
-                .addValue("minOverall", minOverall)
-                .addValue("minPlayers", minPlayers);
-        return jdbc.query(sql, params, (rs, i) -> new LeagueQuality(rs.getInt("id"), rs.getString("name"), rs.getDouble("average")));
-    }
-
     public long count(PlayerSearchRequest request) {
         SearchProfile profile = profileOf(request);
         MapSqlParameterSource params = new MapSqlParameterSource();

@@ -27,7 +27,7 @@ Eski Azerlottery standardı `docs/archive/backend-standard.md` altında, referan
 - EA hesap kimlik bilgisi asla istenmez, saklanmaz, loglanmaz. Capture gövdeleri loglanmaz.
 - Veri kaynakları `docs/DATA_POLICY.md`'ye uymak zorunda; yeni dış kaynak = Buğra onayı.
 - Ücretli (kredi) iş üreten her uç `CreditGuard` arkasında; bedava önizleme uçları ücretli alanı döndürmez. Bugün ücretli: `/fit/squad`,
-  `/careers/{id}/recommendations`, `/recommend/slot`, `/advisor/squad`, `/advisor/tactic` (maliyetler `fcareer.billing.*-cost`).
+  `/careers/{id}/recommendations`, `/advisor/tactic` (maliyetler `fcareer.billing.*-cost`).
 
 ## Çalıştırma / test
 - `mvn test`: entegrasyon testleri zonky gömülü Postgres ile (Docker gerekmez, Testcontainers yok); token depoları, sayaç ve önbellek üretimdekiyle aynı. Opt-in (varsayılan atlanır): `-Dea.live=true`, `-Dml.live=true`, `-Drole.validation=true` (`.ps`), `-Drole.candidates=…`, `-Dacceptance.report=true`, `-Dgtr.footprint=<export>` (içe aktarma süre/bellek), `-Dgtr.cost=<export>` (growth-recent süre/bellek, soğuk ve önbellekten).

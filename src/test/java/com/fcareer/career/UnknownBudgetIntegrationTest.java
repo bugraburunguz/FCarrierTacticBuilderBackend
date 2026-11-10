@@ -13,7 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -46,11 +45,11 @@ class UnknownBudgetIntegrationTest {
         return call(post("/api/v1/auth/register"), Map.of("email", "bud-" + UUID.randomUUID() + "@example.com", "password", "Sup3rSecret!", "privacyVersion", 1), null, 200).at("/data/accessToken").asText();
     }
 
-    private JsonNode targetsFor(Map<String, Object> careerBody) throws Exception {
+    /** FCA-10: eski `/recommend/transfer-targets` kaldırıldı; kural canlı kariyer öneri ucundan doğrulanır. */
+    private JsonNode recommendationsFor(Map<String, Object> careerBody) throws Exception {
         String token = register();
         long careerId = call(post("/api/v1/careers"), careerBody, token, 200).at("/data/id").asLong();
-        return call(post("/api/v1/recommend/transfer-targets"), Map.of("careerId", careerId, "perPosition", 3,
-                "slots", List.of(Map.of("position", "ST", "roleId", "poacher_attack"))), token, 200).at("/data");
+        return call(post("/api/v1/careers/" + careerId + "/recommendations"), Map.of("position", "ST", "roleId", "poacher_attack"), token, 200).at("/data/result");
     }
 
     @Test
@@ -66,11 +65,22 @@ class UnknownBudgetIntegrationTest {
         // Gerçekçi durum: herkesin bir değeri var; `valueMax=0` hepsini elerdi.
         jdbc.update("INSERT INTO player_valuation (base_player_id, game_version_id, source, value_eur, model_version) SELECT base_player_id, 27, 'MODELED', 2000000, 'eng02-test' FROM player_rating WHERE game_version_id = 27 ON CONFLICT DO NOTHING");
         try {
-            assertThat(targetsFor(Map.of("clubId", clubId)).at("/positions/0/targets")).as("bütçe girilmemiş").isNotEmpty();
-            assertThat(targetsFor(Map.of("clubId", clubId, "budgetEur", 0)).at("/positions/0/targets")).as("bütçe 0 = bilinmiyor").isNotEmpty();
+            assertThat(hasValuedSigning(recommendationsFor(Map.of("clubId", clubId)).at("/items"))).as("bütçe girilmemiş").isTrue();
+            assertThat(hasValuedSigning(recommendationsFor(Map.of("clubId", clubId, "budgetEur", 0)).at("/items"))).as("bütçe 0 = bilinmiyor").isTrue();
+            assertThat(hasValuedSigning(recommendationsFor(Map.of("clubId", clubId, "budgetEur", 1)).at("/items"))).as("kontrast: bilinen 1 € bütçe değerli adayı eler").isFalse();
         } finally {
             jdbc.update("DELETE FROM player_valuation WHERE model_version = 'eng02-test'");
         }
+    }
+
+    /** Yalnız serbest ya da sözleşmesi biten oyuncu dönseydi 0 bütçe piyasayı yine boşaltmış olurdu; değeri olan bir transfer adayı aranır. */
+    private static boolean hasValuedSigning(JsonNode items) {
+        for (JsonNode item : items) {
+            if (!item.at("/player/freeAgent").asBoolean() && item.at("/player/valueEur").asLong() > 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private JsonNode call(MockHttpServletRequestBuilder builder, Object body, String token, int expectedStatus) throws Exception {

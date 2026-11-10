@@ -63,8 +63,9 @@ class LoanedOutAvailabilityIntegrationTest {
         });
         assertThat(starters).isNotEmpty().doesNotContainAnyElementsOf(loanedOut);
 
-        JsonNode targets = call(post("/api/v1/recommend/transfer-targets"), Map.of("careerId", careerId, "perPosition", 4,
-                "slots", List.of(Map.of("position", "ST", "roleId", "poacher_attack"))), token, 200).at("/data/positions/0/targets");
+        JsonNode targets = call(post("/api/v1/careers/" + careerId + "/recommendations"), Map.of("position", "ST", "roleId", "poacher_attack"),
+                token, 200).at("/data/result/items");
+        assertThat(targets).as("FCA-10: kaldırılan /recommend/transfer-targets yerine canlı kariyer öneri ucu").isNotEmpty();
         targets.forEach(t -> assertThat(squad).as("sahip olunan oyuncu aday olamaz").doesNotContain(t.at("/player/id").asLong()));
     }
 
