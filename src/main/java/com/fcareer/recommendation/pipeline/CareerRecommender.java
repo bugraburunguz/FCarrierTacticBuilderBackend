@@ -340,6 +340,8 @@ public class CareerRecommender {
                 .includeUnvalued(true)
                 .contractMonthsMax(properties.getContractMonthsMax())
                 .leagueIds(ownTeam ? reachableLeagues(squad) : null)
+                .leagueId(request.getLeagueId())
+                .nationalityId(request.getNationalityId())
                 .ageMin(request.getAgeMin())
                 .ageMax(ageMax)
                 .sort("prescore")

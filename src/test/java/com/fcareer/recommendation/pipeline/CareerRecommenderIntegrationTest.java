@@ -269,6 +269,31 @@ class CareerRecommenderIntegrationTest {
                 .as("istekteki 1 € bütçe kariyer bütçesinin yerine geçer: " + item.getPlayer().getName()).isTrue());
     }
 
+    /** FCA-5: Transfer ayrıntılı filtresi — lig ve uyruk aday havuzunu sunucuda süzer (ücretli istek; tarayıcı süzgeci yetmez). */
+    @Test
+    void theRequestCanNarrowCandidatesToOneLeagueAndOneNationality() throws Exception {
+        long careerId = support.premiumCareer(support.register(), null);
+        CareerRecommendationResponse open = recommender.compute(squad(careerId), request("ST"));
+        assertThat(open.getItems()).isNotEmpty();
+        var first = open.getItems().get(0).getPlayer();
+
+        Integer leagueId = jdbc.queryForObject("SELECT c.league_id FROM club c WHERE c.id = ?", Integer.class, first.getClubId());
+        CareerRecommendationRequest byLeague = request("ST");
+        byLeague.setLeagueId(leagueId);
+        CareerRecommendationResponse league = recommender.compute(squad(careerId), byLeague);
+        assertThat(league.getItems()).isNotEmpty();
+        league.getItems().forEach((i) -> assertThat(jdbc.queryForObject("SELECT league_id FROM club WHERE id = ?", Integer.class, i.getPlayer().getClubId()))
+                .as("yalnız seçilen ligden: " + i.getPlayer().getName()).isEqualTo(leagueId));
+
+        Integer nationalityId = jdbc.queryForObject("SELECT nationality_id FROM base_player WHERE id = ?", Integer.class, first.getId());
+        CareerRecommendationRequest byNation = request("ST");
+        byNation.setNationalityId(nationalityId);
+        CareerRecommendationResponse nation = recommender.compute(squad(careerId), byNation);
+        assertThat(nation.getItems()).isNotEmpty();
+        nation.getItems().forEach((i) -> assertThat(jdbc.queryForObject("SELECT nationality_id FROM base_player WHERE id = ?", Integer.class, i.getPlayer().getId()))
+                .as("yalnız seçilen uyruktan: " + i.getPlayer().getName()).isEqualTo(nationalityId));
+    }
+
     private static List<Long> ids(CareerRecommendationResponse response) {
         return response.getItems().stream().map((i) -> i.getPlayer().getId()).toList();
     }
