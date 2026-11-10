@@ -2,6 +2,7 @@ package com.fcareer.replica;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fcareer.tacticanalysis.BuildUpType;
 import com.fcareer.tacticanalysis.RoleMovements;
 import com.fcareer.tacticanalysis.TacticAnalysisModels.Analysis;
@@ -73,6 +74,7 @@ public class ReplicaService {
                 if (!r.path("fc27").isNull()) {
                     Replica replica = build(r);
                     byId.put(replica.id(), replica);
+                    attachVariantCodes(r);
                 }
             }
         } catch (IOException e) {
@@ -159,6 +161,16 @@ public class ReplicaService {
         Integer fidelity = r.path("replicaFidelity").path("score").isNumber() ? r.path("replicaFidelity").path("score").asInt() : null;
         return new Replica(r.path("id").asText(), r.path("category").asText(), r.path("club").asText(), r.path("coach").asText(), r.path("season").asText(), r.path("league").asText(), formation.id(), eaLabel, buildUp.name(),
                 fc.path("defensiveApproach").asText(), lineHeight, fidelity, code, slots, ordered, 0, isVerified(r));
+    }
+
+    private void attachVariantCodes(JsonNode r) {
+        for (JsonNode variant : r.path("fc27").path("variants")) {
+            ObjectNode wrapper = mapper.createObjectNode();
+            wrapper.put("id", r.path("id").asText() + "#" + variant.path("id").asText());
+            wrapper.set("fc27", variant);
+            String code = build(wrapper).tacticCode();
+            ((ObjectNode) variant).put("tacticCode", code);
+        }
     }
 
     private static boolean isVerified(JsonNode r) {
