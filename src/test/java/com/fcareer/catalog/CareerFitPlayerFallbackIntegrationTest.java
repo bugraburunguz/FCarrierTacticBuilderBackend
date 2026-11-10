@@ -67,4 +67,27 @@ class CareerFitPlayerFallbackIntegrationTest {
         assertThat(fit.get(1).getAttrs()).as("kayıtta öznitelik yok: katalog").isNotEmpty().isEqualTo(catalog.getAttrs());
         assertThat(fit.get(1).getOverall()).as("overall kayıttan").isEqualTo(77);
     }
+
+    /** FCA-9: kariyerde motorun potansiyeli kayıttaki (LE) değerdir; katalog tahmini (MODELED) yalnız kayıtta POT yoksa kullanılır. */
+    @Test
+    void recordPotentialWinsOverTheModeledEstimateWhichIsOnlyAFallback() throws Exception {
+        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
+        long careerId = support.premiumCareer(support.register(), null);
+        List<Long> squad = jdbc.queryForList("SELECT base_player_id FROM user_player_state WHERE career_id = ? ORDER BY base_player_id LIMIT 2", Long.class, careerId);
+        long withPot = squad.get(0);
+        long withoutPot = squad.get(1);
+        for (long id : squad) {
+            jdbc.update("""
+                    INSERT INTO player_valuation (base_player_id, game_version_id, source, potential, model_version) VALUES (?, ?, 'MODELED', 76, 'test')
+                    ON CONFLICT ON CONSTRAINT uq_valuation DO UPDATE SET potential = 76""", id, GAME_VERSION);
+        }
+        playerService.fitPlayers(squad, GAME_VERSION, careerId);
+        jdbc.update("UPDATE career_player SET pot = 84 WHERE career_id = ? AND player_id = ?", careerId, withPot);
+        jdbc.update("UPDATE career_player SET pot = NULL WHERE career_id = ? AND player_id = ?", careerId, withoutPot);
+
+        List<FitPlayer> fit = playerService.fitPlayers(squad, GAME_VERSION, careerId);
+
+        assertThat(fit.get(0).getPotential()).as("kayıttaki POT").isEqualTo(84);
+        assertThat(fit.get(1).getPotential()).as("kayıtta POT yok: katalog tahmini").isEqualTo(76);
+    }
 }
