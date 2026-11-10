@@ -111,7 +111,13 @@ public class CareerRecommender {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
         // FCA-5: erişilemeyen lig seçildiyse sonuç hep boş olurdu; ücret kesilmeden reddedilir.
         requireReachable(request.getLeagueId(), reachableLeagues(squad));
-        return creditGuard.runCharged(userId, billingProperties.getRecommendCost(), CHARGE_REASON, () -> compute(squad, request));
+        // FCA-7: gösterilecek hiçbir şey yoksa (süzgeç çok dar) kredi iade edilir.
+        return creditGuard.runCharged(userId, billingProperties.getRecommendCost(), CHARGE_REASON, () -> compute(squad, request), CareerRecommender::nothingToShow);
+    }
+
+    /** İade koşulu: ana liste de hayal transferler de boş. Hayal transfer doluysa ücretli içgörüdür, iade edilmez (D-01). */
+    static boolean nothingToShow(CareerRecommendationResponse response) {
+        return response.getItems().isEmpty() && (Objects.isNull(response.getLongShots()) || response.getLongShots().isEmpty());
     }
 
     /** FCA-6: ücretsiz; sahiplik squadPlayerIds ile (başkasının kariyeri 404). */
