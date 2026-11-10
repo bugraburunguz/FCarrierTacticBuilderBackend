@@ -11,6 +11,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -49,7 +50,37 @@ class CreditGuardTest {
 
         CreditedResponse<List<String>> full = guard.runCharged(1L, 3, "RECOMMEND", () -> List.of("aday"), List::isEmpty);
         assertThat(full.getCharged()).isEqualTo(3);
-        verify(credits, never()).refund(1L, 3, "RECOMMEND_FAILED");
+        // yalnız boş sonuçtaki tek iade
+        verify(credits, times(1)).refund(anyLong(), anyInt(), anyString());
+    }
+
+    /** FCA-7 inceleme: iade başarısızsa sonuç yine döner, ücret kesilmiş sayılır (charged = maliyet). */
+    @Test
+    void aFailedEmptyRefundStillReturnsTheResultAsCharged() {
+        CreditService credits = mock(CreditService.class);
+        when(credits.charge(anyLong(), anyInt(), anyString())).thenReturn(3);
+        when(credits.status(anyLong())).thenReturn(new CreditStatus(17, 30, false));
+        doThrow(new IllegalStateException("db blip")).when(credits).refund(anyLong(), anyInt(), anyString());
+        CreditGuard guard = new CreditGuard(credits);
+
+        CreditedResponse<List<String>> r = guard.runCharged(1L, 3, "RECOMMEND", List::<String>of, List::isEmpty);
+        assertThat(r.getResult()).isEmpty();
+        assertThat(r.getCharged()).isEqualTo(3);
+    }
+
+    /** FCA-7 inceleme: iade koşulu hata verirse iade yapılmaz, sonuç döner (kredi kesilmiş, 500 yok). */
+    @Test
+    void aThrowingRefundConditionMeansNoRefund() {
+        CreditService credits = mock(CreditService.class);
+        when(credits.charge(anyLong(), anyInt(), anyString())).thenReturn(3);
+        when(credits.status(anyLong())).thenReturn(new CreditStatus(17, 30, false));
+        CreditGuard guard = new CreditGuard(credits);
+
+        CreditedResponse<List<String>> r = guard.runCharged(1L, 3, "RECOMMEND", () -> List.of("aday"), (x) -> {
+            throw new IllegalStateException("koşul");
+        });
+        assertThat(r.getCharged()).isEqualTo(3);
+        verify(credits, never()).refund(anyLong(), anyInt(), anyString());
     }
 
     /** Sıfır ücretli (PREMIUM ya da beta) çağrıda boş sonuç iade denemez. */

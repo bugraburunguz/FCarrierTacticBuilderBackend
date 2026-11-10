@@ -318,6 +318,16 @@ class CareerRecommenderIntegrationTest {
                 .isEqualTo(before - full.at("/data/charged").asInt());
     }
 
+    /** FCA-7 inceleme: ana liste boş ama hayal transferler doluysa iade yok (ücretli içgörü bedava sızmasın, D-01). */
+    @Test
+    void onlyAResponseWithNothingToShowIsRefundable() {
+        CareerRecommendationResponse.Item item = CareerRecommendationResponse.Item.builder().build();
+        assertThat(CareerRecommender.nothingToShow(CareerRecommendationResponse.builder().items(List.of()).build())).isTrue();
+        assertThat(CareerRecommender.nothingToShow(CareerRecommendationResponse.builder().items(List.of()).longShots(List.of()).build())).isTrue();
+        assertThat(CareerRecommender.nothingToShow(CareerRecommendationResponse.builder().items(List.of()).longShots(List.of(item)).build())).isFalse();
+        assertThat(CareerRecommender.nothingToShow(CareerRecommendationResponse.builder().items(List.of(item)).build())).isFalse();
+    }
+
     /** FCA-5 inceleme: lig/uyruk kimliği pozitif olmalı (400, ücretli iş başlamadan). */
     @Test
     void aNonPositiveLeagueOrNationalityIdIsRejectedAsBadRequest() throws Exception {

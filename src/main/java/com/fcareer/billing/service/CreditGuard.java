@@ -43,7 +43,7 @@ public class CreditGuard {
             }
             throw e;
         }
-        if (charged > 0 && refundWhen.test(result)) {
+        if (charged > 0 && refundable(refundWhen, result, userId, reason)) {
             try {
                 creditService.refund(userId, charged, reason + REFUND_EMPTY_SUFFIX);
                 charged = 0;
@@ -57,5 +57,15 @@ public class CreditGuard {
                 .charged(charged)
                 .balance(status.premium() ? null : status.balance())
                 .build();
+    }
+
+    /** İade koşulu hata verirse iade yok (kredi kesilmiş kalır, kullanıcı sonucu alır; 500 yok). */
+    private static <T> boolean refundable(Predicate<T> refundWhen, T result, Long userId, String reason) {
+        try {
+            return refundWhen.test(result);
+        } catch (RuntimeException e) {
+            log.warn("Refund condition failed, no refund userId : {} reason : {}", userId, reason, e);
+            return false;
+        }
     }
 }
