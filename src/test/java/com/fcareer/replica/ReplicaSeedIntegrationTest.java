@@ -310,4 +310,58 @@ class ReplicaSeedIntegrationTest {
         assertThat(d.at("/analysis/metrics/band").asText()).isNotBlank();
         assertThat(d.path("fc27").isObject()).isTrue();
     }
+
+    @Test
+    void besiktas2021CarriesTheArkaDirekSerciVariantWithItsOwnTacticCode() throws Exception {
+        JsonNode d = MAPPER.readTree(mockMvc.perform(get("/api/v1/replicas/sergen_besiktas_2021")).andReturn().getResponse().getContentAsString()).at("/data");
+        JsonNode variant = d.at("/fc27/variants/0");
+        assertThat(variant.path("id").asText()).isEqualTo("arka-direk-serci");
+        assertThat(variant.path("label").asText()).isEqualTo("Arka direk Serci");
+        assertThat(variant.path("formation").asText()).isEqualTo("4-3-3 (4)");
+        List<String> seedSlots = new ArrayList<>();
+        variant.path("slots").forEach((s) -> seedSlots.add(s.path("position").asText() + "|" + norm(s.path("role").asText()) + "|" + norm(s.path("focus").asText())));
+        assertThat(seedSlots).hasSize(11).contains("RB|" + norm("Attacking Wingback") + "|attack", "RW|" + norm("Inside Forward") + "|balanced",
+                "LW|" + norm("Inside Forward") + "|attack", "CAM|" + norm("Shadow Striker") + "|attack", "LB|fullback|defend", "CB|" + norm("Wide Back") + "|defend");
+        String code = variant.path("tacticCode").asText();
+        assertThat(code).hasSize(12).isNotEqualTo(d.path("tacticCode").asText());
+        EaTactic tactic = codec.decode(code).orElseThrow();
+        assertThat(codec.formation(tactic.formationId()).orElseThrow().label()).isEqualTo("4-3-3 (4)");
+        assertThat(tactic.lineHeight()).isEqualTo(variant.path("lineHeight").asInt());
+        assertThat(tactic.buildUp().name()).isEqualTo(variant.path("buildUp").asText());
+        List<String> decoded = new ArrayList<>();
+        for (int i = 0; i < tactic.slots().size(); i++) {
+            var eaRole = codec.role(tactic.slots().get(i).roleId()).orElseThrow();
+            decoded.add(codec.formation(tactic.formationId()).orElseThrow().positions().get(i) + "|" + norm(eaRole.name()) + "|" + norm(eaRole.focuses().get(tactic.slots().get(i).focusIndex())));
+        }
+        assertThat(decoded).containsExactlyInAnyOrderElementsOf(seedSlots);
+    }
+
+    @Test
+    void everyVariantIsValid_formationSlotsRolesFocusesAndApproach() throws Exception {
+        List<String> problems = new ArrayList<>();
+        for (JsonNode r : seed()) {
+            for (JsonNode v : r.path("fc27").path("variants")) {
+                String id = r.path("id").asText() + "#" + v.path("id").asText();
+                if (replicas.formationOf(v.path("formation").asText()).isEmpty()) {
+                    problems.add(id + ": formasyon " + v.path("formation").asText());
+                }
+                if (v.path("slots").size() != 11 || v.path("label").asText().isBlank()) {
+                    problems.add(id + ": 11 slot ya da etiket yok");
+                }
+                int[] range = APPROACH.get(v.path("defensiveApproach").asText());
+                int lh = v.path("lineHeight").asInt();
+                if (range == null || lh < range[0] || lh > range[1]) {
+                    problems.add(id + ": hat " + lh);
+                }
+                for (JsonNode s : v.path("slots")) {
+                    boolean valid = codec.roles().stream().anyMatch((role) -> role.position().equals(s.path("position").asText()) && norm(role.name()).equals(norm(s.path("role").asText()))
+                            && role.focuses().stream().anyMatch((f) -> norm(f).equals(norm(s.path("focus").asText()))));
+                    if (!valid) {
+                        problems.add(id + ": rol/focus geçersiz " + s.path("position").asText() + " " + s.path("role").asText() + "/" + s.path("focus").asText());
+                    }
+                }
+            }
+        }
+        assertThat(problems).isEmpty();
+    }
 }

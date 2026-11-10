@@ -24155,7 +24155,103 @@
     "Tactical Focus: Savunma → build-up bir kademe kayar, savunma yaklaşımı BALANCED→DEEP; focus kaymaları: GK Goalkeeper Balanced→Defend, LB Fullback Balanced→Defend, LM Inside Forward Attack→Balanced, RDM Deep-Lying Playmaker Build-Up→Defend. Ne zaman: Son hafta averaj yarışı gibi skor korunacak anlar.",
     "Quick Tactic: Get In Box — Rosier/Ghezzal ortalarına Aboubakar + Larin + Ljajić"
    ],
-   "tacticCode": null
+   "tacticCode": null,
+   "variants": [
+    {
+     "id": "arka-direk-serci",
+     "label": "Arka direk Serci",
+     "author": "Buğra",
+     "note": "Sağ kanat komple hücum kanadı: sağ bek çizgiyi sonuna kadar kullanır, sağ kanat içe kat edip ceza sahası çevresinden şut ya da orta çıkarır, uzun boylu sol kanat forvet arka direği bitirir. Sol bek stoperlerle arkada kalıp topa sahipken üçlü savunma kurar, sağ stoper boşalan sağ kanadı kapatır.",
+     "formation": "4-3-3 (4)",
+     "buildUp": "BALANCED",
+     "defensiveApproach": "BALANCED",
+     "lineHeight": 45,
+     "slots": [
+      {
+       "slot": "GK",
+       "position": "GK",
+       "role": "Goalkeeper",
+       "focus": "Balanced",
+       "profile": "Ersin Destanoğlu tipi: stoperler yavaş olduğu için çizgisinde kalan kaleci"
+      },
+      {
+       "slot": "LB",
+       "position": "LB",
+       "role": "Fullback",
+       "focus": "Defend",
+       "profile": "N'Sakala / Rıdvan Yılmaz tipi: sigorta bek; topa sahipken içeri girip stoperlerle üçlü savunma kurar"
+      },
+      {
+       "slot": "LCB",
+       "position": "CB",
+       "role": "Defender",
+       "focus": "Defend",
+       "profile": "Welinton tipi: hızlı değil ama yerini iyi tutan stoper"
+      },
+      {
+       "slot": "RCB",
+       "position": "CB",
+       "role": "Wide Back",
+       "focus": "Defend",
+       "profile": "Montero tipi: sağ bek çıkınca sağ kanadı kapatan, hatta yakın kalan stoper"
+      },
+      {
+       "slot": "RB",
+       "position": "RB",
+       "role": "Attacking Wingback",
+       "focus": "Attack",
+       "profile": "Valentin Rosier tipi: çizgiyi sonuna kadar kullanan hızlı ortacı bek; yerden ve arka direğe orta"
+      },
+      {
+       "slot": "LCM",
+       "position": "CM",
+       "role": "Box-to-Box",
+       "focus": "Ball-Winning",
+       "profile": "Atiba Hutchinson tipi: uzun bacaklı \"ahtapot\" 8; iki ceza sahası arasında top kazanır"
+      },
+      {
+       "slot": "RCM",
+       "position": "CM",
+       "role": "Holding",
+       "focus": "Ball-Winning",
+       "profile": "Josef de Souza tipi: her topa giden agresif 6; ileri çıkan sağ bekin arkasını kapatır"
+      },
+      {
+       "slot": "CAM",
+       "position": "CAM",
+       "role": "Shadow Striker",
+       "focus": "Attack",
+       "profile": "8,5 / 10: ceza sahasına geç girip çıkan, sağ bek ve sağ kanatla paslaşan oyuncu"
+      },
+      {
+       "slot": "LW",
+       "position": "LW",
+       "role": "Inside Forward",
+       "focus": "Attack",
+       "profile": "Cyle Larin tipi: uzun boylu kanat forvet; arka direkte kafa ve şutla bitirir"
+      },
+      {
+       "slot": "ST",
+       "position": "ST",
+       "role": "Advanced Forward",
+       "focus": "Attack",
+       "profile": "Vincent Aboubakar tipi: stoperlerle boğuşan, onları yıpratan becerikli santrafor"
+      },
+      {
+       "slot": "RW",
+       "position": "RW",
+       "role": "Inside Forward",
+       "focus": "Balanced",
+       "profile": "Rachid Ghezzal tipi: solak; içe kat edip ceza sahası çevresinden uzak direğe şut, orta ve son pas"
+      }
+     ],
+     "smartTactics": [
+      "Quick Tactic: Get In Box: sağdan orta gelirken ST, CAM ve LW ceza sahasında; LW arka direkte.",
+      "Sağ kanat kontrada açık kalırsa RB focus'unu Support'a çek: bek yalnız uzun top hakimiyetinde çıkar.",
+      "Attacking Wingback ve Box-to-Box kondisyonu hızlı tüketir; 60. dakika civarı değişiklik planla."
+     ]
+    }
+   ]
   },
   "replicaFidelity": {
    "score": 3,
