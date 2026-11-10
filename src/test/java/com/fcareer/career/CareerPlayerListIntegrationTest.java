@@ -27,6 +27,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 /**
  * V3-06a (API CONTRACT CHANGE): kariyer oyuncu listesinin E3-10b filtreleri — value_min, kiralık, oyun tarihine göre sözleşme,
@@ -90,6 +91,48 @@ class CareerPlayerListIntegrationTest {
                     .forEach((p) -> assertThat(p.at("/valueEur").asLong()).isGreaterThanOrEqualTo(3_000_000L));
         } finally {
             jdbc.update("DELETE FROM player_valuation WHERE model_version = 'v3-06a-test'");
+        }
+    }
+
+    @Test
+    void careerValueFollowsTheRecordedOverallWhileUnvaluedPlayersStayUnvalued() throws Exception {
+        List<Long> squad = jdbc.queryForList("SELECT base_player_id FROM user_player_state WHERE career_id = ? ORDER BY base_player_id LIMIT 2", Long.class, careerId);
+        long valued = squad.get(0);
+        long unvalued = squad.get(1);
+        short gv = catalogProperties.getDefaultGameVersion();
+        Long previousUnvalued = jdbc.queryForList("SELECT id FROM player_valuation WHERE base_player_id = ? AND game_version_id = ? AND source = 'MODELED'", Long.class, unvalued, gv)
+                .stream().findFirst().orElse(null);
+        assertThat(previousUnvalued).as("testte ikinci oyuncunun katalog değeri yok").isNull();
+        jdbc.update("DELETE FROM player_valuation WHERE base_player_id = ? AND game_version_id = ? AND source = 'MODELED' AND model_version = 'fca11-test'", valued, gv);
+        try {
+            jdbc.update("INSERT INTO player_valuation (base_player_id, game_version_id, source, potential, value_eur, model_version) VALUES (?, ?, 'MODELED', 60, 1000000, 'fca11-test') "
+                    + "ON CONFLICT ON CONSTRAINT uq_valuation DO NOTHING", valued, gv);
+            int raised = 88;
+            call(put("/api/v1/careers/" + careerId + "/players/ratings"), Map.of("updates", List.of(
+                    Map.of("playerId", valued, "overall", raised, "potential", 90),
+                    Map.of("playerId", unvalued, "overall", raised, "potential", 90))), token, 200);
+
+            Map<String, Object> inputs = jdbc.queryForMap("""
+                    SELECT date_part('year', age(cp.as_of, cp.dob))::int AS age, l.tier AS tier FROM career_player cp
+                      LEFT JOIN club c ON c.id = cp.club_id LEFT JOIN league l ON l.id = c.league_id WHERE cp.career_id = ? AND cp.player_id = ?""", careerId, valued);
+            long expected = com.fcareer.mlclient.service.ModeledValueFormula.estimate(raised, 90, (Integer) inputs.get("age"),
+                    inputs.get("tier") == null ? null : ((Number) inputs.get("tier")).intValue());
+            JsonNode items = call(get("/api/v1/players?career=" + careerId + "&ovr_min=" + raised + "&ovr_max=" + raised + "&size=200"), null, token, 200).at("/data/items");
+            JsonNode valuedRow = null;
+            JsonNode unvaluedRow = null;
+            for (JsonNode p : items) {
+                if (p.at("/id").asLong() == valued) {
+                    valuedRow = p;
+                } else if (p.at("/id").asLong() == unvalued) {
+                    unvaluedRow = p;
+                }
+            }
+            assertThat(valuedRow).as("OVR'si yükselen oyuncu listede").isNotNull();
+            assertThat(unvaluedRow).as("değersiz oyuncu listede").isNotNull();
+            assertThat(valuedRow.at("/valueEur").asLong()).as("değer kariyerdeki OVR/POT/yaşla").isEqualTo(expected).isGreaterThan(1_000_000L);
+            assertThat(unvaluedRow.path("valueEur").isMissingNode() || unvaluedRow.path("valueEur").isNull()).as("katalog değeri yoksa değer uydurulmaz (ENG-02)").isTrue();
+        } finally {
+            jdbc.update("DELETE FROM player_valuation WHERE model_version = 'fca11-test'");
         }
     }
 
