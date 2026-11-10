@@ -139,6 +139,7 @@ public class FitEngineProperties {
         private double intentFitWeight = 0.3;
         private int weakLinkCount = 3;
         private int depthCount = 2;
+        private int depthYouthMaxAge = 21;
     }
 
     private static Map<String, List<String>> defaultPositionEquivalents() {

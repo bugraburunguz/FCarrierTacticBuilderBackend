@@ -102,6 +102,25 @@ class LineupReasonsIntegrationTest {
     }
 
     @Test
+    void lineupCarriesUniqueBackupsPerSlot() throws Exception {
+        String token = support.register();
+        long careerId = support.premiumCareer(token, null);
+        JsonNode lineup = post(token, "/api/v1/fit/lineup", Map.of("careerId", careerId, "tactic", Map.of("formation", "4-4-2")));
+
+        java.util.Set<Long> starters = new java.util.HashSet<>();
+        List<Long> backups = new ArrayList<>();
+        lineup.get("slots").forEach(s -> {
+            starters.add(s.get("playerId").asLong());
+            s.path("depth").forEach(d -> {
+                backups.add(d.get("playerId").asLong());
+                assertThat(d.has("currentFit")).as("Güç").isTrue();
+                assertThat(d.has("weak")).isTrue();
+            });
+        });
+        assertThat(backups).as("kadroda yedek var").isNotEmpty().doesNotHaveDuplicates().noneMatch(starters::contains);
+    }
+
+    @Test
     void roleAlternativesInOneRequestOnlyWhenAsked() throws Exception {
         // FIT-2 madde 6: tek /fit/lineup isteği her dizili slot için o mevkinin tüm rollerini bu oyuncuya göre sıralı döner (11 ayrı çağrı yok).
         String token = support.register();

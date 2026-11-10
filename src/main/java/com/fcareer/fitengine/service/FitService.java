@@ -15,6 +15,7 @@ import com.fcareer.fitengine.model.request.CompareRequest;
 import com.fcareer.fitengine.model.request.FitRoleRequest;
 import com.fcareer.fitengine.model.request.SquadFitRequest;
 import com.fcareer.fitengine.model.response.AttributeGap;
+import com.fcareer.fitengine.model.response.DepthEntry;
 import com.fcareer.fitengine.model.response.FitRoleResult;
 import com.fcareer.fitengine.model.response.PlayerRoleFit;
 import com.fcareer.fitengine.model.response.RoleAlternative;
@@ -192,6 +193,9 @@ public class FitService {
                         .outOfPosition(s.getRoleFit().isOutOfPosition())
                         // KARIYER-UX FAZ 4b (toplu uyum): nedenler /fit/role'de zaten ücretsiz (D-01'e uygun); aynı biçim ve sıra.
                         .reasons(s.getRoleFit().getReasons()).build())
+                .depth(Objects.isNull(s.getDepth()) ? List.of() : s.getDepth().stream().map(d -> DepthEntry.builder().playerId(d.getPlayerId())
+                        .playerName(d.getPlayerName()).combined(d.getCombined()).roleFitScore(d.getRoleFitScore()).currentFit(d.getCurrentFit()).levelFit(d.getLevelFit())
+                        .fitLabel(d.getFitLabel()).badge(d.getBadge()).weak(d.isWeak()).build()).toList())
                 .build()).toList();
         return SquadFitResponse.builder().squadFit(full.getSquadFit()).slots(slots).bench(full.getBench()).mirrored(full.isMirrored()).build();
     }
