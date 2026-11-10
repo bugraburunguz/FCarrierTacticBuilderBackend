@@ -42,6 +42,9 @@ public class SquadFitService {
     private static final double NATURAL_BONUS = 1000;
     /** Kilitli (slot, oyuncu) çifti (KARIYER-UX FAZ 2): doğal bonusun da üstünde; çözücü bu çifti her zaman seçer. Raporlanan değerler değişmez. */
     private static final double LOCK_BONUS = 1_000_000;
+    private static final double FORBIDDEN = -LOCK_BONUS;
+    private static final String GOALKEEPER = "GK";
+    private static final Set<String> WEAK_LABELS = Set.of(RoleFitV3Service.FitLabel.WEAK.name(), RoleFitV3Service.FitLabel.WRONG_ROLE.name());
     private static final double MIRROR_MARGIN = 0.5;
 
     private final RoleFitService roleFitService;
@@ -108,6 +111,7 @@ public class SquadFitService {
             }
         }
 
+        List<List<DepthEntry>> depth = assignDepth(squad, slots, starters, combined, roleFits);
         List<SlotAssignment> assignments = new ArrayList<>();
         List<AssignedSlot> assignedSlots = new ArrayList<>();
         for (int s = 0; s < slotCount; s++) {
@@ -133,7 +137,7 @@ public class SquadFitService {
                     .setupDelta(Objects.isNull(slot.getSetup()) ? null : round1(setupDeltas[p][s]))
                     .roleFit(roleFits[p][s])
                     .intentFit(slot.hasTags() ? intentFits[p][s] : null)
-                    .depth(depth(squad, starters, combined, roleFits, s))
+                    .depth(depth.get(s))
                     .build());
         }
 
@@ -231,23 +235,55 @@ public class SquadFitService {
         return slotToPlayer;
     }
 
-    private List<DepthEntry> depth(List<FitPlayer> squad, Set<Integer> starters, double[][] combined,
-                                   RoleFitResponse[][] roleFits, int slotIndex) {
-        return IntStream.range(0, squad.size())
-                .filter(p -> !starters.contains(p))
-                .boxed()
-                .sorted(Comparator.comparingDouble((Integer p) -> combined[p][slotIndex]).reversed())
-                .limit(properties.getSquad().getDepthCount())
-                .map(p -> DepthEntry.builder()
-                        .playerId(squad.get(p).getId())
-                        .playerName(squad.get(p).getName())
-                        .combined(round1(combined[p][slotIndex]))
-                        .roleFitScore(roleFits[p][slotIndex].getScore())
-                        .badge(roleFits[p][slotIndex].getBadge())
-                        .levelFit(roleFits[p][slotIndex].getLevelFit())
-                        .fitLabel(roleFits[p][slotIndex].getFitLabel())
-                        .build())
-                .toList();
+    private List<List<DepthEntry>> assignDepth(List<FitPlayer> squad, List<IntentProfile> slots, Set<Integer> starters,
+                                               double[][] combined, RoleFitResponse[][] roleFits) {
+        List<List<DepthEntry>> depth = new ArrayList<>();
+        slots.forEach(s -> depth.add(new ArrayList<>()));
+        Set<Integer> used = new HashSet<>(starters);
+        for (int round = 0; round < properties.getSquad().getDepthCount(); round++) {
+            List<Integer> pool = IntStream.range(0, squad.size()).filter(p -> !used.contains(p) && !isYouth(squad.get(p))).boxed().toList();
+            if (pool.isEmpty()) {
+                break;
+            }
+            double[][] scores = new double[pool.size()][slots.size()];
+            for (int i = 0; i < pool.size(); i++) {
+                for (int s = 0; s < slots.size(); s++) {
+                    scores[i][s] = canBackUp(squad.get(pool.get(i)), slots.get(s)) ? combined[pool.get(i)][s] : FORBIDDEN;
+                }
+            }
+            int[] poolToSlot = hungarianSolver.maximize(scores);
+            for (int i = 0; i < pool.size(); i++) {
+                int s = poolToSlot[i];
+                if (s != NOT_ASSIGNED && scores[i][s] != FORBIDDEN) {
+                    int p = pool.get(i);
+                    used.add(p);
+                    depth.get(s).add(depthEntry(squad.get(p), combined[p][s], roleFits[p][s]));
+                }
+            }
+        }
+        return depth;
+    }
+
+    private boolean isYouth(FitPlayer player) {
+        return Objects.nonNull(player.getAge()) && player.getAge() <= properties.getSquad().getDepthYouthMaxAge();
+    }
+
+    private static boolean canBackUp(FitPlayer player, IntentProfile slot) {
+        return player.getPositions().contains(GOALKEEPER) == GOALKEEPER.equals(slot.getSlotPosition());
+    }
+
+    private static DepthEntry depthEntry(FitPlayer player, double combined, RoleFitResponse roleFit) {
+        return DepthEntry.builder()
+                .playerId(player.getId())
+                .playerName(player.getName())
+                .combined(round1(combined))
+                .roleFitScore(roleFit.getScore())
+                .badge(roleFit.getBadge())
+                .levelFit(roleFit.getLevelFit())
+                .fitLabel(roleFit.getFitLabel())
+                .currentFit(Objects.isNull(roleFit.getCurrentFit()) ? roleFit.getScore() : roleFit.getCurrentFit())
+                .weak(Objects.isNull(roleFit.getFitLabel()) ? roleFit.getBadge() == WeaponState.RED : WEAK_LABELS.contains(roleFit.getFitLabel()))
+                .build();
     }
 
     private SlotAssignment emptyAssignment(IntentProfile slot) {

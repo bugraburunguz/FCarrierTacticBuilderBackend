@@ -368,7 +368,9 @@ class ApiFlowIntegrationTest {
         assertThat(lineup.at("/success").asBoolean()).as(lineup.toString()).isTrue();
         assertThat(lineup.at("/data/slots")).hasSize(11);
         assertThat(lineup.at("/data/bench").isArray()).isTrue();
-        assertThat(lineup.at("/data/slots/0/depth").isMissingNode()).as("depth ücretli içgörü").isTrue();
+        JsonNode depth = lineup.at("/data/slots/0/depth");
+        assertThat(depth.isArray()).as("FCA-15 (Buğra kararı): yedekler ücretsiz döner").isTrue();
+        depth.forEach((d) -> assertThat(d.has("reasons") || d.has("intentFit") || d.has("setupDelta")).as("yedekte ücretli içgörü yok").isFalse());
         assertThat(lineup.at("/data/weakLinks").isMissingNode()).isTrue();
         assertThat(lineup.at("/data/rules").isMissingNode()).isTrue();
         assertThat(lineup.at("/data/attackPattern").isMissingNode()).isTrue();
