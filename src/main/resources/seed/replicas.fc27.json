@@ -5888,7 +5888,7 @@
      "slot": "ST",
      "position": "ST",
      "role": "False 9",
-     "focus": "Attack",
+     "focus": "Build-Up",
      "profile": "Benzema tipi (2022): düşüp bağlayan ve bitiren komple 9",
      "keyAttributes": [
       "Finishing",
@@ -5944,7 +5944,8 @@
    "score": 3,
    "cannotReplicate": [
     "Valverde'nin sahte kanat rolü FC27 RW rollerinde tam yok (Winger/Balanced yaklaşık)",
-    "Takımın \"Bernabéu geri dönüşleri\" mental faktör"
+    "Takımın \"Bernabéu geri dönüşleri\" mental faktör",
+    "FC27'de False 9/Attack arkaya kaçıp Poacher gibi oynuyor; düşen 9 için Build-Up seçildi, ceza sahasına geç girişi zayıf"
    ]
   },
   "behaviorTags": [
@@ -6708,7 +6709,7 @@
      "slot": "ST",
      "position": "ST",
      "role": "False 9",
-     "focus": "Attack",
+     "focus": "Build-Up",
      "profile": "Dembélé tipi false 9: düşüp yaratan, iki ayakla bitiren, ilk pres adamı",
      "keyAttributes": [
       "Dribbling",
@@ -6765,7 +6766,8 @@
    "score": 4,
    "cannotReplicate": [
     "Adam adama pres eşleşmeleri FC27'de zonal presle yaklaşık",
-    "Hakimi'nin içeri girip 9 gibi bitirmesi Inverted Wingback/Attack ile yaklaşık"
+    "Hakimi'nin içeri girip 9 gibi bitirmesi Inverted Wingback/Attack ile yaklaşık",
+    "FC27'de False 9/Attack arkaya kaçıp Poacher gibi oynuyor; düşen 9 için Build-Up seçildi, ceza sahasına geç girişi zayıf"
    ]
   },
   "behaviorTags": [
@@ -16286,7 +16288,7 @@
      "slot": "ST",
      "position": "ST",
      "role": "False 9",
-     "focus": "Attack",
+     "focus": "Build-Up",
      "profile": "Mertens tipi: küçük, hareketli, düşüp dönen ve bitiren false 9",
      "keyAttributes": [
       "Agility",
@@ -16338,7 +16340,8 @@
    "score": 4,
    "cannotReplicate": [
     "Sarri'nin ezber paternleri (sol üçgen otomatizmi) FC27 AI'da rol düzeyinde yalnızca yaklaşık",
-    "Savunma hattının topa göre 'akordeon' hareketi ayar değil"
+    "Savunma hattının topa göre 'akordeon' hareketi ayar değil",
+    "FC27'de False 9/Attack arkaya kaçıp Poacher gibi oynuyor; düşen 9 için Build-Up seçildi, ceza sahasına geç girişi zayıf"
    ]
   },
   "behaviorTags": [
