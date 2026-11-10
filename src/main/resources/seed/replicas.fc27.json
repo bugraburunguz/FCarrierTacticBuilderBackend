@@ -2082,7 +2082,7 @@
      "slot": "LST",
      "position": "ST",
      "role": "False 9",
-     "focus": "Attack",
+     "focus": "Build-Up",
      "profile": "Carlos Tevez tipi: düşüp presleyen, boşluk açan hareketli forvet",
      "keyAttributes": [
       "Stamina",
@@ -2125,7 +2125,7 @@
      "RDM: Deep-Lying Playmaker/Build-Up (Scholes)",
      "LM: Winger/Balanced (Park)",
      "RM: Winger/Attack (Nani)",
-     "ST: False 9/Attack (Tevez)"
+     "ST: False 9/Build-Up (Tevez)"
     ]
    },
    "smartTactics": [
@@ -5888,7 +5888,7 @@
      "slot": "ST",
      "position": "ST",
      "role": "False 9",
-     "focus": "Attack",
+     "focus": "Build-Up",
      "profile": "Benzema tipi (2022): düşüp bağlayan ve bitiren komple 9",
      "keyAttributes": [
       "Finishing",
@@ -5944,7 +5944,8 @@
    "score": 3,
    "cannotReplicate": [
     "Valverde'nin sahte kanat rolü FC27 RW rollerinde tam yok (Winger/Balanced yaklaşık)",
-    "Takımın \"Bernabéu geri dönüşleri\" mental faktör"
+    "Takımın \"Bernabéu geri dönüşleri\" mental faktör",
+    "FC27'de False 9/Attack arkaya kaçıp Poacher gibi oynuyor; düşen 9 için Build-Up seçildi, ceza sahasına geç girişi zayıf"
    ]
   },
   "behaviorTags": [
@@ -6708,7 +6709,7 @@
      "slot": "ST",
      "position": "ST",
      "role": "False 9",
-     "focus": "Attack",
+     "focus": "Build-Up",
      "profile": "Dembélé tipi false 9: düşüp yaratan, iki ayakla bitiren, ilk pres adamı",
      "keyAttributes": [
       "Dribbling",
@@ -6765,7 +6766,8 @@
    "score": 4,
    "cannotReplicate": [
     "Adam adama pres eşleşmeleri FC27'de zonal presle yaklaşık",
-    "Hakimi'nin içeri girip 9 gibi bitirmesi Inverted Wingback/Attack ile yaklaşık"
+    "Hakimi'nin içeri girip 9 gibi bitirmesi Inverted Wingback/Attack ile yaklaşık",
+    "FC27'de False 9/Attack arkaya kaçıp Poacher gibi oynuyor; düşen 9 için Build-Up seçildi, ceza sahasına geç girişi zayıf"
    ]
   },
   "behaviorTags": [
@@ -15742,8 +15744,8 @@
     {
      "slot": "RCM",
      "position": "CM",
-     "role": "Playmaker",
-     "focus": "Attack",
+     "role": "Box-to-Box",
+     "focus": "Balanced",
      "profile": "Lampard tipi: içten kutuya giren, sezonda 22 gol atan orta saha",
      "keyAttributes": [
       "Finishing",
@@ -15818,7 +15820,7 @@
     "changes": [
      "CDM: Holding/Defend (Mikel)",
      "LCM: Box-to-Box/Balanced (Ballack / Essien)",
-     "RCM: Playmaker/Attack (Lampard)",
+     "RCM: Box-to-Box/Balanced (Lampard)",
      "CAM: Playmaker/Roaming (Deco / Joe Cole)",
      "LST: Advanced Forward/Support (Anelka)",
      "RST: Target Forward/Attack (Drogba)"
@@ -15834,7 +15836,8 @@
    "score": 4,
    "cannotReplicate": [
     "Sezonun ilk yarısındaki elmas Plan B'de; elmasta genişlik beklerden gelir ve FC27'de AI beklerin aynı anda yükselmesini garanti etmez",
-    "Sezon ortası sistem değişimi ancak Plan B slotuyla"
+    "Sezon ortası sistem değişimi ancak Plan B slotuyla",
+    "Lampard'ın içten ceza sahasına geç koşusu: FC27'de CM'den ceza sahasına giren rol yok; en yakın Box-to-Box/Balanced (iki ceza sahası arası)"
    ]
   },
   "behaviorTags": [
@@ -16285,7 +16288,7 @@
      "slot": "ST",
      "position": "ST",
      "role": "False 9",
-     "focus": "Attack",
+     "focus": "Build-Up",
      "profile": "Mertens tipi: küçük, hareketli, düşüp dönen ve bitiren false 9",
      "keyAttributes": [
       "Agility",
@@ -16337,7 +16340,8 @@
    "score": 4,
    "cannotReplicate": [
     "Sarri'nin ezber paternleri (sol üçgen otomatizmi) FC27 AI'da rol düzeyinde yalnızca yaklaşık",
-    "Savunma hattının topa göre 'akordeon' hareketi ayar değil"
+    "Savunma hattının topa göre 'akordeon' hareketi ayar değil",
+    "FC27'de False 9/Attack arkaya kaçıp Poacher gibi oynuyor; düşen 9 için Build-Up seçildi, ceza sahasına geç girişi zayıf"
    ]
   },
   "behaviorTags": [
@@ -16737,7 +16741,7 @@
     {
      "slot": "LCM",
      "position": "CM",
-     "role": "Playmaker",
+     "role": "Half Winger",
      "focus": "Attack",
      "profile": "Bonaventura tipi: sol 8'den kutuya geç giren tecrübeli bitirici",
      "keyAttributes": [
@@ -16841,7 +16845,8 @@
    "score": 3,
    "cannotReplicate": [
     "Stoperlerin adam takibiyle orta sahaya çıkması FC27'de sadece Stopper/Aggressive eğilimiyle",
-    "4-2-3-1 ve 4-3-3 arasındaki sezon içi gidiş-geliş Plan B'de"
+    "4-2-3-1 ve 4-3-3 arasındaki sezon içi gidiş-geliş Plan B'de",
+    "Bonaventura'nın sol 8'den geç koşusu Half Winger/Attack ile yaklaşık; ceza sahasına giriş CAM Shadow Striker kadar sık değil"
    ]
   },
   "behaviorTags": [
@@ -17308,8 +17313,8 @@
     {
      "slot": "ST",
      "position": "ST",
-     "role": "False 9",
-     "focus": "Build-Up",
+     "role": "Target Forward",
+     "focus": "Balanced",
      "profile": "Welbeck tipi: düşüp topu tutan, kanatlara alan açan 9",
      "keyAttributes": [
       "Ball Control",
@@ -17345,7 +17350,8 @@
    "score": 3,
    "cannotReplicate": [
     "'Topu bekletip pres çağırma' (ball-on-sole baiting) FC27'de ayar değil; yalnızca SHORT_PASSING + Ball-Playing Keeper ile yaklaşık",
-    "Kuruluşta 4-2-4'e dönüş, sahadaki rol tanımlarına bağlı ve kesin değil"
+    "Kuruluşta 4-2-4'e dönüş, sahadaki rol tanımlarına bağlı ve kesin değil",
+    "Welbeck'in düşüp top tutması Target Forward/Balanced ile; FC27'de False 9/Build-Up cepte kalıp ceza sahasını boş bırakıyordu"
    ]
   },
   "behaviorTags": [
@@ -22958,9 +22964,9 @@
     {
      "slot": "CAM",
      "position": "CAM",
-     "role": "Classic 10",
+     "role": "Shadow Striker",
      "focus": "Attack",
-     "profile": "Alex de Souza (gol kralı sezonu) tipi Classic 10: ara pas + ceza sahasına geç giriş",
+     "profile": "Alex de Souza (gol kralı sezonu) tipi: ara pas + ceza sahasına geç giriş",
      "keyAttributes": [
       "Vision",
       "Finishing",
@@ -23019,7 +23025,7 @@
      "RM: Wide Midfielder/Support (Mehmet Topuz tipi)",
      "LCM: Holding/Defend (Selçuk Şahin)",
      "RCM: Deep-Lying Playmaker/Build-Up (Emre)",
-     "CAM: Classic 10/Attack (Alex)",
+     "CAM: Shadow Striker/Attack (Alex)",
      "ST: Advanced Forward/Attack (Niang)"
     ]
    },
@@ -23033,7 +23039,7 @@
   "replicaFidelity": {
    "score": 3,
    "cannotReplicate": [
-    "Alex'in hem kurucu hem golcü ikiliği tek CAM rolüne sığmıyor; Classic 10/Attack orta yol",
+    "Alex'in kurucu ve golcü ikiliği tek CAM rolüne sığmıyor; FC27'de Classic 10 cepte sabit kalıp ceza sahasına girmediği için golcü yanı seçildi (Shadow Striker/Attack)",
     "Kocaman'ın maç maç 4-4-1-1 ↔ 4-2-3-1 kaydırmaları Plan B ile yaklaşık",
     "Sezonun ikinci yarı serisi taktikten çok form/psikoloji kaynaklı; replike edilemez"
    ]
@@ -25705,7 +25711,7 @@
     {
      "slot": "CAM",
      "position": "CAM",
-     "role": "Classic 10",
+     "role": "Shadow Striker",
      "focus": "Attack",
      "profile": "Matías Delgado tipi (kaptan, 10 numara): ara pas, şut ve ikinci dalga (iki büyük maçta ilk 11'de yok; GS maçında 10'da Cissé)",
      "keyAttributes": [
