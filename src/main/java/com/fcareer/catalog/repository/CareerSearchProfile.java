@@ -101,7 +101,7 @@ final class CareerSearchProfile implements SearchProfile {
 
     @Override
     public String value() {
-        return "COALESCE(vi.value_eur, v.value_eur)";
+        return "COALESCE(vi.value_eur, cp.value_eur, v.value_eur)";
     }
 
     @Override

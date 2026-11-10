@@ -3,6 +3,7 @@ package com.fcareer.ingestion.base;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.fitengine.model.Attr;
+import com.fcareer.mlclient.service.ModeledValueFormula;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -23,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 /**
@@ -83,7 +85,21 @@ public class CareerPlayerWriter {
             skill_moves = EXCLUDED.skill_moves, accelerate = EXCLUDED.accelerate, body_type = EXCLUDED.body_type, ovr = EXCLUDED.ovr, pot = EXCLUDED.pot,
             positions = EXCLUDED.positions, attrs = EXCLUDED.attrs, playstyles = EXCLUDED.playstyles, run_style1 = EXCLUDED.run_style1, run_style2 = EXCLUDED.run_style2,
             face_stats = EXCLUDED.face_stats""";
-    private static final String UPSERT = "INSERT INTO career_player (" + COLUMNS + ") SELECT " + COLUMNS + " FROM (" + SELECT + ") src %s ON CONFLICT (career_id, player_id) DO UPDATE SET " + UPDATE_SET;
+    private static final String ONLY_IDS = " AND cp.player_id IN (:ids)";
+    private static final String CATALOG_VALUATION = """
+            FROM player_valuation v WHERE v.base_player_id = cp.player_id AND v.game_version_id = k.game_version_id AND v.source = 'MODELED'
+               AND v.owner_user_id IS NULL AND v.value_eur IS NOT NULL""";
+    private static final String CAREER_VALUE_INPUTS = """
+            SELECT cp.player_id, cp.ovr, cp.pot, date_part('year', age(cp.as_of, cp.dob)) AS age, l.tier AS tier
+              FROM career_player cp
+              JOIN career k ON k.id = cp.career_id
+              LEFT JOIN club c ON c.id = cp.club_id
+              LEFT JOIN league l ON l.id = c.league_id
+             WHERE cp.career_id = :c AND EXISTS (SELECT 1\s""" + CATALOG_VALUATION + ")%s";
+    private static final String CLEAR_UNVALUED = """
+            UPDATE career_player cp SET value_eur = NULL, value_source = NULL FROM career k
+             WHERE k.id = cp.career_id AND cp.career_id = :c AND cp.value_eur IS NOT NULL AND NOT EXISTS (SELECT 1\s""" + CATALOG_VALUATION + ")%s";
+    private static final String UPSERT ="INSERT INTO career_player (" + COLUMNS + ") SELECT " + COLUMNS + " FROM (" + SELECT + ") src %s ON CONFLICT (career_id, player_id) DO UPDATE SET " + UPDATE_SET;
 
     private final NamedParameterJdbcTemplate jdbc;
     private final ObjectMapper objectMapper;
@@ -100,6 +116,7 @@ public class CareerPlayerWriter {
         jdbc.update("""
                 DELETE FROM career_player cp WHERE cp.career_id = :c AND NOT EXISTS (
                   SELECT 1 FROM base_player b WHERE b.id = cp.player_id AND b.retired_at IS NULL AND (b.owner_career_id IS NULL OR b.owner_career_id = :c))""", Map.of("c", careerId));
+        applyCareerValues(new MapSqlParameterSource("c", careerId), "");
         if (bump) {
             bumpVersion(careerId);
         }
@@ -112,9 +129,29 @@ public class CareerPlayerWriter {
         if (playerIds.isEmpty()) {
             return 0;
         }
-        int upserted = jdbc.update(String.format(UPSERT, "WHERE player_id IN (:ids)"), new MapSqlParameterSource("c", careerId).addValue("ids", playerIds));
+        MapSqlParameterSource params = new MapSqlParameterSource("c", careerId).addValue("ids", playerIds);
+        int upserted = jdbc.update(String.format(UPSERT, "WHERE player_id IN (:ids)"), params);
+        applyCareerValues(params, ONLY_IDS);
         bumpVersion(careerId);
         return upserted;
+    }
+
+    private void applyCareerValues(MapSqlParameterSource params, String onlyIds) {
+        StringJoiner playerIds = new StringJoiner(",", "{", "}");
+        StringJoiner values = new StringJoiner(",", "{", "}");
+        jdbc.query(String.format(CAREER_VALUE_INPUTS, onlyIds), params, (rs) -> {
+            Number tier = (Number) rs.getObject("tier");
+            Number age = (Number) rs.getObject("age");
+            playerIds.add(String.valueOf(rs.getLong("player_id")));
+            values.add(String.valueOf(ModeledValueFormula.estimate(rs.getInt("ovr"), (Integer) rs.getObject("pot"), Objects.isNull(age) ? null : age.intValue(),
+                    Objects.isNull(tier) ? null : tier.intValue())));
+        });
+        jdbc.update(String.format(CLEAR_UNVALUED, onlyIds), params);
+        jdbc.update("""
+                UPDATE career_player cp SET value_eur = u.v, value_source = 'MODELED'
+                  FROM unnest(CAST(:ids AS bigint[]), CAST(:vals AS bigint[])) AS u(p, v)
+                 WHERE cp.career_id = :c AND cp.player_id = u.p""",
+                new MapSqlParameterSource("c", params.getValue("c")).addValue("ids", playerIds.toString()).addValue("vals", values.toString()));
     }
 
     /** Satırı hiç olmayan kariyeri (içe aktarma yapılmamış ya da geçiş öncesi) katalogdan tohumlar. */
