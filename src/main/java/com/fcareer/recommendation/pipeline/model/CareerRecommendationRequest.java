@@ -3,6 +3,7 @@ package com.fcareer.recommendation.pipeline.model;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -52,4 +53,12 @@ public class CareerRecommendationRequest {
 
     /** true: HAYAL kovasından en çok 3 oyuncu ayrı `longShots` dizisinde döner (ana listede HAYAL asla yoktur). */
     private boolean includeLongShots;
+
+    /** FCA-5: yalnız bu ligdeki kulüplerin oyuncuları (erişilebilir lig süzgeciyle birlikte, VE). Verilmezse lig süzgeci yok. */
+    @Positive
+    private Integer leagueId;
+
+    /** FCA-5: yalnız bu uyruktaki oyuncular. Verilmezse uyruk süzgeci yok. */
+    @Positive
+    private Integer nationalityId;
 }

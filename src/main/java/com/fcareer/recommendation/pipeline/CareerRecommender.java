@@ -12,6 +12,7 @@ import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.catalog.repository.LeagueRepository;
 import com.fcareer.catalog.repository.PlayerSearchRepository;
 import com.fcareer.catalog.service.PlayerService;
+import com.fcareer.common.exception.LeagueOutOfReachException;
 import com.fcareer.common.exception.NotFoundException;
 import com.fcareer.development.service.GrowthProjector;
 import com.fcareer.fitengine.configuration.FitEngineProperties;
@@ -107,7 +108,16 @@ public class CareerRecommender {
 
     public CreditedResponse<CareerRecommendationResponse> recommend(Long userId, Long careerId, CareerRecommendationRequest request) {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
+        // FCA-5: erişilemeyen lig seçildiyse sonuç hep boş olurdu; ücret kesilmeden reddedilir.
+        requireReachable(request.getLeagueId(), reachableLeagues(squad));
         return creditGuard.runCharged(userId, billingProperties.getRecommendCost(), CHARGE_REASON, () -> compute(squad, request));
+    }
+
+    /** Lig süzgeci verilmiş ve kulübün erişilebilir lig listesi biliniyorsa lig o listede olmalı; liste bilinmiyorsa (kademe yok) kısıt yok. */
+    static void requireReachable(Integer leagueId, List<Integer> reachable) {
+        if (Objects.nonNull(leagueId) && Objects.nonNull(reachable) && !reachable.contains(leagueId)) {
+            throw new LeagueOutOfReachException();
+        }
     }
 
     public CareerRecommendationResponse compute(CareerService.CareerSquad squad, CareerRecommendationRequest request) {
@@ -340,6 +350,8 @@ public class CareerRecommender {
                 .includeUnvalued(true)
                 .contractMonthsMax(properties.getContractMonthsMax())
                 .leagueIds(ownTeam ? reachableLeagues(squad) : null)
+                .leagueId(request.getLeagueId())
+                .nationalityId(request.getNationalityId())
                 .ageMin(request.getAgeMin())
                 .ageMax(ageMax)
                 .sort("prescore")
