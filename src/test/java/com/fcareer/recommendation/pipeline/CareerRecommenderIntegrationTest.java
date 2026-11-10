@@ -23,6 +23,8 @@ import java.util.stream.Collectors;
 
 import static com.fcareer.CareerTestSupport.FIRST_MOCK_ID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import com.fcareer.common.exception.LeagueOutOfReachException;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 /** E3-6 öneri hattı: sert kısıtlar, kayıt dosyası havuzu, null bütçe, cinsiyet izolasyonu, recall@10, açıklama alanları. */
@@ -292,6 +294,28 @@ class CareerRecommenderIntegrationTest {
         assertThat(nation.getItems()).isNotEmpty();
         nation.getItems().forEach((i) -> assertThat(jdbc.queryForObject("SELECT nationality_id FROM base_player WHERE id = ?", Integer.class, i.getPlayer().getId()))
                 .as("yalnız seçilen uyruktan: " + i.getPlayer().getName()).isEqualTo(nationalityId));
+    }
+
+    /** FCA-5 inceleme: lig/uyruk kimliği pozitif olmalı (400, ücretli iş başlamadan). */
+    @Test
+    void aNonPositiveLeagueOrNationalityIdIsRejectedAsBadRequest() throws Exception {
+        String token = support.register();
+        long careerId = support.premiumCareer(token, null);
+        JsonNode body = json(post("/api/v1/careers/" + careerId + "/recommendations").contentType("application/json")
+                .content("{\"position\":\"ST\",\"leagueId\":-1}"), token);
+        assertThat(body.at("/error/0/code").asText()).as(body.toString()).isNotBlank();
+        assertThat(body.at("/data").isMissingNode() || body.at("/data").isNull()).isTrue();
+    }
+
+    /** FCA-5 inceleme: kulübün erişemeyeceği lig seçilirse sonuç hep boş olurdu ve kredi düşerdi — ücret kesilmeden 422. */
+    @Test
+    void aLeagueOutsideTheReachableTiersIsRefusedBeforeAnyCharge() {
+        assertThatThrownBy(() -> CareerRecommender.requireReachable(5, List.of(1, 2)))
+                .isInstanceOf(LeagueOutOfReachException.class)
+                .satisfies((e) -> assertThat(((LeagueOutOfReachException) e).httpStatus().value()).isEqualTo(422));
+        CareerRecommender.requireReachable(5, null);
+        CareerRecommender.requireReachable(null, List.of(1));
+        CareerRecommender.requireReachable(1, List.of(1, 2));
     }
 
     private static List<Long> ids(CareerRecommendationResponse response) {
