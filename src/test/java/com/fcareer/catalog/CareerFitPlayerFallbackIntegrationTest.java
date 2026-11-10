@@ -14,7 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -66,5 +68,43 @@ class CareerFitPlayerFallbackIntegrationTest {
         assertThat(fit.get(0).getOverall()).isEqualTo(88);
         assertThat(fit.get(1).getAttrs()).as("kayıtta öznitelik yok: katalog").isNotEmpty().isEqualTo(catalog.getAttrs());
         assertThat(fit.get(1).getOverall()).as("overall kayıttan").isEqualTo(77);
+    }
+
+    @Test
+    void recordPotentialWinsOverTheModeledEstimateWhichIsOnlyAFallback() throws Exception {
+        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
+        long careerId = support.premiumCareer(support.register(), null);
+        List<Long> squad = jdbc.queryForList("SELECT base_player_id FROM user_player_state WHERE career_id = ? ORDER BY base_player_id LIMIT 2", Long.class, careerId);
+        long withPot = squad.get(0);
+        long withoutPot = squad.get(1);
+        Map<Long, Short> previous = new HashMap<>();
+        jdbc.query("SELECT base_player_id, potential FROM player_valuation WHERE source = 'MODELED' AND owner_user_id IS NULL AND game_version_id = ? AND base_player_id IN (?, ?)",
+                (rs) -> {
+                    previous.put(rs.getLong(1), (Short) rs.getObject(2, Short.class));
+                }, GAME_VERSION, withPot, withoutPot);
+        try {
+            for (long id : squad) {
+                jdbc.update("""
+                        INSERT INTO player_valuation (base_player_id, game_version_id, source, potential, model_version) VALUES (?, ?, 'MODELED', 76, 'fca9-test')
+                        ON CONFLICT ON CONSTRAINT uq_valuation DO UPDATE SET potential = 76""", id, GAME_VERSION);
+            }
+            playerService.fitPlayers(squad, GAME_VERSION, careerId);
+            jdbc.update("UPDATE career_player SET pot = 84 WHERE career_id = ? AND player_id = ?", careerId, withPot);
+            jdbc.update("UPDATE career_player SET pot = NULL WHERE career_id = ? AND player_id = ?", careerId, withoutPot);
+
+            List<FitPlayer> fit = playerService.fitPlayers(squad, GAME_VERSION, careerId);
+
+            assertThat(fit.get(0).getPotential()).as("kayıttaki POT").isEqualTo(84);
+            assertThat(fit.get(1).getPotential()).as("kayıtta POT yok: katalog tahmini").isEqualTo(76);
+        } finally {
+            for (long id : squad) {
+                if (previous.containsKey(id)) {
+                    jdbc.update("UPDATE player_valuation SET potential = ? WHERE source = 'MODELED' AND owner_user_id IS NULL AND game_version_id = ? AND base_player_id = ?",
+                            previous.get(id), GAME_VERSION, id);
+                } else {
+                    jdbc.update("DELETE FROM player_valuation WHERE source = 'MODELED' AND owner_user_id IS NULL AND game_version_id = ? AND base_player_id = ?", GAME_VERSION, id);
+                }
+            }
+        }
     }
 }
