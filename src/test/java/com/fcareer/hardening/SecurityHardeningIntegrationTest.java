@@ -83,22 +83,6 @@ class SecurityHardeningIntegrationTest {
     }
 
     @Test
-    void slotViewIsCappedAndHasNoPaidInsights() throws Exception {
-        String token = register();
-        long careerId = createCareer(token);
-        JsonNode view = call(post("/api/v1/recommend/slot-view"), Map.of("careerId", careerId, "scope", "MARKET",
-                "slot", Map.of("roleId", "winger_attack", "position", "RW")), token, 200);
-
-        assertThat(view.at("/data/items").size()).isLessThanOrEqualTo(3);
-        assertThat(view.at("/data/scoutQuery").isMissingNode()).isTrue();
-        view.at("/data/items").forEach(i -> {
-            assertThat(i.at("/roleFit/reasons").isMissingNode()).isTrue();
-            assertThat(i.at("/roleFit/weaponChecks").isMissingNode()).isTrue();
-            assertThat(i.at("/intentFit").isMissingNode()).isTrue();
-        });
-    }
-
-    @Test
     void anonymousPreviewIsCappedAndHasNoPaidInsights() throws Exception {
         JsonNode preview = call(post("/api/v1/recommend/preview"), Map.of("roleId", "winger_attack", "position", "RW", "limit", 8,
                 "setup", Map.of("buildUp", "Short", "depth", 90)), null, 200);

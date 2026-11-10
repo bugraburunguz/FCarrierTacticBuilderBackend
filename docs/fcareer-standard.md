@@ -22,7 +22,7 @@ Karar kaydı `docs/review/08_DECISIONS_LOG.md`; çelişkide o geçerlidir.
 - Davranış değişikliği commit mesajında `BEHAVIOR CHANGE:`, sözleşme değişikliği `API CONTRACT CHANGE:` ile yazılır ve web aynı seride güncellenir.
 
 ## Güvenlik
-- Bedava uçlar ücretli içgörü döndürmez (D-01): `withoutPaidInsights`, slot-view 3 aday.
+- Bedava uçlar ücretli içgörü döndürmez (D-01): `withoutPaidInsights`, `/recommend/preview` 3 aday.
 - `careerId` alan her uç sahipliği servis katmanında doğrular (`CareerService.requireOwned`); kapsam `OwnershipMatrixIntegrationTest`'te.
   Admin uçları ADMIN rolü; `X-Admin-Key` yalnız `/admin/ingestion` ve `/admin/ml` (makine-makine).
 - Rate limit bellek içi sabit pencereli sayaçla (`WindowCounter`; backend tek örnek, yeniden başlatmada sıfırlanır).

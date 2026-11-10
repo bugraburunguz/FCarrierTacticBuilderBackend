@@ -254,7 +254,7 @@ GET  /roles ; GET /behavior-tags?pos=RW ; GET /presets?kind=REPLICA
 # Fit
 POST /fit/role                   {playerId, roleId, intent?}        -> RoleFit
 POST /fit/squad                  {careerId, tactic}                 -> SquadFit+IntentFit+weakLinks+rules+NLG  [CREDIT: heavy]
-POST /recommend/slot             {careerId, slotRole, intent, budgetMax}  -> scored shortlist [CREDIT]
+POST /careers/{id}/recommendations {position, roleId?, focus?, ...}  -> scored shortlist [CREDIT]  (FCA-10: eski /recommend/slot kaldırıldı)
 # Kariyer
 POST /careers {gameVersion,clubId}; GET /careers/{id}; GET /careers/{id}/squad
 POST /careers/{id}/events {type,playerId,fee,...}      # transfer/sat → event-sourced

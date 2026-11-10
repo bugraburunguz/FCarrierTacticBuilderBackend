@@ -19,7 +19,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
-/** E3-10: web artık eski öneri uçlarını çağırmaz; uçlar bir sürüm `Deprecation` başlığıyla yaşar. Maliyetler UI'da açık olsun diye ayrı uçtan okunur. */
+/**
+ * FCA-10 (ESKI-UC, 16 S3): E3-10'da `Deprecation` başlığıyla bir sürüm yaşayan eski öneri uçları kaldırıldı; hiçbir istemci çağırmıyor.
+ * Halefleri (`/careers/{id}/recommendations`, `/advisor/tactic`) ve UT önizlemesi (`/recommend/preview`) yaşar. Maliyetler UI'da açık olsun diye ayrı uçtan okunur.
+ */
 @IntegrationTest
 class LegacyRecommendationDeprecationIntegrationTest {
 
@@ -46,16 +49,28 @@ class LegacyRecommendationDeprecationIntegrationTest {
     }
 
     @Test
-    void theLegacyRecommendationEndpointsCarryADeprecationHeaderPointingAtTheNewOne() throws Exception {
+    void theRemovedLegacyRecommendationEndpointsAnswer404() throws Exception {
         CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
         String token = support.register();
         long careerId = support.premiumCareer(token, null);
-        for (String path : new String[]{"/api/v1/recommend/slot-view", "/api/v1/recommend/slot", "/api/v1/recommend/transfer-targets", "/api/v1/scouting/" + careerId + "/search"}) {
+        for (String path : new String[]{"/api/v1/recommend/slot-view", "/api/v1/recommend/slot", "/api/v1/recommend/transfer-targets",
+                "/api/v1/scouting/" + careerId + "/search", "/api/v1/advisor/squad"}) {
             MvcResult result = call(post(path), token);
-            assertThat(result.getResponse().getHeader("Deprecation")).as(path).isEqualTo("true");
-            assertThat(result.getResponse().getHeader("Link")).as(path).contains("/recommendations").contains("successor-version");
+            assertThat(result.getResponse().getStatus()).as(path).isEqualTo(404);
+            assertThat(result.getResponse().getHeader("Deprecation")).as(path).isNull();
         }
-        assertThat(call(post("/api/v1/careers/" + careerId + "/recommendations"), token).getResponse().getHeader("Deprecation")).as("yeni uç").isNull();
+    }
+
+    @Test
+    void theSuccessorEndpointsStillExist() throws Exception {
+        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
+        String token = support.register();
+        long careerId = support.premiumCareer(token, null);
+        for (String path : new String[]{"/api/v1/recommend/preview", "/api/v1/advisor/tactic", "/api/v1/careers/" + careerId + "/recommendations"}) {
+            MvcResult result = call(post(path), token);
+            assertThat(result.getResponse().getStatus()).as(path).isNotEqualTo(404).isLessThan(500);
+            assertThat(result.getResponse().getHeader("Deprecation")).as(path).isNull();
+        }
     }
 
     @Test

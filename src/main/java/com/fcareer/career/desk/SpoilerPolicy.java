@@ -69,24 +69,6 @@ public class SpoilerPolicy {
         return ranged && Objects.nonNull(potential) ? Integer.valueOf(low(potential)) : potential;
     }
 
-    public void maskItems(Long careerId, java.util.Collection<com.fcareer.recommendation.model.response.RecommendationItem> items) {
-        if (Objects.nonNull(items) && ranged(careerId)) {
-            items.forEach(i -> mask(true, i.getPlayer()));
-        }
-    }
-
-    public void maskTargets(Long careerId, java.util.Collection<com.fcareer.recommendation.model.response.PositionTargets> positions) {
-        if (Objects.nonNull(positions) && ranged(careerId)) {
-            positions.forEach(p -> Objects.requireNonNullElse(p.getTargets(), java.util.List.<com.fcareer.recommendation.model.response.TransferTarget>of()).forEach(t -> mask(true, t.getPlayer())));
-        }
-    }
-
-    public void maskScouting(Long careerId, java.util.Collection<com.fcareer.recommendation.model.response.ScoutingCandidate> candidates) {
-        if (Objects.nonNull(candidates) && ranged(careerId)) {
-            candidates.forEach(c -> mask(true, c.getPlayer()));
-        }
-    }
-
     /** Potansiyel filtresi bantlara yuvarlanır: pot_min bandın altına, pot_max bandın üstüne (ikili aramayla tam değer bulunamaz). */
     public Integer minBand(Long careerId, Integer potentialMin) {
         if (Objects.nonNull(potentialMin) && ranged(careerId)) {

@@ -2,7 +2,6 @@ package com.fcareer.career;
 
 import com.fcareer.career.desk.SpoilerPolicy;
 import com.fcareer.catalog.model.response.PlayerSummaryResponse;
-import com.fcareer.recommendation.model.response.RecommendationItem;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
@@ -28,18 +27,16 @@ class SpoilerPolicyQueryCountTest {
         NamedParameterJdbcTemplate jdbc = mock(NamedParameterJdbcTemplate.class);
         when(jdbc.queryForList(anyString(), anyMap(), eq(String.class))).thenReturn(List.of(SpoilerPolicy.SCOUT_RANGE));
         SpoilerPolicy policy = new SpoilerPolicy(jdbc);
-        List<RecommendationItem> items = IntStream.range(0, 20).mapToObj(i -> {
-            RecommendationItem item = new RecommendationItem();
+        List<PlayerSummaryResponse> players = IntStream.range(0, 20).mapToObj(i -> {
             PlayerSummaryResponse player = new PlayerSummaryResponse();
             player.setPotential(80 + i % 5);
-            item.setPlayer(player);
-            return item;
+            return player;
         }).toList();
 
-        policy.maskItems(7L, items);
+        policy.maskAll(7L, players);
 
         verify(jdbc, times(1)).queryForList(anyString(), any(Map.class), eq(String.class));
-        assertThat(items).allSatisfy(i -> assertThat(i.getPlayer().getPotential()).isNull());
+        assertThat(players).allSatisfy(p -> assertThat(p.getPotential()).isNull());
     }
 
     @Test

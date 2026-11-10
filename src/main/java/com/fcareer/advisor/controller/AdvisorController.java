@@ -1,12 +1,9 @@
 package com.fcareer.advisor.controller;
 
-import com.fcareer.advisor.model.request.AdvisorRequest;
 import com.fcareer.advisor.model.request.TacticRecommendRequest;
 import com.fcareer.advisor.model.response.TacticRecommendation;
 import com.fcareer.advisor.service.TacticRecommenderService;
-import com.fcareer.advisor.model.response.AdvisorResponses.Advice;
 import com.fcareer.advisor.model.response.AdvisorResponses.PlayerPositionAdvice;
-import com.fcareer.advisor.service.AdvisorService;
 import com.fcareer.advisor.service.PositionAdviceService;
 import com.fcareer.auth.security.AuthUser;
 import com.fcareer.billing.model.response.CreditedResponse;
@@ -29,19 +26,8 @@ import static com.fcareer.common.constants.ApiConstants.API_V1;
 @RequiredArgsConstructor
 public class AdvisorController {
 
-    private final AdvisorService advisorService;
     private final PositionAdviceService positionAdviceService;
     private final TacticRecommenderService tacticRecommenderService;
-    private final com.fcareer.career.desk.SpoilerPolicy spoilerPolicy;
-
-    @PostMapping("/squad")
-    public CreditedResponse<Advice> advise(@AuthenticationPrincipal AuthUser user, @Valid @RequestBody AdvisorRequest request) {
-        CreditedResponse<Advice> response = advisorService.advise(user.id(), request);
-        if (response.getResult().getTransferSuggestions() != null) {
-            response.getResult().getTransferSuggestions().forEach(s -> spoilerPolicy.maskItems(request.getCareerId(), s.getItems()));
-        }
-        return response;
-    }
 
     @PostMapping("/tactic")
     public CreditedResponse<TacticRecommendation.Result> tactic(@AuthenticationPrincipal AuthUser user,

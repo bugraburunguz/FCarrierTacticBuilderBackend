@@ -81,16 +81,10 @@ class SpoilerLeakIntegrationTest {
 
     @Test
     void recommendationScoutingTeamAndSimilarResponsesCarryNoExactPotential() throws Exception {
-        JsonNode targets = call(post("/api/v1/recommend/transfer-targets"), Map.of("careerId", careerId, "perPosition", 3,
-                "slots", List.of(Map.of("position", "ST", "roleId", "poacher_attack"))), token, 200);
-        assertNoExactPotential(targets.at("/data"));
-
-        JsonNode view = call(post("/api/v1/recommend/slot-view"), Map.of("careerId", careerId, "scope", "MARKET",
-                "slot", Map.of("roleId", "winger_attack", "position", "RW")), token, 200);
-        assertNoExactPotential(view.at("/data"));
-
-        JsonNode scouting = call(post("/api/v1/scouting/" + careerId + "/search"), Map.of("position", "ST", "roleId", "poacher_attack", "potentialMin", 83), token, 200);
-        assertNoExactPotential(scouting.at("/data"));
+        JsonNode recommendations = call(post("/api/v1/careers/" + careerId + "/recommendations"), Map.of("position", "ST", "roleId", "poacher_attack",
+                "includeLongShots", true), token, 200);
+        assertThat(recommendations.at("/data/result/items")).as("FCA-10: kaldırılan eski uçların yerine canlı kariyer öneri ucu").isNotEmpty();
+        assertNoExactPotential(recommendations.at("/data"));
 
         JsonNode similar = call(get("/api/v1/players/" + playerId + "/similar?career=" + careerId), null, token, 200);
         assertNoExactPotential(similar.at("/data"));

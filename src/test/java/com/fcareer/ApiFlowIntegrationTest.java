@@ -297,46 +297,27 @@ class ApiFlowIntegrationTest {
         assertThat(preview.at("/success").asBoolean()).isTrue();
         assertThat(preview.at("/data/items").isArray()).isTrue();
 
-        JsonNode recommended = call(post("/api/v1/recommend/slot"), Map.of("careerId", careerId, "roleId", "winger_attack",
+        JsonNode recommended = call(post("/api/v1/careers/" + careerId + "/recommendations"), Map.of("roleId", "winger_attack",
                 "position", "RW", "limit", 5), token, 200);
-        assertThat(recommended.at("/success").asBoolean()).isTrue();
+        assertThat(recommended.at("/success").asBoolean()).as(recommended.toString()).isTrue();
         assertThat(recommended.at("/data/charged").asInt()).isEqualTo(3);
         assertThat(recommended.at("/data/result/items").isArray()).isTrue();
-        assertThat(recommended.at("/data/result/scoutQuery/minAttrs/Crossing").asInt()).isEqualTo(64);
+        assertThat(recommended.at("/data/result/items").size()).isBetween(1, 5);
 
-        for (String scope : new String[]{"SQUAD", "LEAGUE", "MARKET"}) {
-            JsonNode view = call(post("/api/v1/recommend/slot-view"), Map.of("careerId", careerId, "scope", scope,
-                    "slot", Map.of("roleId", "winger_attack", "position", "RW", "leagueId", 1)), token, 200);
-            assertThat(view.at("/success").asBoolean()).as(scope).isTrue();
-            assertThat(view.at("/data/items").isArray()).as(scope).isTrue();
-        }
-        JsonNode unauthenticated = call(post("/api/v1/recommend/slot-view"), Map.of("careerId", careerId, "scope", "SQUAD",
-                "slot", Map.of("roleId", "winger_attack", "position", "RW")), null, 401);
+        JsonNode unauthenticated = call(post("/api/v1/careers/" + careerId + "/recommendations"), Map.of("roleId", "winger_attack", "position", "RW"), null, 401);
         assertThat(unauthenticated.at("/success").asBoolean()).isFalse();
-        JsonNode targets = call(post("/api/v1/recommend/transfer-targets"), Map.of("careerId", careerId, "perPosition", 3,
-                "slots", java.util.List.of(Map.of("position", "RW", "roleId", "winger_attack"), Map.of("position", "RW", "roleId", "winger_attack"),
-                        Map.of("position", "ST", "roleId", "poacher_attack"))), token, 200);
-        assertThat(targets.at("/success").asBoolean()).as(targets.toString()).isTrue();
-        assertThat(targets.at("/data/positions")).hasSize(2);
-        targets.at("/data/positions/0/targets").forEach(t -> assertThat(t.at("/acquisition").asText()).isIn("FREE", "LOAN", "BUY"));
     }
 
+    /** FCA-10: `/advisor/squad` kaldırıldı; kadro mevki önerisi canlı `/advisor/positions/{careerId}` ucundan gelir. */
     @Test
-    void advisorPicksSetupAndExplainsPhilosophyGap() throws Exception {
+    void positionAdviceCoversTheWholeSquad() throws Exception {
         String token = registerAndGetToken();
         long careerId = createCareer(token, 0).at("/data/id").asLong();
 
-        JsonNode advice = call(post("/api/v1/advisor/squad"), Map.of("careerId", careerId, "philosophyPresetId", "tiki_taka",
-                "philosophyWeight", 0, "allowTransfers", true), token, 200);
-        assertThat(advice.at("/success").asBoolean()).as(advice.toString()).isTrue();
-        assertThat(advice.at("/data/charged").asInt()).isEqualTo(8);
-        JsonNode result = advice.at("/data/result");
-        assertThat(result.at("/recommended/lineup/slots")).hasSize(11);
-        assertThat(result.at("/recommended/tactic/slots")).hasSize(11);
-        assertThat(result.at("/playerPositions").size()).isGreaterThan(10);
-        assertThat(result.at("/evaluated").asInt()).isGreaterThan(30);
-        assertThat(result.at("/verdict").asText()).isIn("BEST_FIT", "PHILOSOPHY_OK", "BETTER_ELSEWHERE");
-        assertThat(result.at("/transferSuggestions").isArray()).isTrue();
+        JsonNode positions = call(get("/api/v1/advisor/positions/" + careerId), null, token, 200);
+        assertThat(positions.at("/success").asBoolean()).as(positions.toString()).isTrue();
+        assertThat(positions.at("/data").size()).isGreaterThan(10);
+        positions.at("/data").forEach(p -> assertThat(p.at("/best")).as(p.toString()).isNotEmpty());
     }
 
     @Test
