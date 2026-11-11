@@ -9,7 +9,7 @@ public final class MatchCenterModels {
     private MatchCenterModels() {
     }
 
-    public enum Missing { USER_TEAM, FORMATION, LIKELY_ELEVEN, FORM, SEASON_STATS, SET_PIECES }
+    public enum Missing { USER_TEAM, FORMATION, LIKELY_ELEVEN, SEASON_STATS, SET_PIECES }
 
     public record Opponent(int teamId, String name, String leagueName, Integer overall, boolean sameLeague, List<Integer> competitionIds) {
     }
@@ -27,10 +27,10 @@ public final class MatchCenterModels {
     public record Formation(String name, String matchedFormationId, boolean defaultFormation, List<FormationSlot> slots) {
     }
 
-    public record LikelyStarter(String slotId, String position, long playerId, String name, Integer overall, Integer form) {
+    public record LikelyStarter(String slotId, String position, long playerId, String name, Integer overall, Double averageRating) {
     }
 
-    public record DangerousPlayer(long playerId, String name, Integer overall, Integer form, int appearances, int goals, int assists, Double averageRating) {
+    public record DangerousPlayer(long playerId, String name, Integer overall, int appearances, int goals, int assists, Double averageRating) {
     }
 
     public record PlayerRef(long playerId, String name) {
@@ -58,6 +58,6 @@ public final class MatchCenterModels {
                    Integer defensiveDepth) {
     }
 
-    record SquadMember(long playerId, Integer form) {
+    record SquadMember(long playerId, Double averageRating) {
     }
 }

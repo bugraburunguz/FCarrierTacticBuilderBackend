@@ -51,26 +51,6 @@ public class MatchCenterRepository {
                 ON CONFLICT (career_id, team_id) DO NOTHING""", params);
     }
 
-    public int saveForm(long careerId, List<long[]> rows) {
-        if (rows.isEmpty()) {
-            return 0;
-        }
-        StringJoiner players = new StringJoiner(",", "{", "}");
-        StringJoiner teams = new StringJoiner(",", "{", "}");
-        StringJoiner forms = new StringJoiner(",", "{", "}");
-        rows.forEach((r) -> {
-            players.add(String.valueOf(r[0]));
-            teams.add(String.valueOf(r[1]));
-            forms.add(String.valueOf(r[2]));
-        });
-        return jdbc.update("""
-                UPDATE career_player cp SET form = u.f
-                  FROM career_player x
-                  LEFT JOIN unnest(CAST(:p AS BIGINT[]), CAST(:t AS INTEGER[]), CAST(:f AS SMALLINT[])) AS u(p, t, f) ON u.p = x.player_id AND u.t = x.team_id
-                 WHERE cp.career_id = :c AND x.career_id = cp.career_id AND x.player_id = cp.player_id AND cp.form IS DISTINCT FROM u.f""",
-                new MapSqlParameterSource("c", careerId).addValue("p", players.toString()).addValue("t", teams.toString()).addValue("f", forms.toString()));
-    }
-
     public Optional<Integer> findUserTeam(long careerId) {
         return Optional.ofNullable(jdbc.queryForObject("SELECT user_team_id FROM career WHERE id = :c", Map.of("c", careerId), Integer.class));
     }
@@ -112,26 +92,33 @@ public class MatchCenterRepository {
                         rs.getBoolean("same_league"), intArray(rs.getArray("competitions"))));
     }
 
-    public List<SquadMember> findSquad(long careerId, int teamId) {
-        return jdbc.query("SELECT player_id, form FROM career_player WHERE career_id = :c AND team_id = :t ORDER BY ovr DESC, player_id",
-                new MapSqlParameterSource("c", careerId).addValue("t", teamId), (rs, i) -> new SquadMember(rs.getLong("player_id"), nullableInt(rs, "form")));
+    public List<SquadMember> findSquad(long careerId, int teamId, int minAppearances) {
+        return jdbc.query("""
+                SELECT cp.player_id, CASE WHEN sum(s.appearances) >= :minApps
+                         THEN round(sum(s.rating_total)::numeric / sum(s.appearances) / 10, 1) END AS avg_rating
+                  FROM career_player cp
+                  LEFT JOIN career_player_season_stat s ON s.career_id = cp.career_id AND s.player_id = cp.player_id AND s.team_id = cp.team_id
+                 WHERE cp.career_id = :c AND cp.team_id = :t
+                 GROUP BY cp.player_id, cp.ovr
+                 ORDER BY cp.ovr DESC, cp.player_id""",
+                new MapSqlParameterSource("c", careerId).addValue("t", teamId).addValue("minApps", minAppearances),
+                (rs, i) -> new SquadMember(rs.getLong("player_id"), nullableDouble(rs, "avg_rating")));
     }
 
     public List<DangerousPlayer> findDangerousPlayers(long careerId, int teamId, int limit) {
         return jdbc.query("""
-                SELECT cp.player_id, b.full_name, cp.ovr, cp.form, COALESCE(sum(s.appearances), 0) AS apps, COALESCE(sum(s.goals), 0) AS goals,
+                SELECT cp.player_id, b.full_name, cp.ovr, COALESCE(sum(s.appearances), 0) AS apps, COALESCE(sum(s.goals), 0) AS goals,
                        COALESCE(sum(s.assists), 0) AS assists, round(sum(s.rating_total)::numeric / NULLIF(sum(s.appearances), 0) / 10, 1) AS avg_rating
                   FROM career_player cp
                   JOIN base_player b ON b.id = cp.player_id
                   LEFT JOIN career_player_season_stat s ON s.career_id = cp.career_id AND s.player_id = cp.player_id AND s.team_id = cp.team_id
                  WHERE cp.career_id = :c AND cp.team_id = :t
-                 GROUP BY cp.player_id, b.full_name, cp.ovr, cp.form
+                 GROUP BY cp.player_id, b.full_name, cp.ovr
                 HAVING COALESCE(sum(s.goals), 0) + COALESCE(sum(s.assists), 0) > 0
-                 ORDER BY COALESCE(sum(s.goals), 0) + COALESCE(sum(s.assists), 0) DESC, cp.form DESC NULLS LAST, avg_rating DESC NULLS LAST, cp.player_id
+                 ORDER BY COALESCE(sum(s.goals), 0) + COALESCE(sum(s.assists), 0) DESC, avg_rating DESC NULLS LAST, cp.player_id
                  LIMIT :limit""",
                 new MapSqlParameterSource("c", careerId).addValue("t", teamId).addValue("limit", limit),
-                (rs, i) -> new DangerousPlayer(rs.getLong("player_id"), rs.getString("full_name"), nullableInt(rs, "ovr"), nullableInt(rs, "form"),
-                        rs.getInt("apps"), rs.getInt("goals"), rs.getInt("assists"), nullableDouble(rs, "avg_rating")));
+                (rs, i) -> new DangerousPlayer(rs.getLong("player_id"), rs.getString("full_name"), nullableInt(rs, "ovr"), rs.getInt("apps"), rs.getInt("goals"), rs.getInt("assists"), nullableDouble(rs, "avg_rating")));
     }
 
     public List<CardRisk> findCardRisk(long careerId, int teamId, int limit) {

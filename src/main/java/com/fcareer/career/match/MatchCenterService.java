@@ -80,10 +80,7 @@ public class MatchCenterService {
         if (Objects.isNull(formation)) {
             missing.add(Missing.FORMATION);
         }
-        List<SquadMember> squad = repository.findSquad(careerId, teamId);
-        if (squad.stream().allMatch((m) -> Objects.isNull(m.form()))) {
-            missing.add(Missing.FORM);
-        }
+        List<SquadMember> squad = repository.findSquad(careerId, teamId, properties.getSeasonRatingMinAppearances());
         List<LikelyStarter> eleven = Objects.isNull(formation) || matched.isEmpty() ? List.of() : solveLikelyEleven(career, squad, matched.get());
         if (eleven.size() < ELEVEN) {
             missing.add(Missing.LIKELY_ELEVEN);
@@ -107,15 +104,15 @@ public class MatchCenterService {
         if (squad.size() < ELEVEN) {
             return List.of();
         }
-        Map<Long, Integer> form = new HashMap<>();
-        squad.forEach((m) -> form.put(m.playerId(), m.form()));
+        Map<Long, Double> rating = new HashMap<>();
+        squad.forEach((m) -> rating.put(m.playerId(), m.averageRating()));
         List<FitPlayer> players = playerService.fitPlayers(squad.stream().map(SquadMember::playerId).toList(), career.getGameVersionId(), career.getId());
         Map<Long, FitPlayer> byId = players.stream().collect(Collectors.toMap(FitPlayer::getId, Function.identity(), (a, b) -> a));
         List<SlotAssignment> slots = squadFitService.solve(players, tacticResolver.resolve(TacticRequest.builder().formation(formation.id()).build()).slots(),
                 fitProperties.getCareerEngineVersion(), true).getSlots();
         return slots.stream().filter((s) -> Objects.nonNull(s.getPlayerId()))
                 .map((s) -> new LikelyStarter(s.getSlotId(), s.getPosition(), s.getPlayerId(), s.getPlayerName(), byId.get(s.getPlayerId()).getOverall(),
-                        form.get(s.getPlayerId())))
+                        rating.get(s.getPlayerId())))
                 .toList();
     }
 

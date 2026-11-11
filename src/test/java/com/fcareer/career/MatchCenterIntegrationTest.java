@@ -105,8 +105,10 @@ class MatchCenterIntegrationTest {
             elevenIds.add(s.at("/playerId").asLong());
             assertThat(s.at("/position").asText()).isNotBlank();
             assertThat(s.at("/overall").asInt()).isPositive();
-            assertThat(s.has("form")).isTrue();
+            assertThat(s.has("form")).as("LE formu canlı değil (hep 3), yanıtta yok").isFalse();
+            assertThat(s.has("averageRating")).as("sezon notu, az maçta null").isTrue();
         });
+        assertThat(eleven.findValues("averageRating").stream().filter((v) -> !v.isNull()).count()).as("ilk 11'in çoğunun sezon notu var").isGreaterThan(5);
         assertThat(elevenIds).hasSize(11);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM career_player WHERE career_id = ? AND team_id = ? AND player_id IN ("
                 + elevenIds.stream().map(String::valueOf).collect(Collectors.joining(",")) + ")", Integer.class, careerId, GALATASARAY))
@@ -114,7 +116,8 @@ class MatchCenterIntegrationTest {
 
         assertThat(report.at("/dangerousPlayers").size()).isPositive();
         JsonNode danger = report.at("/dangerousPlayers/0");
-        assertThat(danger.has("form") && danger.has("averageRating") && danger.has("goals") && danger.has("assists")).isTrue();
+        assertThat(danger.has("averageRating") && danger.has("goals") && danger.has("assists")).isTrue();
+        assertThat(danger.has("form")).isFalse();
 
         assertThat(report.at("/setPieces/penaltyTaker/playerId").asLong()).isEqualTo(baseId(GALATASARAY_PENALTY_TAKER));
         assertThat(report.at("/setPieces/captain/playerId").asLong()).isEqualTo(baseId(GALATASARAY_CAPTAIN));

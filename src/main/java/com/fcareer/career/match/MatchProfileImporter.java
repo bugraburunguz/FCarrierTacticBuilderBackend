@@ -18,7 +18,6 @@ public class MatchProfileImporter {
 
     static final String FORMATIONS = "formations";
     static final String TEAMS = "teams";
-    static final String LINKS = "teamplayerlinks";
     private static final int FORMATION_SLOTS = 11;
 
     private final MatchCenterRepository repository;
@@ -32,9 +31,7 @@ public class MatchProfileImporter {
         if (Objects.nonNull(teams) && !teams.isEmpty()) {
             repository.replaceTeamInfo(careerId, toTeamInfo(teams, formations, eaToBase));
         }
-        int forms = applyForm(careerId, tables.get(LINKS), eaToBase);
-        log.info("Match profile imported careerId : {} userTeam : {} formations : {} forms : {}", careerId, userTeam,
-                Objects.isNull(formations) ? 0 : formations.size(), forms);
+        log.info("Match profile imported careerId : {} userTeam : {} formations : {}", careerId, userTeam, Objects.isNull(formations) ? 0 : formations.size());
     }
 
     private static List<TeamMatchInfo> toTeamInfo(List<Map<String, String>> teams, List<Map<String, String>> formations, Map<Long, Long> eaToBase) {
@@ -64,22 +61,6 @@ public class MatchProfileImporter {
                     toInt(row.get("matchdaymidfieldrating")), toInt(row.get("matchdaydefenserating"))));
         }
         return out;
-    }
-
-    private int applyForm(long careerId, List<Map<String, String>> links, Map<Long, Long> eaToBase) {
-        if (Objects.isNull(links) || links.isEmpty() || !links.get(0).containsKey("form")) {
-            return 0;
-        }
-        List<long[]> rows = new ArrayList<>();
-        for (Map<String, String> link : links) {
-            Long playerId = eaToBase.get(toLong(link.get("playerid")));
-            Integer team = toInt(link.get("teamid"));
-            Integer form = toInt(link.get("form"));
-            if (Objects.nonNull(playerId) && Objects.nonNull(team) && Objects.nonNull(form)) {
-                rows.add(new long[] {playerId, team, form});
-            }
-        }
-        return repository.saveForm(careerId, rows);
     }
 
     private static List<Integer> readSlots(Map<String, String> formation, String pattern) {
