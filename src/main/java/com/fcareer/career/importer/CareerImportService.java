@@ -38,6 +38,7 @@ import static com.fcareer.career.importer.CsvStream.toLong;
 public class CareerImportService {
 
     private static final Set<Integer> FREE_AGENT_TEAM_IDS = Set.of(111592, 131368);
+    private static final long NANOS_PER_MILLI = 1_000_000L;
     private static final Set<String> TEAM_COLUMNS = Set.of("teamname", "overallrating", "attackrating", "midfieldrating",
             "defenserating", "buildupplay", "defensivedepth", "youthdevelopment", "domesticprestige",
             "internationalprestige", "popularity", "clubworth", "profitability", "rivalteam", "gender");
@@ -58,7 +59,9 @@ public class CareerImportService {
         entitlementService.requirePremium(userId);
         CareerEntity career = careerService.requireOwned(userId, careerId);
 
+        long started = System.nanoTime();
         BaseUploads.Upload upload = BaseUploads.toUpload(logFile, csvs);
+        long parsed = System.nanoTime();
         Map<String, List<Map<String, String>>> tables = upload.tables();
         LeExportV2Parser.LeContext context = upload.context();
         Map<Integer, String> leagueNames = new HashMap<>();
@@ -121,6 +124,7 @@ public class CareerImportService {
         Set<Long> matchedBaseIds = new HashSet<>();
         playerRows.forEach((row) -> matchedBaseIds.add((Long) row.getValue("base")));
         baseCatalogImporter.saveCareerRatings(careerId, tables.get("players"), eaToBase, matchedBaseIds, generated.keySet(), career.getGameVersionId());
+        long playersWritten = System.nanoTime();
 
         // ACADEMY-a: altyapı takımı veriden (kodda kimlik yok); adı "{kulüp} Youth Academy", diğer çözülmemiş adlar genel kural.
         AcademyDetector.Detection academy = AcademyDetector.detect(tables, userTeam);
@@ -192,6 +196,7 @@ public class CareerImportService {
                     new MapSqlParameterSource().addValue("c", careerId).addValue("ids", returnedFromLoan));
         }
         careerPlayerWriter.applyLeExtras(careerId, tables.get("players"), eaToBase);
+        long synced = System.nanoTime();
         // Kiralık bitiş tarihi: playerloans ve diğer veritabanı kopyaları (betik 2.0.2).
         List<Map<String, String>> allLoans = new ArrayList<>();
         tables.forEach((name, rows) -> {
@@ -200,6 +205,7 @@ public class CareerImportService {
             }
         });
         int contracts = careerPlayerWriter.applyContracts(careerId, tables.get("players"), allLoans, eaToBase);
+        long contractsWritten = System.nanoTime();
         // GTR-a: kariyer içi içe aktarmada bütün kulüplerin anlık görüntüsü (aynı ay tek, en çok 60); ana menü export'u yazılmaz. Görüntü yalnız
         // ölçüm içindir: ayrı transaction'da yazılır, hatası içe aktarmayı geri almaz.
         if (Objects.isNull(context) || context.inCareer()) {
@@ -210,12 +216,19 @@ public class CareerImportService {
                 log.warn("Growth snapshot skipped careerId : {}", careerId, e);
             }
         }
+        long growthWritten = System.nanoTime();
         log.info("Career import done careerId : {} players : {} teams : {} freeAgents : {} unmatched : {}",
                 careerId, playerRows.size(), teamParams.size(), freeAgents, unmatched);
         Integer guessedTeam = guess.isEmpty() ? null : ((Number) guess.get(0).get("team_id")).intValue();
-        Integer synced = Objects.isNull(guessedTeam) || squadEditedByUser(careerId) ? null : rebuildSquad(career, careerId, guessedTeam);
+        Integer squadSynced = Objects.isNull(guessedTeam) || squadEditedByUser(careerId) ? null : rebuildSquad(career, careerId, guessedTeam);
         // FAZ 6a-E: görüntü kadro kurulduktan sonra alınır; kadro sayısı, giren/çıkan ve kadro maaşı içe aktarılan kadroyu yansıtır.
         careerDeskService.takeSnapshot(careerId, "IMPORT", Objects.nonNull(upload.exportId()) ? "export " + upload.exportId() : null);
+        long finished = System.nanoTime();
+        // FCA-21: canlıda yavaş adımı bulmak için adım süreleri (ms); oyuncu kimliği ya da içerik loglanmaz.
+        log.info("Career import timing careerId : {} parseMs : {} playersMs : {} syncMs : {} contractsMs : {} growthMs : {} squadAndSnapshotMs : {} totalMs : {}",
+                careerId, toMillis(parsed - started), toMillis(playersWritten - parsed), toMillis(synced - playersWritten),
+                toMillis(contractsWritten - synced), toMillis(growthWritten - contractsWritten), toMillis(finished - growthWritten),
+                toMillis(finished - started));
         int skippedNoPosition = baseCatalogImporter.careerPlayersWithoutPositions(tables.get("players"), eaToBase.keySet());
         List<String> warnings = new ArrayList<>();
         if (skippedNoPosition > 0) {
@@ -240,7 +253,7 @@ public class CareerImportService {
         return ImportSummaryResponse.builder()
                 .skippedNoPosition(skippedNoPosition).warnings(warnings)
                 .gameDate(Objects.isNull(context) ? null : context.gameDate()).contracts(contracts)
-                .squadSynced(synced)
+                .squadSynced(squadSynced)
                 .players(playerRows.size()).generatedPlayers(generated.size()).unmatchedPlayers(unmatched).teams(teamParams.size()).freeAgents(freeAgents)
                 .guessedTeamId(guess.isEmpty() ? null : ((Number) guess.get(0).get("team_id")).intValue())
                 .guessedTeamName(guess.isEmpty() ? null : (String) guess.get(0).get("name"))
@@ -393,6 +406,10 @@ public class CareerImportService {
             }
         }
         return loans;
+    }
+
+    private static long toMillis(long nanos) {
+        return nanos / NANOS_PER_MILLI;
     }
 
     private void batch(String sql, List<SqlParameterSource> rows) {

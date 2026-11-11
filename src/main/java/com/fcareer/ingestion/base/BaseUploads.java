@@ -4,8 +4,11 @@ import com.fcareer.career.importer.CsvStream;
 import com.fcareer.common.exception.ImportParseException;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedInputStream;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.zip.GZIPInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,6 +21,14 @@ public final class BaseUploads {
 
     private static final Set<String> KEYS = Set.of("players", "teams", "teamplayerlinks", "leagueteamlinks", "leagues",
             "playerloans", "playernames", "dcplayernames", "editedplayernames", "context");
+
+    /**
+     * FCA-21: gzip'li logun açılmış en büyük boyutu (sıkıştırma bombasına karşı). Sıkıştırılmamış yükleme sınırıyla (64 MB) aynı: 512 MB yığında
+     * ayrıştırıcının bellek tavanı değişmez. Kırpılmış tek kariyer export'u ~11 MB.
+     */
+    public static final long MAX_INFLATED_BYTES = 64L * 1024 * 1024;
+    private static final int GZIP_MAGIC_FIRST = 0x1f;
+    private static final int GZIP_MAGIC_SECOND = 0x8b;
 
     private BaseUploads() {
     }
@@ -38,13 +49,17 @@ public final class BaseUploads {
     }
 
     public static Upload toUpload(MultipartFile log, Map<String, MultipartFile> csvFiles, LeExportV2Parser.Prefer prefer) {
+        return toUpload(log, csvFiles, prefer, MAX_INFLATED_BYTES);
+    }
+
+    public static Upload toUpload(MultipartFile log, Map<String, MultipartFile> csvFiles, LeExportV2Parser.Prefer prefer, long maxInflatedBytes) {
         if (Objects.nonNull(log) && !log.isEmpty()) {
             try {
                 boolean v2;
-                try (InputStream probe = log.getInputStream()) {
+                try (InputStream probe = open(log, maxInflatedBytes)) {
                     v2 = LeExportV2Parser.isV2(probe);
                 }
-                try (InputStream in = log.getInputStream()) {
+                try (InputStream in = open(log, maxInflatedBytes)) {
                     if (v2) {
                         LeExportV2Parser.LeExport export = LeExportV2Parser.parse(in, prefer);
                         return new Upload(export.tables(), export.context(), export.exportId(), export.warnings());
@@ -62,6 +77,60 @@ public final class BaseUploads {
             }
         });
         return new Upload(tables, contextOf(tables.get("context")), null, List.of());
+    }
+
+    /** FCA-21: gzip'li log (ilk iki bayt 1f 8b) açılarak okunur; açılmış boyut maxInflatedBytes ile sınırlı. Diğer dosyalar olduğu gibi. */
+    private static InputStream open(MultipartFile log, long maxInflatedBytes) throws IOException {
+        BufferedInputStream in = new BufferedInputStream(log.getInputStream());
+        in.mark(2);
+        int first = in.read();
+        int second = in.read();
+        in.reset();
+        if (first != GZIP_MAGIC_FIRST || second != GZIP_MAGIC_SECOND) {
+            return in;
+        }
+        try {
+            return new LimitedInputStream(new GZIPInputStream(in), maxInflatedBytes);
+        } catch (IOException e) {
+            in.close();
+            throw e;
+        }
+    }
+
+    private static final class LimitedInputStream extends FilterInputStream {
+
+        private final long limit;
+        private long count;
+
+        private LimitedInputStream(InputStream in, long limit) {
+            super(in);
+            this.limit = limit;
+        }
+
+        @Override
+        public int read() throws IOException {
+            int b = super.read();
+            if (b >= 0) {
+                checkLimit(1);
+            }
+            return b;
+        }
+
+        @Override
+        public int read(byte[] buffer, int offset, int length) throws IOException {
+            int n = super.read(buffer, offset, length);
+            if (n > 0) {
+                checkLimit(n);
+            }
+            return n;
+        }
+
+        private void checkLimit(long added) {
+            count += added;
+            if (count > limit) {
+                throw new ImportParseException("log too large after decompression");
+            }
+        }
     }
 
     private static LeExportV2Parser.LeContext contextOf(List<Map<String, String>> rows) {
