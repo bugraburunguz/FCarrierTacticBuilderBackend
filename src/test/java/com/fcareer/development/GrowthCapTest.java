@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * GROWTH-CAL madde 1 (verified:false, kaynak: Buğra oyun tecrübesi, ölçülmedi): altyapıda (A takımda değil) sezon başı OVR kazancı en çok +5,
- * A takımdaki gençlerde yaş çarpanı aynen ama en çok +8. İki sezonluk tahminde altyapı oyuncusu ikinci sezonda A takımda sayılır. Tavan plan
+ * A takımda da en çok +5 (FCA-20; kazanç yaşa göre mutlak puan). İki sezonluk tahminde altyapı oyuncusu ikinci sezonda A takımda sayılır. Tavan plan
  * dağılımından önce: plan toplamı değiştirmez, POT tavanı aynen.
  */
 class GrowthCapTest {
@@ -42,32 +42,45 @@ class GrowthCapTest {
     @Test
     void defaultsAreTheDecision() {
         assertThat(growth.config().getAcademyMaxGain()).isEqualTo(5);
-        assertThat(growth.config().getFirstTeamMaxGain()).isEqualTo(8);
+        assertThat(growth.config().getFirstTeamMaxGain()).as("FCA-20: oynamayan genç A takımda altyapıdan hızlı gelişmedi").isEqualTo(5);
     }
 
     @Test
     void anAcademyPlayerLikeHargreavesGrowsAtMostFiveInASeason() {
         FitPlayer hargreaves = player(15, 53, 92);
         GrowthProjector.Projection academy = growth.project(hargreaves, Stage.ACADEMY);
-        assertThat(academy.projectedRating()).as("39 × 0,55 ≈ +21 yerine +5").isEqualTo(58);
+        assertThat(academy.projectedRating()).as("39 puan fark olsa da +5").isEqualTo(58);
         assertThat(academy.grown().getAttrs().get(Attr.SHORT_PASSING)).isEqualTo(60);
         assertThat(projector.project(hargreaves, plans.general(), 1, 1).overall()).isEqualTo(58);
     }
 
     @Test
-    void aFirstTeamNineteenYearOldGrowsAtMostEight() {
+    void aFirstTeamNineteenYearOldGrowsByAgeNotByHeadroom() {
         FitPlayer young = player(19, 60, 90);
-        assertThat(growth.project(young).projectedRating()).as("30 × 0,55 ≈ +17 yerine +8").isEqualTo(68);
-        assertThat(growth.project(young, Stage.FIRST_TEAM).projectedRating()).isEqualTo(68);
-        assertThat(growth.project(player(19, 70, 74)).projectedRating()).as("tavan POT'u aşmaz, küçük kazanç aynen").isEqualTo(72);
+        assertThat(growth.project(young).projectedRating()).as("FCA-20: 30 puan fark olsa da 19 yaşta +3").isEqualTo(63);
+        assertThat(growth.project(young, Stage.FIRST_TEAM).projectedRating()).isEqualTo(63);
+        assertThat(growth.project(player(19, 70, 72)).projectedRating()).as("POT'u aşmaz").isEqualTo(72);
     }
 
     @Test
     void twoSeasonsAcademyThenFirstTeam() {
         FitPlayer hargreaves = player(15, 53, 92);
-        assertThat(projector.project(hargreaves, plans.general(), 2, 1).overall()).as("1. sezon +5 (altyapı), 2. sezon +8 (A takım)").isEqualTo(66);
+        assertThat(projector.project(hargreaves, plans.general(), 2, 1).overall()).as("1. sezon +5 (altyapı), 2. sezon +5 (A takım)").isEqualTo(63);
         assertThat(projector.project(hargreaves, plans.general(), 2, 2).overall()).as("iki sezon altyapı").isEqualTo(63);
-        assertThat(projector.project(hargreaves, plans.general(), 2).overall()).as("varsayılan A takım").isEqualTo(69);
+        assertThat(projector.project(hargreaves, plans.general(), 2).overall()).as("varsayılan A takım").isEqualTo(63);
+    }
+
+    @Test
+    void eachStageUsesItsOwnCap() {
+        GrowthProjector.Config config = new GrowthProjector.Config();
+        config.setAcademyMaxGain(2);
+        config.setFirstTeamMaxGain(4);
+        GrowthProjector capped = new GrowthProjector(config);
+        FitPlayer hargreaves = player(15, 53, 92);
+        assertThat(capped.project(hargreaves, Stage.ACADEMY).projectedRating()).isEqualTo(55);
+        assertThat(capped.project(hargreaves, Stage.FIRST_TEAM).projectedRating()).isEqualTo(57);
+        PlanProjector cappedProjector = new PlanProjector(capped, OVERALL);
+        assertThat(cappedProjector.project(hargreaves, plans.general(), 2, 1).overall()).as("1. sezon altyapı +2, 2. sezon A takım +4").isEqualTo(59);
     }
 
     @Test

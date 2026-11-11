@@ -234,7 +234,7 @@ class AcademyIntegrationTest {
         });
         assertThat(detail.at("/advice/estimated").asBoolean()).isTrue();
         // GROWTH-CAL madde 1: iki sezonluk tahmin varsayımı tek satır (altyapı: 1. sezon +5 tavanı, 2. sezon A takımda sayılır).
-        assertThat(detail.at("/advice/assumption").asText()).isEqualTo("Tahmin: 1. sezon altyapıda (en çok +5 OVR), 2. sezon A takımda (en çok +8 OVR).");
+        assertThat(detail.at("/advice/assumption").asText()).isEqualTo("Tahmin: 1. sezon altyapıda (en çok +5 OVR), 2. sezon A takımda (en çok +5 OVR).");
         plans.forEach((p) -> assertThat(p.path("overall1").asInt() - detail.path("overall").asInt()).as("altyapıda 1 sezonda en çok +5 (genel OVR, mevki farkı ±)").isLessThanOrEqualTo(12));
         assertThat(detail.at("/position/bestPosition").asText()).isNotBlank();
         assertThat(detail.at("/team/position").asText()).isNotBlank();

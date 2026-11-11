@@ -18,7 +18,7 @@ import java.util.Set;
 
 /**
  * Tek sezonluk büyüme (futureFit +1 sezon, E3-6). Tanım:
- *   sezon kazancı = round((POT − OVR) × yaşÇarpanı(yaş));  projectedRating = min(POT, OVR + kazanç);
+ *   sezon kazancı = min(yaşKazancı(yaş), POT − OVR, aşama tavanı) (FCA-20);  projectedRating = min(POT, OVR + kazanç);
  *   attribute artışı = round(kazanç × trainability), hız/çeviklik grubu 0,3×, diğerleri 1,0×, 99'da kırpılır.
  * Düşüş (GT-a, gruplar sırayla): fiziksel (hız, çeviklik, dayanıklılık, güç, sıçrama, denge) yaş ≥ declineFromAge, teknik (pas, dribling, şut, top
  *   kesme, kafa, kaleci) yaş ≥ technicalDeclineFromAge, zihinsel ve bitiricilik yaş ≥ mentalDeclineFromAge; her grup sezonda
@@ -52,19 +52,22 @@ public class GrowthProjector {
     @Setter
     @ConfigurationProperties(prefix = "fcareer.growth")
     public static class Config {
-        /** yaş ≤ ageN → çarpan factorN; hepsinin üstü 0. */
-        private int age1 = 19;
-        private double factor1 = 0.55;
-        private int age2 = 21;
-        private double factor2 = 0.45;
-        private int age3 = 23;
-        private double factor3 = 0.35;
-        private int age4 = 25;
-        private double factor4 = 0.25;
-        private int age5 = 27;
-        private double factor5 = 0.12;
+        /**
+         * FCA-20 (verified:false, kaynak: Beşiktaş gelişim deneyi 2026-08 → 2027-03, 39 oyuncu): yaş ≤ ageN → sezon OVR kazancı gainN puan (POT'a kalan
+         * farkla sınırlı); hepsinin üstü 0. Kazanç kalan farkla orantılı değil: büyük farklı gençler deneyde yılda +2/+3 aldı.
+         */
+        private int age1 = 17;
+        private int gain1 = 5;
+        private int age2 = 19;
+        private int gain2 = 3;
+        private int age3 = 21;
+        private int gain3 = 3;
+        private int age4 = 23;
+        private int gain4 = 3;
+        private int age5 = 26;
+        private int gain5 = 2;
         private int age6 = 29;
-        private double factor6 = 0.05;
+        private int gain6 = 1;
         private double hardToTrain = 0.3;
         /** GT-a (verified:false, kaynak: Buğra oyun tecrübesi, ölçülmedi): fiziksel düşüş başlangıcı. */
         private int declineFromAge = 30;
@@ -86,8 +89,8 @@ public class GrowthProjector {
         private int familiaritySeasonsPerLevel = 1;
         /** GROWTH-CAL (verified:false, kaynak: Buğra oyun tecrübesi, ölçülmedi): altyapıdaki (A takımda değil) oyuncunun sezon OVR kazancı tavanı. */
         private int academyMaxGain = 5;
-        /** GROWTH-CAL (verified:false, ölçülmedi): A takımdaki oyuncunun sezon OVR kazancı tavanı; kalibrasyon raporu gerçek veri verince ayarlanır. */
-        private int firstTeamMaxGain = 8;
+        /** FCA-20 (verified:false): A takımdaki oyuncunun sezon OVR kazancı tavanı; deneyde oynamayan genç A takımda altyapıdan hızlı gelişmedi. */
+        private int firstTeamMaxGain = 5;
     }
 
     /** Oyuncunun o sezon nerede geliştiği: altyapı (tavan academyMaxGain) ya da A takım (tavan firstTeamMaxGain). */
@@ -322,32 +325,32 @@ public class GrowthProjector {
                 .skillMoves(player.getSkillMoves()).heightCm(player.getHeightCm()).roleFamiliarity(player.getRoleFamiliarity()).build();
     }
 
-    /** Sezon kazancı: kalan boşluk × yaş çarpanı, aşamanın tavanıyla sınırlı (tavan plan dağılımından önce; plan toplamı değiştirmez). */
+    /** Sezon kazancı: yaşın mutlak kazancı, kalan boşluk ve aşamanın tavanıyla sınırlı (tavan plan dağılımından önce; plan toplamı değiştirmez). */
     private int seasonGain(FitPlayer player, Stage stage) {
         if (Objects.isNull(player.getPotential()) || Objects.isNull(player.getAge())) {
             return 0;
         }
         int headroom = Math.max(0, Math.min(MAX_ATTR, player.getPotential()) - player.getOverall());
         int cap = stage == Stage.ACADEMY ? config.getAcademyMaxGain() : config.getFirstTeamMaxGain();
-        return Math.min(cap, (int) Math.round(headroom * ageFactor(player.getAge())));
+        return Math.min(cap, Math.min(headroom, ageGain(player.getAge())));
     }
 
-    private double ageFactor(int age) {
+    private int ageGain(int age) {
         if (age <= config.getAge1()) {
-            return config.getFactor1();
+            return config.getGain1();
         }
         if (age <= config.getAge2()) {
-            return config.getFactor2();
+            return config.getGain2();
         }
         if (age <= config.getAge3()) {
-            return config.getFactor3();
+            return config.getGain3();
         }
         if (age <= config.getAge4()) {
-            return config.getFactor4();
+            return config.getGain4();
         }
         if (age <= config.getAge5()) {
-            return config.getFactor5();
+            return config.getGain5();
         }
-        return age <= config.getAge6() ? config.getFactor6() : 0;
+        return age <= config.getAge6() ? config.getGain6() : 0;
     }
 }

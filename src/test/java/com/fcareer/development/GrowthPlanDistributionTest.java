@@ -39,9 +39,9 @@ class GrowthPlanDistributionTest {
 
     @Test
     void planAttributesTakeMostOfTheSeasonBudget() {
-        // 23 yaş, 70→76: kazanç round(6 × 0,35) = 2; bütçe 2 × 29 saha attribute'u = 58.
+        // 25 yaş, 70→76: kazanç 2 (FCA-20 yaş kazancı); bütçe 2 × 29 saha attribute'u = 58.
         // Karar: pay 0,45. Plan (8): round(0,45 × 58 / 8) = 3 · diğerleri (21): round(0,55 × 58 / 21) = 2 · hız grubu: round(1,52 × 0,3) = 0 · kaleci: değişmez.
-        Map<Attr, Integer> grown = projector.project(player(23, 70, 76, 60), PLAN).grown().getAttrs();
+        Map<Attr, Integer> grown = projector.project(player(25, 70, 76, 60), PLAN).grown().getAttrs();
         assertThat(grown.get(Attr.FINISHING)).isEqualTo(63);
         assertThat(grown.get(Attr.DRIBBLING)).isEqualTo(63);
         assertThat(grown.get(Attr.STAMINA)).isEqualTo(62);
@@ -61,8 +61,8 @@ class GrowthPlanDistributionTest {
     @Test
     void goalkeeperPlanBudgetsOnlyGoalkeepingAttributes() {
         // İnceleme: kaleci planı bütçesi 34 attribute'tan değil yalnız 5 kaleci attribute'undan (yoksa 3 attribute'a ~8× kazanç yığılıyordu).
-        // 23 yaş, 70→76: kazanç 2; bütçe 2 × 5 = 10; plan (3): round(0,45 × 10 / 3) = 2 · diğer kaleci (2): round(0,55 × 10 / 2) = 3 · saha: değişmez.
-        Map<Attr, Integer> grown = projector.project(player(23, 70, 76, 60), List.of(Attr.GK_DIVING, Attr.GK_HANDLING, Attr.GK_REFLEXES)).grown().getAttrs();
+        // 25 yaş, 70→76: kazanç 2; bütçe 2 × 5 = 10; plan (3): round(0,45 × 10 / 3) = 2 · diğer kaleci (2): round(0,55 × 10 / 2) = 3 · saha: değişmez.
+        Map<Attr, Integer> grown = projector.project(player(25, 70, 76, 60), List.of(Attr.GK_DIVING, Attr.GK_HANDLING, Attr.GK_REFLEXES)).grown().getAttrs();
         assertThat(grown.get(Attr.GK_DIVING)).isEqualTo(62);
         assertThat(grown.get(Attr.GK_KICKING)).isEqualTo(63);
         assertThat(grown.get(Attr.FINISHING)).isEqualTo(60);
