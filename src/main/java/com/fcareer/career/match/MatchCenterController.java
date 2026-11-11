@@ -20,6 +20,7 @@ import static com.fcareer.common.constants.ApiConstants.API_V1;
 public class MatchCenterController {
 
     private final MatchCenterService service;
+    private final MatchPlanService planService;
 
     @GetMapping("/opponents")
     public List<Opponent> opponents(@AuthenticationPrincipal AuthUser user, @PathVariable Long careerId) {
@@ -29,5 +30,10 @@ public class MatchCenterController {
     @GetMapping("/opponents/{teamId}/report")
     public OpponentReport report(@AuthenticationPrincipal AuthUser user, @PathVariable Long careerId, @PathVariable Integer teamId) {
         return service.buildReport(user.id(), careerId, teamId);
+    }
+
+    @GetMapping("/opponents/{teamId}/plan")
+    public MatchCenterModels.MatchPlan plan(@AuthenticationPrincipal AuthUser user, @PathVariable Long careerId, @PathVariable Integer teamId) {
+        return planService.buildPlan(user.id(), careerId, teamId);
     }
 }

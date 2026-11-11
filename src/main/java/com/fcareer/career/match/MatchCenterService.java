@@ -116,7 +116,7 @@ public class MatchCenterService {
                 .toList();
     }
 
-    private Optional<FormationDefinition> findClosestFormation(List<Integer> positions) {
+    Optional<FormationDefinition> findClosestFormation(List<Integer> positions) {
         Map<String, Long> wanted = positions.stream().filter(Objects::nonNull).map(DumpMappings.FORMATION_POSITION_BY_CODE::get).filter(Objects::nonNull)
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
         if (wanted.isEmpty()) {

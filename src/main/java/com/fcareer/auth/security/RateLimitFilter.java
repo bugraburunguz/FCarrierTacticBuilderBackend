@@ -39,7 +39,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final String IMAGE_PATH = API_V1 + "/img/";
     /** GUV-2 (F8): pahalı ama ücretsiz uçlar analiz kovasında. Id parçası serbest: Spring "{id}"yi Long.decode ile okur ("+7", "0x7"). */
     private static final Pattern ANALYSIS_PATHS = Pattern.compile(Pattern.quote(API_V1)
-            + "/(fit/lineup|replicas/[^/]+/apply|recommend/preview|careers/[^/]+/starter-tactic|careers/[^/]+/development/recommendations|careers/[^/]+/academy|careers/[^/]+/youth(/[^/]+)?|careers/[^/]+/match/opponents/[^/]+/report)/?$");
+            + "/(fit/lineup|replicas/[^/]+/apply|recommend/preview|careers/[^/]+/starter-tactic|careers/[^/]+/development/recommendations|careers/[^/]+/academy|careers/[^/]+/youth(/[^/]+)?|careers/[^/]+/match/opponents/[^/]+/(report|plan))/?$");
     /** MGR-a: kulüp önerisi kendi dar kovasında (önbellek dışı istek pahalı). */
     private static final Pattern MANAGER_PATH = Pattern.compile(Pattern.quote(API_V1) + "/manager/club-recommendations/?$");
     /** FIT-2 kararı: taktik analizi kendi kovasında (Lab'da diziliş isteğiyle birlikte gider; ortak kovayı yarı hızda doldurmasın). */

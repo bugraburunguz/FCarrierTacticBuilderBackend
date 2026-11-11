@@ -31,6 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 class MatchCenterIntegrationTest {
 
     private static final int BESIKTAS = 327;
+    private static final long BESIKTAS_TOP_SCORER = 207421L;
     private static final int GALATASARAY = 325;
     private static final int FENERBAHCE = 326;
     private static final int EUROPEAN_RIVAL = 1943;
@@ -148,6 +149,79 @@ class MatchCenterIntegrationTest {
                     .header("Authorization", "Bearer " + token)).andReturn().getResponse().getStatus();
             assertThat(status).as("takım " + teamId).isEqualTo(404);
         }
+    }
+
+    @Test
+    void planAgainstGalatasarayGivesOurElevenRestCandidatesNotesAndSetPieceMatchups() throws Exception {
+        importExport(fixture());
+
+        assertThat(data(get("/api/v1/careers/" + careerId + "/match/opponents/" + GALATASARAY + "/plan")).at("/restCandidates").size())
+                .as("son 10 günde 2 maç: yoğun fikstür yok").isZero();
+        long scorer = baseId(BESIKTAS_TOP_SCORER);
+        for (String date : new String[] {"2027-02-23", "2027-02-25"}) {
+            jdbc.update("INSERT INTO career_player_match_rating (career_id, player_id, match_date, minutes, position_code, rating) VALUES (?, ?, ?::date, 90, 25, 7)",
+                    careerId, scorer, date);
+        }
+
+        JsonNode plan = data(get("/api/v1/careers/" + careerId + "/match/opponents/" + GALATASARAY + "/plan"));
+
+        assertThat(plan.at("/ourFormation/source").asText()).as("ana taktik yok: takımın varsayılan dizilişi").isEqualTo("TEAM_DEFAULT");
+        assertThat(plan.at("/ourFormation/id").asText()).isEqualTo("4-1-4-1");
+        JsonNode eleven = plan.at("/ourEleven");
+        assertThat(eleven.size()).isEqualTo(11);
+        List<Long> squad = jdbc.queryForList("SELECT base_player_id FROM user_player_state WHERE career_id = ?", Long.class, careerId);
+        JsonNode rest = plan.at("/restCandidates/0");
+        assertThat(rest.at("/playerId").asLong()).as("10 günde 4 maç").isEqualTo(scorer);
+        assertThat(rest.at("/matches").asInt()).isGreaterThanOrEqualTo(3);
+        assertThat(rest.at("/minutes").asInt()).isGreaterThanOrEqualTo(240);
+        eleven.forEach((s) -> {
+            assertThat(squad).contains(s.at("/playerId").asLong());
+            assertThat(s.at("/lastRatings").isArray()).isTrue();
+            assertThat(s.at("/lastRatings").size()).isLessThanOrEqualTo(5);
+            assertThat(s.at("/restSuggested").asBoolean()).isEqualTo(s.at("/playerId").asLong() == scorer);
+        });
+        assertThat(plan.findValues("code").stream().map(JsonNode::asText)).as("yoğun oynayan ilk 11 oyuncusu için rotasyon notu").contains("ROTATE");
+        assertThat(eleven.findValues("recentAverage").stream().filter((v) -> !v.isNull()).count()).as("son 5 not ortalaması").isPositive();
+
+        JsonNode notes = plan.at("/tacticalNotes");
+        assertThat(notes.size()).isBetween(1, 5);
+        notes.forEach((n) -> {
+            assertThat(n.at("/code").asText()).isNotBlank();
+            assertThat(n.at("/text").asText()).as("metin messages.properties'ten, kod değil").isNotBlank().doesNotStartWith("match.note");
+        });
+
+        assertThat(plan.at("/setPieces/ourAerialThreats").size()).isPositive();
+        assertThat(plan.at("/setPieces/theirAerialThreats").size()).isPositive();
+        assertThat(plan.at("/setPieces/theirCornerTaker/name").asText()).isNotBlank();
+        assertThat(plan.at("/missing").size()).as(plan.at("/missing").toString()).isZero();
+    }
+
+    @Test
+    void planUsesTheMainTacticFormationWhenThereIsOne() throws Exception {
+        importExport(fixture());
+        support.json(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/v1/user-tactics/1")
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(java.util.Map.of("careerId", careerId, "tactic", java.util.Map.of("formation", "4-3-3")))), token);
+        support.json(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/v1/user-tactics/1/main?careerId=" + careerId), token);
+
+        JsonNode plan = data(get("/api/v1/careers/" + careerId + "/match/opponents/" + GALATASARAY + "/plan"));
+
+        assertThat(plan.at("/ourFormation/source").asText()).isEqualTo("MAIN_TACTIC");
+        assertThat(plan.at("/ourFormation/id").asText()).isEqualTo("4-3-3");
+        assertThat(plan.at("/ourEleven").size()).isEqualTo(11);
+    }
+
+    @Test
+    void planOnAnOldExportListsWhatIsMissing() throws Exception {
+        importExport(withoutTables(fixture(), "formations", "career_playermatchratinghistory"));
+
+        JsonNode plan = data(get("/api/v1/careers/" + careerId + "/match/opponents/" + GALATASARAY + "/plan"));
+
+        List<String> missing = new ArrayList<>();
+        plan.at("/missing").forEach((m) -> missing.add(m.asText()));
+        assertThat(missing).contains("OUR_FORMATION", "MATCH_RATINGS");
+        assertThat(plan.at("/ourEleven").size()).isZero();
+        assertThat(plan.at("/restCandidates").size()).isZero();
     }
 
     private long baseId(long eaId) {

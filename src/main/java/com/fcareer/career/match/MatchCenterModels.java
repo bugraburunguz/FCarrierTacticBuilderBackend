@@ -9,7 +9,38 @@ public final class MatchCenterModels {
     private MatchCenterModels() {
     }
 
-    public enum Missing { USER_TEAM, FORMATION, LIKELY_ELEVEN, SEASON_STATS, SET_PIECES }
+    public enum Missing { USER_TEAM, FORMATION, LIKELY_ELEVEN, SEASON_STATS, SET_PIECES, OUR_FORMATION, MATCH_RATINGS }
+
+    public enum FormationSource { MAIN_TACTIC, TEAM_DEFAULT }
+
+    public record OurFormation(String id, FormationSource source) {
+    }
+
+    public record OurStarter(String slotId, String position, long playerId, String name, Integer overall, Double combined, List<Integer> lastRatings,
+                             Double recentAverage, boolean restSuggested) {
+    }
+
+    public record RestCandidate(long playerId, String name, int minutes, int matches) {
+    }
+
+    public record TacticalNote(String code, String text) {
+    }
+
+    public record AerialPlayer(long playerId, String name, int score) {
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record SetPieceMatchup(List<AerialPlayer> ourAerialThreats, List<AerialPlayer> theirAerialThreats, PlayerRef ourCornerTaker,
+                                  PlayerRef theirCornerTaker, PlayerRef theirFreeKickTaker) {
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record MatchPlan(int opponentTeamId, OurFormation ourFormation, List<OurStarter> ourEleven, List<RestCandidate> restCandidates,
+                            List<TacticalNote> tacticalNotes, SetPieceMatchup setPieces, List<Missing> missing) {
+    }
+
+    record RecentForm(long playerId, List<Integer> ratings, Double average) {
+    }
 
     public record Opponent(int teamId, String name, String leagueName, Integer overall, boolean sameLeague, List<Integer> competitionIds) {
     }
