@@ -29,3 +29,6 @@ CREATE TABLE career_player_season_stat (
   PRIMARY KEY (career_id, player_id, team_id, competition_id)
 );
 CREATE INDEX ix_career_season_stat_competition ON career_player_season_stat (career_id, competition_id);
+-- base_player silinince (kariyerde üretilen oyuncular) cascade satır başına tam tarama yapmasın.
+CREATE INDEX ix_career_match_rating_player ON career_player_match_rating (player_id);
+CREATE INDEX ix_career_season_stat_player ON career_player_season_stat (player_id);

@@ -30,7 +30,7 @@ public class MatchStatsService {
     @Transactional(readOnly = true)
     public List<SquadForm> squadForm(Long userId, Long careerId) {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, careerId);
-        return repository.squadForm(careerId, squad.playerIds(), properties.getRecentRatings());
+        return repository.squadForm(careerId, squad.ownedIds(), properties.getRecentRatings());
     }
 
     @Transactional(readOnly = true)
@@ -41,8 +41,8 @@ public class MatchStatsService {
 
     @Transactional(readOnly = true)
     public List<Leader> leaders(Long userId, Long careerId, Integer competitionId, String metric, Integer limit) {
-        Metric parsed = Metric.parse(metric);
         careerService.requireOwned(userId, careerId);
+        Metric parsed = Metric.parse(metric);
         int size = Objects.isNull(limit) || limit <= 0 ? properties.getLeadersDefaultLimit() : Math.min(limit, properties.getLeadersMaxLimit());
         return repository.leaders(careerId, competitionId, parsed, size, properties.getRatingLeadersMinAppearances());
     }

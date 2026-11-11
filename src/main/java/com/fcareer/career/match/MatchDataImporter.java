@@ -30,7 +30,8 @@ public class MatchDataImporter {
         List<Map<String, String>> ratingRows = tables.get(RATING_TABLE);
         List<Map<String, String>> seasonRows = tables.get(SEASON_TABLE);
         int ratings = isEmpty(ratingRows) ? 0 : repository.upsertRatings(careerId, toRatings(ratingRows, eaToBase));
-        int seasons = isEmpty(seasonRows) ? 0 : repository.replaceSeasonStats(careerId, toSeasons(seasonRows, eaToBase));
+        List<SeasonRow> mappedSeasons = isEmpty(seasonRows) ? List.of() : toSeasons(seasonRows, eaToBase);
+        int seasons = mappedSeasons.isEmpty() ? 0 : repository.replaceSeasonStats(careerId, mappedSeasons);
         log.info("Match data imported careerId : {} ratings : {} seasonRows : {} ratingTable : {} seasonTable : {}",
                 careerId, ratings, seasons, !isEmpty(ratingRows), !isEmpty(seasonRows));
         return new Summary(ratings, seasons);
@@ -41,11 +42,11 @@ public class MatchDataImporter {
         for (Map<String, String> row : rows) {
             Long playerId = eaToBase.get(toLong(row.get("playerid")));
             LocalDate date = toDate(toInt(row.get("date")));
-            Integer rating = toInt(row.get("rating"));
+            Integer rating = toSmall(row.get("rating"));
             if (Objects.isNull(playerId) || Objects.isNull(date) || Objects.isNull(rating)) {
                 continue;
             }
-            unique.put(playerId + "|" + date, new RatingRow(playerId, date, toInt(row.get("minsplayed")), toInt(row.get("position")), rating));
+            unique.put(playerId + "|" + date, new RatingRow(playerId, date, toSmall(row.get("minsplayed")), toSmall(row.get("position")), rating));
         }
         return new ArrayList<>(unique.values());
     }
@@ -60,7 +61,7 @@ public class MatchDataImporter {
                 continue;
             }
             unique.put(playerId + "|" + teamId + "|" + competitionId, new SeasonRow(playerId, teamId, competitionId, count(row, "app"), count(row, "goals"),
-                    count(row, "assists"), count(row, "avg"), count(row, "yellow"), count(row, "red"), count(row, "clean_sheets")));
+                    count(row, "assists"), total(row, "avg"), count(row, "yellow"), count(row, "red"), count(row, "clean_sheets")));
         }
         return new ArrayList<>(unique.values());
     }
@@ -79,7 +80,17 @@ public class MatchDataImporter {
 
     private static int count(Map<String, String> row, String column) {
         Integer value = toInt(row.get(column));
+        return Objects.isNull(value) || value < 0 ? 0 : Math.min(value, Short.MAX_VALUE);
+    }
+
+    private static int total(Map<String, String> row, String column) {
+        Integer value = toInt(row.get(column));
         return Objects.isNull(value) || value < 0 ? 0 : value;
+    }
+
+    private static Integer toSmall(String value) {
+        Long parsed = toLong(value);
+        return Objects.isNull(parsed) || parsed < Short.MIN_VALUE || parsed > Short.MAX_VALUE ? null : parsed.intValue();
     }
 
     private static boolean isEmpty(List<Map<String, String>> rows) {

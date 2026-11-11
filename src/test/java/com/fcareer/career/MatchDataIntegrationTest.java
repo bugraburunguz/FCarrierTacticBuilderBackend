@@ -131,6 +131,23 @@ class MatchDataIntegrationTest {
         assertThat(goals).isNotEmpty().isSortedAccordingTo((a, b) -> b - a);
         assertThat(leaders.at("/0/playerName").asText()).isNotBlank();
         assertThat(leaders.at("/0/teamName").asText()).isNotBlank();
+
+        List<Integer> recent = new ArrayList<>();
+        row.at("/lastRatings").forEach((r) -> recent.add(r.asInt()));
+        List<Integer> newest = new ArrayList<>();
+        for (int i = 0; i < Math.min(5, player.at("/ratings").size()); i++) {
+            newest.add(player.at("/ratings/" + i + "/rating").asInt());
+        }
+        assertThat(recent).as("son 5 not, en yeni önce").isEqualTo(newest);
+
+        JsonNode byRating = data(get("/api/v1/careers/" + careerId + "/stats/leaders?metric=RATING"));
+        List<Double> averages = new ArrayList<>();
+        byRating.forEach((l) -> {
+            averages.add(l.at("/averageRating").asDouble());
+            assertThat(l.at("/appearances").asInt()).as("not krallığında en az 3 maç").isGreaterThanOrEqualTo(3);
+        });
+        assertThat(averages).isNotEmpty().isSortedAccordingTo((a, b) -> Double.compare(b, a));
+        assertThat(support.json(get("/api/v1/careers/" + careerId + "/stats/leaders?metric=xg"), token).at("/success").asBoolean()).isFalse();
     }
 
     private void importExport(String log) throws Exception {
