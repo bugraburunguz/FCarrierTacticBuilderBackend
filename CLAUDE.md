@@ -30,7 +30,8 @@ Eski Azerlottery standardı `docs/archive/backend-standard.md` altında, referan
   `/careers/{id}/recommendations`, `/advisor/tactic` (maliyetler `fcareer.billing.*-cost`).
 
 ## Çalıştırma / test
-- `mvn test`: entegrasyon testleri zonky gömülü Postgres ile (Docker gerekmez, Testcontainers yok); token depoları, sayaç ve önbellek üretimdekiyle aynı. Opt-in (varsayılan atlanır): `-Dea.live=true`, `-Dml.live=true`, `-Drole.validation=true` (`.ps`), `-Drole.candidates=…`, `-Dacceptance.report=true`, `-Dgtr.footprint=<export>` (içe aktarma süre/bellek), `-Dgtr.cost=<export>` (growth-recent süre/bellek, soğuk ve önbellekten).
+- `mvn test`: entegrasyon testleri zonky gömülü Postgres ile (Docker gerekmez, Testcontainers yok); token depoları, sayaç ve önbellek üretimdekiyle aynı. Opt-in (varsayılan atlanır): `-Dea.live=true`, `-Dml.live=true`, `-Drole.validation=true` (`.ps`), `-Drole.candidates=…`, `-Dacceptance.report=true`, `-Dgtr.footprint=<export>` (içe aktarma süre/bellek), `-Dgtr.cost=<export>` (growth-recent süre/bellek, soğuk ve önbellekten), `-Dgta.report=<log>` (`VeteranPlanReportTest`, gerçek LE logunda veteran planı), `-Dplan.report=true` (`DevelopmentPlanReportTest` → `target/development-plan-report.md`).
+  `OptInFlagsDocumentedTest` her `@EnabledIfSystemProperty` bayrağının burada `-D` ile yazılı olduğunu doğrular; `OwnershipMatrixCoverageTest` her `/careers/{id}/…` ucunun `OwnershipMatrixIntegrationTest`'te olduğunu.
   `RoleSignalRegressionTest` git dışı LE dökümü (`ml-service/data/fc27-dump`) yoksa atlanır; CI'da her zaman atlanır. ML: `cd ml-service && python -m pytest`.
 - Dev: README'deki `DevApplication` akışı.
 
@@ -48,6 +49,6 @@ Eski Azerlottery standardı `docs/archive/backend-standard.md` altında, referan
   `grep -E '^(DB_PASSWORD|JWT_SECRET|ML_SHARED_SECRET)=' .env | cut -d= -f1`
 - Veri silme protokolü: dry-run → git dışında yedek (`../backups`) → tek transaction → kullanıcı onayı.
   `docker compose down -v`, `DROP`, `TRUNCATE`, `DELETE` onaysız çalıştırılmaz.
-- Ortam: macOS (Apple Silicon, arm64). Proje kökü `/Users/user/Desktop/FCarrierTacticBuilder`
+- Ortam: macOS (Apple Silicon, arm64). Proje kökü `/Users/user/Desktop/Projects/FCarrierTacticBuilder`
   (backend `main`, web `v3`, yedekler `backups/` git dışı). JDK 17: `~/.zshrc` jenv ile `JAVA_HOME`'u ayarlar;
   `.zshrc` okumayan shell'de `JAVA_HOME=$(/usr/libexec/java_home -v 17)` ver.
