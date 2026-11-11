@@ -24,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 @IntegrationTest
+@org.junit.jupiter.api.extension.ExtendWith(org.springframework.boot.test.system.OutputCaptureExtension.class)
 class CareerImportIntegrationTest {
 
     private static final String PASSWORD = "S3cure-pass!";
@@ -244,6 +245,26 @@ class CareerImportIntegrationTest {
         assertThat(result.at("/data/gameDate").asText()).isEqualTo("2029-07-01");
         assertThat(result.at("/data/contracts").asInt()).isZero();
         assertThat(result.at("/data/warnings").toString()).contains("CONTRACTS_MISSING").doesNotContain("MISSINGTABLE");
+    }
+
+    @Test
+    void aGzippedLogImportsLikeThePlainOneAndTheImportLogsItsPhaseTimings(org.springframework.boot.test.system.CapturedOutput output) throws Exception {
+        String token = register();
+        long careerId = premiumCareer(token);
+        String club = CareerTestSupport.catalogClubName(jdbc);
+        java.io.ByteArrayOutputStream gz = new java.io.ByteArrayOutputStream();
+        try (java.util.zip.GZIPOutputStream out = new java.util.zip.GZIPOutputStream(gz)) {
+            out.write(fcx2Log(club, true, "2029-07-01", 77).getBytes(StandardCharsets.UTF_8));
+        }
+
+        JsonNode result = json(multipart("/api/v1/careers/" + careerId + "/import")
+                .file(new MockMultipartFile("log", "career.log.gz", "application/gzip", gz.toByteArray())), token);
+
+        assertThat(result.at("/success").asBoolean()).as(result.toString()).isTrue();
+        assertThat(result.at("/data/guessedTeamId").asInt()).isEqualTo(77);
+        assertThat(result.at("/data/gameDate").asText()).isEqualTo("2029-07-01");
+        assertThat(output.getOut()).contains("Career import timing careerId : " + careerId).contains("parseMs : ").contains("playersMs : ")
+                .contains("contractsMs : ").contains("growthMs : ").contains("squadAndSnapshotMs : ").contains("totalMs : ");
     }
 
     @Test
