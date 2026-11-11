@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "burunguz-toolkit-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "bugraburunguz/BurunguzToolKit"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "burunguz-toolkit@burunguz-toolkit-marketplace": true
+  }
+}
