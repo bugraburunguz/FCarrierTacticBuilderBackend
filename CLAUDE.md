@@ -45,8 +45,8 @@ Eski Azerlottery standardı `docs/archive/backend-standard.md` altında, referan
 - Dosya düzenlemeleri Edit aracıyla yapılır; `sed` veya heredoc ile kaynak dosya düzenlenmez.
 - Önce kırmızı test, sonra kod.
 - Her task sonunda: testler yeşil + push + progress güncellemesi.
-- Secret'lar commit'e, loga, rapora, dokümana girmez; `.env` okunmaz. Anahtar varlık kontrolü yalnız:
-  `grep -E '^(DB_PASSWORD|JWT_SECRET|ML_SHARED_SECRET)=' .env | cut -d= -f1`
+- Secret'lar commit'e, loga, rapora, dokümana girmez; `.env` okunmaz; `.env` geçen komut (grep dahil) burunguz-toolkit
+  hook'una takılır. Anahtar eksik görünüyorsa (backend açılmıyor, `DB_PASSWORD`/`JWT_SECRET`/`ML_SHARED_SECRET` hatası) Buğra'ya sor.
 - Veri silme protokolü: dry-run → git dışında yedek (`../backups`) → tek transaction → kullanıcı onayı.
   `docker compose down -v`, `DROP`, `TRUNCATE`, `DELETE` onaysız çalıştırılmaz.
 - Ortam: macOS (Apple Silicon, arm64). Proje kökü `/Users/user/Desktop/Projects/FCarrierTacticBuilder`
