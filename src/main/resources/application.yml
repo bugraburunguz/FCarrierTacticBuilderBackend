@@ -52,10 +52,10 @@ fcareer:
     # GROWTH-CAL (verified:false, kaynak: Buğra): altyapı oyuncusu 16 yaşından önce A takıma alınamaz.
     min-promotion-age: 16
   growth:
-    # GROWTH-CAL (verified:false, kaynak: Buğra oyun tecrübesi, ölçülmedi): sezon OVR kazancı tavanı — altyapıda (A takımda değil) ve A takımda.
-    # Kalibrasyon raporu gerçek veri verince yeniden ayarlanır.
+    # GROWTH-CAL (verified:false): sezon OVR kazancı tavanı — altyapıda (A takımda değil) ve A takımda.
+    # FCA-20 (kaynak: Beşiktaş gelişim deneyi 2026-08 → 2027-03): oynamayan genç A takımda altyapıdan hızlı gelişmedi; iki tavan eşit.
     academy-max-gain: 5
-    first-team-max-gain: 8
+    first-team-max-gain: 5
     # GT-a (verified:false, kaynak: Buğra oyun tecrübesi, ölçülmedi): düşüş başlangıç yaşları — fiziksel önce, teknik (pas, dribling, şut) sonra,
     # zihinsel ve bitiricilik en geç. Yaşla kaybedilen toplam attribute puanı Dengeli ile aynı; plan bu kaybı plan attribute'larından
     # (plan-decline-delay yıl geç, plan-decline-factor kadar yavaş) plan dışına kaydırır. Kart OVR attribute'lardan (ana mevki formülü), zorlanmaz.

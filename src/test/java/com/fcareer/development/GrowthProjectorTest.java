@@ -34,17 +34,18 @@ class GrowthProjectorTest {
     @Test
     void aYoungPlayerWithHeadroomGrowsAndItIsReflectedInProjectedRatingAndAttributes() {
         GrowthProjector.Projection p = projector.project(player(19, 70, 86));
-        assertThat(p.projectedRating()).isBetween(75, 79);
+        assertThat(p.projectedRating()).as("FCA-20: 19 yaşta +3, kalan farktan bağımsız").isEqualTo(73);
         assertThat(p.grown().getAttrs().get(Attr.FINISHING)).isGreaterThan(60);
         assertThat(p.grown().getAttrs().get(Attr.SPRINT_SPEED)).as("zor gelişen attribute daha az artar").isLessThan(p.grown().getAttrs().get(Attr.FINISHING));
     }
 
     @Test
     void ageStopsGrowth() {
-        // 29: büyüme çarpanı küçük (boşluk 2 → kazanç 0), düşüş henüz yok (fiziksel 30'da başlar).
+        // FCA-20: 29'da kazanç +1, düşüş henüz yok (fiziksel 30'da başlar); 30'da büyüme yok.
         GrowthProjector.Projection p = projector.project(player(29, 78, 80));
-        assertThat(p.projectedRating()).isEqualTo(78);
-        assertThat(p.grown().getAttrs().get(Attr.FINISHING)).isEqualTo(60);
+        assertThat(p.projectedRating()).isEqualTo(79);
+        assertThat(p.grown().getAttrs().get(Attr.FINISHING)).isEqualTo(61);
+        assertThat(projector.project(player(30, 78, 80)).projectedRating()).isLessThanOrEqualTo(78);
     }
 
     @Test
