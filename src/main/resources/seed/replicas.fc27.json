@@ -15489,8 +15489,8 @@
     {
      "slot": "RCM",
      "position": "CM",
-     "role": "Box-to-Box",
-     "focus": "Balanced",
+     "role": "Half Winger",
+     "focus": "Attack",
      "profile": "Marcos Llorente tipi: patlayıcı koşularla gol ve asist üreten 8 (sezonda 12 gol, 11 asist)",
      "keyAttributes": [
       "Sprint Speed",
@@ -15577,7 +15577,8 @@
    "score": 4,
    "cannotReplicate": [
     "Sezon içinde 3-5-2 ile 4-4-2 arasında gidiş-geliş tek formasyona sığmıyor (Plan B 4-4-2 (2))",
-    "Llorente'nin sağ iç koridor–forvet arası hibrit rolü Box-to-Box ile yaklaşık"
+    "Llorente'nin sağ iç koridor–forvet arası hibrit rolü Box-to-Box ile yaklaşık",
+    "Llorente'nin sağ kanala koşup ceza sahasına girmesi Half Winger/Attack ile yaklaşık; aynı kanatta Trippier olduğu için kanat kalabalıklaşabilir"
    ]
   },
   "behaviorTags": [

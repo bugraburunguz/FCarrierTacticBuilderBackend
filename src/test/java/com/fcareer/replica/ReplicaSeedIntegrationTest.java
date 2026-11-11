@@ -103,7 +103,8 @@ class ReplicaSeedIntegrationTest {
                 Map.entry("denizli_besiktas_2009|CAM", "CAM|Shadow Striker|Attack"), Map.entry("ancelotti_chelsea_2010|RCM", "CM|Box-to-Box|Balanced"),
                 Map.entry("italiano_fiorentina_2023|LCM", "CM|Half Winger|Attack"), Map.entry("ferguson_united_2008|LST", "ST|False 9|Build-Up"),
                 Map.entry("dezerbi_brighton_2023|ST", "ST|Target Forward|Balanced"), Map.entry("ancelotti_real_2022|ST", "ST|False 9|Build-Up"),
-                Map.entry("luisenrique_psg_2025|ST", "ST|False 9|Build-Up"), Map.entry("sarri_napoli_2018|ST", "ST|False 9|Build-Up"));
+                Map.entry("luisenrique_psg_2025|ST", "ST|False 9|Build-Up"), Map.entry("sarri_napoli_2018|ST", "ST|False 9|Build-Up"),
+                Map.entry("simeone_atletico_2021|RCM", "CM|Half Winger|Attack"));
         expected.forEach((key, slot) -> {
             String[] parts = key.split("\\|");
             ReplicaService.RoleSlot actual = replicas.find(parts[0]).orElseThrow(() -> new AssertionError(parts[0])).slots().stream()
