@@ -54,6 +54,7 @@ public class CareerImportService {
     private final com.fcareer.career.desk.CareerDeskService careerDeskService;
     private final com.fcareer.development.track.GrowthTrackService growthTrackService;
     private final com.fcareer.career.match.MatchDataImporter matchDataImporter;
+    private final com.fcareer.career.match.MatchProfileImporter matchProfileImporter;
 
     @Transactional
     public ImportSummaryResponse importData(Long userId, Long careerId, MultipartFile logFile, Map<String, MultipartFile> csvs) {
@@ -208,6 +209,7 @@ public class CareerImportService {
         int contracts = careerPlayerWriter.applyContracts(careerId, tables.get("players"), allLoans, eaToBase);
         long contractsWritten = System.nanoTime();
         matchDataImporter.apply(careerId, tables, eaToBase);
+        matchProfileImporter.apply(careerId, tables, eaToBase, userTeam);
         // GTR-a: kariyer içi içe aktarmada bütün kulüplerin anlık görüntüsü (aynı ay tek, en çok 60); ana menü export'u yazılmaz. Görüntü yalnız
         // ölçüm içindir: ayrı transaction'da yazılır, hatası içe aktarmayı geri almaz.
         if (Objects.isNull(context) || context.inCareer()) {

@@ -12,4 +12,6 @@ public class MatchProperties {
     private int leadersDefaultLimit = 20;
     private int leadersMaxLimit = 50;
     private int ratingLeadersMinAppearances = 3;
+    private int dangerousPlayersLimit = 5;
+    private int cardRiskLimit = 5;
 }

@@ -25,6 +25,13 @@ public final class DumpMappings {
             Map.entry(10, "CDM"), Map.entry(12, "RM"), Map.entry(14, "CM"), Map.entry(16, "LM"),
             Map.entry(18, "CAM"), Map.entry(23, "RW"), Map.entry(25, "ST"), Map.entry(27, "LW"));
 
+    public static final Map<Integer, String> FORMATION_POSITION_BY_CODE = Map.ofEntries(
+            Map.entry(0, "GK"), Map.entry(1, "CB"), Map.entry(2, "RB"), Map.entry(3, "RB"), Map.entry(4, "CB"), Map.entry(5, "CB"),
+            Map.entry(6, "CB"), Map.entry(7, "LB"), Map.entry(8, "LB"), Map.entry(9, "CDM"), Map.entry(10, "CDM"), Map.entry(11, "CDM"),
+            Map.entry(12, "RM"), Map.entry(13, "CM"), Map.entry(14, "CM"), Map.entry(15, "CM"), Map.entry(16, "LM"), Map.entry(17, "CAM"),
+            Map.entry(18, "CAM"), Map.entry(19, "CAM"), Map.entry(20, "ST"), Map.entry(21, "ST"), Map.entry(22, "ST"), Map.entry(23, "RW"),
+            Map.entry(24, "ST"), Map.entry(25, "ST"), Map.entry(26, "ST"), Map.entry(27, "LW"));
+
     public static final Map<String, Attr> ATTRIBUTE_COLUMNS = attributeColumns();
 
     private DumpMappings() {
