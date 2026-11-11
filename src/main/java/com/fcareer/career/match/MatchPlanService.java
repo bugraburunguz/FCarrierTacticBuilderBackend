@@ -18,7 +18,9 @@ import com.fcareer.career.match.MatchCenterModels.TacticalNote;
 import com.fcareer.career.match.MatchCenterModels.TeamMatchInfo;
 import com.fcareer.career.service.CareerService;
 import com.fcareer.catalog.service.PlayerService;
+import com.fcareer.common.exception.InvalidTacticException;
 import com.fcareer.common.service.MessageService;
+import com.fcareer.fitengine.model.IntentProfile;
 import com.fcareer.fitengine.configuration.FitEngineProperties;
 import com.fcareer.fitengine.model.Attr;
 import com.fcareer.fitengine.model.FitPlayer;
@@ -30,12 +32,14 @@ import com.fcareer.tactics.service.TacticResolver;
 import com.fcareer.usertactic.UserTacticService;
 import com.fcareer.usertactic.model.UserTacticModels.UserTactic;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -43,6 +47,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MatchPlanService {
@@ -51,6 +56,7 @@ public class MatchPlanService {
     private static final String SLOT = "slot";
     private static final String ROLE_ID = "roleId";
     private static final String TAGS = "tags";
+    private static final String GOALKEEPER = "GK";
 
     private final CareerService careerService;
     private final MatchCenterService matchCenterService;
@@ -94,27 +100,40 @@ public class MatchPlanService {
         UserTactic main = userTacticService.main(userId, careerId);
         if (Objects.nonNull(main) && Objects.nonNull(main.formation())) {
             List<SlotSelection> slots = Objects.isNull(main.slots()) ? List.of() : main.slots().stream().map(MatchPlanService::toSelection).toList();
-            return Optional.of(new OurTactic(new OurFormation(main.formation(), FormationSource.MAIN_TACTIC),
-                    TacticRequest.builder().formation(main.formation()).slots(new ArrayList<>(slots)).build()));
+            Optional<OurTactic> resolved = resolveTactic(new OurFormation(main.formation(), FormationSource.MAIN_TACTIC),
+                    TacticRequest.builder().formation(main.formation()).slots(new ArrayList<>(slots)).build());
+            if (resolved.isPresent()) {
+                return resolved;
+            }
         }
         return userTeam.flatMap((u) -> repository.findMatchInfo(careerId, u)).map(TeamMatchInfo::positions).flatMap(matchCenterService::findClosestFormation)
-                .map((f) -> new OurTactic(new OurFormation(f.id(), FormationSource.TEAM_DEFAULT), TacticRequest.builder().formation(f.id()).build()));
+                .flatMap((f) -> resolveTactic(new OurFormation(f.id(), FormationSource.TEAM_DEFAULT), TacticRequest.builder().formation(f.id()).build()));
     }
 
-    @SuppressWarnings("unchecked")
+    private Optional<OurTactic> resolveTactic(OurFormation formation, TacticRequest request) {
+        try {
+            return Optional.of(new OurTactic(formation, tacticResolver.resolve(request).slots()));
+        } catch (InvalidTacticException e) {
+            log.warn("Match plan tactic skipped formation : {} source : {} reason : {}", formation.id(), formation.source(), e.getMessage());
+            return Optional.empty();
+        }
+    }
+
     private static SlotSelection toSelection(Map<String, Object> slot) {
         SlotSelection selection = new SlotSelection();
-        selection.setSlotId((String) slot.get(SLOT));
-        selection.setRoleId((String) slot.get(ROLE_ID));
-        Object tags = slot.get(TAGS);
-        selection.setTags(tags instanceof List<?> list ? new ArrayList<>((List<String>) list) : new ArrayList<>());
+        selection.setSlotId(slot.get(SLOT) instanceof String id ? id : null);
+        selection.setRoleId(slot.get(ROLE_ID) instanceof String role ? role : null);
+        List<String> tags = new ArrayList<>();
+        if (slot.get(TAGS) instanceof List<?> list) {
+            list.stream().filter(String.class::isInstance).map(String.class::cast).forEach(tags::add);
+        }
+        selection.setTags(tags);
         return selection;
     }
 
     private OurPlan solveOurEleven(CareerEntity career, List<Long> squad, Set<Long> resting, OurTactic tactic) {
         List<FitPlayer> players = playerService.fitPlayers(squad, career.getGameVersionId(), career.getId());
-        List<SlotAssignment> slots = squadFitService.solve(players, tacticResolver.resolve(tactic.request()).slots(), fitProperties.getCareerEngineVersion(), true)
-                .getSlots();
+        List<SlotAssignment> slots = squadFitService.solve(players, tactic.slots(), fitProperties.getCareerEngineVersion(), true).getSlots();
         Map<Long, FitPlayer> byId = players.stream().collect(Collectors.toMap(FitPlayer::getId, Function.identity(), (a, b) -> a));
         List<Long> placed = slots.stream().map(SlotAssignment::getPlayerId).filter(Objects::nonNull).toList();
         Map<Long, RecentForm> recent = repository.findRecentForm(career.getId(), placed, properties.getRecentRatings()).stream()
@@ -134,7 +153,7 @@ public class MatchPlanService {
         List<TacticalNote> notes = new ArrayList<>();
         report.dangerousPlayers().stream().filter((d) -> d.goals() + d.assists() >= config.getKeyThreatMin()).findFirst()
                 .ifPresent((d) -> notes.add(note("KEY_THREAT", d.name(), d.goals(), d.assists())));
-        eleven.stream().filter(OurStarter::restSuggested).findFirst().ifPresent((s) -> {
+        eleven.stream().filter(OurStarter::restSuggested).max(Comparator.comparingInt((OurStarter s) -> resting.get(s.playerId()).minutes())).ifPresent((s) -> {
             RestCandidate load = resting.get(s.playerId());
             notes.add(backups.containsKey(s.playerId())
                     ? note("ROTATE", s.name(), config.getRestWindowDays(), load.matches(), load.minutes(), backups.get(s.playerId()))
@@ -189,7 +208,7 @@ public class MatchPlanService {
 
     private List<AerialPlayer> rankAerial(List<FitPlayer> players) {
         MatchProperties.Plan config = properties.getPlan();
-        return players.stream().filter(Objects::nonNull).filter((p) -> !p.getPositions().contains("GK"))
+        return players.stream().filter(Objects::nonNull).filter((p) -> !p.getPositions().contains(GOALKEEPER))
                 .map((p) -> new AerialPlayer(p.getId(), p.getName(), aerialScore(p, config)))
                 .sorted(Comparator.comparingInt(AerialPlayer::score).reversed().thenComparingLong(AerialPlayer::playerId))
                 .limit(config.getAerialTop()).toList();
@@ -204,7 +223,7 @@ public class MatchPlanService {
     }
 
     private static String oneDecimal(double value) {
-        return String.format(java.util.Locale.ROOT, "%.1f", value);
+        return String.format(Locale.ROOT, "%.1f", value);
     }
 
     private static int line(Integer matchday, Integer base) {
@@ -215,7 +234,7 @@ public class MatchPlanService {
         return new TacticalNote(code, messageService.getMessage(NOTE_PREFIX + code, args));
     }
 
-    private record OurTactic(OurFormation formation, TacticRequest request) {
+    private record OurTactic(OurFormation formation, List<IntentProfile> slots) {
     }
 
     private record OurPlan(OurFormation formation, List<OurStarter> starters, List<FitPlayer> players, Map<Long, String> backups) {

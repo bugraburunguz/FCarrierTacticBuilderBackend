@@ -172,7 +172,7 @@ class MatchCenterIntegrationTest {
         List<Long> squad = jdbc.queryForList("SELECT base_player_id FROM user_player_state WHERE career_id = ?", Long.class, careerId);
         JsonNode rest = plan.at("/restCandidates/0");
         assertThat(rest.at("/playerId").asLong()).as("10 günde 4 maç").isEqualTo(scorer);
-        assertThat(rest.at("/matches").asInt()).isGreaterThanOrEqualTo(3);
+        assertThat(rest.at("/matches").asInt()).as("21, 23, 25, 27 Şubat").isEqualTo(4);
         assertThat(rest.at("/minutes").asInt()).isGreaterThanOrEqualTo(240);
         eleven.forEach((s) -> {
             assertThat(squad).contains(s.at("/playerId").asLong());
@@ -199,16 +199,34 @@ class MatchCenterIntegrationTest {
     @Test
     void planUsesTheMainTacticFormationWhenThereIsOne() throws Exception {
         importExport(fixture());
-        support.json(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/v1/user-tactics/1")
-                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(java.util.Map.of("careerId", careerId, "tactic", java.util.Map.of("formation", "4-3-3")))), token);
-        support.json(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/v1/user-tactics/1/main?careerId=" + careerId), token);
+        saveMainTactic("4-3-3", List.of(java.util.Map.of("slotId", "ST", "roleId", "poacher_attack", "tags", List.of())));
 
         JsonNode plan = data(get("/api/v1/careers/" + careerId + "/match/opponents/" + GALATASARAY + "/plan"));
 
         assertThat(plan.at("/ourFormation/source").asText()).isEqualTo("MAIN_TACTIC");
         assertThat(plan.at("/ourFormation/id").asText()).isEqualTo("4-3-3");
         assertThat(plan.at("/ourEleven").size()).isEqualTo(11);
+    }
+
+    @Test
+    void aStaleMainTacticFallsBackToTheTeamDefaultInsteadOfFailing() throws Exception {
+        importExport(fixture());
+        saveMainTactic("4-3-3", List.of());
+        jdbc.update("UPDATE user_tactic SET formation = '9-9-9' WHERE career_id = ?", careerId);
+
+        JsonNode plan = data(get("/api/v1/careers/" + careerId + "/match/opponents/" + GALATASARAY + "/plan"));
+
+        assertThat(plan.at("/ourFormation/source").asText()).isEqualTo("TEAM_DEFAULT");
+        assertThat(plan.at("/ourFormation/id").asText()).isEqualTo("4-1-4-1");
+        assertThat(plan.at("/ourEleven").size()).isEqualTo(11);
+    }
+
+    private void saveMainTactic(String formation, List<java.util.Map<String, Object>> slots) throws Exception {
+        JsonNode saved = support.json(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/v1/user-tactics/1")
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(java.util.Map.of("careerId", careerId, "tactic", java.util.Map.of("formation", formation, "slots", slots)))), token);
+        assertThat(saved.at("/success").asBoolean()).as(saved.toString()).isTrue();
+        support.json(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/v1/user-tactics/1/main?careerId=" + careerId), token);
     }
 
     @Test
