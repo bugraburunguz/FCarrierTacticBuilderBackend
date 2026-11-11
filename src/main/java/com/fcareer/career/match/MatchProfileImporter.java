@@ -30,14 +30,14 @@ public class MatchProfileImporter {
         List<Map<String, String>> teams = tables.get(TEAMS);
         List<Map<String, String>> formations = tables.get(FORMATIONS);
         if (Objects.nonNull(teams) && !teams.isEmpty()) {
-            repository.replaceTeamInfo(careerId, teamInfo(teams, formations, eaToBase));
+            repository.replaceTeamInfo(careerId, toTeamInfo(teams, formations, eaToBase));
         }
         int forms = applyForm(careerId, tables.get(LINKS), eaToBase);
         log.info("Match profile imported careerId : {} userTeam : {} formations : {} forms : {}", careerId, userTeam,
                 Objects.isNull(formations) ? 0 : formations.size(), forms);
     }
 
-    private static List<TeamMatchInfo> teamInfo(List<Map<String, String>> teams, List<Map<String, String>> formations, Map<Long, Long> eaToBase) {
+    private static List<TeamMatchInfo> toTeamInfo(List<Map<String, String>> teams, List<Map<String, String>> formations, Map<Long, Long> eaToBase) {
         Map<Integer, Map<String, String>> formationByTeam = new HashMap<>();
         if (Objects.nonNull(formations)) {
             formations.forEach((row) -> {
@@ -56,10 +56,10 @@ public class MatchProfileImporter {
             Map<String, String> formation = formationByTeam.get(teamId);
             out.add(new TeamMatchInfo(teamId,
                     Objects.isNull(formation) ? null : formation.get("formationname"),
-                    Objects.isNull(formation) ? null : slots(formation, "position%d"),
-                    Objects.isNull(formation) ? null : slots(formation, "pos%drole"),
-                    player(row, "captainid", eaToBase), player(row, "penaltytakerid", eaToBase), player(row, "freekicktakerid", eaToBase),
-                    player(row, "leftcornerkicktakerid", eaToBase), player(row, "rightcornerkicktakerid", eaToBase),
+                    Objects.isNull(formation) ? null : readSlots(formation, "position%d"),
+                    Objects.isNull(formation) ? null : readSlots(formation, "pos%drole"),
+                    findPlayer(row, "captainid", eaToBase), findPlayer(row, "penaltytakerid", eaToBase), findPlayer(row, "freekicktakerid", eaToBase),
+                    findPlayer(row, "leftcornerkicktakerid", eaToBase), findPlayer(row, "rightcornerkicktakerid", eaToBase),
                     toInt(row.get("matchdayoverallrating")), toInt(row.get("matchdayattackrating")),
                     toInt(row.get("matchdaymidfieldrating")), toInt(row.get("matchdaydefenserating"))));
         }
@@ -82,7 +82,7 @@ public class MatchProfileImporter {
         return repository.saveForm(careerId, rows);
     }
 
-    private static List<Integer> slots(Map<String, String> formation, String pattern) {
+    private static List<Integer> readSlots(Map<String, String> formation, String pattern) {
         List<Integer> out = new ArrayList<>(FORMATION_SLOTS);
         for (int i = 0; i < FORMATION_SLOTS; i++) {
             out.add(toInt(formation.get(String.format(pattern, i))));
@@ -90,7 +90,7 @@ public class MatchProfileImporter {
         return out;
     }
 
-    private static Long player(Map<String, String> row, String column, Map<Long, Long> eaToBase) {
+    private static Long findPlayer(Map<String, String> row, String column, Map<Long, Long> eaToBase) {
         Long ea = toLong(row.get(column));
         return Objects.isNull(ea) ? null : eaToBase.get(ea);
     }

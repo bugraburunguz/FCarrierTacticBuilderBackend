@@ -23,11 +23,11 @@ public class MatchCenterController {
 
     @GetMapping("/opponents")
     public List<Opponent> opponents(@AuthenticationPrincipal AuthUser user, @PathVariable Long careerId) {
-        return service.opponents(user.id(), careerId);
+        return service.listOpponents(user.id(), careerId);
     }
 
     @GetMapping("/opponents/{teamId}/report")
     public OpponentReport report(@AuthenticationPrincipal AuthUser user, @PathVariable Long careerId, @PathVariable Integer teamId) {
-        return service.report(user.id(), careerId, teamId);
+        return service.buildReport(user.id(), careerId, teamId);
     }
 }

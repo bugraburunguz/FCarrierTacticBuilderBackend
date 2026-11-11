@@ -1,7 +1,6 @@
 package com.fcareer.career.match;
 
 import com.fcareer.career.entity.CareerEntity;
-import com.fcareer.career.match.MatchCenterModels.CardRisk;
 import com.fcareer.career.match.MatchCenterModels.Formation;
 import com.fcareer.career.match.MatchCenterModels.FormationSlot;
 import com.fcareer.career.match.MatchCenterModels.LikelyStarter;
@@ -59,51 +58,52 @@ public class MatchCenterService {
     private final FitEngineProperties fitProperties;
 
     @Transactional(readOnly = true)
-    public List<Opponent> opponents(Long userId, Long careerId) {
+    public List<Opponent> listOpponents(Long userId, Long careerId) {
         careerService.requireOwned(userId, careerId);
-        return repository.userTeam(careerId).map((team) -> repository.opponents(careerId, team)).orElse(List.of());
+        return repository.findUserTeam(careerId).map((team) -> repository.findOpponents(careerId, team)).orElse(List.of());
     }
 
     @Transactional(readOnly = true)
-    public OpponentReport report(Long userId, Long careerId, Integer teamId) {
+    public OpponentReport buildReport(Long userId, Long careerId, Integer teamId) {
         CareerEntity career = careerService.requireOwned(userId, careerId);
-        Optional<Integer> userTeam = repository.userTeam(careerId);
-        TeamRow opponent = repository.team(careerId, teamId).filter((t) -> userTeam.map((u) -> !u.equals(t.teamId())).orElse(true))
+        Optional<Integer> userTeam = repository.findUserTeam(careerId);
+        TeamRow opponent = repository.findTeam(careerId, teamId).filter((t) -> userTeam.map((u) -> !u.equals(t.teamId())).orElse(true))
                 .orElseThrow(() -> new NotFoundException(TEAM, teamId));
         List<Missing> missing = new ArrayList<>();
         if (userTeam.isEmpty()) {
             missing.add(Missing.USER_TEAM);
         }
-        Optional<TeamMatchInfo> info = repository.matchInfo(careerId, teamId);
-        Optional<FormationDefinition> matched = info.map(TeamMatchInfo::positions).flatMap(this::closestFormation);
+        Optional<TeamMatchInfo> info = repository.findMatchInfo(careerId, teamId);
+        Optional<FormationDefinition> matched = info.map(TeamMatchInfo::positions).flatMap(this::findClosestFormation);
         Formation formation = info.filter((i) -> Objects.nonNull(i.formationName()) && Objects.nonNull(i.positions()))
-                .map((i) -> formation(i, matched.map(FormationDefinition::id).orElse(null))).orElse(null);
+                .map((i) -> toFormation(i, matched.map(FormationDefinition::id).orElse(null))).orElse(null);
         if (Objects.isNull(formation)) {
             missing.add(Missing.FORMATION);
         }
-        List<SquadMember> squad = repository.squad(careerId, teamId);
+        List<SquadMember> squad = repository.findSquad(careerId, teamId);
         if (squad.stream().allMatch((m) -> Objects.isNull(m.form()))) {
             missing.add(Missing.FORM);
         }
-        List<LikelyStarter> eleven = Objects.isNull(formation) || matched.isEmpty() ? List.of() : likelyEleven(career, squad, matched.get());
-        if (eleven.isEmpty()) {
+        List<LikelyStarter> eleven = Objects.isNull(formation) || matched.isEmpty() ? List.of() : solveLikelyEleven(career, squad, matched.get());
+        if (eleven.size() < ELEVEN) {
             missing.add(Missing.LIKELY_ELEVEN);
         }
         if (!repository.hasSeasonStats(careerId, teamId)) {
             missing.add(Missing.SEASON_STATS);
         }
-        SetPieces setPieces = info.map(this::setPieces).orElse(null);
+        SetPieces setPieces = info.map(this::findSetPieces).orElse(null);
         if (Objects.isNull(setPieces) || Stream.of(setPieces.captain(), setPieces.penaltyTaker(), setPieces.freeKickTaker(), setPieces.leftCornerTaker(),
                 setPieces.rightCornerTaker()).allMatch(Objects::isNull)) {
             missing.add(Missing.SET_PIECES);
         }
-        LineRatings ours = userTeam.flatMap((u) -> repository.team(careerId, u).map((t) -> lines(t, repository.matchInfo(careerId, u)))).orElse(null);
-        return new OpponentReport(opponent.teamId(), opponent.name(), opponent.leagueName(), formation, new Lines(ours, lines(opponent, info)),
-                opponent.buildUpPlay(), opponent.defensiveDepth(), eleven, repository.dangerousPlayers(careerId, teamId, properties.getDangerousPlayersLimit()),
-                setPieces, repository.cardRisk(careerId, teamId, properties.getCardRiskLimit()), missing);
+        LineRatings ours = userTeam.flatMap((u) -> repository.findTeam(careerId, u).map((t) -> toLineRatings(t, repository.findMatchInfo(careerId, u)))).orElse(null);
+        return new OpponentReport(opponent.teamId(), opponent.name(), opponent.leagueName(), formation, new Lines(ours, toLineRatings(opponent, info)),
+                opponent.buildUpPlay(), opponent.defensiveDepth(), eleven,
+                repository.findDangerousPlayers(careerId, teamId, properties.getDangerousPlayersLimit()), setPieces,
+                repository.findCardRisk(careerId, teamId, properties.getCardRiskLimit()), missing);
     }
 
-    private List<LikelyStarter> likelyEleven(CareerEntity career, List<SquadMember> squad, FormationDefinition formation) {
+    private List<LikelyStarter> solveLikelyEleven(CareerEntity career, List<SquadMember> squad, FormationDefinition formation) {
         if (squad.size() < ELEVEN) {
             return List.of();
         }
@@ -119,22 +119,22 @@ public class MatchCenterService {
                 .toList();
     }
 
-    private Optional<FormationDefinition> closestFormation(List<Integer> positions) {
+    private Optional<FormationDefinition> findClosestFormation(List<Integer> positions) {
         Map<String, Long> wanted = positions.stream().filter(Objects::nonNull).map(DumpMappings.FORMATION_POSITION_BY_CODE::get).filter(Objects::nonNull)
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
         if (wanted.isEmpty()) {
             return Optional.empty();
         }
-        return formationRegistry.findAll().stream().max(Comparator.comparingLong((FormationDefinition f) -> overlap(wanted, f))
+        return formationRegistry.findAll().stream().max(Comparator.comparingLong((FormationDefinition f) -> countOverlap(wanted, f))
                 .thenComparing((FormationDefinition f) -> -f.id().length()));
     }
 
-    private static long overlap(Map<String, Long> wanted, FormationDefinition formation) {
+    private static long countOverlap(Map<String, Long> wanted, FormationDefinition formation) {
         Map<String, Long> have = formation.slots().stream().collect(Collectors.groupingBy(com.fcareer.tactics.model.FormationSlot::position, Collectors.counting()));
         return wanted.entrySet().stream().mapToLong((e) -> Math.min(e.getValue(), have.getOrDefault(e.getKey(), 0L))).sum();
     }
 
-    private static Formation formation(TeamMatchInfo info, String matchedId) {
+    private static Formation toFormation(TeamMatchInfo info, String matchedId) {
         List<FormationSlot> slots = new ArrayList<>();
         for (int i = 0; i < info.positions().size(); i++) {
             Integer code = info.positions().get(i);
@@ -144,15 +144,15 @@ public class MatchCenterService {
         return new Formation(info.formationName(), matchedId, true, slots);
     }
 
-    private SetPieces setPieces(TeamMatchInfo info) {
-        Map<Long, PlayerRef> names = repository.names(Stream.of(info.captainId(), info.penaltyTakerId(), info.freeKickTakerId(), info.leftCornerTakerId(),
+    private SetPieces findSetPieces(TeamMatchInfo info) {
+        Map<Long, PlayerRef> names = repository.findNames(Stream.of(info.captainId(), info.penaltyTakerId(), info.freeKickTakerId(), info.leftCornerTakerId(),
                 info.rightCornerTakerId()).filter(Objects::nonNull).toList());
         Function<Long, PlayerRef> ref = (id) -> Objects.isNull(id) ? null : names.get(id);
         return new SetPieces(ref.apply(info.captainId()), ref.apply(info.penaltyTakerId()), ref.apply(info.freeKickTakerId()),
                 ref.apply(info.leftCornerTakerId()), ref.apply(info.rightCornerTakerId()));
     }
 
-    private static LineRatings lines(TeamRow team, Optional<TeamMatchInfo> info) {
+    private static LineRatings toLineRatings(TeamRow team, Optional<TeamMatchInfo> info) {
         return new LineRatings(team.overall(), team.attack(), team.midfield(), team.defence(),
                 info.map(TeamMatchInfo::matchdayOverall).orElse(null), info.map(TeamMatchInfo::matchdayAttack).orElse(null),
                 info.map(TeamMatchInfo::matchdayMidfield).orElse(null), info.map(TeamMatchInfo::matchdayDefence).orElse(null));

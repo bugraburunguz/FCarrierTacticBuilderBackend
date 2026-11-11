@@ -39,7 +39,7 @@ public class MatchCenterRepository {
     public void replaceTeamInfo(long careerId, List<TeamMatchInfo> rows) {
         jdbc.update("DELETE FROM career_team_match_info WHERE career_id = :c", Map.of("c", careerId));
         SqlParameterSource[] params = rows.stream().map((r) -> new MapSqlParameterSource().addValue("c", careerId).addValue("t", r.teamId())
-                .addValue("name", r.formationName()).addValue("pos", arrayLiteral(r.positions()), Types.VARCHAR).addValue("roles", arrayLiteral(r.roles()), Types.VARCHAR)
+                .addValue("name", r.formationName()).addValue("pos", toArrayLiteral(r.positions()), Types.VARCHAR).addValue("roles", toArrayLiteral(r.roles()), Types.VARCHAR)
                 .addValue("captain", r.captainId(), Types.BIGINT).addValue("pen", r.penaltyTakerId(), Types.BIGINT).addValue("fk", r.freeKickTakerId(), Types.BIGINT)
                 .addValue("lc", r.leftCornerTakerId(), Types.BIGINT).addValue("rc", r.rightCornerTakerId(), Types.BIGINT)
                 .addValue("mo", r.matchdayOverall(), Types.SMALLINT).addValue("ma", r.matchdayAttack(), Types.SMALLINT)
@@ -47,9 +47,7 @@ public class MatchCenterRepository {
         jdbc.batchUpdate("""
                 INSERT INTO career_team_match_info (career_id, team_id, formation_name, formation_positions, formation_roles, captain_id, penalty_taker_id,
                   free_kick_taker_id, left_corner_taker_id, right_corner_taker_id, matchday_overall, matchday_attack, matchday_midfield, matchday_defence)
-                SELECT :c, :t, :name, CAST(:pos AS SMALLINT[]), CAST(:roles AS INTEGER[]),
-                       (SELECT id FROM base_player WHERE id = :captain), (SELECT id FROM base_player WHERE id = :pen), (SELECT id FROM base_player WHERE id = :fk),
-                       (SELECT id FROM base_player WHERE id = :lc), (SELECT id FROM base_player WHERE id = :rc), :mo, :ma, :mm, :md
+                VALUES (:c, :t, :name, CAST(:pos AS SMALLINT[]), CAST(:roles AS INTEGER[]), :captain, :pen, :fk, :lc, :rc, :mo, :ma, :mm, :md)
                 ON CONFLICT (career_id, team_id) DO NOTHING""", params);
     }
 
@@ -67,16 +65,17 @@ public class MatchCenterRepository {
         });
         return jdbc.update("""
                 UPDATE career_player cp SET form = u.f
-                  FROM unnest(CAST(:p AS BIGINT[]), CAST(:t AS INTEGER[]), CAST(:f AS SMALLINT[])) AS u(p, t, f)
-                 WHERE cp.career_id = :c AND cp.player_id = u.p AND cp.team_id = u.t""",
+                  FROM career_player x
+                  LEFT JOIN unnest(CAST(:p AS BIGINT[]), CAST(:t AS INTEGER[]), CAST(:f AS SMALLINT[])) AS u(p, t, f) ON u.p = x.player_id AND u.t = x.team_id
+                 WHERE cp.career_id = :c AND x.career_id = cp.career_id AND x.player_id = cp.player_id AND cp.form IS DISTINCT FROM u.f""",
                 new MapSqlParameterSource("c", careerId).addValue("p", players.toString()).addValue("t", teams.toString()).addValue("f", forms.toString()));
     }
 
-    public Optional<Integer> userTeam(long careerId) {
+    public Optional<Integer> findUserTeam(long careerId) {
         return Optional.ofNullable(jdbc.queryForObject("SELECT user_team_id FROM career WHERE id = :c", Map.of("c", careerId), Integer.class));
     }
 
-    public Optional<TeamRow> team(long careerId, int teamId) {
+    public Optional<TeamRow> findTeam(long careerId, int teamId) {
         return jdbc.query("""
                 SELECT team_id, name, league_name, overall, attack, midfield, defence, build_up_play, defensive_depth
                   FROM career_team WHERE career_id = :c AND team_id = :t""",
@@ -85,7 +84,7 @@ public class MatchCenterRepository {
                         nullableInt(rs, "build_up_play"), nullableInt(rs, "defensive_depth"))).stream().findFirst();
     }
 
-    public Optional<TeamMatchInfo> matchInfo(long careerId, int teamId) {
+    public Optional<TeamMatchInfo> findMatchInfo(long careerId, int teamId) {
         return jdbc.query("SELECT * FROM career_team_match_info WHERE career_id = :c AND team_id = :t",
                 new MapSqlParameterSource("c", careerId).addValue("t", teamId), (rs, i) -> new TeamMatchInfo(rs.getInt("team_id"), rs.getString("formation_name"),
                         intArray(rs.getArray("formation_positions")), intArray(rs.getArray("formation_roles")), nullableLong(rs, "captain_id"),
@@ -94,7 +93,7 @@ public class MatchCenterRepository {
                         nullableInt(rs, "matchday_midfield"), nullableInt(rs, "matchday_defence"))).stream().findFirst();
     }
 
-    public List<Opponent> opponents(long careerId, int userTeam) {
+    public List<Opponent> findOpponents(long careerId, int userTeam) {
         return jdbc.query("""
                 WITH ours AS (SELECT league_name FROM career_team WHERE career_id = :c AND team_id = :u),
                      shared AS (SELECT DISTINCT s.team_id, s.competition_id FROM career_player_season_stat s
@@ -113,12 +112,12 @@ public class MatchCenterRepository {
                         rs.getBoolean("same_league"), intArray(rs.getArray("competitions"))));
     }
 
-    public List<SquadMember> squad(long careerId, int teamId) {
+    public List<SquadMember> findSquad(long careerId, int teamId) {
         return jdbc.query("SELECT player_id, form FROM career_player WHERE career_id = :c AND team_id = :t ORDER BY ovr DESC, player_id",
                 new MapSqlParameterSource("c", careerId).addValue("t", teamId), (rs, i) -> new SquadMember(rs.getLong("player_id"), nullableInt(rs, "form")));
     }
 
-    public List<DangerousPlayer> dangerousPlayers(long careerId, int teamId, int limit) {
+    public List<DangerousPlayer> findDangerousPlayers(long careerId, int teamId, int limit) {
         return jdbc.query("""
                 SELECT cp.player_id, b.full_name, cp.ovr, cp.form, COALESCE(sum(s.appearances), 0) AS apps, COALESCE(sum(s.goals), 0) AS goals,
                        COALESCE(sum(s.assists), 0) AS assists, round(sum(s.rating_total)::numeric / NULLIF(sum(s.appearances), 0) / 10, 1) AS avg_rating
@@ -127,7 +126,7 @@ public class MatchCenterRepository {
                   LEFT JOIN career_player_season_stat s ON s.career_id = cp.career_id AND s.player_id = cp.player_id AND s.team_id = cp.team_id
                  WHERE cp.career_id = :c AND cp.team_id = :t
                  GROUP BY cp.player_id, b.full_name, cp.ovr, cp.form
-                HAVING COALESCE(sum(s.goals), 0) + COALESCE(sum(s.assists), 0) > 0 OR COALESCE(cp.form, 0) > 0
+                HAVING COALESCE(sum(s.goals), 0) + COALESCE(sum(s.assists), 0) > 0
                  ORDER BY COALESCE(sum(s.goals), 0) + COALESCE(sum(s.assists), 0) DESC, cp.form DESC NULLS LAST, avg_rating DESC NULLS LAST, cp.player_id
                  LIMIT :limit""",
                 new MapSqlParameterSource("c", careerId).addValue("t", teamId).addValue("limit", limit),
@@ -135,7 +134,7 @@ public class MatchCenterRepository {
                         rs.getInt("apps"), rs.getInt("goals"), rs.getInt("assists"), nullableDouble(rs, "avg_rating")));
     }
 
-    public List<CardRisk> cardRisk(long careerId, int teamId, int limit) {
+    public List<CardRisk> findCardRisk(long careerId, int teamId, int limit) {
         return jdbc.query("""
                 SELECT s.player_id, b.full_name, sum(s.appearances) AS apps, sum(s.yellow_cards) AS yellow, sum(s.red_cards) AS red
                   FROM career_player_season_stat s
@@ -155,7 +154,7 @@ public class MatchCenterRepository {
                 new MapSqlParameterSource("c", careerId).addValue("t", teamId), Boolean.class));
     }
 
-    public Map<Long, PlayerRef> names(Collection<Long> playerIds) {
+    public Map<Long, PlayerRef> findNames(Collection<Long> playerIds) {
         List<Long> ids = playerIds.stream().filter(Objects::nonNull).distinct().toList();
         if (ids.isEmpty()) {
             return Map.of();
@@ -168,7 +167,7 @@ public class MatchCenterRepository {
         return out;
     }
 
-    private static String arrayLiteral(List<Integer> values) {
+    private static String toArrayLiteral(List<Integer> values) {
         if (Objects.isNull(values)) {
             return null;
         }

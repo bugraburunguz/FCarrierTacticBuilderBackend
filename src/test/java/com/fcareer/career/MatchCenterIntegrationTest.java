@@ -137,13 +137,14 @@ class MatchCenterIntegrationTest {
     }
 
     @Test
-    void aTeamThatIsNotAnOpponentIsNotFound() throws Exception {
+    void anUnknownTeamAndOurOwnTeamAreNotFound() throws Exception {
         importExport(fixture());
 
-        JsonNode body = support.json(get("/api/v1/careers/" + careerId + "/match/opponents/999999/report"), token);
-
-        assertThat(body.at("/success").asBoolean()).isFalse();
-        assertThat(body.at("/error/0/code").asText()).isNotBlank();
+        for (int teamId : new int[] {999_999, BESIKTAS}) {
+            int status = mockMvc.perform(get("/api/v1/careers/" + careerId + "/match/opponents/" + teamId + "/report")
+                    .header("Authorization", "Bearer " + token)).andReturn().getResponse().getStatus();
+            assertThat(status).as("takım " + teamId).isEqualTo(404);
+        }
     }
 
     private long baseId(long eaId) {
