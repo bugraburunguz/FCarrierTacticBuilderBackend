@@ -136,6 +136,47 @@ public class MatchCenterRepository {
                 (rs, i) -> new CardRisk(rs.getLong("player_id"), rs.getString("full_name"), rs.getInt("apps"), rs.getInt("yellow"), rs.getInt("red")));
     }
 
+    public List<MatchCenterModels.RecentForm> findRecentForm(long careerId, Collection<Long> playerIds, int recent) {
+        if (playerIds.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.query("""
+                SELECT r.player_id, array_agg(r.rating ORDER BY r.match_date DESC) AS ratings, round(avg(r.rating)::numeric, 1) AS average
+                  FROM (SELECT player_id, rating, match_date, row_number() OVER (PARTITION BY player_id ORDER BY match_date DESC) AS rn
+                          FROM career_player_match_rating WHERE career_id = :c AND player_id IN (:ids)) r
+                 WHERE r.rn <= :recent
+                 GROUP BY r.player_id""",
+                new MapSqlParameterSource("c", careerId).addValue("ids", playerIds).addValue("recent", recent),
+                (rs, i) -> new MatchCenterModels.RecentForm(rs.getLong("player_id"), intArray(rs.getArray("ratings")), nullableDouble(rs, "average")));
+    }
+
+    public List<MatchCenterModels.RestCandidate> findRestCandidates(long careerId, Collection<Long> playerIds, int windowDays, int minMatches, int minMinutes) {
+        if (playerIds.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.query("""
+                WITH last_match AS (SELECT max(match_date) AS d FROM career_player_match_rating WHERE career_id = :c AND player_id IN (:ids))
+                SELECT r.player_id, b.full_name, sum(COALESCE(r.minutes, 0)) AS minutes, count(*) AS matches
+                  FROM career_player_match_rating r
+                  JOIN last_match l ON r.match_date > l.d - CAST(:days AS INTEGER)
+                  JOIN base_player b ON b.id = r.player_id
+                 WHERE r.career_id = :c AND r.player_id IN (:ids)
+                 GROUP BY r.player_id, b.full_name
+                HAVING count(*) >= :minMatches AND sum(COALESCE(r.minutes, 0)) >= :minMinutes
+                 ORDER BY sum(COALESCE(r.minutes, 0)) DESC, r.player_id""",
+                new MapSqlParameterSource("c", careerId).addValue("ids", playerIds).addValue("days", windowDays).addValue("minMatches", minMatches)
+                        .addValue("minMinutes", minMinutes),
+                (rs, i) -> new MatchCenterModels.RestCandidate(rs.getLong("player_id"), rs.getString("full_name"), rs.getInt("minutes"), rs.getInt("matches")));
+    }
+
+    public boolean hasMatchRatings(long careerId, Collection<Long> playerIds) {
+        if (playerIds.isEmpty()) {
+            return false;
+        }
+        return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS (SELECT 1 FROM career_player_match_rating WHERE career_id = :c AND player_id IN (:ids))",
+                new MapSqlParameterSource("c", careerId).addValue("ids", playerIds), Boolean.class));
+    }
+
     public boolean hasSeasonStats(long careerId, int teamId) {
         return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS (SELECT 1 FROM career_player_season_stat WHERE career_id = :c AND team_id = :t)",
                 new MapSqlParameterSource("c", careerId).addValue("t", teamId), Boolean.class));

@@ -44,6 +44,33 @@ fcareer:
     interest-margin: 10
     dream-margin: 25
     pool-size: 40
+  match:
+    # FCA-22/23 Maç Merkezi (verified:false, kalibre edilmedi): sezon notu ve krallık en az maç; rapor listeleri.
+    rating-leaders-min-appearances: 3
+    season-rating-min-appearances: 3
+    dangerous-players-limit: 5
+    card-risk-limit: 5
+    plan:
+      # Dinlendirme adayı: son maçtan geriye rest-window-days içinde en az rest-min-matches maç ve rest-min-minutes dakika (yoğun fikstür).
+      rest-window-days: 10
+      rest-min-matches: 3
+      rest-min-minutes: 240
+      # Taktik notları: hat farkı (maç günü gücü, yoksa temel), savunma derinliği, ana tehdit (gol+asist), kart, son maç formu.
+      line-gap: 3
+      high-line-from: 65
+      low-block-to: 35
+      key-threat-min: 10
+      card-yellow-min: 4
+      recent-min-matches: 3
+      low-form-below: 6.3
+      max-notes: 5
+      # Hava topu puanı: kafa, sıçrama, güç ağırlıkları + 180 cm üstü her cm için ek.
+      aerial-heading: 0.4
+      aerial-jumping: 0.3
+      aerial-strength: 0.3
+      aerial-height-base-cm: 180
+      aerial-per-cm: 0.5
+      aerial-top: 2
   academy:
     # ACADEMY-b kararı (verified:false): "Bekliyor" = altyapıda en az bu kadar ay ve son içe aktarmalarda OVR artışı yok.
     # Tek içe aktarmada artış ölçülemez: Bekliyor gösterilmez (yalnız Hazır/Gelişiyor).
