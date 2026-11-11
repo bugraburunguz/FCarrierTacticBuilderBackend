@@ -98,6 +98,14 @@ class SecurityHardeningIntegrationTest {
     }
 
     @Test
+    void anonymousPreviewStaysCappedForZeroOrNegativeLimit() throws Exception {
+        for (int limit : new int[]{0, -5}) {
+            JsonNode preview = call(post("/api/v1/recommend/preview"), Map.of("roleId", "winger_attack", "position", "RW", "limit", limit), null, 200);
+            assertThat(preview.at("/data/items").size()).as("limit " + limit).isBetween(1, 3);
+        }
+    }
+
+    @Test
     void votesUpsertChangeAndRevoke() throws Exception {
         String token = register();
         JsonNode up = call(put("/api/v1/ut/sbc/votes/36"), Map.of("vote", 1), token, 200);

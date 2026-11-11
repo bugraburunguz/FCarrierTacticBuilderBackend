@@ -45,7 +45,7 @@ public class RecommendationService {
     private static final double MAX_SCORE = 100.0;
     private static final int DEFAULT_LIMIT = 10;
     private static final int PREVIEW_LIMIT = 8;
-    private static final int SLOT_VIEW_LIMIT = 3;
+    private static final int PREVIEW_ITEMS = 3;
     private static final Short DEFAULT_PREVIEW_GENDER = 0;
 
     private final PlayerService playerService;
@@ -61,7 +61,7 @@ public class RecommendationService {
     public RecommendationResponse preview(RecommendSlotRequest request) {
         RecommendSlotRequest limited = RecommendSlotRequest.builder().roleId(request.getRoleId()).position(request.getPosition()).tags(request.getTags())
                 .setup(request.getSetup()).gender(request.getGender()).gameVersionId(request.getGameVersionId())
-                .limit(Math.min(Objects.isNull(request.getLimit()) ? SLOT_VIEW_LIMIT : request.getLimit(), SLOT_VIEW_LIMIT)).build();
+                .limit(Objects.isNull(request.getLimit()) || request.getLimit() <= 0 ? PREVIEW_ITEMS : Math.min(request.getLimit(), PREVIEW_ITEMS)).build();
         return withoutPaidInsights(rankPreview(limited));
     }
 
