@@ -229,6 +229,31 @@ class MatchCenterIntegrationTest {
         java.util.Map<String, Long> placed = new java.util.HashMap<>();
         plan.at("/ourEleven").forEach((s) -> placed.put(s.at("/slotId").asText(), s.at("/playerId").asLong()));
         assertThat(placed).isEqualTo(lineup);
+
+        java.util.Map<String, Long> stale = new java.util.LinkedHashMap<>(lineup);
+        long bench = java.util.stream.StreamSupport.stream(data(get("/api/v1/careers/" + careerId + "/squad")).spliterator(), false)
+                .map((s) -> s.at("/player/id").asLong()).filter((id) -> !lineup.containsValue(id)).findFirst().orElseThrow();
+        stale.put("LWB", bench);
+        saveMainTactic("4-3-3", List.of(java.util.Map.of("slotId", "ST", "roleId", "poacher_attack", "tags", List.of())), stale);
+        assertThat(data(get("/api/v1/careers/" + careerId + "/match/opponents/" + GALATASARAY + "/plan")).at("/lineupSource").asText())
+                .as("dizilişte olmayan eski slot anahtarı kendi 11'i bozmaz").isEqualTo("USER_LINEUP");
+    }
+
+    @Test
+    void theSamePlayerInTwoSlotsLeavesTheElevenToTheEngine() throws Exception {
+        importExport(fixture());
+        saveMainTactic("4-3-3", List.of(java.util.Map.of("slotId", "ST", "roleId", "poacher_attack", "tags", List.of())));
+        JsonNode engine = data(get("/api/v1/careers/" + careerId + "/match/opponents/" + GALATASARAY + "/plan"));
+        java.util.Map<String, Long> lineup = new java.util.LinkedHashMap<>();
+        engine.at("/ourEleven").forEach((s) -> lineup.put(s.at("/slotId").asText(), s.at("/playerId").asLong()));
+        String first = lineup.keySet().iterator().next();
+        String last = lineup.keySet().stream().reduce((a, b) -> b).orElseThrow();
+        lineup.put(last, lineup.get(first));
+        saveMainTactic("4-3-3", List.of(java.util.Map.of("slotId", "ST", "roleId", "poacher_attack", "tags", List.of())), lineup);
+
+        JsonNode plan = data(get("/api/v1/careers/" + careerId + "/match/opponents/" + GALATASARAY + "/plan"));
+
+        assertThat(plan.at("/lineupSource").asText()).isEqualTo("ENGINE");
     }
 
     @Test

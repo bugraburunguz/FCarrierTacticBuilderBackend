@@ -191,8 +191,8 @@ public class MatchPlanService {
         if (tactic.lineup().isEmpty()) {
             return false;
         }
-        return tactic.slots().stream().allMatch((s) -> squad.contains(tactic.lineup().get(s.getSlotId())))
-                && tactic.lineup().values().stream().distinct().count() == tactic.slots().size();
+        List<Long> placed = tactic.slots().stream().map((s) -> tactic.lineup().get(s.getSlotId())).toList();
+        return placed.stream().allMatch(squad::contains) && placed.stream().distinct().count() == placed.size();
     }
 
     private List<TacticalNote> buildNotes(OpponentReport report, List<OurStarter> eleven, Map<Long, String> backups, Map<Long, RestCandidate> resting,

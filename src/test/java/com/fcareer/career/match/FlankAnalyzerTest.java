@@ -51,6 +51,40 @@ class FlankAnalyzerTest {
     }
 
     @Test
+    void noWidePlayersOnEitherSideMeansNoFlanks() {
+        List<FlankSlot> centralOurs = List.of(slot("ST", "Forvet", "advanced_forward_attack", attrs(80, 80, 78, 60, 80, 30, 30, 30), 0));
+
+        assertThat(analyzer.analyze(centralOurs, theirs(strongRight()))).isEqualTo(Optional.empty());
+    }
+
+    @Test
+    void theCounterNoteNamesTheWingerWhoMeetsTheCounterRule() {
+        List<FlankSlot> ours = List.of(
+                slot("LW", "Hızlı Kanat", "winger_attack", attrs(90, 90, 80, 70, 80, 35, 32, 34), 0),
+                slot("LM", "Yavaş Kanat", "wide_midfielder_defend", attrs(95, 96, 60, 60, 60, 60, 60, 60), 0),
+                slot("LB", "Bizim Sol Bek", "fullback_defend", attrs(76, 76, 66, 70, 70, 82, 82, 82), 0));
+        List<FlankSlot> theirs = theirs(List.of(
+                slot("RB", "Bindiren Bek", "fullback_balanced", attrs(88, 88, 75, 84, 78, 60, 58, 60), 0),
+                slot("RM", "Zayıf Kanat", "winger_balanced", attrs(62, 60, 58, 60, 60, 40, 40, 40), 0)));
+
+        List<TacticalNote> notes = analyzer.buildNotes(analyzer.analyze(ours, theirs).orElseThrow());
+
+        assertThat(notes).extracting(TacticalNote::code).containsExactly("FLANK_COUNTER");
+        assertThat(notes.get(0).text()).contains("Hızlı Kanat").doesNotContain("Yavaş Kanat");
+    }
+
+    @Test
+    void aMissingRoleUsesAFallbackWordInsteadOfNull() {
+        FlankSlot winger = slot("LW", "Rolsüz Kanat", "winger_attack", attrs(88, 89, 84, 76, 84, 35, 32, 34), 0);
+        List<FlankSlot> ours = List.of(new FlankSlot("LW", winger.player(), null, 0), slot("LB", "Bizim Sol Bek", "attacking_wingback_attack", attrs(76, 76, 66, 70, 70, 50, 50, 50), 0));
+
+        List<TacticalNote> notes = analyzer.buildNotes(analyzer.analyze(ours, theirs(strongRight())).orElseThrow());
+
+        assertThat(notes).isNotEmpty();
+        assertThat(notes.get(0).text()).doesNotContain("null");
+    }
+
+    @Test
     void anUnknownGoalAssistCountIsLeftOutOfTheNote() {
         List<FlankSlot> theirs = theirs(List.of(
                 slot("RB", "Sağ Bek", "fullback_balanced", attrs(84, 85, 78, 80, 78, 70, 72, 70), 0),

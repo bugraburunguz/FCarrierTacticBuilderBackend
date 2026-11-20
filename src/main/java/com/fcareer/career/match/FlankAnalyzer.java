@@ -41,6 +41,7 @@ public class FlankAnalyzer {
     private static final String OPPOSITE_PREFIX = "match.flank.opposite.";
     private static final String FULLBACK_FALLBACK = "match.flank.fullback";
     private static final String GOALS_ASSISTS = "match.flank.goals-assists";
+    private static final String ROLE_FALLBACK = "match.flank.role";
     private static final String EXPOSED = "FLANK_EXPOSED";
     private static final String EXPOSED_COUNTER = "FLANK_EXPOSED_COUNTER";
     private static final String COUNTER = "FLANK_COUNTER";
@@ -59,7 +60,12 @@ public class FlankAnalyzer {
         if (ours.isEmpty() || theirs.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(new Flanks(buildMatchup(FlankSide.LEFT, ours, theirs), buildMatchup(FlankSide.RIGHT, ours, theirs)));
+        FlankMatchup left = buildMatchup(FlankSide.LEFT, ours, theirs);
+        FlankMatchup right = buildMatchup(FlankSide.RIGHT, ours, theirs);
+        if (Objects.isNull(left) && Objects.isNull(right)) {
+            return Optional.empty();
+        }
+        return Optional.of(new Flanks(left, right));
     }
 
     public List<TacticalNote> buildNotes(Flanks flanks) {
@@ -70,17 +76,29 @@ public class FlankAnalyzer {
         String side = messageService.getMessage(SIDE_PREFIX + matchup.side().name());
         if (matchup.verdict() == FlankVerdict.OPPORTUNITY) {
             FlankPlayer fullback = findTheirForwardFullback(matchup);
-            FlankPlayer runner = matchup.ours().players().stream().filter((p) -> !isFullback(p)).max(Comparator.comparingInt(FlankPlayer::pace)).orElseThrow();
+            FlankPlayer runner = findCounterRunner(matchup);
             return note(COUNTER, side, fullback.name(), fullback.attackLean(), runner.name(), runner.pace());
         }
         FlankThreat threat = matchup.theirs().keyThreat();
         FlankPlayer attacker = findOurAttacker(matchup);
-        String fullback = matchup.ours().players().stream().filter(FlankAnalyzer::isFullback).findFirst().map(FlankPlayer::name)
-                .orElse(messageService.getMessage(FULLBACK_FALLBACK));
+        String fullback = matchup.ours().players().stream().filter(FlankAnalyzer::isFullback).filter((p) -> p.playerId() != attacker.playerId()).findFirst()
+                .map(FlankPlayer::name).orElseGet(() -> messageService.getMessage(FULLBACK_FALLBACK));
+        String role = Objects.isNull(attacker.role()) ? messageService.getMessage(ROLE_FALLBACK) : attacker.role();
         String goalsAssists = threat.goalsAssists() > 0 ? messageService.getMessage(GOALS_ASSISTS, threat.goalsAssists()) : "";
         Object[] args = {side, messageService.getMessage(OPPOSITE_PREFIX + matchup.side().name()), threat.name(), threat.threat(), threat.pace(), goalsAssists,
-                attacker.name(), attacker.role(), matchup.ours().defensiveCover(), fullback, matchup.counter() ? findTheirForwardFullback(matchup).name() : null};
+                attacker.name(), role, matchup.ours().defensiveCover(), fullback,
+                matchup.counter() ? findTheirForwardFullback(matchup).name() : null, matchup.counter() ? findCounterRunner(matchup).name() : null};
         return note(matchup.counter() ? EXPOSED_COUNTER : EXPOSED, args);
+    }
+
+    private FlankPlayer findCounterRunner(FlankMatchup matchup) {
+        return matchup.ours().players().stream().filter((p) -> isCounterRunner(p.position(), p.pace(), p.attackLean()))
+                .max(Comparator.comparingInt(FlankPlayer::pace)).orElseThrow();
+    }
+
+    private boolean isCounterRunner(String position, int pace, int lean) {
+        MatchProperties.Flank config = properties.getPlan().getFlank();
+        return !FULLBACK_POSITIONS.contains(position) && pace >= config.getCounterPaceMin() && lean >= config.getCounterWingerLeanMin();
     }
 
     private static FlankPlayer findOurAttacker(FlankMatchup matchup) {
@@ -104,14 +122,14 @@ public class FlankAnalyzer {
     private FlankMatchup buildMatchup(FlankSide side, List<FlankSlot> ours, List<FlankSlot> theirs) {
         Set<String> ourSide = side == FlankSide.LEFT ? LEFT_POSITIONS : RIGHT_POSITIONS;
         Set<String> theirSide = side == FlankSide.LEFT ? RIGHT_POSITIONS : LEFT_POSITIONS;
-        List<Scored> ourPlayers = ours.stream().filter((s) -> ourSide.contains(s.position())).map((s) -> score(s, false)).toList();
-        List<Scored> theirPlayers = theirs.stream().filter((s) -> theirSide.contains(s.position())).map((s) -> score(s, true)).toList();
+        List<Scored> ourPlayers = ours.stream().filter((s) -> ourSide.contains(s.position())).map((s) -> scoreSlot(s, false)).toList();
+        List<Scored> theirPlayers = theirs.stream().filter((s) -> theirSide.contains(s.position())).map((s) -> scoreSlot(s, true)).toList();
         if (ourPlayers.isEmpty() || theirPlayers.isEmpty()) {
             return null;
         }
-        OurFlank ourFlank = new OurFlank(toPlayers(ourPlayers), average(ourPlayers, Scored::lean), average(ourPlayers, Scored::cover));
+        OurFlank ourFlank = new OurFlank(toPlayers(ourPlayers), calculateAverage(ourPlayers, Scored::lean), calculateAverage(ourPlayers, Scored::cover));
         Scored key = theirPlayers.stream().max(Comparator.comparingInt(Scored::threat)).orElseThrow();
-        TheirFlank theirFlank = new TheirFlank(toPlayers(theirPlayers), key.threat(), average(theirPlayers, Scored::lean),
+        TheirFlank theirFlank = new TheirFlank(toPlayers(theirPlayers), key.threat(), calculateAverage(theirPlayers, Scored::lean),
                 new FlankThreat(key.slot().player().getId(), key.slot().player().getName(), key.threat(), key.pace(), key.slot().goalsAssists()));
         boolean exposed = isExposed(ourFlank, theirFlank);
         boolean counter = hasCounterChance(ourPlayers, theirPlayers);
@@ -128,12 +146,11 @@ public class FlankAnalyzer {
     private boolean hasCounterChance(List<Scored> ours, List<Scored> theirs) {
         MatchProperties.Flank config = properties.getPlan().getFlank();
         boolean fullbackForward = theirs.stream().anyMatch((s) -> FULLBACK_POSITIONS.contains(s.slot().position()) && s.lean() >= config.getCounterFullbackLeanMin());
-        boolean fastWinger = ours.stream().anyMatch((s) -> !FULLBACK_POSITIONS.contains(s.slot().position()) && s.pace() >= config.getCounterPaceMin()
-                && s.lean() >= config.getCounterWingerLeanMin());
+        boolean fastWinger = ours.stream().anyMatch((s) -> isCounterRunner(s.slot().position(), s.pace(), s.lean()));
         return fullbackForward && fastWinger;
     }
 
-    private Scored score(FlankSlot slot, boolean opponent) {
+    private Scored scoreSlot(FlankSlot slot, boolean opponent) {
         MatchProperties.Flank config = properties.getPlan().getFlank();
         Optional<Movement> movement = Optional.ofNullable(slot.role()).flatMap((r) -> movements.find(r.getId()));
         double roleLean = movement.map((m) -> MAX_SCORE * (config.getLeanRun() * m.r() + config.getLeanRunBehind() * m.runBehind()))
@@ -175,7 +192,7 @@ public class FlankAnalyzer {
         }).toList();
     }
 
-    private static int average(List<Scored> scored, ToIntFunction<Scored> value) {
+    private static int calculateAverage(List<Scored> scored, ToIntFunction<Scored> value) {
         return (int) Math.round(scored.stream().mapToInt(value).average().orElse(MIN_SCORE));
     }
 
