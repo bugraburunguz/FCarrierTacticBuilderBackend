@@ -9,9 +9,34 @@ public final class MatchCenterModels {
     private MatchCenterModels() {
     }
 
-    public enum Missing { USER_TEAM, FORMATION, LIKELY_ELEVEN, SEASON_STATS, SET_PIECES, OUR_FORMATION, MATCH_RATINGS }
+    public enum Missing { USER_TEAM, FORMATION, LIKELY_ELEVEN, SEASON_STATS, SET_PIECES, OUR_FORMATION, MATCH_RATINGS, FLANKS }
 
     public enum FormationSource { MAIN_TACTIC, TEAM_DEFAULT }
+
+    public enum LineupSource { USER_LINEUP, ENGINE }
+
+    public enum FlankSide { LEFT, RIGHT }
+
+    public enum FlankVerdict { EXPOSED, OPPORTUNITY, BALANCED }
+
+    public record FlankPlayer(long playerId, String name, String position, String roleId, String role, String focus, int attackLean, int pace) {
+    }
+
+    public record FlankThreat(long playerId, String name, int threat, int pace, int goalsAssists) {
+    }
+
+    public record OurFlank(List<FlankPlayer> players, int attackLean, int defensiveCover) {
+    }
+
+    public record TheirFlank(List<FlankPlayer> players, int threat, int attackLean, FlankThreat keyThreat) {
+    }
+
+    public record FlankMatchup(FlankSide side, OurFlank ours, TheirFlank theirs, FlankVerdict verdict, boolean counter) {
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record Flanks(FlankMatchup left, FlankMatchup right) {
+    }
 
     public record OurFormation(String id, FormationSource source) {
     }
@@ -35,8 +60,8 @@ public final class MatchCenterModels {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    public record MatchPlan(int opponentTeamId, OurFormation ourFormation, List<OurStarter> ourEleven, List<RestCandidate> restCandidates,
-                            List<TacticalNote> tacticalNotes, SetPieceMatchup setPieces, List<Missing> missing) {
+    public record MatchPlan(int opponentTeamId, OurFormation ourFormation, LineupSource lineupSource, List<OurStarter> ourEleven, List<RestCandidate> restCandidates,
+                            List<TacticalNote> tacticalNotes, SetPieceMatchup setPieces, Flanks flanks, List<Missing> missing) {
     }
 
     record RecentForm(long playerId, List<Integer> ratings, Double average) {

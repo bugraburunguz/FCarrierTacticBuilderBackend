@@ -71,6 +71,28 @@ fcareer:
       aerial-height-base-cm: 180
       aerial-per-cm: 0.5
       aerial-top: 2
+      # FCA-29 kanat eşleşmesi (verified:false, kalibre edilmedi). Tehdit: hız (ivme+sürat), dribbling, orta, top kontrol + gol/asist bonusu.
+      # Hücum eğilimi role-movement profilinden (r, runBehind); rakipte dizilişin varsayılan rolü özellik eğilimiyle karışır. Savunma desteği: savunma özellikleri × rol savunma görevi (d).
+      flank:
+        threat-pace: 0.4
+        threat-dribbling: 0.25
+        threat-crossing: 0.2
+        threat-ball-control: 0.15
+        threat-per-goal-assist: 1.0
+        threat-goal-assist-cap: 10
+        lean-run: 0.6
+        lean-run-behind: 0.4
+        opponent-attr-lean-weight: 0.5
+        attr-lean-scale: 1.5
+        neutral-lean: 50
+        default-duty: 0.5
+        exposed-threat-min: 78
+        exposed-their-lean-min: 50
+        exposed-our-lean-min: 40
+        exposed-cover-below: 40
+        counter-fullback-lean-min: 50
+        counter-pace-min: 80
+        counter-winger-lean-min: 45
   academy:
     # ACADEMY-b kararı (verified:false): "Bekliyor" = altyapıda en az bu kadar ay ve son içe aktarmalarda OVR artışı yok.
     # Tek içe aktarmada artış ölçülemez: Bekliyor gösterilmez (yalnız Hazır/Gelişiyor).

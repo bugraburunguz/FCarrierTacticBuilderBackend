@@ -2,8 +2,13 @@ package com.fcareer.career.match;
 
 import com.fcareer.career.entity.CareerEntity;
 import com.fcareer.career.match.MatchCenterModels.AerialPlayer;
+import com.fcareer.career.match.FlankAnalyzer.FlankSlot;
 import com.fcareer.career.match.MatchCenterModels.CardRisk;
+import com.fcareer.career.match.MatchCenterModels.DangerousPlayer;
+import com.fcareer.career.match.MatchCenterModels.Flanks;
 import com.fcareer.career.match.MatchCenterModels.FormationSource;
+import com.fcareer.career.match.MatchCenterModels.LikelyStarter;
+import com.fcareer.career.match.MatchCenterModels.LineupSource;
 import com.fcareer.career.match.MatchCenterModels.LineRatings;
 import com.fcareer.career.match.MatchCenterModels.MatchPlan;
 import com.fcareer.career.match.MatchCenterModels.Missing;
@@ -68,6 +73,7 @@ public class MatchPlanService {
     private final SquadFitService squadFitService;
     private final FitEngineProperties fitProperties;
     private final MessageService messageService;
+    private final FlankAnalyzer flankAnalyzer;
 
     @Transactional(readOnly = true)
     public MatchPlan buildPlan(Long userId, Long careerId, Integer teamId) {
@@ -91,9 +97,36 @@ public class MatchPlanService {
         }
         List<OurStarter> eleven = ours.map(OurPlan::starters).orElse(List.of());
         Optional<TeamMatchInfo> ourInfo = userTeam.flatMap((u) -> repository.findMatchInfo(careerId, u));
-        SetPieceMatchup setPieces = buildSetPieces(career, ours.map(OurPlan::players).orElse(List.of()), report, ourInfo);
-        List<TacticalNote> notes = buildNotes(report, eleven, ours.map(OurPlan::backups).orElse(Map.of()), resting);
-        return new MatchPlan(report.teamId(), ours.map(OurPlan::formation).orElse(null), eleven, rest, notes, setPieces, missing);
+        List<FitPlayer> theirPlayers = findTheirPlayers(career, report);
+        SetPieceMatchup setPieces = buildSetPieces(ours.map(OurPlan::players).orElse(List.of()), theirPlayers, report, ourInfo);
+        Optional<Flanks> flanks = flankAnalyzer.analyze(ours.map(OurPlan::flankSlots).orElse(List.of()), buildTheirFlankSlots(report, theirPlayers));
+        if (flanks.isEmpty()) {
+            missing.add(Missing.FLANKS);
+        }
+        List<TacticalNote> flankNotes = flanks.map(flankAnalyzer::buildNotes).orElse(List.of());
+        List<TacticalNote> notes = buildNotes(report, eleven, ours.map(OurPlan::backups).orElse(Map.of()), resting, flankNotes);
+        return new MatchPlan(report.teamId(), ours.map(OurPlan::formation).orElse(null), ours.map(OurPlan::lineupSource).orElse(null), eleven, rest, notes,
+                setPieces, flanks.orElse(null), missing);
+    }
+
+    private List<FitPlayer> findTheirPlayers(CareerEntity career, OpponentReport report) {
+        List<Long> theirIds = report.likelyEleven().stream().map(LikelyStarter::playerId).toList();
+        return theirIds.isEmpty() ? List.of() : playerService.fitPlayers(theirIds, career.getGameVersionId(), career.getId());
+    }
+
+    private List<FlankSlot> buildTheirFlankSlots(OpponentReport report, List<FitPlayer> theirPlayers) {
+        if (Objects.isNull(report.formation()) || Objects.isNull(report.formation().matchedFormationId()) || report.likelyEleven().isEmpty()) {
+            return List.of();
+        }
+        Map<String, IntentProfile> intents = resolveTactic(new OurFormation(report.formation().matchedFormationId(), FormationSource.TEAM_DEFAULT),
+                TacticRequest.builder().formation(report.formation().matchedFormationId()).build())
+                .map((t) -> t.slots().stream().collect(Collectors.toMap(IntentProfile::getSlotId, Function.identity(), (a, b) -> a))).orElse(Map.of());
+        Map<Long, FitPlayer> byId = theirPlayers.stream().filter(Objects::nonNull).collect(Collectors.toMap(FitPlayer::getId, Function.identity(), (a, b) -> a));
+        Map<Long, Integer> goalsAssists = report.dangerousPlayers().stream()
+                .collect(Collectors.toMap(DangerousPlayer::playerId, (d) -> d.goals() + d.assists(), (a, b) -> a));
+        return report.likelyEleven().stream().filter((s) -> byId.containsKey(s.playerId()) && intents.containsKey(s.slotId()))
+                .map((s) -> new FlankSlot(s.position(), byId.get(s.playerId()), intents.get(s.slotId()).getResolvedRole(), goalsAssists.getOrDefault(s.playerId(), 0)))
+                .toList();
     }
 
     private Optional<OurTactic> findOurTactic(Long userId, Long careerId, Optional<Integer> userTeam) {
@@ -103,7 +136,7 @@ public class MatchPlanService {
             Optional<OurTactic> resolved = resolveTactic(new OurFormation(main.formation(), FormationSource.MAIN_TACTIC),
                     TacticRequest.builder().formation(main.formation()).slots(new ArrayList<>(slots)).build());
             if (resolved.isPresent()) {
-                return resolved;
+                return resolved.map((t) -> new OurTactic(t.formation(), t.slots(), Objects.isNull(main.lineup()) ? Map.of() : main.lineup()));
             }
         }
         return userTeam.flatMap((u) -> repository.findMatchInfo(careerId, u)).map(TeamMatchInfo::positions).flatMap(matchCenterService::findClosestFormation)
@@ -112,7 +145,7 @@ public class MatchPlanService {
 
     private Optional<OurTactic> resolveTactic(OurFormation formation, TacticRequest request) {
         try {
-            return Optional.of(new OurTactic(formation, tacticResolver.resolve(request).slots()));
+            return Optional.of(new OurTactic(formation, tacticResolver.resolve(request).slots(), Map.of()));
         } catch (InvalidTacticException e) {
             log.warn("Match plan tactic skipped formation : {} source : {} reason : {}", formation.id(), formation.source(), e.getMessage());
             return Optional.empty();
@@ -133,8 +166,10 @@ public class MatchPlanService {
 
     private OurPlan solveOurEleven(CareerEntity career, List<Long> squad, Set<Long> resting, OurTactic tactic) {
         List<FitPlayer> players = playerService.fitPlayers(squad, career.getGameVersionId(), career.getId());
-        List<SlotAssignment> slots = squadFitService.solve(players, tactic.slots(), fitProperties.getCareerEngineVersion(), true).getSlots();
         Map<Long, FitPlayer> byId = players.stream().collect(Collectors.toMap(FitPlayer::getId, Function.identity(), (a, b) -> a));
+        boolean ownLineup = isCompleteLineup(tactic, byId.keySet());
+        Map<String, Long> locked = ownLineup ? tactic.lineup() : Map.of();
+        List<SlotAssignment> slots = squadFitService.solve(players, tactic.slots(), fitProperties.getCareerEngineVersion(), true, locked).getSlots();
         List<Long> placed = slots.stream().map(SlotAssignment::getPlayerId).filter(Objects::nonNull).toList();
         Map<Long, RecentForm> recent = repository.findRecentForm(career.getId(), placed, properties.getRecentRatings()).stream()
                 .collect(Collectors.toMap(RecentForm::playerId, Function.identity()));
@@ -145,14 +180,28 @@ public class MatchPlanService {
         }).toList();
         Map<Long, String> backups = slots.stream().filter((s) -> Objects.nonNull(s.getPlayerId()) && Objects.nonNull(s.getDepth()) && !s.getDepth().isEmpty())
                 .collect(Collectors.toMap(SlotAssignment::getPlayerId, (s) -> s.getDepth().get(0).getPlayerName(), (a, b) -> a));
-        return new OurPlan(tactic.formation(), starters, placed.stream().map(byId::get).toList(), backups);
+        Map<String, IntentProfile> intents = tactic.slots().stream().collect(Collectors.toMap(IntentProfile::getSlotId, Function.identity(), (a, b) -> a));
+        List<FlankSlot> flankSlots = slots.stream().filter((s) -> Objects.nonNull(s.getPlayerId()) && intents.containsKey(s.getSlotId()))
+                .map((s) -> new FlankSlot(s.getPosition(), byId.get(s.getPlayerId()), intents.get(s.getSlotId()).getResolvedRole(), 0)).toList();
+        return new OurPlan(tactic.formation(), ownLineup ? LineupSource.USER_LINEUP : LineupSource.ENGINE, starters, placed.stream().map(byId::get).toList(), backups,
+                flankSlots);
     }
 
-    private List<TacticalNote> buildNotes(OpponentReport report, List<OurStarter> eleven, Map<Long, String> backups, Map<Long, RestCandidate> resting) {
+    private static boolean isCompleteLineup(OurTactic tactic, Set<Long> squad) {
+        if (tactic.lineup().isEmpty()) {
+            return false;
+        }
+        return tactic.slots().stream().allMatch((s) -> squad.contains(tactic.lineup().get(s.getSlotId())))
+                && tactic.lineup().values().stream().distinct().count() == tactic.slots().size();
+    }
+
+    private List<TacticalNote> buildNotes(OpponentReport report, List<OurStarter> eleven, Map<Long, String> backups, Map<Long, RestCandidate> resting,
+                                          List<TacticalNote> flankNotes) {
         MatchProperties.Plan config = properties.getPlan();
         List<TacticalNote> notes = new ArrayList<>();
         report.dangerousPlayers().stream().filter((d) -> d.goals() + d.assists() >= config.getKeyThreatMin()).findFirst()
                 .ifPresent((d) -> notes.add(note("KEY_THREAT", d.name(), d.goals(), d.assists())));
+        notes.addAll(flankNotes);
         eleven.stream().filter(OurStarter::restSuggested).max(Comparator.comparingInt((OurStarter s) -> resting.get(s.playerId()).minutes())).ifPresent((s) -> {
             RestCandidate load = resting.get(s.playerId());
             notes.add(backups.containsKey(s.playerId())
@@ -196,9 +245,7 @@ public class MatchPlanService {
         return notes.stream().limit(config.getMaxNotes()).toList();
     }
 
-    private SetPieceMatchup buildSetPieces(CareerEntity career, List<FitPlayer> ourPlayers, OpponentReport report, Optional<TeamMatchInfo> ourInfo) {
-        List<Long> theirIds = report.likelyEleven().stream().map(MatchCenterModels.LikelyStarter::playerId).toList();
-        List<FitPlayer> theirPlayers = theirIds.isEmpty() ? List.of() : playerService.fitPlayers(theirIds, career.getGameVersionId(), career.getId());
+    private SetPieceMatchup buildSetPieces(List<FitPlayer> ourPlayers, List<FitPlayer> theirPlayers, OpponentReport report, Optional<TeamMatchInfo> ourInfo) {
         PlayerRef ourCorner = ourInfo.map(TeamMatchInfo::leftCornerTakerId).map((id) -> repository.findNames(List.of(id)).get(id)).orElse(null);
         PlayerRef theirCorner = Objects.isNull(report.setPieces()) ? null
                 : Optional.ofNullable(report.setPieces().leftCornerTaker()).orElse(report.setPieces().rightCornerTaker());
@@ -234,9 +281,10 @@ public class MatchPlanService {
         return new TacticalNote(code, messageService.getMessage(NOTE_PREFIX + code, args));
     }
 
-    private record OurTactic(OurFormation formation, List<IntentProfile> slots) {
+    private record OurTactic(OurFormation formation, List<IntentProfile> slots, Map<String, Long> lineup) {
     }
 
-    private record OurPlan(OurFormation formation, List<OurStarter> starters, List<FitPlayer> players, Map<Long, String> backups) {
+    private record OurPlan(OurFormation formation, LineupSource lineupSource, List<OurStarter> starters, List<FitPlayer> players, Map<Long, String> backups,
+                           List<FlankSlot> flankSlots) {
     }
 }
