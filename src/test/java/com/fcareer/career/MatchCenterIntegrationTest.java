@@ -209,6 +209,114 @@ class MatchCenterIntegrationTest {
     }
 
     @Test
+    void planFollowsTheUsersOwnLineupFromTheMainTactic() throws Exception {
+        importExport(fixture());
+        saveMainTactic("4-3-3", List.of(java.util.Map.of("slotId", "ST", "roleId", "poacher_attack", "tags", List.of())));
+        JsonNode engine = data(get("/api/v1/careers/" + careerId + "/match/opponents/" + GALATASARAY + "/plan"));
+        assertThat(engine.at("/lineupSource").asText()).isEqualTo("ENGINE");
+        java.util.Map<String, Long> lineup = new java.util.LinkedHashMap<>();
+        engine.at("/ourEleven").forEach((s) -> lineup.put(s.at("/slotId").asText(), s.at("/playerId").asLong()));
+        List<String> wide = lineup.keySet().stream().filter((slot) -> slot.startsWith("L") || slot.startsWith("R")).toList();
+        assertThat(wide).as(lineup.keySet().toString()).hasSizeGreaterThanOrEqualTo(2);
+        Long first = lineup.get(wide.get(0));
+        lineup.put(wide.get(0), lineup.get(wide.get(1)));
+        lineup.put(wide.get(1), first);
+        saveMainTactic("4-3-3", List.of(java.util.Map.of("slotId", "ST", "roleId", "poacher_attack", "tags", List.of())), lineup);
+
+        JsonNode plan = data(get("/api/v1/careers/" + careerId + "/match/opponents/" + GALATASARAY + "/plan"));
+
+        assertThat(plan.at("/lineupSource").asText()).isEqualTo("USER_LINEUP");
+        java.util.Map<String, Long> placed = new java.util.HashMap<>();
+        plan.at("/ourEleven").forEach((s) -> placed.put(s.at("/slotId").asText(), s.at("/playerId").asLong()));
+        assertThat(placed).isEqualTo(lineup);
+
+        java.util.Map<String, Long> stale = new java.util.LinkedHashMap<>(lineup);
+        long bench = java.util.stream.StreamSupport.stream(data(get("/api/v1/careers/" + careerId + "/squad")).spliterator(), false)
+                .map((s) -> s.at("/player/id").asLong()).filter((id) -> !lineup.containsValue(id)).findFirst().orElseThrow();
+        stale.put("LWB", bench);
+        saveMainTactic("4-3-3", List.of(java.util.Map.of("slotId", "ST", "roleId", "poacher_attack", "tags", List.of())), stale);
+        assertThat(data(get("/api/v1/careers/" + careerId + "/match/opponents/" + GALATASARAY + "/plan")).at("/lineupSource").asText())
+                .as("dizilişte olmayan eski slot anahtarı kendi 11'i bozmaz").isEqualTo("USER_LINEUP");
+    }
+
+    @Test
+    void theSamePlayerInTwoSlotsLeavesTheElevenToTheEngine() throws Exception {
+        importExport(fixture());
+        saveMainTactic("4-3-3", List.of(java.util.Map.of("slotId", "ST", "roleId", "poacher_attack", "tags", List.of())));
+        JsonNode engine = data(get("/api/v1/careers/" + careerId + "/match/opponents/" + GALATASARAY + "/plan"));
+        java.util.Map<String, Long> lineup = new java.util.LinkedHashMap<>();
+        engine.at("/ourEleven").forEach((s) -> lineup.put(s.at("/slotId").asText(), s.at("/playerId").asLong()));
+        String first = lineup.keySet().iterator().next();
+        String last = lineup.keySet().stream().reduce((a, b) -> b).orElseThrow();
+        lineup.put(last, lineup.get(first));
+        saveMainTactic("4-3-3", List.of(java.util.Map.of("slotId", "ST", "roleId", "poacher_attack", "tags", List.of())), lineup);
+
+        JsonNode plan = data(get("/api/v1/careers/" + careerId + "/match/opponents/" + GALATASARAY + "/plan"));
+
+        assertThat(plan.at("/lineupSource").asText()).isEqualTo("ENGINE");
+    }
+
+    @Test
+    void anIncompleteLineupLeavesTheElevenToTheEngine() throws Exception {
+        importExport(fixture());
+        saveMainTactic("4-3-3", List.of(java.util.Map.of("slotId", "ST", "roleId", "poacher_attack", "tags", List.of())));
+        JsonNode engine = data(get("/api/v1/careers/" + careerId + "/match/opponents/" + GALATASARAY + "/plan"));
+        JsonNode keeper = engine.at("/ourEleven/0");
+        saveMainTactic("4-3-3", List.of(java.util.Map.of("slotId", "ST", "roleId", "poacher_attack", "tags", List.of())),
+                java.util.Map.of(keeper.at("/slotId").asText(), keeper.at("/playerId").asLong()));
+
+        JsonNode plan = data(get("/api/v1/careers/" + careerId + "/match/opponents/" + GALATASARAY + "/plan"));
+
+        assertThat(plan.at("/lineupSource").asText()).isEqualTo("ENGINE");
+        assertThat(plan.at("/ourEleven").size()).isEqualTo(11);
+    }
+
+    @Test
+    void anAttackingLeftWingerAgainstFenerbahcesStrongRightSideIsFlaggedAsAnExposedFlank() throws Exception {
+        importExport(fixture());
+        JsonNode balanced = data(get("/api/v1/careers/" + careerId + "/match/opponents/" + FENERBAHCE + "/plan"));
+        assertThat(balanced.at("/flanks/left/verdict").asText()).as("varsayılan Winger (Balanced): sol kanat dengeli").isEqualTo("BALANCED");
+        saveMainTactic("4-1-4-1", List.of(java.util.Map.of("slotId", "LM", "roleId", "winger_attack", "tags", List.of())));
+
+        JsonNode plan = data(get("/api/v1/careers/" + careerId + "/match/opponents/" + FENERBAHCE + "/plan"));
+
+        JsonNode left = plan.at("/flanks/left");
+        assertThat(left.at("/verdict").asText()).isEqualTo("EXPOSED");
+        assertThat(left.at("/ours/attackLean").asInt()).isGreaterThan(balanced.at("/flanks/left/ours/attackLean").asInt());
+        List<String> codes = new ArrayList<>();
+        plan.at("/tacticalNotes").forEach((n) -> codes.add(n.at("/code").asText()));
+        assertThat(codes).as(codes.toString()).startsWith("KEY_THREAT", "FLANK_EXPOSED");
+        assertThat(plan.at("/tacticalNotes/1/text").asText()).startsWith("Sol kanadımız açık: rakibin sağ kanadında")
+                .contains(left.at("/theirs/keyThreat/name").asText(), "Winger (Attack) rolüyle");
+    }
+
+    @Test
+    void planCarriesBothFlankMatchupsAndFlankNotesComeRightAfterTheKeyThreat() throws Exception {
+        importExport(fixture());
+
+        JsonNode plan = data(get("/api/v1/careers/" + careerId + "/match/opponents/" + GALATASARAY + "/plan"));
+
+        for (String side : List.of("left", "right")) {
+            JsonNode flank = plan.at("/flanks/" + side);
+            assertThat(flank.at("/side").asText()).isEqualTo(side.toUpperCase(java.util.Locale.ROOT));
+            assertThat(flank.at("/verdict").asText()).isIn("EXPOSED", "OPPORTUNITY", "BALANCED");
+            assertThat(flank.at("/ours/players").size()).isPositive();
+            assertThat(flank.at("/theirs/players").size()).isPositive();
+            assertThat(flank.at("/theirs/keyThreat/name").asText()).isNotBlank();
+            assertThat(flank.at("/ours/players/0/role").asText()).isNotBlank();
+            assertThat(flank.at("/ours/defensiveCover").asInt()).isBetween(0, 100);
+            assertThat(flank.at("/theirs/threat").asInt()).isBetween(0, 100);
+        }
+        List<String> codes = new ArrayList<>();
+        plan.at("/tacticalNotes").forEach((n) -> codes.add(n.at("/code").asText()));
+        int firstOther = java.util.stream.IntStream.range(0, codes.size()).filter((i) -> !codes.get(i).startsWith("FLANK_") && !codes.get(i).equals("KEY_THREAT"))
+                .findFirst().orElse(codes.size());
+        assertThat(codes.subList(firstOther, codes.size())).as(codes.toString()).noneMatch((c) -> c.startsWith("FLANK_"));
+        assertThat(codes.indexOf("KEY_THREAT")).as(codes.toString()).isLessThanOrEqualTo(0);
+        assertThat(codes.size()).isLessThanOrEqualTo(5);
+    }
+
+    @Test
     void aStaleMainTacticFallsBackToTheTeamDefaultInsteadOfFailing() throws Exception {
         importExport(fixture());
         saveMainTactic("4-3-3", List.of());
@@ -222,9 +330,17 @@ class MatchCenterIntegrationTest {
     }
 
     private void saveMainTactic(String formation, List<java.util.Map<String, Object>> slots) throws Exception {
+        saveMainTactic(formation, slots, java.util.Map.of());
+    }
+
+    private void saveMainTactic(String formation, List<java.util.Map<String, Object>> slots, java.util.Map<String, Long> lineup) throws Exception {
+        java.util.Map<String, Object> body = new java.util.HashMap<>(java.util.Map.of("careerId", careerId, "tactic", java.util.Map.of("formation", formation, "slots", slots)));
+        if (!lineup.isEmpty()) {
+            body.put("lineup", lineup);
+        }
         JsonNode saved = support.json(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/v1/user-tactics/1")
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(java.util.Map.of("careerId", careerId, "tactic", java.util.Map.of("formation", formation, "slots", slots)))), token);
+                .content(objectMapper.writeValueAsString(body)), token);
         assertThat(saved.at("/success").asBoolean()).as(saved.toString()).isTrue();
         support.json(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/v1/user-tactics/1/main?careerId=" + careerId), token);
     }
@@ -237,7 +353,8 @@ class MatchCenterIntegrationTest {
 
         List<String> missing = new ArrayList<>();
         plan.at("/missing").forEach((m) -> missing.add(m.asText()));
-        assertThat(missing).contains("OUR_FORMATION", "MATCH_RATINGS");
+        assertThat(missing).contains("OUR_FORMATION", "MATCH_RATINGS", "FLANKS");
+        assertThat(plan.has("flanks")).isFalse();
         assertThat(plan.at("/ourEleven").size()).isZero();
         assertThat(plan.at("/restCandidates").size()).isZero();
     }
