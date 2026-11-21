@@ -27470,5 +27470,1452 @@
    "Sezon ilerledikçe ilk 11 güncellenmeli"
   ],
   "alternatives": []
+ },
+ {
+  "id": "bugra_dengeli",
+  "kind": "PERSONAL",
+  "category": "PERSONAL_STYLE",
+  "variant": "DENGELI",
+  "club": "Buğra FC",
+  "coach": "Buğra",
+  "season": "FC27",
+  "league": null,
+  "honours": [],
+  "whyIconic": "Buğra'nın temel futbol felsefesi, fiziksel dirençle desteklenen yaratıcı ve üretken hücum futboludur. Kontrollü oyun kurulur, uygun boşluk bulunduğunda hızla dikeyleşilir; kanatlarda asimetrik hareketlilik ve merkezde yaratıcı bir 10 numara kullanılır. Topa sahip olmak amaç değil, tehlikeli hücumlar üretmenin aracıdır.",
+  "realShape": {
+   "inPossession": "Temel yapı 4-2-3-1'dir. Stoperler, Makelele tipi ön libero ve iki yönlü 8 numarayla kontrollü çıkılır. Sağda çizgiyi kullanan hızlı kanat oyuncusuna Dani Alves tipi bek içeriden veya dışarıdan destek verir. Solda Henry tipi oyuncu içeri kat ederken Ashley Cole tipi bek genişlik sağlar. Sergen tipi 10 numara kanatlara yaklaşarak bağlantı kurar, Benzema tipi santrfor geriye gelip pas istasyonu olur. Topun konumuna göre 3-2-5 benzeri hücum yerleşimleri oluşabilir.",
+   "outOfPossession": "Orta-yüksek savunma çizgisi ve kompakt 4-2-3-1 veya 4-4-1-1 savunma yerleşimi kullanılır. Santrfor baskıyı bir tarafa yönlendirir, 10 numara rakibin merkez pas bağlantısını kapatır. Top rakip beke ulaştığında kanat, bek ve merkez orta saha birlikte baskı tuzağı kurar. Top kaybında yakın oyuncular koşullu karşı pres yapar; kazanma ihtimali düşükse takım kompakt orta bloğa döner.",
+   "keyMechanisms": [
+    "Stoperler ve çift pivot üzerinden kontrollü oyun kurma",
+    "Sağ kanatta çizgi genişliği, bek ve 10 numarayla üçgenler",
+    "Sol kanatta içeri kat eden bitirici ve bindiren bek",
+    "Geriye gelen santrfor ile savunma arkasına koşan kanat arasındaki bağlantı",
+    "Rakibi kanada yönlendiren pres tuzakları",
+    "Makelele tipi ön liberoyla savunma geçişi ve ikinci top güvenliği"
+   ]
+  },
+  "replicaFidelity": {
+   "score": 4,
+   "cannotReplicate": [
+    "Beklerin topun bulunduğu tarafa ve rakibin konumuna göre anlık olarak hücum, içe kat etme ve geride kalma görevlerini değiştirmesi birebir tanımlanamıyor; asimetrik bek rolleri kullanıldı.",
+    "Makelele tipi ön liberonun yalnızca iki bek birden ileri çıktığında stoperlerin arasına girmesi koşullu olarak ayarlanamıyor; Holding/Defend kullanıldı.",
+    "Sergen tipi 10 numaranın serbest yaratıcılığı ile kanada kayma hareketi aynı anda tam karşılanamıyor; Playmaker/Roaming kullanıldı.",
+    "Pres kırıldığında Ramos tipi stoperin kanada açılması ve ön liberonun onun yerini doldurması otomatik bir zincir olarak tanımlanamıyor.",
+    "FC27 rol ve PlayStyle davranışlarının gerçek oyun içi etkisi ayrıca doğrulanmalıdır."
+   ]
+  },
+  "behaviorTags": [
+   "short_build_up",
+   "vertical_possession",
+   "wing_play",
+   "flank_overload",
+   "fb_asymmetric",
+   "double_pivot",
+   "cdm_anchor",
+   "cam_drift_wide",
+   "st_link_up",
+   "w_cut_inside",
+   "press_traps",
+   "compact_mid_block",
+   "counter_press",
+   "rest_defence"
+  ],
+  "fc27": {
+   "formation": "4-2-3-1 (2)",
+   "buildUp": "BALANCED",
+   "defensiveApproach": "BALANCED",
+   "lineHeight": 60,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Sweeper Keeper",
+     "focus": "Build-Up",
+     "profile": "Óscar Córdoba tipi: güvenilir, refleksleri güçlü, gerektiğinde savunma arkasını süpüren ve pas bağlantısına katılan kaleci.",
+     "keyAttributes": [
+      "GK Reflexes",
+      "GK Positioning",
+      "GK Handling",
+      "GK Kicking",
+      "Reactions"
+     ],
+     "keyPlayStyles": [
+      "Rush Out",
+      "Footwork",
+      "Far Reach"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Wingback",
+     "focus": "Balanced",
+     "profile": "Ashley Cole tipi: hızlı geri dönen, bire bir savunması kuvvetli, sol kanat içeri kat ettiğinde bindirme yapan bek.",
+     "keyAttributes": [
+      "Sprint Speed",
+      "Stamina",
+      "Defensive Awareness",
+      "Standing Tackle",
+      "Crossing"
+     ],
+     "keyPlayStyles": [
+      "Jockey",
+      "Relentless",
+      "Quick Step"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Defender",
+     "focus": "Defend",
+     "profile": "Alessandro Nesta tipi: pozisyon bilgisi, müdahale zamanlaması ve savunma organizasyonu üst düzey stoper.",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Interceptions",
+      "Standing Tackle",
+      "Composure",
+      "Reactions"
+     ],
+     "keyPlayStyles": [
+      "Anticipate",
+      "Intercept",
+      "Block"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Stopper",
+     "focus": "Balanced",
+     "profile": "Sergio Ramos tipi: atletik, agresif, geniş alanda rakibi karşılayabilen ve bek arkasını kapatabilen stoper.",
+     "keyAttributes": [
+      "Aggression",
+      "Sprint Speed",
+      "Strength",
+      "Standing Tackle",
+      "Defensive Awareness"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Anticipate",
+      "Aerial Fortress"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Falseback",
+     "focus": "Balanced",
+     "profile": "Dani Alves tipi: teknik, pas kalitesi yüksek, kanat ve 10 numarayla üçgenler kuran, gerektiğinde iç koridora giren sağ bek.",
+     "keyAttributes": [
+      "Short Passing",
+      "Ball Control",
+      "Stamina",
+      "Crossing",
+      "Vision"
+     ],
+     "keyPlayStyles": [
+      "Tiki Taka",
+      "Pinged Pass",
+      "Whipped Pass"
+     ]
+    },
+    {
+     "slot": "LDM",
+     "position": "CDM",
+     "role": "Holding",
+     "focus": "Defend",
+     "profile": "Claude Makelele tipi: savunma önünü kapatan, stoperlerin boşluklarını dolduran, geçişleri durduran disiplinli ön libero.",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Interceptions",
+      "Standing Tackle",
+      "Stamina",
+      "Reactions"
+     ],
+     "keyPlayStyles": [
+      "Intercept",
+      "Anticipate",
+      "Relentless"
+     ]
+    },
+    {
+     "slot": "RDM",
+     "position": "CDM",
+     "role": "Deep-Lying Playmaker",
+     "focus": "Build-Up",
+     "profile": "Xabi Alonso-Gerrard-Lampard karışımı tipi: uzun pası güçlü, fiziksel mücadeleden kaçmayan, uzaktan şut tehdidi olan akıllı iki yönlü orta saha.",
+     "keyAttributes": [
+      "Long Passing",
+      "Vision",
+      "Long Shots",
+      "Stamina",
+      "Short Passing"
+     ],
+     "keyPlayStyles": [
+      "Long Ball Pass",
+      "Pinged Pass",
+      "Power Shot"
+     ]
+    },
+    {
+     "slot": "LM",
+     "position": "LM",
+     "role": "Inside Forward",
+     "focus": "Attack",
+     "profile": "Thierry Henry tipi: soldan içeri kat eden, savunma arkasına koşan, bitiriciliği ve hızı yüksek hücumcu.",
+     "keyAttributes": [
+      "Acceleration",
+      "Sprint Speed",
+      "Finishing",
+      "Positioning",
+      "Dribbling"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Finesse Shot",
+      "Quick Step"
+     ]
+    },
+    {
+     "slot": "CAM",
+     "position": "CAM",
+     "role": "Playmaker",
+     "focus": "Roaming",
+     "profile": "Sergen Yalçın tipi: yüksek oyun zekâsı, yaratıcı son paslar, dar alan tekniği ve kanatlara serbest hareketlilik sunan 10 numara.",
+     "keyAttributes": [
+      "Vision",
+      "Ball Control",
+      "Dribbling",
+      "Short Passing",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Incisive Pass",
+      "Inventive",
+      "Technical"
+     ]
+    },
+    {
+     "slot": "RM",
+     "position": "RM",
+     "role": "Winger",
+     "focus": "Balanced",
+     "profile": "Shaun Wright-Phillips tipi: çizgide genişlik sağlayan, bire birde hızlı, orta ve geriye pas üreten çalışkan kanat.",
+     "keyAttributes": [
+      "Acceleration",
+      "Sprint Speed",
+      "Dribbling",
+      "Crossing",
+      "Stamina"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Quick Step",
+      "Whipped Pass"
+     ]
+    },
+    {
+     "slot": "ST",
+     "position": "ST",
+     "role": "False 9",
+     "focus": "Build-Up",
+     "profile": "Karim Benzema tipi: geriye gelip bağlantı kuran, kanat koşularını besleyen, aynı zamanda gol bitirebilen komple santrfor.",
+     "keyAttributes": [
+      "Ball Control",
+      "Vision",
+      "Short Passing",
+      "Finishing",
+      "Positioning"
+     ],
+     "keyPlayStyles": [
+      "First Touch",
+      "Incisive Pass",
+      "Finesse Shot"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Merkezi güçlendir",
+    "formation": "4-3-3 (2)",
+    "buildUp": "BALANCED",
+    "defensiveApproach": "BALANCED",
+    "lineHeight": 55,
+    "changes": [
+     "CDM: Holding/Defend (Makelele tipi tek pivot olur)",
+     "RCM: Box-to-Box/Balanced (iki yönlü 8 sağ içe geçer)",
+     "LCM: Playmaker/Roaming (Sergen tipi 10 orta saha üçlüsüne yaklaşır)",
+     "LW: Inside Forward/Attack (içeri koşu tehdidi korunur)",
+     "RW: Winger/Balanced (sağ kanat genişliği korunur)"
+    ]
+   },
+   "smartTactics": [
+    "Tactical Focus: Hücum → bek desteğini ve dikey pas sıklığını artır. Ne zaman: rakip orta blokta pasif kaldığında.",
+    "Tactical Focus: Savunma → bekleri kontrollü kullan, çift pivotu yakınlaştır. Ne zaman: rakip hızlı geçişlerle tehdit oluşturduğunda.",
+    "Quick Tactic: Kanat Tuzağı: rakibi bir tarafa yönlendir, top beke ulaştığında birlikte baskı yap.",
+    "Quick Tactic: İkinci Top: uzaklaştırılan topları merkezde toplayarak hücum sürekliliğini koru."
+   ],
+   "tacticCode": null
+  },
+  "sources": [
+   "Kişisel oyun anlayışı sohbeti, 2026-11"
+  ],
+  "verify": [
+   "Varsayılan takımda sağ bekin içe kat etmesini mi, yoksa bindirmesini mi daha sık tercih edersin?",
+   "Hibrit 8 numaranın uzun pas özelliklerini korumak için CDM Deep-Lying Playmaker kullanılması uygun mu?",
+   "Varsayılan savunma çizgisi için 60 değeri istediğin orta-yüksek çizgiye uyuyor mu?"
+  ]
+ },
+ {
+  "id": "bugra_hucum",
+  "kind": "PERSONAL",
+  "category": "PERSONAL_STYLE",
+  "variant": "HUCUM",
+  "club": "Buğra FC",
+  "coach": "Buğra",
+  "season": "FC27",
+  "league": null,
+  "honours": [],
+  "whyIconic": "Gol gerektiğinde hücumcu kimlikten vazgeçilmez; ceza sahasında ikinci santrfor, kanatlarda yaratıcılık ve merkezde ikinci topları kazanacak güvenlik oluşturulur. Benzema tipi bağlantı santrforunun yanına Drogba tipi fiziksel bitirici eklenir. Risk artırılır ancak savunma geçişi tamamen terk edilmez.",
+  "realShape": {
+   "inPossession": "4-2-2-2 yapısında iki santrfor birbirini tamamlar: bağlantı oyuncusu geriye gelir, hedef santrfor stoperleri meşgul ederek ceza sahasında kalır. Messi ve Kaká tipi iki yaratıcı hücumcu iç koridorlardan pozisyon üretir. Genişliği bekler sırayla sağlar; top tarafındaki bek ileri çıkarken diğer bek içeri daralır. Ön libero uzaklaştırılan topları ve merkezdeki kontratak koridorunu kontrol eder.",
+   "outOfPossession": "Savunma çizgisi yükselir, rakip yarı sahada yönlendirilmiş pres uygulanır. Yakın oyuncular top kaybında hızlıca baskı kurar. İki santrfor ilk pas bağlantılarını sınırlar; iki hücumcu orta saha pas kanallarına baskı desteği verir. Baskı kırıldığında ön libero ve gerideki bek savunma güvenliğini sağlar.",
+   "keyMechanisms": [
+    "Bağlantı santrforu ve fiziksel hedef santrfor birlikteliği",
+    "Yüksek orta, alçak orta ve geriye çıkarılan pasları birlikte kullanma",
+    "Yaratıcı oyuncuların iç koridorlarda serbest kombinasyonları",
+    "Top tarafındaki bekle genişlik, ters bekin içeri daralması",
+    "İkinci topları toplayarak rakibi kendi sahasına hapsetme",
+    "Savunma dengesizken hızlı Messi-Kaká tipi pas ve koşu kombinasyonu"
+   ]
+  },
+  "replicaFidelity": {
+   "score": 3,
+   "cannotReplicate": [
+    "Buğra'nın tercih ettiği ikinci santrfor hamlesi normalde maç içinde yapılan bir değişikliktir; HUCUM varyantında başlangıç dizilişi olarak modellendi.",
+    "4-2-2-2 dizilişinde iki yaratıcı hücumcunun kanat genişliği ile iç koridor serbestliğini aynı anda kusursuz korumak mümkün değil; LAM/RAM Playmaker/Roaming kullanıldı.",
+    "Top tarafındaki bekin çıkıp diğer bekin üçüncü stoper gibi daralması otomatik ve koşullu olarak ayarlanamıyor.",
+    "Makelele tipi oyuncunun hangi ikinci topa çıkıp hangisinde savunma güvenliğini koruyacağını oyun içi rol tek başına belirleyemiyor.",
+    "Benzema tipi santrforun False 9 davranışı ile Drogba tipi Target Forward ceza sahası varlığı seçildi."
+   ]
+  },
+  "behaviorTags": [
+   "two_strikers",
+   "st_link_up",
+   "st_target",
+   "cam_create",
+   "cam_half_space",
+   "wing_play",
+   "wide_crossing",
+   "fullback_width",
+   "fb_asymmetric",
+   "vertical_attack",
+   "counter_press",
+   "rest_defence",
+   "set_piece_threat",
+   "high_line"
+  ],
+  "fc27": {
+   "formation": "4-2-2-2",
+   "buildUp": "BALANCED",
+   "defensiveApproach": "HIGH",
+   "lineHeight": 70,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Sweeper Keeper",
+     "focus": "Balanced",
+     "profile": "Óscar Córdoba tipi: savunma arkasını kontrol eden, hızlı hücum başlatabilen güvenilir kaleci.",
+     "keyAttributes": [
+      "GK Reflexes",
+      "GK Positioning",
+      "GK Kicking",
+      "Reactions"
+     ],
+     "keyPlayStyles": [
+      "Rush Out",
+      "Footwork"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Attacking Wingback",
+     "focus": "Support",
+     "profile": "Ashley Cole tipi: hızlı bindirme yapan, isabetli orta açan, geriye dönüşü güçlü bek.",
+     "keyAttributes": [
+      "Sprint Speed",
+      "Stamina",
+      "Crossing",
+      "Standing Tackle"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Whipped Pass",
+      "Quick Step"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Defender",
+     "focus": "Defend",
+     "profile": "Nesta tipi: son savunma hattını yöneten, doğru pozisyon alan ve müdahale zamanlaması yüksek stoper.",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Interceptions",
+      "Standing Tackle",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Anticipate",
+      "Block",
+      "Intercept"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Stopper",
+     "focus": "Balanced",
+     "profile": "Ramos tipi: hızlı rakipleri karşılayan, agresif ama kontrollü müdahaleler yapan stoper.",
+     "keyAttributes": [
+      "Sprint Speed",
+      "Aggression",
+      "Strength",
+      "Standing Tackle"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Anticipate",
+      "Aerial Fortress"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Falseback",
+     "focus": "Balanced",
+     "profile": "Dani Alves tipi: iç koridordan pas bağlantısı kuran, gerektiğinde genişlik sağlayan teknik bek.",
+     "keyAttributes": [
+      "Short Passing",
+      "Vision",
+      "Ball Control",
+      "Stamina"
+     ],
+     "keyPlayStyles": [
+      "Tiki Taka",
+      "Pinged Pass",
+      "Whipped Pass"
+     ]
+    },
+    {
+     "slot": "LDM",
+     "position": "CDM",
+     "role": "Holding",
+     "focus": "Defend",
+     "profile": "Makelele tipi: hücum arkasında alan koruyan, ikinci topları süpüren savunma lideri.",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Interceptions",
+      "Standing Tackle",
+      "Reactions"
+     ],
+     "keyPlayStyles": [
+      "Intercept",
+      "Anticipate",
+      "Relentless"
+     ]
+    },
+    {
+     "slot": "RDM",
+     "position": "CDM",
+     "role": "Deep-Lying Playmaker",
+     "focus": "Build-Up",
+     "profile": "Gerrard-Xabi Alonso tipi: geriden uzun pasla hücumu yönlendiren, uzaktan şut atabilen, fiziksel mücadeleye katılan orta saha.",
+     "keyAttributes": [
+      "Long Passing",
+      "Vision",
+      "Long Shots",
+      "Short Passing",
+      "Stamina"
+     ],
+     "keyPlayStyles": [
+      "Long Ball Pass",
+      "Pinged Pass",
+      "Power Shot"
+     ]
+    },
+    {
+     "slot": "LAM",
+     "position": "CAM",
+     "role": "Playmaker",
+     "focus": "Roaming",
+     "profile": "Kaká tipi: sol iç koridordan dikine hızlanan, savunma arkasına koşan yaratıcı hücumcu.",
+     "keyAttributes": [
+      "Acceleration",
+      "Dribbling",
+      "Vision",
+      "Finishing"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Incisive Pass",
+      "Technical"
+     ]
+    },
+    {
+     "slot": "RAM",
+     "position": "CAM",
+     "role": "Playmaker",
+     "focus": "Roaming",
+     "profile": "Messi tipi: sağ iç koridorda adam eksilten, ara pas ve şut üreten serbest yaratıcı.",
+     "keyAttributes": [
+      "Dribbling",
+      "Agility",
+      "Vision",
+      "Finishing",
+      "Ball Control"
+     ],
+     "keyPlayStyles": [
+      "Technical",
+      "Incisive Pass",
+      "Finesse Shot"
+     ]
+    },
+    {
+     "slot": "LST",
+     "position": "ST",
+     "role": "False 9",
+     "focus": "Build-Up",
+     "profile": "Benzema tipi: geriye gelerek pas bağlantısı kuran, ikinci santrfora pozisyon hazırlayan forvet.",
+     "keyAttributes": [
+      "Vision",
+      "Short Passing",
+      "Ball Control",
+      "Finishing"
+     ],
+     "keyPlayStyles": [
+      "First Touch",
+      "Incisive Pass",
+      "Press Proven"
+     ]
+    },
+    {
+     "slot": "RST",
+     "position": "ST",
+     "role": "Target Forward",
+     "focus": "Attack",
+     "profile": "Drogba tipi: stoperlerle fiziksel mücadele eden, hava toplarında etkili, ceza sahasında bitirici santrfor.",
+     "keyAttributes": [
+      "Strength",
+      "Heading Accuracy",
+      "Jumping",
+      "Finishing",
+      "Positioning"
+     ],
+     "keyPlayStyles": [
+      "Aerial Fortress",
+      "Precision Header",
+      "Bruiser"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Son baskı",
+    "formation": "4-2-2-2",
+    "buildUp": "COUNTER",
+    "defensiveApproach": "AGGRESSIVE",
+    "lineHeight": 91,
+    "changes": [
+     "LAM: Shadow Striker/Attack (Kaká tipi ceza sahasına daha çok koşar)",
+     "RAM: Playmaker/Roaming (Messi tipi pas bağlantısını korur)",
+     "LST: False 9/Attack (Benzema tipinin gol tehdidi artar)",
+     "RST: Target Forward/Attack (Drogba tipi ceza sahası hedefi)",
+     "LB: Attacking Wingback/Attack (daha fazla genişlik ve orta)"
+    ]
+   },
+   "smartTactics": [
+    "Tactical Focus: Hücum → ceza sahası oyuncu sayısını ve bek desteğini artır. Ne zaman: son bölümde gol zorunlu olduğunda.",
+    "Tactical Focus: Savunma → baskı kırılıyorsa beklerden birini geride tut. Ne zaman: rakip kontratak tehdidini artırdığında.",
+    "Quick Tactic: İkinci Santrfor: bağlantı forvetinin yanına fiziksel bitirici ekle.",
+    "Quick Tactic: İkinci Dalga: uzaklaştırılan topları kazanıp savunma yerleşmeden tekrar hücum et."
+   ],
+   "tacticCode": null
+  },
+  "sources": [
+   "Kişisel oyun anlayışı sohbeti, 2026-11"
+  ],
+  "verify": [
+   "HUCUM varyantında başlangıçtan itibaren çift santrfor mu istersin, yoksa 4-2-3-1 başlayıp sonradan mı geçmek istersin?",
+   "İki santrforlu düzende Messi ve Kaká tipi oyuncuların iç koridorlarda oynaması senin tercihin mi?",
+   "Hücum varyantında 70 savunma çizgisi yeterli mi, yoksa daha yüksek mi olmalı?"
+  ]
+ },
+ {
+  "id": "bugra_defans",
+  "kind": "PERSONAL",
+  "category": "PERSONAL_STYLE",
+  "variant": "DEFANS",
+  "club": "Buğra FC",
+  "coach": "Buğra",
+  "season": "FC27",
+  "league": null,
+  "honours": [],
+  "whyIconic": "Buğra'nın doğasında tamamen kapanmak yoktur; bu nedenle DEFANS varyantı derin blokta sürekli beklemek yerine kompakt orta blok, güçlü merkez ve kontrollü hücum üzerine kurulmuştur. Skor korunurken topu rakibe tamamen bırakmak yerine pas bağlantılarıyla baskıdan çıkılır ve ikinci gol fırsatı aranır. Yorgun hücumcuların yerine top saklayabilen oyuncular tercih edilir.",
+  "realShape": {
+   "inPossession": "4-2-3-1 düzeninde stoperler ve iki ön libero birbirine yakın konumlanır. Bekler kontrollü çıkar, çoğunlukla biri geride kalır. Yaratıcı 10 numara topu saklayarak kanatlarla bağlantı kurar. Santrfor gerektiğinde geriye gelir ve hücumcuları oyuna sokar. Rakip öne çıktığında hızlı kanat oyuncusunun savunma arkası koşusu kullanılır.",
+   "outOfPossession": "Kompakt orta blokta 4-4-1-1 benzeri yerleşim oluşturulur. Savunma çizgisi normalden biraz daha geridedir ancak ceza sahasına gömülmez. Ön liberolar merkez pas kanallarını kapatır, kanatlar rakip bekleri takip eder. Pres için uygun an beklendikten sonra rakip kanatta sıkıştırılır. Top kazanıldığında kontrolsüz uzaklaştırma yerine güvenli pas veya uygun hızlı hücum tercih edilir.",
+   "keyMechanisms": [
+    "Kompakt orta blok ve merkezde çift ön libero güvenliği",
+    "Beklerden birinin geride kalmasıyla savunma geçişi koruması",
+    "Kanatların rakip beklerin bindirmelerini takip etmesi",
+    "Topu saklayabilen yaratıcı oyuncularla rakibin baskısını kırma",
+    "Fırsat doğduğunda hızlı kanat koşusuyla ikinci golü arama",
+    "Savunma hattından gereksiz oyuncu çıkarmadan alanları koruma"
+   ]
+  },
+  "replicaFidelity": {
+   "score": 4,
+   "cannotReplicate": [
+    "Buğra'nın skoru korurken hücum kimliğini sürdürme isteği tek bir savunma yaklaşımıyla tam açıklanamıyor; BALANCED ve 48 çizgi yüksekliği kullanıldı.",
+    "Rakibin bek bindirmesine göre kanat oyuncusunun geri dönmesi ve hibrit 8'in iç koridoru kapatması koşullu olarak tanımlanamıyor.",
+    "Ramos tipi stoperin yalnızca pres kırıldığında kanada açılması ve Makelele'nin yerini doldurması otomatik uygulanamıyor.",
+    "Yorgun kanat oyuncusunun yerine top tutabilen oyuncu alınması maç içi oyuncu değişikliği gerektiriyor."
+   ]
+  },
+  "behaviorTags": [
+   "compact_mid_block",
+   "double_pivot",
+   "cdm_anchor",
+   "cdm_screen",
+   "cm_ball_winner",
+   "fb_asymmetric",
+   "fb_stay_back",
+   "wm_two_way",
+   "st_link_up",
+   "possession_low_risk",
+   "transition_defence",
+   "rest_defence",
+   "press_traps",
+   "zonal_marking"
+  ],
+  "fc27": {
+   "formation": "4-2-3-1 (2)",
+   "buildUp": "BALANCED",
+   "defensiveApproach": "BALANCED",
+   "lineHeight": 48,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Goalkeeper",
+     "focus": "Balanced",
+     "profile": "Óscar Córdoba tipi: güvenilir, baskı altında sakin, kritik kurtarışlar yapan kaleci.",
+     "keyAttributes": [
+      "GK Reflexes",
+      "GK Positioning",
+      "GK Handling",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Far Reach",
+      "Cross Claimer",
+      "Footwork"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Fullback",
+     "focus": "Defend",
+     "profile": "Ashley Cole tipi: hızlı rakip kanatlara karşı bire bir savunması güçlü, pozisyon disiplinli bek.",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Standing Tackle",
+      "Sprint Speed",
+      "Stamina"
+     ],
+     "keyPlayStyles": [
+      "Jockey",
+      "Anticipate",
+      "Relentless"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Defender",
+     "focus": "Defend",
+     "profile": "Nesta tipi: savunma çizgisini yöneten, doğru zamanda müdahale eden, pozisyonunu koruyan stoper.",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Interceptions",
+      "Standing Tackle",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Anticipate",
+      "Intercept",
+      "Block"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Defender",
+     "focus": "Defend",
+     "profile": "Ramos tipi: atletik, fiziksel mücadelede güçlü, gerektiğinde bek arkasını kapatan stoper.",
+     "keyAttributes": [
+      "Strength",
+      "Sprint Speed",
+      "Standing Tackle",
+      "Defensive Awareness"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Anticipate",
+      "Aerial Fortress"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Fullback",
+     "focus": "Balanced",
+     "profile": "Dani Alves tipi: teknik pas bağlantısını koruyan ancak hücuma çıkışlarını daha dikkatli seçen bek.",
+     "keyAttributes": [
+      "Short Passing",
+      "Defensive Awareness",
+      "Stamina",
+      "Ball Control"
+     ],
+     "keyPlayStyles": [
+      "Tiki Taka",
+      "Jockey",
+      "Relentless"
+     ]
+    },
+    {
+     "slot": "LDM",
+     "position": "CDM",
+     "role": "Holding",
+     "focus": "Defend",
+     "profile": "Makelele tipi: savunma önünü kapatan, stoperlerin gereksiz yere çıkmasını önleyen ön libero.",
+     "keyAttributes": [
+      "Interceptions",
+      "Defensive Awareness",
+      "Standing Tackle",
+      "Reactions"
+     ],
+     "keyPlayStyles": [
+      "Intercept",
+      "Anticipate",
+      "Relentless"
+     ]
+    },
+    {
+     "slot": "RDM",
+     "position": "CDM",
+     "role": "Holding",
+     "focus": "Ball-Winning",
+     "profile": "Essien tipi: geniş alan kapatan, ikili mücadele kazanan, rakibin merkezdeki temposunu bozan orta saha.",
+     "keyAttributes": [
+      "Strength",
+      "Stamina",
+      "Aggression",
+      "Interceptions",
+      "Standing Tackle"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Relentless",
+      "Intercept"
+     ]
+    },
+    {
+     "slot": "LM",
+     "position": "LM",
+     "role": "Inside Forward",
+     "focus": "Balanced",
+     "profile": "Henry tipi: top kazanıldığında hızla hücuma çıkabilen, içeri kat ederek gol tehdidi yaratan kanat.",
+     "keyAttributes": [
+      "Sprint Speed",
+      "Acceleration",
+      "Finishing",
+      "Ball Control"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Finesse Shot",
+      "Quick Step"
+     ]
+    },
+    {
+     "slot": "CAM",
+     "position": "CAM",
+     "role": "Playmaker",
+     "focus": "Balanced",
+     "profile": "Sergen Yalçın tipi: topu saklayabilen, baskı altında doğru pası bulan, hücumu yöneten yaratıcı oyuncu.",
+     "keyAttributes": [
+      "Ball Control",
+      "Vision",
+      "Short Passing",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Press Proven",
+      "Incisive Pass",
+      "First Touch"
+     ]
+    },
+    {
+     "slot": "RM",
+     "position": "RM",
+     "role": "Winger",
+     "focus": "Balanced",
+     "profile": "Wright-Phillips tipi: savunmaya yardım eden, çizgide genişlik sağlayan, kontrataklarda hızlı çıkabilen kanat.",
+     "keyAttributes": [
+      "Stamina",
+      "Sprint Speed",
+      "Acceleration",
+      "Dribbling"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Rapid",
+      "Quick Step"
+     ]
+    },
+    {
+     "slot": "ST",
+     "position": "ST",
+     "role": "False 9",
+     "focus": "Build-Up",
+     "profile": "Benzema tipi: baskı altında top saklayan, geriye gelip bağlantı kuran, takımın hücuma çıkmasını sağlayan santrfor.",
+     "keyAttributes": [
+      "Ball Control",
+      "Strength",
+      "Vision",
+      "Short Passing"
+     ],
+     "keyPlayStyles": [
+      "Press Proven",
+      "First Touch",
+      "Incisive Pass"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Merkez kilidi",
+    "formation": "4-3-3 (2)",
+    "buildUp": "SHORT_PASSING",
+    "defensiveApproach": "BALANCED",
+    "lineHeight": 43,
+    "changes": [
+     "CDM: Holding/Defend (Makelele tipi savunma önünde kalır)",
+     "RCM: Box-to-Box/Ball-Winning (Essien tipi orta sahayı destekler)",
+     "LCM: Playmaker/Roaming (Sergen tipi merkez üçlüsüne yaklaşır)",
+     "LB: Fullback/Defend (savunma güvenliği önce)",
+     "RW: Winger/Balanced (hızlı çıkış seçeneği korunur)"
+    ]
+   },
+   "smartTactics": [
+    "Tactical Focus: Savunma → blok kompaktlaşır, bekler daha kontrollü çıkar. Ne zaman: skor avantajı korunurken.",
+    "Tactical Focus: Hücum → top kazanıldığında güvenli pasla çık, açık alan varsa hızlan. Ne zaman: rakip fazla oyuncuyla ileri çıktığında.",
+    "Quick Tactic: Merkezi Kapat: ön liberolarla pas kanallarını ve ceza sahası önünü koru.",
+    "Quick Tactic: İkinci Gol: rakip öne çıktığında hızlı kanat koşularını kullan."
+   ],
+   "tacticCode": null
+  },
+  "sources": [
+   "Kişisel oyun anlayışı sohbeti, 2026-11"
+  ],
+  "verify": [
+   "Skor korurken savunma çizgisinin 48'e düşmesi uygun mu?",
+   "DEFANS varyantında Essien tipi fiziksel oyuncunun hibrit 8 numaranın yerini almasını ister misin?",
+   "Skor avantajı korunurken Benzema tipi bağlantı santrforunu mu, yoksa daha fiziksel bir hedef santrforu mu tercih edersin?"
+  ]
+ },
+ {
+  "id": "bugra_buyuk_mac",
+  "kind": "PERSONAL",
+  "category": "PERSONAL_STYLE",
+  "variant": "BUYUK_MAC",
+  "club": "Buğra FC",
+  "coach": "Buğra",
+  "season": "FC27",
+  "league": null,
+  "honours": [],
+  "whyIconic": "Derbi ve finallerde güçlü rakibin orta sahasına fiziksel dirençle karşılık verilir, ancak hücumdaki yıldızların yaratıcılığından vazgeçilmez. Rakip merkezde üstünlük kurarsa önce pres görevleri, ardından oyuncuların pozisyonları değiştirilir; kadro değişikliği son aşamadır. Bu varyant, Buğra'nın hücumcu kimliğini pragmatik maç yönetimiyle birleştirir.",
+  "realShape": {
+   "inPossession": "4-2-3-1 dizilişinde Makelele ve Essien tipi fiziksel çift pivot savunma güvenliği sağlar. Ronaldinho tipi sol kanat, Messi tipi sağ kanat ve Kaká tipi 10 numara özgür hücum bağlantıları kurar. Benzema tipi santrfor geriye gelerek yaratıcı oyunculara alan açar. Kontrollü ilk paslardan sonra uygun boşlukta hızla dikeyleşilir. Rakibin merkez baskısı aşırı güçlenirse 10 numara geriye yaklaşıp orta saha üçlüsü oluşturur.",
+   "outOfPossession": "Orta-yüksek çizgi ve rakibin oyun kurucularını hedefleyen yönlendirilmiş baskı uygulanır. Santrfor ilk pası bir kanada yönlendirir, 10 numara merkez bağlantısını kapatır. Essien tipi oyuncu rakibin oyun kurucusuna agresif baskı yaparken Makelele tipi oyuncu arkasındaki alanı korur. Baskı kırıldığında kompakt orta bloğa dönülür. Stoperler hızlı kanat koşularına karşı savunma çizgisini gereksiz terk etmez.",
+   "keyMechanisms": [
+    "Fiziksel çift pivotla yıldız hücumcuların özgürlüğünü koruma",
+    "Rakibin merkez oyun kurucularına yönlendirilmiş baskı",
+    "Top kazanıldığında yaratıcı oyuncularla hızlı dikey hücum",
+    "Benzema tipi santrforun geriye gelmesiyle kanatların savunma arkasına koşması",
+    "Önce pres, sonra pozisyon, son olarak oyuncu değişikliği",
+    "Merkez baskısı çözülemezse Xabi Alonso tipi pasörle üçlü orta sahaya geçme"
+   ]
+  },
+  "replicaFidelity": {
+   "score": 4,
+   "cannotReplicate": [
+    "Rakibin Xavi-Iniesta-Busquets benzeri orta saha üstünlüğüne göre önce presi, sonra 10 numaranın pozisyonunu, ardından oyuncuyu değiştirme zinciri otomatik uygulanamıyor.",
+    "Messi-Ronaldinho-Kaká tipi üç yıldızın savunma katkısını sınırlı tutarken bütün baskı organizasyonunu diğer oyuncularla kusursuz yürütmek rol sistemiyle garanti edilemiyor.",
+    "Essien tipi oyuncunun belirli rakip oyun kuruculara duruma göre fiziksel baskı uygulaması birebir hedeflenemiyor.",
+    "İki bekin hücum desteğinin topun konumuna göre anlık değişmesi tam karşılanamıyor.",
+    "Inside Forward/Roaming EA'da yalnız LW/RW'de var; 4-2-3-1 (2) kanatları LM/RM olduğu için Ronaldinho tipi Wide Playmaker/Attack, Messi tipi Inside Forward/Attack oldu."
+   ]
+  },
+  "behaviorTags": [
+   "double_pivot",
+   "cdm_anchor",
+   "cdm_destroyer",
+   "cam_create",
+   "fluid_front",
+   "w_create_inside",
+   "st_link_up",
+   "vertical_transition",
+   "press_traps",
+   "mid_block",
+   "compact_block",
+   "rest_defence",
+   "fb_asymmetric",
+   "wing_play"
+  ],
+  "fc27": {
+   "formation": "4-2-3-1 (2)",
+   "buildUp": "BALANCED",
+   "defensiveApproach": "BALANCED",
+   "lineHeight": 57,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Sweeper Keeper",
+     "focus": "Balanced",
+     "profile": "Óscar Córdoba tipi: kritik maçlarda güvenilir, refleksleri güçlü ve baskı altında sakin kaleci.",
+     "keyAttributes": [
+      "GK Reflexes",
+      "GK Positioning",
+      "GK Handling",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Far Reach",
+      "Rush Out",
+      "Footwork"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Fullback",
+     "focus": "Balanced",
+     "profile": "Ashley Cole tipi: elit kanat oyuncularına karşı savunma yapabilen, fırsat bulduğunda bindiren atletik bek.",
+     "keyAttributes": [
+      "Sprint Speed",
+      "Defensive Awareness",
+      "Standing Tackle",
+      "Stamina"
+     ],
+     "keyPlayStyles": [
+      "Jockey",
+      "Anticipate",
+      "Relentless"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Defender",
+     "focus": "Defend",
+     "profile": "Nesta tipi: pozisyon disiplini ve müdahale zamanlamasıyla savunmayı organize eden stoper.",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Interceptions",
+      "Standing Tackle",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Anticipate",
+      "Intercept",
+      "Block"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Stopper",
+     "focus": "Balanced",
+     "profile": "Ramos tipi: hızlı hücumcuları karşılayabilen, fiziksel mücadelede güçlü, atletik stoper.",
+     "keyAttributes": [
+      "Sprint Speed",
+      "Aggression",
+      "Strength",
+      "Standing Tackle"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Anticipate",
+      "Aerial Fortress"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Fullback",
+     "focus": "Balanced",
+     "profile": "Dani Alves tipi: güçlü rakibe karşı kontrollü bindiren, pas bağlantısı ve oyun zekâsı yüksek bek.",
+     "keyAttributes": [
+      "Short Passing",
+      "Stamina",
+      "Ball Control",
+      "Defensive Awareness"
+     ],
+     "keyPlayStyles": [
+      "Tiki Taka",
+      "Pinged Pass",
+      "Relentless"
+     ]
+    },
+    {
+     "slot": "LDM",
+     "position": "CDM",
+     "role": "Holding",
+     "focus": "Defend",
+     "profile": "Makelele tipi: rakip hücumcuların arasındaki boşlukları kapatan, savunma önünü koruyan ön libero.",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Interceptions",
+      "Standing Tackle",
+      "Reactions"
+     ],
+     "keyPlayStyles": [
+      "Intercept",
+      "Anticipate",
+      "Relentless"
+     ]
+    },
+    {
+     "slot": "RDM",
+     "position": "CDM",
+     "role": "Holding",
+     "focus": "Ball-Winning",
+     "profile": "Essien tipi: fiziksel üstünlük sağlayan, rakip oyun kurucuları rahatsız eden, geniş alan kapatan orta saha.",
+     "keyAttributes": [
+      "Strength",
+      "Stamina",
+      "Aggression",
+      "Interceptions",
+      "Standing Tackle"
+     ],
+     "keyPlayStyles": [
+      "Bruiser",
+      "Relentless",
+      "Intercept"
+     ]
+    },
+    {
+     "slot": "LM",
+     "position": "LM",
+     "role": "Wide Playmaker",
+     "focus": "Attack",
+     "profile": "Ronaldinho tipi: soldan içeri giren, dar alanda rakip eksilten, son pas ve şut üreten yaratıcı yıldız.",
+     "keyAttributes": [
+      "Dribbling",
+      "Agility",
+      "Ball Control",
+      "Vision",
+      "Curve"
+     ],
+     "keyPlayStyles": [
+      "Trickster",
+      "Technical",
+      "Inventive"
+     ]
+    },
+    {
+     "slot": "CAM",
+     "position": "CAM",
+     "role": "Playmaker",
+     "focus": "Roaming",
+     "profile": "Kaká tipi: merkezden hızla dikine giden, ara pas ve şut tehdidi taşıyan yaratıcı 10 numara.",
+     "keyAttributes": [
+      "Acceleration",
+      "Dribbling",
+      "Vision",
+      "Finishing",
+      "Ball Control"
+     ],
+     "keyPlayStyles": [
+      "Rapid",
+      "Incisive Pass",
+      "Technical"
+     ]
+    },
+    {
+     "slot": "RM",
+     "position": "RM",
+     "role": "Inside Forward",
+     "focus": "Attack",
+     "profile": "Messi tipi: sağdan merkeze kat ederek pas, çalım ve bitiricilikle maçın kaderini değiştiren oyuncu.",
+     "keyAttributes": [
+      "Dribbling",
+      "Agility",
+      "Vision",
+      "Finishing",
+      "Ball Control"
+     ],
+     "keyPlayStyles": [
+      "Technical",
+      "Incisive Pass",
+      "Finesse Shot"
+     ]
+    },
+    {
+     "slot": "ST",
+     "position": "ST",
+     "role": "False 9",
+     "focus": "Build-Up",
+     "profile": "Benzema tipi: geriye gelip yıldız hücumcularla bağlantı kuran, stoperleri yerinden çıkaran komple santrfor.",
+     "keyAttributes": [
+      "Ball Control",
+      "Vision",
+      "Short Passing",
+      "Finishing"
+     ],
+     "keyPlayStyles": [
+      "First Touch",
+      "Incisive Pass",
+      "Press Proven"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Orta saha üstünlüğü",
+    "formation": "4-3-3 (2)",
+    "buildUp": "SHORT_PASSING",
+    "defensiveApproach": "BALANCED",
+    "lineHeight": 53,
+    "changes": [
+     "CDM: Holding/Defend (Makelele tipi savunma önünde kalır)",
+     "RCM: Box-to-Box/Ball-Winning (Essien tipi merkezde agresif mücadele eder)",
+     "LCM: Deep-Lying Playmaker/Build-Up (Xabi Alonso tipi pasör girer, Ronaldinho tipi çıkar)",
+     "LW: Inside Forward/Attack (Kaká tipi sol kanada geçer)",
+     "RW: Inside Forward/Roaming (Messi tipi yaratıcı özgürlüğünü korur)",
+     "ST: False 9/Build-Up (bağlantı santrforu korunur)"
+    ]
+   },
+   "smartTactics": [
+    "Tactical Focus: Savunma → rakip merkez oyun kurucularına baskıyı artır, ön liberoların dengesini koru. Ne zaman: rakip orta sahayı kontrol ettiğinde.",
+    "Tactical Focus: Hücum → rakibin zayıf kanadına hızlı geçişler yap. Ne zaman: merkez baskısı nedeniyle kanatlarda boşluk oluştuğunda.",
+    "Quick Tactic: Yıldızları Koru: yaratıcı hücumcuları sahada tutarak önce orta saha rollerini değiştir.",
+    "Quick Tactic: Üçlü Merkez: baskı sonuç vermiyorsa Xabi Alonso tipi pasörle 4-3-3'e geç."
+   ],
+   "tacticCode": null
+  },
+  "sources": [
+   "Kişisel oyun anlayışı sohbeti, 2026-11"
+  ],
+  "verify": [
+   "BUYUK_MAC varyantında Sergen tipi oyuncu yerine Kaká tipi 10 numaranın kullanılması uygun mu?",
+   "Ronaldinho-Messi-Kaká gibi üç yaratıcı yıldız yoksa bu varyantı Henry-Sergen-Wright-Phillips profilleriyle mi uygulamak istersin?",
+   "Büyük maçlarda varsayılan 57 çizgi yüksekliği istediğin risk düzeyini yansıtıyor mu?"
+  ]
+ },
+ {
+  "id": "bugra_kucuk_mac",
+  "kind": "PERSONAL",
+  "category": "PERSONAL_STYLE",
+  "variant": "KUCUK_MAC",
+  "club": "Buğra FC",
+  "coach": "Buğra",
+  "season": "FC27",
+  "league": null,
+  "honours": [],
+  "whyIconic": "Kapanan rakibe karşı topa sahip olmak tek başına yeterli değildir; genişlik, çapraz koşular, uzaktan şutlar ve ceza sahasında farklı bitiriş seçenekleri kullanılır. Bekler daha fazla hücum desteği verirken yaratıcı orta saha pas temposunu belirler. Bu varyant Buğra'nın sabırlı fakat steril olmayan hücum anlayışını temsil eder.",
+  "realShape": {
+   "inPossession": "4-2-3-1 temelinde stoperler ve pasör ön libero kontrollü oyun kurar. Bekler rakip savunmayı genişletir; sağ kanat çizgiyi tutarken sol kanat içeri kat eder. Sergen tipi 10 numara kanatlara yaklaşır ve merkezde yaratıcı bağlantılar kurar. Benzema tipi santrfor geriye gelerek savunma hattını bozar. Hibrit 8 numara uzun pas, yön değiştirme ve uzaktan şut tehdidi sunar. Rakip çok derinde kaldığında orta, alçak orta, ikinci top ve gerektiğinde ikinci santrfor kullanılır.",
+   "outOfPossession": "Yüksek savunma çizgisiyle rakip yarı sahada alan daraltılır. Santrfor rakibin ilk pasını yönlendirir, kanat ve bekler pres tuzaklarına katılır. Ön libero ve hibrit 8 uzaklaştırılan topları kontrol eder. İki bek ileri çıktığında ön libero gerektiğinde stoperlerin arasına yaklaşarak savunma geçişini güvenceye alır.",
+   "keyMechanisms": [
+    "Bekler ve kanatlarla savunmayı yatay olarak genişletme",
+    "10 numara ve kanat oyuncularıyla bölgesel sayısal üstünlük",
+    "Uzun diagonal paslarla oyunun yönünü değiştirme",
+    "Ceza sahası çevresinden uzaktan şut ve ikinci top tehdidi",
+    "Geriye gelen santrfor ile savunma arkasına koşan iç kanat",
+    "Kilidin açılamadığı maçlarda fiziksel ikinci santrfor kullanma"
+   ]
+  },
+  "replicaFidelity": {
+   "score": 4,
+   "cannotReplicate": [
+    "Rakibin savunma yoğunluğuna göre yüksek orta, alçak orta, geriye pas ve uzaktan şut tercihlerinin dinamik değişimi doğrudan ayarlanamıyor.",
+    "Beklerin top tarafına göre dönüşümlü bindirmesi ve ön liberonun yalnızca gerektiğinde stoperler arasına girmesi tam karşılanamıyor.",
+    "Sergen tipi 10 numaranın hem serbest dolaşıp hem belirli kanatta sayısal üstünlük oluşturması tek rolle kusursuz uygulanamıyor.",
+    "Uzaktan şut ve uzun diagonal pas sıklığı doğrudan taktik ayarı yerine oyuncu özellikleri ve PlayStyle seçimleriyle temsil edildi."
+   ]
+  },
+  "behaviorTags": [
+   "possession",
+   "short_build_up",
+   "vertical_possession",
+   "wing_play",
+   "flank_overload",
+   "fullback_width",
+   "fb_overlap",
+   "cam_drift_wide",
+   "cm_long_shot",
+   "cdm_deep_build",
+   "st_link_up",
+   "wide_crossing",
+   "counter_press",
+   "high_line"
+  ],
+  "fc27": {
+   "formation": "4-2-3-1 (2)",
+   "buildUp": "SHORT_PASSING",
+   "defensiveApproach": "HIGH",
+   "lineHeight": 72,
+   "slots": [
+    {
+     "slot": "GK",
+     "position": "GK",
+     "role": "Ball-Playing Keeper",
+     "focus": "Build-Up",
+     "profile": "Óscar Córdoba tipi: kısa pasla oyun kuran, yüksek savunma hattının arkasını kontrol eden kaleci.",
+     "keyAttributes": [
+      "GK Kicking",
+      "GK Positioning",
+      "GK Reflexes",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Footwork",
+      "Rush Out",
+      "Far Reach"
+     ]
+    },
+    {
+     "slot": "LB",
+     "position": "LB",
+     "role": "Attacking Wingback",
+     "focus": "Support",
+     "profile": "Ashley Cole tipi: sol kanatta genişlik sağlayan, hızlı bindiren ve savunmaya geri dönebilen bek.",
+     "keyAttributes": [
+      "Sprint Speed",
+      "Stamina",
+      "Crossing",
+      "Standing Tackle"
+     ],
+     "keyPlayStyles": [
+      "Relentless",
+      "Whipped Pass",
+      "Quick Step"
+     ]
+    },
+    {
+     "slot": "LCB",
+     "position": "CB",
+     "role": "Ball-Playing Defender",
+     "focus": "Build-Up",
+     "profile": "Nesta-Maldini tipi: pozisyon bilgisi yüksek, geriden güvenli pasla oyun kurabilen stoper.",
+     "keyAttributes": [
+      "Defensive Awareness",
+      "Composure",
+      "Short Passing",
+      "Interceptions"
+     ],
+     "keyPlayStyles": [
+      "Anticipate",
+      "Pinged Pass",
+      "Intercept"
+     ]
+    },
+    {
+     "slot": "RCB",
+     "position": "CB",
+     "role": "Ball-Playing Defender",
+     "focus": "Defend",
+     "profile": "Ramos tipi: yüksek savunma hattında geniş alan savunabilen, pas kalitesi yeterli atletik stoper.",
+     "keyAttributes": [
+      "Sprint Speed",
+      "Standing Tackle",
+      "Defensive Awareness",
+      "Short Passing"
+     ],
+     "keyPlayStyles": [
+      "Anticipate",
+      "Bruiser",
+      "Block"
+     ]
+    },
+    {
+     "slot": "RB",
+     "position": "RB",
+     "role": "Inverted Wingback",
+     "focus": "Build-Up",
+     "profile": "Dani Alves tipi: sağ kanatla pas üçgenleri kuran, iç koridora giren, gerektiğinde bindirme yapan teknik bek.",
+     "keyAttributes": [
+      "Short Passing",
+      "Vision",
+      "Ball Control",
+      "Stamina",
+      "Crossing"
+     ],
+     "keyPlayStyles": [
+      "Tiki Taka",
+      "Pinged Pass",
+      "Whipped Pass"
+     ]
+    },
+    {
+     "slot": "LDM",
+     "position": "CDM",
+     "role": "Holding",
+     "focus": "Defend",
+     "profile": "Makelele tipi: hücum arkasında denge sağlayan, rakibin uzaklaştırdığı topları kontrol eden ön libero.",
+     "keyAttributes": [
+      "Interceptions",
+      "Defensive Awareness",
+      "Standing Tackle",
+      "Reactions"
+     ],
+     "keyPlayStyles": [
+      "Intercept",
+      "Anticipate",
+      "Relentless"
+     ]
+    },
+    {
+     "slot": "RDM",
+     "position": "CDM",
+     "role": "Deep-Lying Playmaker",
+     "focus": "Build-Up",
+     "profile": "Xabi Alonso-Lampard tipi: oyun yönünü değiştiren uzun paslar, isabetli kısa paslar ve uzaktan şut tehdidi sunan orta saha.",
+     "keyAttributes": [
+      "Long Passing",
+      "Vision",
+      "Short Passing",
+      "Long Shots",
+      "Shot Power"
+     ],
+     "keyPlayStyles": [
+      "Long Ball Pass",
+      "Pinged Pass",
+      "Power Shot"
+     ]
+    },
+    {
+     "slot": "LM",
+     "position": "LM",
+     "role": "Inside Forward",
+     "focus": "Attack",
+     "profile": "Henry tipi: soldan içeri kat eden, santrforun açtığı boşluğa koşan, yüksek bitiricilik sunan hücumcu.",
+     "keyAttributes": [
+      "Finishing",
+      "Positioning",
+      "Acceleration",
+      "Dribbling"
+     ],
+     "keyPlayStyles": [
+      "Finesse Shot",
+      "Rapid",
+      "Quick Step"
+     ]
+    },
+    {
+     "slot": "CAM",
+     "position": "CAM",
+     "role": "Playmaker",
+     "focus": "Roaming",
+     "profile": "Sergen Yalçın tipi: kapanan savunmalara karşı yaratıcı ara paslar veren, kanatlarda bağlantı kuran serbest 10 numara.",
+     "keyAttributes": [
+      "Vision",
+      "Ball Control",
+      "Dribbling",
+      "Short Passing",
+      "Composure"
+     ],
+     "keyPlayStyles": [
+      "Inventive",
+      "Incisive Pass",
+      "Technical"
+     ]
+    },
+    {
+     "slot": "RM",
+     "position": "RM",
+     "role": "Winger",
+     "focus": "Attack",
+     "profile": "Wright-Phillips tipi: çizgide bire bir üstünlük kuran, savunmayı genişleten, orta ve geriye pas üreten hızlı kanat.",
+     "keyAttributes": [
+      "Acceleration",
+      "Dribbling",
+      "Crossing",
+      "Sprint Speed"
+     ],
+     "keyPlayStyles": [
+      "Quick Step",
+      "Rapid",
+      "Whipped Pass"
+     ]
+    },
+    {
+     "slot": "ST",
+     "position": "ST",
+     "role": "False 9",
+     "focus": "Build-Up",
+     "profile": "Benzema tipi: geriye gelip stoperleri yerinden çıkaran, kanatların içeri koşularını besleyen yaratıcı santrfor.",
+     "keyAttributes": [
+      "Vision",
+      "Short Passing",
+      "Ball Control",
+      "Finishing"
+     ],
+     "keyPlayStyles": [
+      "First Touch",
+      "Incisive Pass",
+      "Press Proven"
+     ]
+    }
+   ],
+   "planB": {
+    "label": "Ceza sahasını doldur",
+    "formation": "4-2-2-2",
+    "buildUp": "BALANCED",
+    "defensiveApproach": "HIGH",
+    "lineHeight": 70,
+    "changes": [
+     "LST: False 9/Build-Up (Benzema tipi bağlantı santrforu korunur)",
+     "RST: Target Forward/Attack (Drogba tipi girer; orta saha ya da kanattan biri çıkar)",
+     "LAM: Playmaker/Roaming (yaratıcı oyuncu sol iç koridora yaklaşır)",
+     "RAM: Playmaker/Roaming (yaratıcı oyuncu sağ iç koridora yaklaşır)",
+     "LDM: Holding/Defend (savunma geçişi güvenliği korunur)",
+     "LB: Attacking Wingback/Support (genişlik ve orta desteği artar)"
+    ]
+   },
+   "smartTactics": [
+    "Tactical Focus: Hücum → bek genişliği, kanat kombinasyonları ve ceza sahası koşularını artır. Ne zaman: rakip derin blokta kaldığında.",
+    "Tactical Focus: Savunma → yüksek çizgi arkasındaki alanı koruyacak şekilde beklerden birini kontrollü kullan. Ne zaman: rakip hızlı kontrataklara başladığında.",
+    "Quick Tactic: Kanat Değiştir: uzun diagonal paslarla savunmanın zayıf tarafını hedefle.",
+    "Quick Tactic: Uzaktan Tehdit: ceza sahası çevresindeki boşlukları uzun şutlarla değerlendir.",
+    "Quick Tactic: Drogba Planı: kilit açılmıyorsa bağlantı santrforunun yanına fiziksel hedef oyuncu ekle."
+   ],
+   "tacticCode": null
+  },
+  "sources": [
+   "Kişisel oyun anlayışı sohbeti, 2026-11"
+  ],
+  "verify": [
+   "Kapanan rakibe karşı 72 savunma çizgisi uygun mu?",
+   "Zayıf rakibe karşı hibrit 8 yerine Xavi-Iniesta tarzında daha teknik orta saha tercih eder misin?",
+   "İki bekin hücum katkısı arttığında Makelele tipi oyuncunun daha sık stoperlerin arasına girmesini ister misin?"
+  ]
  }
 ]
