@@ -27,7 +27,10 @@ class ReplicaSeedIntegrationTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final Map<String, int[]> APPROACH = Map.of("DEEP", new int[]{1, 30}, "BALANCED", new int[]{31, 60}, "HIGH", new int[]{61, 90}, "AGGRESSIVE", new int[]{91, 100});
-    private static final int RECORDS = 103;
+    private static final int RECORDS = 108;
+    private static final String PERSONAL_STYLE = "PERSONAL_STYLE";
+    private static final Map<String, String> PERSONAL_VARIANTS = Map.of("bugra_dengeli", "4-2-3-1 (2)", "bugra_hucum", "4-2-2-2", "bugra_defans", "4-2-3-1 (2)",
+            "bugra_buyuk_mac", "4-2-3-1 (2)", "bugra_kucuk_mac", "4-2-3-1 (2)");
     private static final List<String> REMOVED = List.of("delbosque_real_2000", "cruyff_barcelona_1992", "sacchi_milan_1989", "capello_milan_1994", "kovacs_ajax_1972", "herrera_inter_1965",
             "lobanovskyi_dynamokyiv_1986", "lobanovskyi_dynamokyiv_1999", "vangaal_ajax_1995", "ferguson_manutd_1999", "ucl_winner_2026_tbd");
     private static final Set<String> LEAGUES = Set.of("TR_SUPER_LIG", "EN_PREMIER_LEAGUE", "EN_CHAMPIONSHIP", "ES_LALIGA", "IT_SERIE_A", "IT_SERIE_B", "DE_BUNDESLIGA", "FR_LIGUE_1",
@@ -46,6 +49,10 @@ class ReplicaSeedIntegrationTest {
 
     private static String norm(String s) {
         return s.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
+    }
+
+    private static boolean isPersonal(JsonNode r) {
+        return PERSONAL_STYLE.equals(r.path("category").asText());
     }
 
     private static JsonNode seed() throws Exception {
@@ -72,6 +79,9 @@ class ReplicaSeedIntegrationTest {
         seed().forEach((r) -> ids.add(r.path("id").asText()));
         assertThat(ids).doesNotContainAnyElementsOf(REMOVED).contains("terim_galatasaray_2000", "italiano_besiktas_2027");
         for (JsonNode r : seed()) {
+            if (isPersonal(r)) {
+                continue;
+            }
             int start = Integer.parseInt(r.path("season").asText().substring(0, 4));
             assertThat(start >= 2000 || "terim_galatasaray_2000".equals(r.path("id").asText())).as(r.path("id").asText() + " sezon").isTrue();
         }
@@ -117,6 +127,9 @@ class ReplicaSeedIntegrationTest {
     @Test
     void noSourceIsAModelGuessAnymore() throws Exception {
         for (JsonNode r : seed()) {
+            if (isPersonal(r)) {
+                continue;
+            }
             String sources = r.path("sources").toString();
             assertThat(sources).as(r.path("id").asText()).doesNotContain("VERIFY").doesNotContain("model bilgisi").contains("Transfermarkt");
         }
@@ -157,6 +170,9 @@ class ReplicaSeedIntegrationTest {
     @Test
     void everyReplicaCarriesTheLeagueItPlayedInThatSeason() throws Exception {
         for (JsonNode r : seed()) {
+            if (isPersonal(r)) {
+                continue;
+            }
             assertThat(LEAGUES).as(r.path("id").asText()).contains(r.path("league").asText());
         }
         Map<String, String> spot = Map.of("sergen_besiktas_2021", "TR_SUPER_LIG", "zeman_pescara_2012", "IT_SERIE_B", "bielsa_leeds_2020", "EN_CHAMPIONSHIP",
@@ -164,7 +180,11 @@ class ReplicaSeedIntegrationTest {
                 "garcia_lille_2011", "FR_LIGUE_1", "heynckes_bayern_2013", "DE_BUNDESLIGA", "simeone_atletico_2014", "ES_LALIGA");
         spot.forEach((id, league) -> assertThat(replicas.find(id).orElseThrow().league()).as(id).isEqualTo(league));
         JsonNode list = MAPPER.readTree(mockMvc.perform(get("/api/v1/replicas")).andReturn().getResponse().getContentAsString()).at("/data");
-        list.forEach((r) -> assertThat(LEAGUES).as(r.path("id").asText()).contains(r.path("league").asText()));
+        list.forEach((r) -> {
+            if (!isPersonal(r)) {
+                assertThat(LEAGUES).as(r.path("id").asText()).contains(r.path("league").asText());
+            }
+        });
         JsonNode detail = MAPPER.readTree(mockMvc.perform(get("/api/v1/replicas/inzaghi_inter_2023")).andReturn().getResponse().getContentAsString()).at("/data");
         assertThat(detail.path("league").asText()).isEqualTo("IT_SERIE_A");
     }
@@ -175,6 +195,9 @@ class ReplicaSeedIntegrationTest {
         Map<String, Set<String>> namesByStem = new java.util.TreeMap<>();
         Set<String> names = new HashSet<>();
         for (JsonNode r : seed()) {
+            if (isPersonal(r)) {
+                continue;
+            }
             String id = r.path("id").asText();
             String stem = id.substring(id.indexOf('_') + 1, id.lastIndexOf('_'));
             namesByStem.computeIfAbsent(CLUB_STEM_ALIAS.getOrDefault(stem, stem), (k) -> new java.util.TreeSet<>()).add(r.path("club").asText());
@@ -335,6 +358,45 @@ class ReplicaSeedIntegrationTest {
             decoded.add(codec.formation(tactic.formationId()).orElseThrow().positions().get(i) + "|" + norm(eaRole.name()) + "|" + norm(eaRole.focuses().get(tactic.slots().get(i).focusIndex())));
         }
         assertThat(decoded).containsExactlyInAnyOrderElementsOf(seedSlots);
+    }
+
+    @Test
+    void bugrasPersonalStyleIsFiveSeparateCardsWithTheirOwnTacticCodesAndNoLeague() throws Exception {
+        List<String> personal = new ArrayList<>();
+        for (JsonNode r : seed()) {
+            if (isPersonal(r)) {
+                personal.add(r.path("id").asText());
+                assertThat(r.path("kind").asText()).as(r.path("id").asText()).isEqualTo("PERSONAL");
+                assertThat(r.path("variant").asText()).as(r.path("id").asText()).isNotBlank();
+            }
+        }
+        assertThat(personal).containsExactlyInAnyOrderElementsOf(PERSONAL_VARIANTS.keySet());
+        JsonNode list = MAPPER.readTree(mockMvc.perform(get("/api/v1/replicas")).andReturn().getResponse().getContentAsString()).at("/data");
+        PERSONAL_VARIANTS.forEach((id, formation) -> {
+            ReplicaService.Replica r = replicas.find(id).orElseThrow(() -> new AssertionError(id));
+            assertThat(r.category()).as(id).isEqualTo(PERSONAL_STYLE);
+            assertThat(r.coach()).as(id).isEqualTo("Buğra");
+            assertThat(r.eaFormation()).as(id).isEqualTo(formation);
+            assertThat(r.league()).as(id).isNull();
+            assertThat(r.tacticCode()).as(id).hasSize(12);
+            assertThat(r.slots()).as(id).extracting(ReplicaService.RoleSlot::slotId).contains("RB").doesNotContain("LW", "RW");
+            assertThat(r.slots()).as(id).filteredOn((s) -> s.slotId().equals("RB")).extracting(ReplicaService.RoleSlot::position).containsExactly("RB");
+        });
+        List<JsonNode> listed = new ArrayList<>();
+        list.forEach((r) -> {
+            if (isPersonal(r)) {
+                listed.add(r);
+            }
+        });
+        assertThat(listed).hasSize(PERSONAL_VARIANTS.size()).allSatisfy((r) -> {
+            assertThat(r.path("league").isNull()).as(r.path("id").asText()).isTrue();
+            assertThat(r.path("variant").asText()).as(r.path("id").asText()).isNotBlank();
+        });
+        assertThat(replicas.find("bugra_hucum").orElseThrow().variant()).isEqualTo("HUCUM");
+        assertThat(replicas.find("guardiola_barcelona_2009").orElseThrow().variant()).isNull();
+        JsonNode detail = MAPPER.readTree(mockMvc.perform(get("/api/v1/replicas/bugra_dengeli")).andReturn().getResponse().getContentAsString()).at("/data");
+        assertThat(detail.path("variant").asText()).isEqualTo("DENGELI");
+        assertThat(detail.path("league").isNull()).isTrue();
     }
 
     @Test
