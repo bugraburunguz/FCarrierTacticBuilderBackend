@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fcareer.common.cache.CacheStats;
 import com.fcareer.fitengine.model.FitPlayer;
 import com.fcareer.fitengine.model.IntentProfile;
 import com.fcareer.fitengine.model.response.SquadFitResponse;
@@ -28,6 +29,9 @@ public class LineupSolveCache {
     public static final int MAX_ENTRIES = 500;
     public static final Duration TTL = Duration.ofMinutes(10);
     private static final String DIGEST = "SHA-256";
+    private static final int STATS_LOG_EVERY = 100;
+
+    private final CacheStats stats = new CacheStats("lineup", STATS_LOG_EVERY);
 
     private record Entry(Instant at, SquadFitResponse response) {
     }
@@ -57,9 +61,11 @@ public class LineupSolveCache {
         synchronized (entries) {
             Entry hit = entries.get(key);
             if (Objects.nonNull(hit) && hit.at().plus(TTL).isAfter(now)) {
+                stats.record(true);
                 return hit.response();
             }
         }
+        stats.record(false);
         SquadFitResponse solved = solver.get();
         synchronized (entries) {
             entries.put(key, new Entry(now, solved));
@@ -71,6 +77,10 @@ public class LineupSolveCache {
         synchronized (entries) {
             entries.clear();
         }
+    }
+
+    public CacheStats stats() {
+        return stats;
     }
 
     public int size() {

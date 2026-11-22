@@ -73,4 +73,27 @@ class ReferenceCacheTest {
         cache.evict("tags", "missing");
         assertThat(cache.get("tags", LIST)).isEmpty();
     }
+
+    @Test
+    void expiredEntriesAreSweptOnALaterWrite() {
+        cache.put("old", List.of("a"), Duration.ofMinutes(1));
+        clock.now = clock.now.plus(ReferenceCache.SWEEP_INTERVAL).plusSeconds(61);
+
+        cache.put("new", List.of("b"), Duration.ofMinutes(1));
+
+        assertThat(cache.size()).isEqualTo(1);
+    }
+
+    @Test
+    void evictsEveryKeyWithAPrefix() {
+        cache.put("mgr-fit:1", List.of("a"), Duration.ofHours(1));
+        cache.put("mgr-stats:1", List.of("b"), Duration.ofHours(1));
+        cache.put("roles", List.of("c"), Duration.ofHours(1));
+
+        cache.evictPrefix("mgr-");
+
+        assertThat(cache.get("mgr-fit:1", LIST)).isEmpty();
+        assertThat(cache.get("mgr-stats:1", LIST)).isEmpty();
+        assertThat(cache.get("roles", LIST)).contains(List.of("c"));
+    }
 }

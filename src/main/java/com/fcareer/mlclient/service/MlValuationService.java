@@ -12,6 +12,7 @@ import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.catalog.repository.LeagueRepository;
 import com.fcareer.catalog.repository.PlayerRatingRepository;
 import com.fcareer.catalog.repository.PlayerValuationRepository;
+import com.fcareer.common.cache.ReferenceCache;
 import com.fcareer.mlclient.client.MlClient;
 import com.fcareer.mlclient.configuration.MlProperties;
 import com.fcareer.mlclient.model.MlPlayerFeatures;
@@ -31,6 +32,8 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.fcareer.common.constants.KeyConstants.CACHE_MANAGER_PREFIX;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -48,6 +51,7 @@ public class MlValuationService {
     private final MlProperties properties;
     private final CatalogProperties catalogProperties;
     private final TransactionTemplate transactionTemplate;
+    private final ReferenceCache referenceCache;
 
     public int run(Short gameVersionId) {
         short gameVersion = Objects.isNull(gameVersionId) ? catalogProperties.getDefaultGameVersion() : gameVersionId;
@@ -61,6 +65,7 @@ public class MlValuationService {
                 written += processBatch(ratings.getContent(), gameVersion);
             }
         } while (ratings.hasNext());
+        referenceCache.evictPrefix(CACHE_MANAGER_PREFIX);
         log.info("ML valuations written gameVersion : {} count : {}", gameVersion, written);
         return written;
     }

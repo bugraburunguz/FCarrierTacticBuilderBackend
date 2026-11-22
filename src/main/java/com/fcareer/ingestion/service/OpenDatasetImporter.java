@@ -5,6 +5,7 @@ import com.fcareer.catalog.entity.PlayerValuationEntity;
 import com.fcareer.catalog.model.enums.ValuationSource;
 import com.fcareer.catalog.repository.BasePlayerRepository;
 import com.fcareer.catalog.repository.PlayerValuationRepository;
+import com.fcareer.common.cache.ReferenceCache;
 import com.fcareer.common.exception.ImportParseException;
 import com.fcareer.ingestion.configuration.IngestionProperties;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,8 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.fcareer.common.constants.KeyConstants.CACHE_MANAGER_PREFIX;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -36,6 +39,7 @@ public class OpenDatasetImporter {
     private final IngestionProperties properties;
     private final BasePlayerRepository basePlayerRepository;
     private final PlayerValuationRepository playerValuationRepository;
+    private final ReferenceCache referenceCache;
 
     @Transactional
     public int importSeed() {
@@ -73,6 +77,7 @@ public class OpenDatasetImporter {
             playerValuationRepository.save(valuation);
             written++;
         }
+        referenceCache.evictPrefix(CACHE_MANAGER_PREFIX);
         log.info("Open dataset seed imported rows : {} written : {}", rows.size(), written);
         return written;
     }

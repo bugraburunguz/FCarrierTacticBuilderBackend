@@ -84,6 +84,19 @@ class LineupSolveCacheTest {
         verify(squadFitService, times(1)).solveBest(anyList(), anyList(), any(), any());
         assertThat(second.getSquadFit()).isEqualTo(first.getSquadFit());
         assertThat(second).isNotSameAs(first);
+        assertThat(cache.stats().hits()).isEqualTo(1);
+        assertThat(cache.stats().misses()).isEqualTo(1);
+    }
+
+    @Test
+    void cacheStatsLogEveryInterval() {
+        com.fcareer.common.cache.CacheStats stats = new com.fcareer.common.cache.CacheStats("test-cache", 2);
+
+        assertThat(stats.record(true)).isFalse();
+        assertThat(stats.record(false)).isTrue();
+        assertThat(stats.record(true)).isFalse();
+        assertThat(stats.hits()).isEqualTo(2);
+        assertThat(stats.misses()).isEqualTo(1);
     }
 
     @Test

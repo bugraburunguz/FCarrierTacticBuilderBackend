@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
 /**
@@ -29,7 +30,10 @@ public class ReferenceCache {
 
     private final ObjectMapper objectMapper;
     private final Clock clock;
+    public static final Duration SWEEP_INTERVAL = Duration.ofMinutes(10);
+
     private final Map<String, Entry> entries = new ConcurrentHashMap<>();
+    private final AtomicLong lastSweepMillis = new AtomicLong();
 
     public <T> T getOrLoad(String key, TypeReference<T> type, Duration ttl, Supplier<T> loader) {
         Optional<T> cached = get(key, type);
@@ -55,11 +59,29 @@ public class ReferenceCache {
     }
 
     public void put(String key, Object value, Duration ttl) {
+        sweepExpired();
         try {
             entries.put(key, new Entry(objectMapper.writeValueAsString(value), clock.millis() + ttl.toMillis()));
         } catch (JsonProcessingException e) {
             log.warn("Reference cache write skipped key : {} reason : {}", key, e.getMessage());
         }
+    }
+
+    public int size() {
+        return entries.size();
+    }
+
+    private void sweepExpired() {
+        long now = clock.millis();
+        long last = lastSweepMillis.get();
+        if (now - last < SWEEP_INTERVAL.toMillis() || !lastSweepMillis.compareAndSet(last, now)) {
+            return;
+        }
+        entries.values().removeIf((entry) -> entry.expiresAtMillis() <= now);
+    }
+
+    public void evictPrefix(String prefix) {
+        entries.keySet().removeIf((key) -> key.startsWith(prefix));
     }
 
     public void evict(String... keys) {
