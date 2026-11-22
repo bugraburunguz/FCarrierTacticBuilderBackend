@@ -121,6 +121,23 @@ class CareerPlayerSquadVersionIntegrationTest {
                 .as("kariyer overlay'i (career_player_rating) arşiv tabanının üstüne yazılır").isEqualTo(93);
     }
 
+    @Test
+    void seedingANewCareerReplacesTheStatisticsOfADeletedOne() {
+        long latest = squadVersions.findLatest(GAME).orElseThrow().id();
+        long deleted = career(latest);
+        writer.seedNewCareer(deleted);
+        jdbc.execute("ANALYZE career_player");
+        jdbc.update("DELETE FROM career_player WHERE career_id = ?", deleted);
+        long fresh = career(latest);
+
+        writer.seedNewCareer(fresh);
+
+        String commonCareers = jdbc.queryForObject("SELECT most_common_vals::text FROM pg_stats WHERE tablename = 'career_player' AND attname = 'career_id'",
+                String.class);
+        assertThat(commonCareers).as("ilk doldurmadan sonra planlayıcı yeni kariyeri görür").contains(String.valueOf(fresh))
+                .doesNotContain(String.valueOf(deleted));
+    }
+
     private static String attrColumnsLiteral() {
         StringBuilder out = new StringBuilder();
         for (com.fcareer.fitengine.model.Attr attr : com.fcareer.fitengine.model.Attr.values()) {
