@@ -75,6 +75,33 @@ class CareerPlayerSquadVersionIntegrationTest {
     }
 
     @Test
+    void careerReadsThePotentialAndValueOfItsOwnSquadVersion() {
+        long player = jdbc.queryForObject("""
+                SELECT r.base_player_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id
+                 WHERE r.game_version_id = 27 AND b.owner_career_id IS NULL AND b.retired_at IS NULL AND r.overall BETWEEN 60 AND 75 ORDER BY r.base_player_id LIMIT 1""", Long.class);
+        jdbc.update("UPDATE base_player SET dob = CURRENT_DATE - INTERVAL '19 years' WHERE id = ?", player);
+        modeled(player, 80, 3_000_000L);
+        SquadVersion old = squadVersions.findLatest(GAME).orElseThrow();
+        long oldCareer = career(old.id());
+        squadVersions.archiveCurrent(old.id(), GAME);
+        SquadVersion fresh = squadVersions.create(GAME, "Kadro güncellemesi", null, null, 0);
+        long newCareer = career(fresh.id());
+        modeled(player, 95, 90_000_000L);
+        long generated = jdbc.queryForObject("INSERT INTO base_player (full_name, owner_career_id) VALUES ('Kariyer Genci', ?) RETURNING id", Long.class, oldCareer);
+        jdbc.update("INSERT INTO player_rating (base_player_id, game_version_id, overall, positions) VALUES (?, 27, 55, ARRAY['CM'])", generated);
+        modeled(generated, 71, 200_000L);
+
+        writer.syncCareer(oldCareer);
+        writer.syncCareer(newCareer);
+
+        assertThat(pot(oldCareer, player)).as("eski sürüm kariyeri arşivdeki POT").isEqualTo(80);
+        assertThat(pot(newCareer, player)).as("en yeni sürüm kariyeri canlı POT").isEqualTo(95);
+        assertThat(value(oldCareer, player)).as("değer de eski POT'tan").isLessThan(value(newCareer, player));
+        assertThat(pot(oldCareer, generated)).as("kariyerin kendi oyuncusu canlı değerlemeden").isEqualTo(71);
+        assertThat(value(oldCareer, generated)).isNotNull();
+    }
+
+    @Test
     void careerOverlayStillWinsOverTheArchivedBase() {
         long player = jdbc.queryForObject("""
                 SELECT r.base_player_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id
@@ -111,6 +138,20 @@ class CareerPlayerSquadVersionIntegrationTest {
 
     private Integer ovr(long careerId, long playerId) {
         return jdbc.queryForList("SELECT ovr FROM career_player WHERE career_id = ? AND player_id = ?", Integer.class, careerId, playerId).stream().findFirst().orElse(null);
+    }
+
+    private void modeled(long playerId, int potential, long valueEur) {
+        jdbc.update("""
+                INSERT INTO player_valuation (base_player_id, game_version_id, source, potential, value_eur, model_version) VALUES (?, 27, 'MODELED', ?, ?, 'fca31-test')
+                ON CONFLICT ON CONSTRAINT uq_valuation DO UPDATE SET potential = EXCLUDED.potential, value_eur = EXCLUDED.value_eur""", playerId, potential, valueEur);
+    }
+
+    private Integer pot(long careerId, long playerId) {
+        return jdbc.queryForList("SELECT pot FROM career_player WHERE career_id = ? AND player_id = ?", Integer.class, careerId, playerId).stream().findFirst().orElse(null);
+    }
+
+    private Long value(long careerId, long playerId) {
+        return jdbc.queryForList("SELECT value_eur FROM career_player WHERE career_id = ? AND player_id = ?", Long.class, careerId, playerId).stream().findFirst().orElse(null);
     }
 
     private int rows(long careerId) {

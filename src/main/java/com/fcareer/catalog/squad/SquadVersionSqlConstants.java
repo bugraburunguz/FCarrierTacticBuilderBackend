@@ -51,6 +51,55 @@ public final class SquadVersionSqlConstants {
             + " WHERE r.game_version_id = :gameVersionId"
             + " AND EXISTS (SELECT 1 FROM base_player b WHERE b.id = r.base_player_id AND b.owner_career_id IS NULL)";
 
+    static final String ARCHIVE_VALUATIONS = """
+            INSERT INTO player_valuation_archive (squad_version_id, base_player_id, game_version_id, potential, value_eur, wage_eur, model_version)
+            SELECT :squadVersionId, v.base_player_id, v.game_version_id, v.potential, v.value_eur, v.wage_eur, v.model_version FROM player_valuation v
+             WHERE v.game_version_id = :gameVersionId AND v.source = 'MODELED' AND v.owner_user_id IS NULL
+               AND EXISTS (SELECT 1 FROM base_player b WHERE b.id = v.base_player_id AND b.owner_career_id IS NULL)""";
+
+    static final String FIND_VERSIONED_RATINGS = "SELECT " + RATING_COLUMNS + " FROM player_rating_archive a"
+            + " WHERE a.squad_version_id = :squadVersionId AND a.base_player_id IN (:ids)"
+            + " AND EXISTS (SELECT 1 FROM base_player b WHERE b.id = a.base_player_id AND b.owner_career_id IS NULL)"
+            + " UNION ALL SELECT " + RATING_COLUMNS + " FROM player_rating r"
+            + " WHERE r.game_version_id = :gameVersionId AND r.base_player_id IN (:ids)"
+            + " AND EXISTS (SELECT 1 FROM base_player b WHERE b.id = r.base_player_id AND b.owner_career_id = CAST(:careerId AS BIGINT))";
+
+    static final String FIND_VERSIONED_VALUATIONS = """
+            SELECT a.base_player_id, a.game_version_id, a.potential, a.value_eur, a.wage_eur, a.model_version FROM player_valuation_archive a
+             WHERE a.squad_version_id = :squadVersionId AND a.base_player_id IN (:ids)
+            UNION ALL
+            SELECT v.base_player_id, v.game_version_id, v.potential, v.value_eur, v.wage_eur, v.model_version FROM player_valuation v
+             WHERE v.game_version_id = :gameVersionId AND v.base_player_id IN (:ids) AND v.source = 'MODELED' AND v.owner_user_id IS NULL
+               AND EXISTS (SELECT 1 FROM base_player b WHERE b.id = v.base_player_id AND b.owner_career_id = CAST(:careerId AS BIGINT))""";
+
+    static final String FIND_ARCHIVED_SQUAD_VERSION_OF_CAREER = """
+            SELECT k.squad_version_id FROM career k JOIN squad_version s ON s.id = k.squad_version_id
+             WHERE k.id = :careerId
+               AND EXISTS (SELECT 1 FROM squad_version o WHERE o.game_version_id = s.game_version_id AND o.version_no > s.version_no)""";
+
+    private static final String CAREER_ON_LATEST = """
+            EXISTS (SELECT 1 FROM career lk JOIN squad_version ls ON ls.id = lk.squad_version_id WHERE lk.id = %1$s
+              AND NOT EXISTS (SELECT 1 FROM squad_version lo WHERE lo.game_version_id = ls.game_version_id AND lo.version_no > ls.version_no))""";
+
+    private static final String CAREER_VALUATIONS = """
+            (SELECT v.base_player_id, v.game_version_id, v.potential, v.value_eur FROM player_valuation v
+              WHERE v.source = 'MODELED' AND v.owner_user_id IS NULL AND %2$s
+             UNION ALL
+             SELECT a.base_player_id, a.game_version_id, a.potential, a.value_eur FROM player_valuation_archive a
+              WHERE a.squad_version_id = (SELECT squad_version_id FROM career WHERE id = %1$s) AND NOT %2$s
+             UNION ALL
+             SELECT v.base_player_id, v.game_version_id, v.potential, v.value_eur FROM player_valuation v
+              WHERE v.source = 'MODELED' AND v.owner_user_id IS NULL AND NOT %2$s
+                AND v.base_player_id IN (SELECT id FROM base_player WHERE owner_career_id = %1$s))""";
+
+    public static String buildCareerOnLatestSquadVersionSql(String careerIdExpression) {
+        return String.format(CAREER_ON_LATEST, careerIdExpression);
+    }
+
+    public static String buildCareerValuationsSql(String careerIdExpression) {
+        return String.format(CAREER_VALUATIONS, careerIdExpression, buildCareerOnLatestSquadVersionSql(careerIdExpression));
+    }
+
     private static final String CLUB_PROFILE_COLUMNS = """
             club_id, game_version_id, domestic_prestige, international_prestige, popularity, transfer_budget_eur, club_worth_eur,
             youth_development, league_level, updated_at""";

@@ -4,14 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fcareer.advisor.service.FeasibilityService;
 import com.fcareer.advisor.service.FormationRanker;
 import com.fcareer.advisor.service.PositionAdviceService;
-import com.fcareer.catalog.entity.BasePlayerEntity;
 import com.fcareer.catalog.entity.PlayerRatingEntity;
-import com.fcareer.catalog.entity.PlayerValuationEntity;
-import com.fcareer.catalog.mapper.PlayerMapper;
-import com.fcareer.catalog.model.enums.ValuationSource;
-import com.fcareer.catalog.repository.BasePlayerRepository;
 import com.fcareer.catalog.repository.PlayerRatingRepository;
-import com.fcareer.catalog.repository.PlayerValuationRepository;
 import com.fcareer.catalog.service.PlayerService;
 import com.fcareer.catalog.squad.SquadVersionRepository;
 import com.fcareer.common.cache.ReferenceCache;
@@ -28,11 +22,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * MGR-a madde 4 "Uyum": kariyer yokken bir katalog kulübünün kadrosuyla seçilen formasyon ve tarzda Takım gücü (başlangıç önerisi motoru: formasyon
@@ -57,9 +48,6 @@ public class ClubFitCalculator {
     private final FitEngineProperties fitProperties;
     private final ReferenceCache cache;
     private final SquadVersionRepository squadVersionRepository;
-    private final BasePlayerRepository basePlayerRepository;
-    private final PlayerValuationRepository valuationRepository;
-    private final PlayerMapper playerMapper;
     private final AtomicLong computations = new AtomicLong();
 
     /** formation null → kulüp kadrosu 11'den azsa uyum yok. squadFit = Takım gücü (0–100); levelFit = ilk 11'in ortalama Rol oturması. */
@@ -83,8 +71,7 @@ public class ClubFitCalculator {
 
     private ClubFit compute(int clubId, short gameVersionId, String formation, Style style, Long archivedSquadVersionId) {
         computations.incrementAndGet();
-        List<FitPlayer> players = Objects.isNull(archivedSquadVersionId) ? findLiveSquad(clubId, gameVersionId)
-                : findArchivedSquad(clubId, gameVersionId, archivedSquadVersionId);
+        List<FitPlayer> players = findSquad(clubId, gameVersionId, archivedSquadVersionId);
         if (players.size() < MIN_PLAYERS) {
             return new ClubFit(null, null, null);
         }
@@ -100,25 +87,13 @@ public class ClubFitCalculator {
         return new ClubFit(chosen, Math.round(solved.getSquadFit() * 10) / 10.0, Objects.isNull(level) ? null : Math.round(level * 10) / 10.0);
     }
 
-    private List<FitPlayer> findLiveSquad(int clubId, short gameVersionId) {
-        List<Long> ids = ratings.findCatalogSquad(clubId, gameVersionId).stream().map(PlayerRatingEntity::getBasePlayerId).toList();
-        if (ids.size() < MIN_PLAYERS) {
-            return List.of();
-        }
-        return playerService.fitPlayers(ids, gameVersionId);
-    }
-
-    private List<FitPlayer> findArchivedSquad(int clubId, short gameVersionId, long archivedSquadVersionId) {
-        List<PlayerRatingEntity> squad = squadVersionRepository.findArchivedCatalogSquad(clubId, archivedSquadVersionId);
+    private List<FitPlayer> findSquad(int clubId, short gameVersionId, Long archivedSquadVersionId) {
+        List<PlayerRatingEntity> squad = Objects.isNull(archivedSquadVersionId) ? ratings.findCatalogSquad(clubId, gameVersionId)
+                : squadVersionRepository.findArchivedCatalogSquad(clubId, archivedSquadVersionId);
         if (squad.size() < MIN_PLAYERS) {
             return List.of();
         }
-        List<Long> ids = squad.stream().map(PlayerRatingEntity::getBasePlayerId).toList();
-        Map<Long, BasePlayerEntity> bases = basePlayerRepository.findAllById(ids).stream().collect(Collectors.toMap(BasePlayerEntity::getId, Function.identity()));
-        Map<Long, PlayerValuationEntity> valuations = valuationRepository
-                .findByBasePlayerIdInAndGameVersionIdAndSourceAndOwnerUserIdIsNull(ids, gameVersionId, ValuationSource.MODELED).stream()
-                .collect(Collectors.toMap(PlayerValuationEntity::getBasePlayerId, Function.identity()));
-        return squad.stream().map((r) -> playerMapper.toFitPlayer(bases.get(r.getBasePlayerId()), r, valuations.get(r.getBasePlayerId()), null)).toList();
+        return playerService.fitCatalogPlayers(squad.stream().map(PlayerRatingEntity::getBasePlayerId).toList(), gameVersionId, archivedSquadVersionId);
     }
 
     private String best(List<FitPlayer> players) {

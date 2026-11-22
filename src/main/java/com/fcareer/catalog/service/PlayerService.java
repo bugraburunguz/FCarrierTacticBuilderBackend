@@ -6,7 +6,6 @@ import com.fcareer.catalog.entity.PlayerRatingEntity;
 import com.fcareer.catalog.entity.RatingColumns;
 import com.fcareer.catalog.entity.PlayerValuationEntity;
 import com.fcareer.catalog.mapper.PlayerMapper;
-import com.fcareer.catalog.model.enums.ValuationSource;
 import com.fcareer.catalog.model.request.PlayerSearchRequest;
 import com.fcareer.catalog.model.response.PlayerDetailResponse;
 import com.fcareer.catalog.model.response.PlayerSummaryResponse;
@@ -16,7 +15,7 @@ import com.fcareer.catalog.repository.BasePlayerRepository;
 import com.fcareer.catalog.repository.PlayerRatingRepository;
 import com.fcareer.catalog.repository.PlayerSearchRepository;
 import com.fcareer.catalog.repository.CareerPlayerRepository;
-import com.fcareer.catalog.repository.PlayerValuationRepository;
+import com.fcareer.catalog.squad.SquadVersionService;
 import com.fcareer.common.exception.NotFoundException;
 import com.fcareer.common.model.PageResponse;
 import com.fcareer.fitengine.model.FitPlayer;
@@ -49,7 +48,7 @@ public class PlayerService {
     private final BasePlayerRepository basePlayerRepository;
     private final PlayerRatingRepository playerRatingRepository;
     private final com.fcareer.catalog.repository.CareerPlayerRepository careerPlayerRepository;
-    private final PlayerValuationRepository playerValuationRepository;
+    private final SquadVersionService squadVersionService;
     private final PlayerMapper playerMapper;
     private final com.fcareer.versioning.service.VersioningService versioningService;
 
@@ -58,7 +57,7 @@ public class PlayerService {
         request.setSize(request.getSize() <= 0 ? DEFAULT_PAGE_SIZE : Math.min(request.getSize(), MAX_PAGE_SIZE));
         request.setPage(Math.max(request.getPage(), 0));
         return PageResponse.<PlayerSummaryResponse>builder()
-                .items(enrich(playerSearchRepository.search(request), request.getGameVersionId()))
+                .items(enrich(playerSearchRepository.search(request), request.getGameVersionId(), isOnLatestSquadVersion(request.getCareerId())))
                 .page(request.getPage())
                 .size(request.getSize())
                 .totalItems(playerSearchRepository.count(request))
@@ -97,9 +96,10 @@ public class PlayerService {
         } else {
             rating = playerRatingRepository.findByBasePlayerIdAndGameVersionId(playerId, gv).orElseThrow(() -> new NotFoundException(PLAYER, playerId));
         }
-        PlayerSummaryResponse summary = enrich(List.of(summaryOf(playerId, gv, careerId)), gv).get(0);
+        boolean latest = isOnLatestSquadVersion(careerId);
+        PlayerSummaryResponse summary = enrich(List.of(summaryOf(playerId, gv, careerId)), gv, latest).get(0);
         PlayerDetailResponse detail = playerMapper.toDetail(summary, base, rating);
-        detail.setDiff(versioningService.diffFor(playerId, gv).orElse(null));
+        detail.setDiff(latest ? versioningService.diffFor(playerId, gv).orElse(null) : null);
         return detail;
     }
 
@@ -108,7 +108,19 @@ public class PlayerService {
     }
 
     public List<FitPlayer> fitPlayers(List<Long> playerIds, Short gameVersionId, Long careerId) {
-        short gv = resolveGameVersion(gameVersionId);
+        Long archivedSquadVersionId = squadVersionService.findArchivedSquadVersionOfCareer(careerId).orElse(null);
+        return fitPlayers(playerIds, resolveGameVersion(gameVersionId), careerId, archivedSquadVersionId);
+    }
+
+    public List<FitPlayer> fitCatalogPlayers(List<Long> playerIds, short gameVersionId, Long archivedSquadVersionId) {
+        return fitPlayers(playerIds, gameVersionId, null, archivedSquadVersionId);
+    }
+
+    private boolean isOnLatestSquadVersion(Long careerId) {
+        return squadVersionService.findArchivedSquadVersionOfCareer(careerId).isEmpty();
+    }
+
+    private List<FitPlayer> fitPlayers(List<Long> playerIds, short gv, Long careerId, Long archivedSquadVersionId) {
         if (!playerIds.isEmpty()) {
             List<Long> foreign = basePlayerRepository.findForeignOwnedIds(playerIds, careerId);
             if (!foreign.isEmpty()) {
@@ -123,10 +135,9 @@ public class PlayerService {
         List<Long> fromCatalog = Objects.isNull(careerId) ? playerIds
                 : playerIds.stream().filter(id -> !careerRows.containsKey(id) || careerRows.get(id).attrs().isEmpty()).toList();
         if (!fromCatalog.isEmpty()) {
-            playerRatingRepository.findByBasePlayerIdInAndGameVersionId(fromCatalog, gv).forEach(r -> ratings.put(r.getBasePlayerId(), r));
+            squadVersionService.findCatalogRatings(fromCatalog, gv, archivedSquadVersionId, careerId).forEach(r -> ratings.put(r.getBasePlayerId(), r));
         }
-        Map<Long, PlayerValuationEntity> valuations = playerValuationRepository
-                .findByBasePlayerIdInAndGameVersionIdAndSourceAndOwnerUserIdIsNull(playerIds, gv, ValuationSource.MODELED)
+        Map<Long, PlayerValuationEntity> valuations = squadVersionService.findCatalogValuations(playerIds, gv, archivedSquadVersionId, careerId)
                 .stream().collect(Collectors.toMap(PlayerValuationEntity::getBasePlayerId, Function.identity()));
         java.time.LocalDate gameDate = playerSearchRepository.careerGameDate(careerId).orElse(null);
         return playerIds.stream().map(id -> {
@@ -212,10 +223,10 @@ public class PlayerService {
     }
 
     /** Yüz adresi (şablondan) ve son sürümde değişmiş olma bilgisi eklenir; diff precompute edilmiştir, burada yalnızca okunur. */
-    private List<PlayerSummaryResponse> enrich(List<PlayerSummaryResponse> items, short gameVersionId) {
+    private List<PlayerSummaryResponse> enrich(List<PlayerSummaryResponse> items, short gameVersionId, boolean withLatestChanges) {
         String template = faceTemplate();
-        Map<Long, com.fcareer.versioning.model.VersionModels.ChangeSummary> changes = versioningService.summaries(
-                items.stream().map(PlayerSummaryResponse::getId).toList(), gameVersionId);
+        Map<Long, com.fcareer.versioning.model.VersionModels.ChangeSummary> changes = withLatestChanges
+                ? versioningService.summaries(items.stream().map(PlayerSummaryResponse::getId).toList(), gameVersionId) : Map.of();
         for (PlayerSummaryResponse item : items) {
             if (Objects.nonNull(template) && !template.isBlank() && Objects.nonNull(item.getFaceAssetId())) {
                 item.setFaceUrl(template.replace("{id}", String.valueOf(item.getFaceAssetId())));

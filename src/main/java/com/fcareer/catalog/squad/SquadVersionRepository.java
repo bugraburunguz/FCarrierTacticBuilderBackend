@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.catalog.entity.PlayerRatingEntity;
+import com.fcareer.catalog.entity.PlayerValuationEntity;
+import com.fcareer.catalog.model.enums.ValuationSource;
 import com.fcareer.catalog.mapper.RatingAttrAccessor;
 import com.fcareer.fitengine.model.Attr;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +18,10 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +31,10 @@ import java.util.Optional;
 
 import static com.fcareer.catalog.squad.SquadVersionSqlConstants.ARCHIVE_CLUB_PROFILES;
 import static com.fcareer.catalog.squad.SquadVersionSqlConstants.ARCHIVE_RATINGS;
+import static com.fcareer.catalog.squad.SquadVersionSqlConstants.ARCHIVE_VALUATIONS;
+import static com.fcareer.catalog.squad.SquadVersionSqlConstants.FIND_ARCHIVED_SQUAD_VERSION_OF_CAREER;
+import static com.fcareer.catalog.squad.SquadVersionSqlConstants.FIND_VERSIONED_RATINGS;
+import static com.fcareer.catalog.squad.SquadVersionSqlConstants.FIND_VERSIONED_VALUATIONS;
 import static com.fcareer.catalog.squad.SquadVersionSqlConstants.CREATE;
 import static com.fcareer.catalog.squad.SquadVersionSqlConstants.CREATE_FIRST;
 import static com.fcareer.catalog.squad.SquadVersionSqlConstants.FIND_ARCHIVED_CATALOG_RATING;
@@ -46,6 +54,8 @@ public class SquadVersionRepository {
     private static final String SQUAD_VERSION_ID = "squadVersionId";
     private static final String CLUB_ID = "clubId";
     private static final String BASE_PLAYER_ID = "basePlayerId";
+    private static final String CAREER_ID = "careerId";
+    private static final String IDS = "ids";
 
     private static final RowMapper<SquadVersion> ROW_MAPPER = SquadVersionRepository::mapRow;
 
@@ -84,8 +94,44 @@ public class SquadVersionRepository {
         MapSqlParameterSource params = new MapSqlParameterSource(SQUAD_VERSION_ID, squadVersionId).addValue(GAME_VERSION_ID, gameVersionId);
         int players = jdbc.update(ARCHIVE_RATINGS, params);
         int clubs = jdbc.update(ARCHIVE_CLUB_PROFILES, params);
-        log.info("Squad version archived squadVersionId : {} players : {} clubs : {}", squadVersionId, players, clubs);
-        return new SquadArchiveResult(players, clubs);
+        int valuations = jdbc.update(ARCHIVE_VALUATIONS, params);
+        log.info("Squad version archived squadVersionId : {} players : {} clubs : {} valuations : {}", squadVersionId, players, clubs, valuations);
+        return new SquadArchiveResult(players, clubs, valuations);
+    }
+
+    public Optional<Long> findArchivedSquadVersionOfCareer(long careerId) {
+        return jdbc.queryForList(FIND_ARCHIVED_SQUAD_VERSION_OF_CAREER, new MapSqlParameterSource(CAREER_ID, careerId), Long.class).stream().findFirst();
+    }
+
+    public List<PlayerRatingEntity> findVersionedRatings(Collection<Long> basePlayerIds, long squadVersionId, short gameVersionId, Long careerId) {
+        if (basePlayerIds.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.query(FIND_VERSIONED_RATINGS, buildVersionedParams(basePlayerIds, squadVersionId, gameVersionId, careerId), (rs, i) -> toArchivedRating(rs));
+    }
+
+    public List<PlayerValuationEntity> findVersionedValuations(Collection<Long> basePlayerIds, long squadVersionId, short gameVersionId, Long careerId) {
+        if (basePlayerIds.isEmpty()) {
+            return List.of();
+        }
+        return jdbc.query(FIND_VERSIONED_VALUATIONS, buildVersionedParams(basePlayerIds, squadVersionId, gameVersionId, careerId), (rs, i) -> toValuation(rs));
+    }
+
+    private static MapSqlParameterSource buildVersionedParams(Collection<Long> basePlayerIds, long squadVersionId, short gameVersionId, Long careerId) {
+        return new MapSqlParameterSource(SQUAD_VERSION_ID, squadVersionId).addValue(GAME_VERSION_ID, gameVersionId).addValue(IDS, basePlayerIds)
+                .addValue(CAREER_ID, careerId, Types.BIGINT);
+    }
+
+    private static PlayerValuationEntity toValuation(ResultSet rs) throws SQLException {
+        PlayerValuationEntity valuation = new PlayerValuationEntity();
+        valuation.setBasePlayerId(rs.getLong("base_player_id"));
+        valuation.setGameVersionId(rs.getShort("game_version_id"));
+        valuation.setSource(ValuationSource.MODELED);
+        valuation.setPotential(rs.getObject("potential", Short.class));
+        valuation.setValueEur(rs.getObject("value_eur", Long.class));
+        valuation.setWageEur(rs.getObject("wage_eur", Long.class));
+        valuation.setModelVersion(rs.getString("model_version"));
+        return valuation;
     }
 
     public void createFirstIfMissing(short gameVersionId, String label) {
