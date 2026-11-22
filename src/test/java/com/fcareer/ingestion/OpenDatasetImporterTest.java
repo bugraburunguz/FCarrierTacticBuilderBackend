@@ -14,7 +14,7 @@ class OpenDatasetImporterTest {
 
     @Test
     void refusesToImportUntilLicenseIsConfirmed() {
-        OpenDatasetImporter importer = new OpenDatasetImporter(new IngestionProperties(), null, null);
+        OpenDatasetImporter importer = new OpenDatasetImporter(new IngestionProperties(), null, null, null);
 
         assertThatThrownBy(importer::importSeed).isInstanceOf(ImportParseException.class);
     }
@@ -25,7 +25,7 @@ class OpenDatasetImporterTest {
         properties.getOpenDataset().setLicenseConfirmed(true);
         properties.getOpenDataset().setPath("x.csv");
 
-        assertThatThrownBy(() -> new OpenDatasetImporter(properties, null, null).importSeed())
+        assertThatThrownBy(() -> new OpenDatasetImporter(properties, null, null, null).importSeed())
                 .isInstanceOf(ImportParseException.class);
     }
 

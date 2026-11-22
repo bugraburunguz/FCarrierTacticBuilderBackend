@@ -1,0 +1,148 @@
+{
+  "auto" : {
+    "reputation" : 46,
+    "band" : "Ulusal tanınırlık",
+    "catalogReady" : true,
+    "cards" : [ {
+      "category" : "BEST_FIT",
+      "clubId" : 5,
+      "clubName" : "Mock FC 4",
+      "leagueId" : 1,
+      "league" : "Mock League One",
+      "difficulty" : "EASY",
+      "evidence" : [ "Kadro gücü ligde 1. (ort. OVR 77)", "Kulüp değeri €5,0 Mn · tahmini bütçe bilinmiyor", "21 yaş altı yüksek potansiyelli oyuncu yok" ],
+      "expectation" : "Yönetim hızlı başarı bekler.",
+      "formation" : "4-3-3",
+      "style" : "COUNTER",
+      "squadFit" : 78.3,
+      "roleFit" : null,
+      "need" : 30,
+      "dream" : false
+    }, {
+      "category" : "RESCUE",
+      "clubId" : 8,
+      "clubName" : "Mock FC 7",
+      "leagueId" : 2,
+      "league" : "Mock League Two",
+      "difficulty" : "MEDIUM",
+      "evidence" : [ "Kadro gücü ligde 5. (ort. OVR 69)", "Kulüp değeri €8,0 Mn · tahmini bütçe bilinmiyor", "21 yaş altı yüksek potansiyelli oyuncu yok" ],
+      "expectation" : "Makul beklenti, zaman tanınır.",
+      "formation" : "4-3-3",
+      "style" : "COUNTER",
+      "squadFit" : 58.7,
+      "roleFit" : null,
+      "need" : 53,
+      "dream" : false
+    }, {
+      "category" : "STRONG_BUDGET",
+      "clubId" : 15,
+      "clubName" : "Mock FC 14",
+      "leagueId" : 1,
+      "league" : "Mock League One",
+      "difficulty" : "MEDIUM",
+      "evidence" : [ "Kadro gücü ligde 8. (ort. OVR 64)", "Kulüp değeri €15,0 Mn · tahmini bütçe bilinmiyor, ligin üst çeyreği", "21 yaş altı yüksek potansiyelli oyuncu yok" ],
+      "expectation" : "Yönetim hızlı başarı bekler.",
+      "formation" : "4-3-3 (CAM)",
+      "style" : "COUNTER",
+      "squadFit" : 43.4,
+      "roleFit" : null,
+      "need" : 30,
+      "dream" : false
+    }, {
+      "category" : "DREAM",
+      "clubId" : 16,
+      "clubName" : "Mock FC 15",
+      "leagueId" : 2,
+      "league" : "Mock League Two",
+      "difficulty" : "MEDIUM",
+      "evidence" : [ "Kadro gücü ligde 4. (ort. OVR 71)", "Kulüp değeri €16,0 Mn · tahmini bütçe bilinmiyor, ligin üst çeyreği", "21 yaş altı yüksek potansiyelli oyuncu yok" ],
+      "expectation" : "Yönetim sabırlı ama taraftar şüpheli; ilk sezon kritik.",
+      "formation" : "4-2-1-3",
+      "style" : "COUNTER",
+      "squadFit" : 66.5,
+      "roleFit" : null,
+      "need" : 63,
+      "dream" : true
+    } ],
+    "missing" : [ {
+      "category" : "YOUTH_PROJECT",
+      "reason" : "Altyapı gelişimi yüksek ve genç yetenekli kulüp yok."
+    }, {
+      "category" : "SAFE",
+      "reason" : "İtibarına yakın ve kadrosu ligin üst üçte birinde olan kulüp yok."
+    } ]
+  },
+  "fixed" : {
+    "reputation" : 46,
+    "band" : "Ulusal tanınırlık",
+    "catalogReady" : true,
+    "cards" : [ {
+      "category" : "BEST_FIT",
+      "clubId" : 5,
+      "clubName" : "Mock FC 4",
+      "leagueId" : 1,
+      "league" : "Mock League One",
+      "difficulty" : "EASY",
+      "evidence" : [ "Kadro gücü ligde 1. (ort. OVR 77)", "Kulüp değeri €5,0 Mn · tahmini bütçe bilinmiyor", "21 yaş altı yüksek potansiyelli oyuncu yok" ],
+      "expectation" : "Yönetim hızlı başarı bekler.",
+      "formation" : "4-3-3",
+      "style" : "POSSESSION",
+      "squadFit" : 78.8,
+      "roleFit" : null,
+      "need" : 30,
+      "dream" : false
+    }, {
+      "category" : "RESCUE",
+      "clubId" : 8,
+      "clubName" : "Mock FC 7",
+      "leagueId" : 2,
+      "league" : "Mock League Two",
+      "difficulty" : "MEDIUM",
+      "evidence" : [ "Kadro gücü ligde 5. (ort. OVR 69)", "Kulüp değeri €8,0 Mn · tahmini bütçe bilinmiyor", "21 yaş altı yüksek potansiyelli oyuncu yok" ],
+      "expectation" : "Makul beklenti, zaman tanınır.",
+      "formation" : "4-3-3",
+      "style" : "POSSESSION",
+      "squadFit" : 60.1,
+      "roleFit" : null,
+      "need" : 53,
+      "dream" : false
+    }, {
+      "category" : "STRONG_BUDGET",
+      "clubId" : 15,
+      "clubName" : "Mock FC 14",
+      "leagueId" : 1,
+      "league" : "Mock League One",
+      "difficulty" : "MEDIUM",
+      "evidence" : [ "Kadro gücü ligde 8. (ort. OVR 64)", "Kulüp değeri €15,0 Mn · tahmini bütçe bilinmiyor, ligin üst çeyreği", "21 yaş altı yüksek potansiyelli oyuncu yok" ],
+      "expectation" : "Yönetim hızlı başarı bekler.",
+      "formation" : "4-3-3",
+      "style" : "POSSESSION",
+      "squadFit" : 43.8,
+      "roleFit" : null,
+      "need" : 30,
+      "dream" : false
+    }, {
+      "category" : "DREAM",
+      "clubId" : 16,
+      "clubName" : "Mock FC 15",
+      "leagueId" : 2,
+      "league" : "Mock League Two",
+      "difficulty" : "MEDIUM",
+      "evidence" : [ "Kadro gücü ligde 4. (ort. OVR 71)", "Kulüp değeri €16,0 Mn · tahmini bütçe bilinmiyor, ligin üst çeyreği", "21 yaş altı yüksek potansiyelli oyuncu yok" ],
+      "expectation" : "Yönetim sabırlı ama taraftar şüpheli; ilk sezon kritik.",
+      "formation" : "4-3-3",
+      "style" : "POSSESSION",
+      "squadFit" : 67.3,
+      "roleFit" : null,
+      "need" : 63,
+      "dream" : true
+    } ],
+    "missing" : [ {
+      "category" : "YOUTH_PROJECT",
+      "reason" : "Altyapı gelişimi yüksek ve genç yetenekli kulüp yok."
+    }, {
+      "category" : "SAFE",
+      "reason" : "İtibarına yakın ve kadrosu ligin üst üçte birinde olan kulüp yok."
+    } ]
+  }
+}

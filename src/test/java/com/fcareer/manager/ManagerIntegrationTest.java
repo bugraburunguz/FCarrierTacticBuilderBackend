@@ -169,6 +169,58 @@ class ManagerIntegrationTest {
         assertThat(data(post("/api/v1/manager/club-recommendations"), Map.of(), token).path("cards").size()).isEqualTo(cards.size());
     }
 
+    @Test
+    void batchedParallelFitsEqualClubByClubFits() {
+        seedProfiles();
+        List<Integer> clubs = jdbc.queryForList("SELECT club_id FROM club_profile WHERE game_version_id = 27 ORDER BY club_id", Integer.class);
+        String batchVersion = "eq-batch-" + System.nanoTime();
+        String singleVersion = "eq-single-" + System.nanoTime();
+        for (String formation : java.util.Arrays.asList(null, "4-3-3")) {
+            Map<Integer, ClubFitCalculator.ClubFit> batched = fitCalculator.fitAll(clubs, (short) 27, formation, ManagerModels.Style.COUNTER, batchVersion, null);
+            for (Integer club : clubs) {
+                assertThat(fitCalculator.fit(club, (short) 27, formation, ManagerModels.Style.COUNTER, singleVersion, null)).as("kulüp %s", club)
+                        .isEqualTo(batched.get(club));
+            }
+        }
+    }
+
+    @Test
+    void coldRecommendationsMatchTheCharacterizedResult() throws Exception {
+        Integer foreignClubs = jdbc.queryForObject("""
+                SELECT count(DISTINCT r.club_id) FROM player_rating r JOIN club c ON c.id = r.club_id WHERE c.name NOT LIKE 'Mock FC%'""", Integer.class);
+        Integer norms = jdbc.queryForObject("SELECT count(*) FROM fit_level_norms", Integer.class);
+        org.junit.jupiter.api.Assumptions.assumeTrue(foreignClubs == 0 && norms == 0, "karakterizasyon temiz mock katalogda üretildi");
+        seedProfiles();
+        String token = support.register();
+        Map<String, Object> fixed = new java.util.HashMap<>(PROFILE);
+        fixed.put("formation", "4-3-3");
+        fixed.put("style", "POSSESSION");
+        Map<String, Object> actual = new java.util.LinkedHashMap<>();
+
+        long started = System.nanoTime();
+        actual.put("auto", data(post("/api/v1/manager/club-recommendations"), Map.of("profile", PROFILE), token));
+        actual.put("fixed", data(post("/api/v1/manager/club-recommendations"), Map.of("profile", fixed), token));
+        long coldMs = (System.nanoTime() - started) / 1_000_000;
+        started = System.nanoTime();
+        data(post("/api/v1/manager/club-recommendations"), Map.of("profile", PROFILE), token);
+        long warmMs = (System.nanoTime() - started) / 1_000_000;
+        org.slf4j.LoggerFactory.getLogger(getClass()).info("Club recommendations timing coldMs : {} warmMs : {} computations : {}", coldMs, warmMs,
+                fitCalculator.computations());
+
+        String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(actual);
+        java.nio.file.Files.createDirectories(java.nio.file.Path.of("target"));
+        java.nio.file.Files.writeString(java.nio.file.Path.of("target", "club-recs-actual.json"), json);
+        try (var expected = getClass().getResourceAsStream("/manager/club-recs-characterization.json")) {
+            assertThat(expected).as("karakterizasyon dosyası").isNotNull();
+            assertThat(withoutIds(objectMapper.readTree(json))).isEqualTo(withoutIds(objectMapper.readTree(expected)));
+        }
+    }
+
+    private static JsonNode withoutIds(JsonNode node) {
+        node.findParents("clubId").forEach((p) -> ((com.fasterxml.jackson.databind.node.ObjectNode) p).remove(List.of("clubId", "leagueId")));
+        return node;
+    }
+
     /** MGR-a inceleme: kariyerde üretilmiş oyuncular (owner_career_id) kulüp istatistiğine ve uyuma girmez; istekteki bilinmeyen lig 400. */
     @Test
     void generatedCareerPlayersStayOutOfTheCatalogStatsAndUnknownLeaguesAreRejected() throws Exception {

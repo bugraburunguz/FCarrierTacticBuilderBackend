@@ -3,6 +3,8 @@ package com.fcareer.manager;
 import com.fcareer.catalog.service.PlayerService;
 import com.fcareer.catalog.squad.SquadVersion;
 import com.fcareer.catalog.squad.SquadVersionRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fcareer.common.cache.ReferenceCache;
 import com.fcareer.common.exception.NotFoundException;
 import com.fcareer.manager.ManagerModels.Card;
 import com.fcareer.manager.ManagerModels.ManagerProfile;
@@ -17,6 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
+import java.time.Duration;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -25,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static com.fcareer.common.constants.KeyConstants.CACHE_MANAGER_STATS;
 
 /**
  * MGR-a: menajer profili ve kulüp önerisi. Aday havuzu itibar aralığı ve filtrelerle süzülür, kaba sıralamada (ihtiyacın itibara yakınlığı) en iyi
@@ -38,6 +45,7 @@ public class ManagerService {
     private static final String PROFILE = "Menajer profili";
     private static final int MEN = 0;
     private static final double QUARTILE = 0.75;
+    private static final Duration STATS_TTL = Duration.ofHours(12);
 
     private final ManagerRepository repository;
     private final ManagerRules rules;
@@ -45,6 +53,8 @@ public class ManagerService {
     private final ClubFitCalculator fitCalculator;
     private final PlayerService playerService;
     private final SquadVersionRepository squadVersions;
+    private final ReferenceCache referenceCache;
+    private final Clock clock;
 
     /** Profil yoksa null (yanıtta data null, hata değil; ana taktikteki kural). */
     @Transactional(readOnly = true)
@@ -96,7 +106,8 @@ public class ManagerService {
         if (repository.profileCount(gv, archived) == 0) {
             return new Recommendations(reputation, rules.band(reputation), false, List.of(), List.of());
         }
-        List<ClubStat> stats = repository.clubStats(gv, gender, properties, archived);
+        String version = repository.catalogVersion(gv, archived);
+        List<ClubStat> stats = findClubStats(gv, gender, version, archived);
         Map<Long, Integer> needs = rules.needs(stats.stream().map((s) -> new ManagerRules.Prestige(s.clubId(), s.domestic(), s.international(), s.leagueLevel())).toList());
         Map<Long, Integer> strengthPct = ManagerRules.percentiles(stats.stream().collect(Collectors.toMap(ClubStat::clubId, ClubStat::avgOvr)));
         Map<Long, Integer> squadRank = new HashMap<>();
@@ -119,15 +130,16 @@ public class ManagerService {
         });
 
         // Aday havuzu: itibar aralığı (ilgi + hayal) ve filtreler; kaba sıra ihtiyacın itibara yakınlığı; ilk poolSize kulüp için uyum.
-        String version = repository.catalogVersion(gv, archived);
         Map<Long, ClubStat> byId = stats.stream().collect(Collectors.toMap(ClubStat::clubId, (s) -> s));
         Map<Long, Integer> filtered = new HashMap<>();
         stats.stream().filter((s) -> Objects.isNull(leagueId) || leagueId.equals(s.leagueId())).forEach((s) -> filtered.put(s.clubId(), needs.get(s.clubId())));
         List<ClubStat> pool = rules.pool(filtered, reputation, properties.getPoolSize(), properties.getDreamPoolSize()).stream().map(byId::get).toList();
         List<Candidate> candidates = new ArrayList<>();
         Map<Long, ClubFitCalculator.ClubFit> fits = new HashMap<>();
+        Map<Integer, ClubFitCalculator.ClubFit> poolFits = fitCalculator.fitAll(pool.stream().map((s) -> (int) s.clubId()).toList(), gv, profile.formation(),
+                profile.style(), version, archived);
         for (ClubStat s : pool) {
-            ClubFitCalculator.ClubFit fit = fitCalculator.fit((int) s.clubId(), gv, profile.formation(), profile.style(), version, archived);
+            ClubFitCalculator.ClubFit fit = poolFits.get((int) s.clubId());
             if (Objects.isNull(fit.squadFit())) {
                 continue;
             }
@@ -150,6 +162,13 @@ public class ManagerService {
         List<MissingCategory> missing = selection.missing().stream().map((m) -> new MissingCategory(m.category(), m.reason())).toList();
         log.info("Manager club recommendations userId : {} reputation : {} pool : {} candidates : {} cards : {}", userId, reputation, pool.size(), candidates.size(), cards.size());
         return new Recommendations(reputation, rules.band(reputation), true, cards, missing);
+    }
+
+    private List<ClubStat> findClubStats(short gv, int gender, String catalogVersion, Long archived) {
+        String key = String.join(":", CACHE_MANAGER_STATS + gv, catalogVersion, String.valueOf(Objects.requireNonNullElse(archived, 0L)), String.valueOf(gender),
+                String.valueOf(properties.getStrengthTop()), String.valueOf(properties.getBudgetTop()), String.valueOf(properties.getYoungMaxAge()),
+                String.valueOf(properties.getYoungMinHeadroom()), LocalDate.now(clock).toString());
+        return referenceCache.getOrLoad(key, new TypeReference<List<ClubStat>>() { }, STATS_TTL, () -> repository.clubStats(gv, gender, properties, archived));
     }
 
     private Long resolveArchivedSquadVersion(short gameVersionId, Long squadVersionId) {

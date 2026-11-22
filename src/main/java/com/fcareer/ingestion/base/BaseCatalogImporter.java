@@ -2,6 +2,7 @@ package com.fcareer.ingestion.base;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fcareer.common.cache.ReferenceCache;
 import com.fcareer.common.exception.ImportParseException;
 import com.fcareer.fitengine.model.Attr;
 import com.fcareer.ingestion.mapper.AcceleRateDeriver;
@@ -40,6 +41,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static com.fcareer.career.importer.CsvStream.toInt;
+import static com.fcareer.common.constants.KeyConstants.CACHE_MANAGER_PREFIX;
 import static com.fcareer.career.importer.CsvStream.toLong;
 
 @Slf4j
@@ -116,6 +118,7 @@ public class BaseCatalogImporter {
     private final LePlaystyleBits playstyleBits;
     private final SquadVersionRepository squadVersionRepository;
     private final Clock clock;
+    private final ReferenceCache referenceCache;
 
     /**
      * full=true yalnızca dosya katalogun tamamını içeriyorsa verilmeli: dosyada olmayan oyuncular REMOVED işaretlenir.
@@ -219,6 +222,7 @@ public class BaseCatalogImporter {
         }
 
         int profiles = saveClubProfiles(tables, gameVersionId, excludedTeams);
+        referenceCache.evictPrefix(CACHE_MANAGER_PREFIX);
         log.info("Base catalog import players : {} created : {} existing : {} noTeam : {} noPosition : {} changes : {} clubProfiles : {} squadVersionId : {}",
                 players.size(), ratings.size(), already, noTeam, noPosition, recorded, profiles, squad.id());
         return new BaseImportResult(players.size(), already, ratings.size(), noTeam, noPosition,

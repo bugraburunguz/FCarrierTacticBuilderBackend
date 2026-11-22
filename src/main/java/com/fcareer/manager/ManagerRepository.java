@@ -13,7 +13,10 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Array;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -34,6 +37,12 @@ public class ManagerRepository {
     private static final String ARCHIVED_CATALOG_PREFIX = "sv-";
     private static final String ARCHIVED_RATINGS = "(SELECT base_player_id, game_version_id, club_id, overall FROM player_rating_archive WHERE squad_version_id = :sv)";
     private static final String ARCHIVED_PROFILES = "(SELECT * FROM club_profile_archive WHERE squad_version_id = :sv)";
+    private static final String CATALOG_SQUADS = """
+            SELECT r.club_id, r.base_player_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id
+             WHERE r.club_id IN (:clubs) AND r.game_version_id = :gv AND b.owner_career_id IS NULL ORDER BY r.club_id, r.ctid""";
+    private static final String ARCHIVED_CATALOG_SQUADS = """
+            SELECT a.club_id, a.base_player_id FROM player_rating_archive a JOIN base_player b ON b.id = a.base_player_id
+             WHERE a.squad_version_id = :sv AND a.club_id IN (:clubs) AND b.owner_career_id IS NULL ORDER BY a.club_id, a.ctid""";
 
     private final NamedParameterJdbcTemplate jdbc;
 
@@ -127,6 +136,20 @@ public class ManagerRepository {
                 (rs, i) -> new ClubStat(rs.getLong("club_id"), rs.getString("name"), rs.getObject("league_id", Integer.class), rs.getString("league"),
                         rs.getInt("domestic_prestige"), rs.getInt("international_prestige"), Math.max(1, rs.getInt("league_level")), rs.getInt("youth_development"),
                         rs.getObject("club_worth_eur", Long.class), rs.getInt("players"), rs.getDouble("avg_ovr"), rs.getLong("top_value"), rs.getInt("young")));
+    }
+
+    public Map<Integer, List<Long>> catalogSquads(Collection<Integer> clubIds, short gameVersionId, Long archivedSquadVersionId) {
+        Map<Integer, List<Long>> squads = new LinkedHashMap<>();
+        if (clubIds.isEmpty()) {
+            return squads;
+        }
+        MapSqlParameterSource params = new MapSqlParameterSource("clubs", clubIds).addValue("gv", gameVersionId);
+        String sql = Objects.isNull(archivedSquadVersionId) ? CATALOG_SQUADS : ARCHIVED_CATALOG_SQUADS;
+        jdbc.query(sql, withSquadVersion(params, archivedSquadVersionId),
+                (rs) -> {
+                    squads.computeIfAbsent(rs.getInt("club_id"), (k) -> new ArrayList<>()).add(rs.getLong("base_player_id"));
+                });
+        return squads;
     }
 
     private static String ratings(Long archivedSquadVersionId) {
