@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
+import com.fcareer.common.cache.ReferenceCache;
 import com.fcareer.ingestion.base.BaseCatalogImporter;
 import com.fcareer.ingestion.service.IngestionService;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.fcareer.common.constants.KeyConstants.CACHE_LOOKUP_PREFIX;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
@@ -40,11 +42,15 @@ class CatalogListsIntegrationTest {
     @Autowired
     private IngestionService ingestionService;
 
+    @Autowired
+    private ReferenceCache referenceCache;
+
     @BeforeEach
     void seed() {
         if (basePlayerRepository.count() == 0) {
             ingestionService.run();
         }
+        referenceCache.evictPrefix(CACHE_LOOKUP_PREFIX);
     }
 
     private JsonNode data(String path) throws Exception {
@@ -81,6 +87,7 @@ class CatalogListsIntegrationTest {
         Integer full = jdbc.queryForObject("INSERT INTO club (name, league_id, gender) VALUES ('ACB Dolu FC', ?, 0) RETURNING id", Integer.class, emptyLeague);
         jdbc.update("INSERT INTO player_rating (base_player_id, game_version_id, club_id, overall, positions) VALUES (?, 27, ?, 60, '{CM}')", catalogPlayer, full);
         assertThat(names(data("/api/v1/clubs?q=ACB&limit=50"))).containsExactly("ACB Dolu FC");
+        referenceCache.evictPrefix(CACHE_LOOKUP_PREFIX);
         assertThat(names(data("/api/v1/leagues"))).contains("ACB Klasik Lig");
     }
 

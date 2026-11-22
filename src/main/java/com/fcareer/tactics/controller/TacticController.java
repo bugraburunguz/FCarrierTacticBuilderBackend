@@ -7,6 +7,7 @@ import com.fcareer.tactics.model.response.ResolvedTacticResponse;
 import com.fcareer.tactics.service.TacticService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 import static com.fcareer.common.constants.ApiConstants.API_V1;
+import static com.fcareer.common.model.CatalogResponses.toPublicCached;
 
 @RestController
 @RequestMapping(API_V1)
@@ -27,18 +29,18 @@ public class TacticController {
     private final TacticService tacticService;
 
     @GetMapping("/formations")
-    public List<FormationDefinition> formations() {
-        return tacticService.formations();
+    public ResponseEntity<List<FormationDefinition>> formations() {
+        return toPublicCached(tacticService.formations());
     }
 
     @GetMapping("/presets")
-    public List<PresetResponse> presets(@RequestParam(required = false) String kind) {
-        return tacticService.presets(kind);
+    public ResponseEntity<List<PresetResponse>> presets(@RequestParam(required = false) String kind) {
+        return toPublicCached(tacticService.presets(kind));
     }
 
     @GetMapping("/presets/{id}")
-    public PresetResponse preset(@PathVariable String id) {
-        return tacticService.preset(id);
+    public ResponseEntity<PresetResponse> preset(@PathVariable String id) {
+        return toPublicCached(tacticService.preset(id));
     }
 
     @PostMapping("/tactics/resolve")

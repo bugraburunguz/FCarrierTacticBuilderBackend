@@ -13,6 +13,7 @@ import com.fcareer.catalog.repository.GameVersionRepository;
 import com.fcareer.catalog.repository.LeagueRepository;
 import com.fcareer.catalog.repository.NationalityRepository;
 import com.fcareer.catalog.repository.PlayerRatingRepository;
+import com.fcareer.common.cache.ReferenceCache;
 import com.fcareer.common.exception.NotFoundException;
 import com.fcareer.fitengine.model.AcceleRate;
 import com.fcareer.ingestion.configuration.IngestionProperties;
@@ -38,6 +39,8 @@ import java.util.concurrent.Executors;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.fcareer.common.constants.KeyConstants.CACHE_LOOKUP_PREFIX;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -61,6 +64,7 @@ public class IngestionService {
     private final JdbcTemplate jdbc;
     private final com.fcareer.catalog.service.LeagueTierService leagueTierService;
     private final org.springframework.context.ApplicationEventPublisher events;
+    private final ReferenceCache referenceCache;
     private final ExecutorService executor = Executors.newSingleThreadExecutor(runnable -> {
         Thread thread = new Thread(runnable, "ingestion");
         thread.setDaemon(true);
@@ -155,6 +159,8 @@ public class IngestionService {
             runs.fail(runId, e.getMessage());
             log.error("Ingestion failed runId : {} (will resume from last offset)", runId, e);
             throw e;
+        } finally {
+            referenceCache.evictPrefix(CACHE_LOOKUP_PREFIX);
         }
         runs.finish(runId);
         leagueTierService.apply();
