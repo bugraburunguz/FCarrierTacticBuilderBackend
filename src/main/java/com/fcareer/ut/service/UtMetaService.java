@@ -75,7 +75,7 @@ public class UtMetaService {
         PlayerSearchRequest request = PlayerSearchRequest.builder()
                 .gameVersionId(gameVersionId).gender(gender).sort("overall").ascending(false).page(0).size(POOL_SIZE).build();
         request.setPositions(List.of(position));
-        List<Long> ids = playerService.search(request).getItems().stream().map(PlayerSummaryResponse::getId).toList();
+        List<Long> ids = playerService.searchItems(request).stream().map(PlayerSummaryResponse::getId).toList();
         if (ids.isEmpty()) {
             return List.of();
         }

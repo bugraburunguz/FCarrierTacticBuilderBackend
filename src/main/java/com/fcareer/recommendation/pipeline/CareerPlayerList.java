@@ -189,7 +189,7 @@ public class CareerPlayerList {
         request.setIds(slice.stream().map(Ranked::id).toList());
         request.setPage(0);
         request.setSize(slice.size());
-        Map<Long, PlayerSummaryResponse> byId = playerService.search(request).getItems().stream()
+        Map<Long, PlayerSummaryResponse> byId = playerService.searchItems(request).stream()
                 .collect(Collectors.toMap(PlayerSummaryResponse::getId, Function.identity(), (a, b) -> a));
         List<PlayerSummaryResponse> out = new ArrayList<>();
         for (Ranked r : slice) {

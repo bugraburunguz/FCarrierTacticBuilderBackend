@@ -144,7 +144,7 @@ public class ReplicaApplyService {
         Set<Long> ids = new LinkedHashSet<>();
         for (String position : formation.slots().stream().map(FormationSlot::position).distinct().toList()) {
             PlayerSearchRequest search = PlayerSearchRequest.builder().positions(List.of(position)).sort(SORT_OVERALL).size(SAMPLE_PER_POSITION).build();
-            playerService.search(search).getItems().forEach((p) -> ids.add(p.getId()));
+            playerService.searchItems(search).forEach((p) -> ids.add(p.getId()));
         }
         return List.copyOf(ids);
     }

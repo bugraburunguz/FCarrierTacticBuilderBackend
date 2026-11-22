@@ -59,6 +59,7 @@ public class FitService {
     private final FitEngineProperties fitProperties;
     private final WeakLinkClassifier weakLinkClassifier;
     private final RoleSuggestService roleSuggestService;
+    private final LineupSolveCache lineupSolveCache;
 
     public FitRoleResult roleFit(FitRoleRequest request) {
         FitPlayer player = playerService.fitPlayers(List.of(request.getPlayerId()), request.getGameVersionId()).get(0);
@@ -122,14 +123,14 @@ public class FitService {
             log.warn("Squad source invalid hasCareer : {} hasPlayers : {}", hasCareer, hasPlayers);
             throw new InvalidTacticException("squad source (careerId or playerIds)");
         }
+        CareerService.CareerSquad squad = hasCareer ? careerService.squadPlayerIds(userId, request.getCareerId()) : null;
         if (hasCareer) {
-            CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, request.getCareerId());
             playerIds = squad.playerIds();
             gameVersion = squad.gameVersionId();
         } else {
             playerIds = request.getPlayerIds();
         }
-        List<Long> ownedIds = hasCareer ? careerService.squadPlayerIds(userId, request.getCareerId()).ownedIds() : List.of();
+        List<Long> ownedIds = hasCareer ? squad.ownedIds() : List.of();
         List<FitPlayer> players = playerService.fitPlayers(playerIds, gameVersion, hasCareer ? request.getCareerId() : null);
         TacticResolver.ResolvedTactic resolved = tacticResolver.resolve(request.getTactic());
         List<IntentProfile> slots = resolved.slots();
@@ -151,7 +152,10 @@ public class FitService {
         CareerService.CareerSquad squad = careerService.squadPlayerIds(userId, request.getCareerId());
         List<FitPlayer> players = playerService.fitPlayers(squad.playerIds(), squad.gameVersionId(), request.getCareerId());
         List<IntentProfile> slots = tacticResolver.resolve(request.getTactic()).slots();
-        SquadFitResponse response = withWeakClasses(withoutPaidInsights(squadFitService.solveBest(players, slots, fitProperties.getCareerEngineVersion(), request.getLocked())), request.getLocked());
+        String engineVersion = fitProperties.getCareerEngineVersion();
+        SquadFitResponse solved = lineupSolveCache.getOrSolve(request.getCareerId(), players, slots, engineVersion, request.getLocked(),
+                () -> squadFitService.solveBest(players, slots, engineVersion, request.getLocked()));
+        SquadFitResponse response = withWeakClasses(withoutPaidInsights(solved), request.getLocked());
         return Boolean.TRUE.equals(request.getRoleAlternatives()) ? withRoleAlternatives(response, players) : response;
     }
 
@@ -183,7 +187,7 @@ public class FitService {
 
     private static SquadFitResponse withoutPaidInsights(SquadFitResponse full) {
         List<SlotAssignment> slots = Objects.isNull(full.getSlots()) ? List.of() : full.getSlots().stream().map(s -> SlotAssignment.builder()
-                .slotId(s.getSlotId()).position(s.getPosition()).roleId(s.getRoleId()).roleName(s.getRoleName()).tags(s.getTags())
+                .slotId(s.getSlotId()).position(s.getPosition()).roleId(s.getRoleId()).roleName(s.getRoleName()).tags(copyOf(s.getTags()))
                 .playerId(s.getPlayerId()).playerName(s.getPlayerName()).overall(s.getOverall()).combined(s.getCombined())
                 .roleFit(Objects.isNull(s.getRoleFit()) ? null : RoleFitResponse.builder().playerId(s.getRoleFit().getPlayerId())
                         .playerName(s.getRoleFit().getPlayerName()).roleId(s.getRoleFit().getRoleId()).roleName(s.getRoleFit().getRoleName())
@@ -192,12 +196,16 @@ public class FitService {
                         .levelBandLo(s.getRoleFit().getLevelBandLo()).levelBandHi(s.getRoleFit().getLevelBandHi()).levelSample(s.getRoleFit().getLevelSample())
                         .outOfPosition(s.getRoleFit().isOutOfPosition())
                         // KARIYER-UX FAZ 4b (toplu uyum): nedenler /fit/role'de zaten ücretsiz (D-01'e uygun); aynı biçim ve sıra.
-                        .reasons(s.getRoleFit().getReasons()).build())
+                        .reasons(copyOf(s.getRoleFit().getReasons())).build())
                 .depth(Objects.isNull(s.getDepth()) ? List.of() : s.getDepth().stream().map(d -> DepthEntry.builder().playerId(d.getPlayerId())
                         .playerName(d.getPlayerName()).combined(d.getCombined()).roleFitScore(d.getRoleFitScore()).currentFit(d.getCurrentFit()).levelFit(d.getLevelFit())
                         .fitLabel(d.getFitLabel()).badge(d.getBadge()).weak(d.isWeak()).build()).toList())
                 .build()).toList();
-        return SquadFitResponse.builder().squadFit(full.getSquadFit()).slots(slots).bench(full.getBench()).mirrored(full.isMirrored()).build();
+        return SquadFitResponse.builder().squadFit(full.getSquadFit()).slots(slots).bench(copyOf(full.getBench())).mirrored(full.isMirrored()).build();
+    }
+
+    private static <T> List<T> copyOf(List<T> list) {
+        return Objects.isNull(list) ? null : java.util.Collections.unmodifiableList(new ArrayList<>(list));
     }
 
     private RoleFitResponse roleFit(FitPlayer player, FitRole role, IntentProfile intent, String position, String engineVersion) {

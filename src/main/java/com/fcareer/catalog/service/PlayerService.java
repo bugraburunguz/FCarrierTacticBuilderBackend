@@ -53,15 +53,19 @@ public class PlayerService {
     private final com.fcareer.versioning.service.VersioningService versioningService;
 
     public PageResponse<PlayerSummaryResponse> search(PlayerSearchRequest request) {
-        request.setGameVersionId(resolveGameVersion(request.getGameVersionId()));
-        request.setSize(request.getSize() <= 0 ? DEFAULT_PAGE_SIZE : Math.min(request.getSize(), MAX_PAGE_SIZE));
-        request.setPage(Math.max(request.getPage(), 0));
         return PageResponse.<PlayerSummaryResponse>builder()
-                .items(enrich(playerSearchRepository.search(request), request.getGameVersionId(), isOnLatestSquadVersion(request.getCareerId())))
+                .items(searchItems(request))
                 .page(request.getPage())
                 .size(request.getSize())
                 .totalItems(playerSearchRepository.count(request))
                 .build();
+    }
+
+    public List<PlayerSummaryResponse> searchItems(PlayerSearchRequest request) {
+        request.setGameVersionId(resolveGameVersion(request.getGameVersionId()));
+        request.setSize(request.getSize() <= 0 ? DEFAULT_PAGE_SIZE : Math.min(request.getSize(), MAX_PAGE_SIZE));
+        request.setPage(Math.max(request.getPage(), 0));
+        return enrich(playerSearchRepository.search(request), request.getGameVersionId(), isOnLatestSquadVersion(request.getCareerId()));
     }
 
     /** EA oyuncu kimliğiyle (assetId = ea_resource_id) katalog detayı; kariyere özel üretilmiş oyuncular dışlanır. */

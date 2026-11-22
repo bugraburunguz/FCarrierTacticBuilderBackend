@@ -161,8 +161,15 @@ public class CareerService {
     @Transactional(readOnly = true)
     public List<CareerResponse> list(Long userId) {
         List<CareerEntity> careers = careerRepository.findByUserIdOrderByIdDesc(userId);
+        if (careers.isEmpty()) {
+            return List.of();
+        }
         Map<Long, CareerSquadVersionResponse> squadVersions = findSquadVersions(careers);
-        return careers.stream().map(career -> toResponse(career, squadVersions)).toList();
+        Map<Integer, ClubEntity> clubs = clubRepository.findAllById(careers.stream().map(CareerEntity::getClubId).filter(Objects::nonNull).distinct().toList()).stream()
+                .collect(java.util.stream.Collectors.toMap(ClubEntity::getId, java.util.function.Function.identity()));
+        Map<Long, Long> squadSizes = userPlayerStateRepository.countByCareerIds(careers.stream().map(CareerEntity::getId).toList()).stream()
+                .collect(java.util.stream.Collectors.toMap(UserPlayerStateRepository.CareerSquadSize::getCareerId, UserPlayerStateRepository.CareerSquadSize::getSize));
+        return careers.stream().map(career -> toResponse(career, clubs.get(career.getClubId()), squadSizes.getOrDefault(career.getId(), 0L), squadVersions)).toList();
     }
 
     @Transactional(readOnly = true)
@@ -437,14 +444,14 @@ public class CareerService {
     }
 
     private CareerResponse toResponse(CareerEntity career) {
-        return toResponse(career, findSquadVersions(List.of(career)));
+        ClubEntity club = clubRepository.findById(career.getClubId()).orElse(null);
+        return toResponse(career, club, userPlayerStateRepository.countByCareerId(career.getId()), findSquadVersions(List.of(career)));
     }
 
-    private CareerResponse toResponse(CareerEntity career, Map<Long, CareerSquadVersionResponse> squadVersions) {
-        ClubEntity club = clubRepository.findById(career.getClubId()).orElse(null);
+    private CareerResponse toResponse(CareerEntity career, ClubEntity club, long squadSize, Map<Long, CareerSquadVersionResponse> squadVersions) {
         return careerMapper.toResponse(career, Objects.isNull(club) ? null : club.getName(),
                 Objects.isNull(club) ? null : club.getGender(),
-                userPlayerStateRepository.findByCareerIdOrderByIdAsc(career.getId()).size(),
+                Math.toIntExact(squadSize),
                 squadVersions.get(career.getSquadVersionId()));
     }
 

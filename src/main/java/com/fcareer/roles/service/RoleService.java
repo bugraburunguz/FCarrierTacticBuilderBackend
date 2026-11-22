@@ -38,8 +38,7 @@ public class RoleService {
     }
 
     public FitRole getFitRole(String roleId) {
-        return roleRepository.findById(roleId)
-                .map(roleMapper::toFitRole)
+        return java.util.Optional.ofNullable(fitRolesById().get(roleId))
                 .orElseThrow(() -> new NotFoundException(ROLE, roleId));
     }
 
