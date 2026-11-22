@@ -3,7 +3,9 @@ package com.fcareer.ingestion.base;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
 import com.fcareer.catalog.squad.SquadVersion;
+import com.fcareer.catalog.entity.PlayerRatingEntity;
 import com.fcareer.catalog.squad.SquadVersionRepository;
+import com.fcareer.catalog.squad.SquadVersionService;
 import com.fcareer.ingestion.service.IngestionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +37,8 @@ class CareerPlayerSquadVersionIntegrationTest {
     private BasePlayerRepository basePlayerRepository;
     @Autowired
     private IngestionService ingestionService;
+    @Autowired
+    private SquadVersionService squadVersionService;
 
     @BeforeEach
     void seed() {
@@ -162,6 +166,22 @@ class CareerPlayerSquadVersionIntegrationTest {
 
         assertThat(jdbc.queryForMap("SELECT loan_from_team_id, loan_until FROM career_player WHERE career_id = ? AND player_id = ?", careerId, player))
                 .containsEntry("loan_from_team_id", null).containsEntry("loan_until", null);
+    }
+
+    @Test
+    void theLoanedOutPlayersOfAClubComeFromTheCareersSquadVersion() {
+        long player = jdbc.queryForObject("""
+                SELECT r.base_player_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id
+                 WHERE r.game_version_id = 27 AND b.owner_career_id IS NULL AND b.retired_at IS NULL ORDER BY r.base_player_id LIMIT 1""", Long.class);
+        jdbc.update("UPDATE player_rating SET loan_from_team_id = 9100001 WHERE base_player_id = ? AND game_version_id = 27", player);
+        SquadVersion old = squadVersions.findLatest(GAME).orElseThrow();
+        squadVersions.archiveCurrent(old.id(), GAME);
+        SquadVersion fresh = squadVersions.create(GAME, "Kadro güncellemesi", null, null, 0);
+        jdbc.update("UPDATE player_rating SET loan_from_team_id = NULL WHERE base_player_id = ? AND game_version_id = 27", player);
+
+        assertThat(squadVersionService.findCatalogLoanedOut(old.id(), 9100001, GAME)).extracting(PlayerRatingEntity::getBasePlayerId)
+                .as("eski sürüm arşivden").containsExactly(player);
+        assertThat(squadVersionService.findCatalogLoanedOut(fresh.id(), 9100001, GAME)).as("yeni sürümde kiralık bitti").isEmpty();
     }
 
     @Test

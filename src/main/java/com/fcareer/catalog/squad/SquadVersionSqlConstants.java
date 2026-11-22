@@ -35,6 +35,10 @@ public final class SquadVersionSqlConstants {
             SELECT a.* FROM player_rating_archive a JOIN base_player b ON b.id = a.base_player_id
              WHERE a.squad_version_id = :squadVersionId AND a.club_id = :clubId AND b.owner_career_id IS NULL""";
 
+    static final String FIND_ARCHIVED_CATALOG_LOANED_OUT = """
+            SELECT a.* FROM player_rating_archive a JOIN base_player b ON b.id = a.base_player_id
+             WHERE a.squad_version_id = :squadVersionId AND a.loan_from_team_id = :eaTeamId AND b.owner_career_id IS NULL""";
+
     static final String FIND_ARCHIVED_CATALOG_RATING = """
             SELECT a.* FROM player_rating_archive a JOIN base_player b ON b.id = a.base_player_id
              WHERE a.squad_version_id = :squadVersionId AND a.base_player_id = :basePlayerId AND b.owner_career_id IS NULL""";
