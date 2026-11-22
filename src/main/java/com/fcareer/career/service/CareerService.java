@@ -112,7 +112,7 @@ public class CareerService {
         careerRepository.flush();
         careerPlayerWriter.seedNewCareer(career.getId());
         log.info("Career created careerId : {} userId : {} squadSize : {} loanedOut : {}", career.getId(), userId, ratings.size(), loanedOut.size());
-        return careerMapper.toResponse(career, club.getName(), club.getGender(), ratings.size(),
+        return careerMapper.toResponse(career, club.getName(), club.getGender(), ratings.size() + loanedOut.size(),
                 findSquadVersions(List.of(career)).get(career.getSquadVersionId()));
     }
 

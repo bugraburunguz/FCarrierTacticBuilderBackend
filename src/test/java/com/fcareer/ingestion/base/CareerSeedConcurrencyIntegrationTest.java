@@ -158,15 +158,25 @@ class CareerSeedConcurrencyIntegrationTest {
                 SELECT r.base_player_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id
                  WHERE r.game_version_id = 27 AND r.club_id <> ? AND b.owner_career_id IS NULL AND b.retired_at IS NULL ORDER BY r.base_player_id LIMIT 1""",
                 Long.class, clubId);
+        long homePlayer = jdbc.queryForObject("""
+                SELECT r.base_player_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id
+                 WHERE r.game_version_id = 27 AND r.club_id = ? AND b.owner_career_id IS NULL ORDER BY r.base_player_id LIMIT 1""", Long.class, clubId);
         jdbc.update("UPDATE club SET ea_team_id = 9100000 WHERE id = ?", clubId);
-        jdbc.update("UPDATE player_rating SET loan_from_team_id = 9100000, loan_until = DATE '2027-06-30' WHERE base_player_id = ? AND game_version_id = 27", awayPlayer);
+        jdbc.update("UPDATE player_rating SET loan_from_team_id = 9100000, loan_until = DATE '2027-06-30' WHERE base_player_id IN (?, ?) AND game_version_id = 27",
+                awayPlayer, homePlayer);
         try {
             CreateCareerRequest request = new CreateCareerRequest();
             request.setClubId(clubId);
             request.setName("kiraya");
 
-            long careerId = careerService.create(userId, request).getId();
+            var created = careerService.create(userId, request);
+            long careerId = created.getId();
             careerIds.add(careerId);
+
+            assertThat(created.getSquadSize()).as("oluşturma yanıtı kiraya verilenleri de sayar")
+                    .isEqualTo(jdbc.queryForObject("SELECT count(*) FROM user_player_state WHERE career_id = ?", Integer.class, careerId));
+            assertThat(jdbc.queryForObject("SELECT count(*) FROM user_player_state WHERE career_id = ? AND base_player_id = ?", Integer.class, careerId, homePlayer))
+                    .as("kendi kulübündeki oyuncu bir kez").isEqualTo(1);
 
             assertThat(jdbc.queryForMap("SELECT on_loan, loaned_out FROM user_player_state WHERE career_id = ? AND base_player_id = ?", careerId, awayPlayer))
                     .as("kiraya verilen oyuncu kadroda, bizden kiralıkta").containsEntry("on_loan", false).containsEntry("loaned_out", true);
@@ -176,7 +186,8 @@ class CareerSeedConcurrencyIntegrationTest {
                         assertThat(row.isOnLoan()).isFalse();
                     });
         } finally {
-            jdbc.update("UPDATE player_rating SET loan_from_team_id = NULL, loan_until = NULL WHERE base_player_id = ? AND game_version_id = 27", awayPlayer);
+            jdbc.update("UPDATE player_rating SET loan_from_team_id = NULL, loan_until = NULL WHERE base_player_id IN (?, ?) AND game_version_id = 27",
+                    awayPlayer, homePlayer);
             jdbc.update("UPDATE club SET ea_team_id = ? WHERE id = ?", previousEaTeam, clubId);
         }
     }
