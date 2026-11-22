@@ -15,7 +15,9 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -55,15 +57,19 @@ public class CareerImportService {
     private final com.fcareer.development.track.GrowthTrackService growthTrackService;
     private final com.fcareer.career.match.MatchDataImporter matchDataImporter;
     private final com.fcareer.career.match.MatchProfileImporter matchProfileImporter;
+    private final PlatformTransactionManager transactionManager;
 
-    @Transactional
     public ImportSummaryResponse importData(Long userId, Long careerId, MultipartFile logFile, Map<String, MultipartFile> csvs) {
         entitlementService.requirePremium(userId);
-        CareerEntity career = careerService.requireOwned(userId, careerId);
-
+        careerService.requireOwned(userId, careerId);
         long started = System.nanoTime();
         BaseUploads.Upload upload = BaseUploads.toUpload(logFile, csvs);
         long parsed = System.nanoTime();
+        return new TransactionTemplate(transactionManager).execute((status) -> writeImport(userId, careerId, upload, started, parsed));
+    }
+
+    private ImportSummaryResponse writeImport(Long userId, Long careerId, BaseUploads.Upload upload, long started, long parsed) {
+        CareerEntity career = careerService.requireOwned(userId, careerId);
         Map<String, List<Map<String, String>>> tables = upload.tables();
         LeExportV2Parser.LeContext context = upload.context();
         Map<Integer, String> leagueNames = new HashMap<>();
@@ -229,8 +235,8 @@ public class CareerImportService {
         careerDeskService.takeSnapshot(careerId, "IMPORT", Objects.nonNull(upload.exportId()) ? "export " + upload.exportId() : null);
         long finished = System.nanoTime();
         // FCA-21: canlıda yavaş adımı bulmak için adım süreleri (ms); oyuncu kimliği ya da içerik loglanmaz.
-        log.info("Career import timing careerId : {} parseMs : {} playersMs : {} syncMs : {} contractsMs : {} growthMs : {} squadAndSnapshotMs : {} totalMs : {}",
-                careerId, toMillis(parsed - started), toMillis(playersWritten - parsed), toMillis(synced - playersWritten),
+        log.info("Career import timing careerId : {} parseMs : {} txMs : {} playersMs : {} syncMs : {} contractsMs : {} growthMs : {} squadAndSnapshotMs : {} totalMs : {}",
+                careerId, toMillis(parsed - started), toMillis(finished - parsed), toMillis(playersWritten - parsed), toMillis(synced - playersWritten),
                 toMillis(contractsWritten - synced), toMillis(growthWritten - contractsWritten), toMillis(finished - growthWritten),
                 toMillis(finished - started));
         int skippedNoPosition = baseCatalogImporter.careerPlayersWithoutPositions(tables.get("players"), eaToBase.keySet());
