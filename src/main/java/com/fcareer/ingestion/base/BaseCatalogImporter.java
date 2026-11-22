@@ -18,7 +18,15 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fcareer.catalog.squad.SquadVersion;
+import com.fcareer.catalog.squad.SquadVersionRepository;
+
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -28,6 +36,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import static com.fcareer.career.importer.CsvStream.toInt;
@@ -65,18 +74,43 @@ public class BaseCatalogImporter {
     private static final double NATIONALITY_CONFIDENCE = 0.6;
 
     public record BaseImportResult(int playersInFile, int existing, int created, int skippedNoTeam, int skippedNoPosition,
-                                   int nationalitiesCreated, int clubsCreated, int leaguesCreated, int updated, int changesRecorded) {
+                                   int nationalitiesCreated, int clubsCreated, int leaguesCreated, int updated, int changesRecorded,
+                                   Long squadVersionId, Integer squadVersionNo, int archivedPlayers) {
     }
+
+    private record SquadSnapshot(Long id, Integer versionNo, int archivedPlayers) {
+    }
+
+    private static final SquadSnapshot NO_SQUAD_VERSION = new SquadSnapshot(null, null, 0);
+    private static final ZoneId LE_LOCAL_ZONE = ZoneId.of("Europe/Istanbul");
+    private static final String SQUAD_LABEL_PREFIX = "Kadro güncellemesi ";
+    private static final DateTimeFormatter SQUAD_LABEL_DATE = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private static final int SHORT_BUILD_PARTS = 3;
+    private static final String CATALOG_PLAYER_COUNT_SQL = """
+            SELECT count(*) FROM player_rating r JOIN base_player b ON b.id = r.base_player_id
+            WHERE r.game_version_id = :gv AND b.owner_career_id IS NULL""";
+    private static final String IS_ARCHIVED_SQL = """
+            SELECT EXISTS (SELECT 1 FROM player_rating_archive WHERE squad_version_id = :id)
+                OR EXISTS (SELECT 1 FROM club_profile_archive WHERE squad_version_id = :id)""";
+    private static final String LINK_DATASET_VERSION_SQL = "UPDATE dataset_version SET squad_version_id = :squad WHERE id = :id";
 
     private final NamedParameterJdbcTemplate jdbc;
     private final AcceleRateDeriver acceleRateDeriver;
     private final ObjectMapper objectMapper;
     private final VersioningService versioningService;
     private final LePlaystyleBits playstyleBits;
+    private final SquadVersionRepository squadVersionRepository;
+    private final Clock clock;
 
     public BaseImportResult importMissing(Map<String, List<Map<String, String>>> tables, short gameVersionId, boolean overwriteExisting,
                                          boolean createMissing) {
         return importMissing(tables, gameVersionId, overwriteExisting, createMissing, false, null);
+    }
+
+    @Transactional
+    public BaseImportResult importMissing(Map<String, List<Map<String, String>>> tables, short gameVersionId, boolean overwriteExisting,
+                                         boolean createMissing, boolean full, String label) {
+        return importMissing(tables, gameVersionId, overwriteExisting, createMissing, full, label, null);
     }
 
     /**
@@ -85,7 +119,7 @@ public class BaseCatalogImporter {
      */
     @Transactional
     public BaseImportResult importMissing(Map<String, List<Map<String, String>>> tables, short gameVersionId, boolean overwriteExisting,
-                                         boolean createMissing, boolean full, String label) {
+                                         boolean createMissing, boolean full, String label, LeExportV2Parser.LeContext source) {
         Context ctx = buildContext(tables);
         List<Map<String, String>> players = ctx.players();
         Map<Long, Integer> playerTeam = ctx.playerTeam();
@@ -145,11 +179,13 @@ public class BaseCatalogImporter {
                     .addValue("gender", Objects.equals(toInt(row.get("gender")), 1) ? 1 : 0));
             pending.put(eaId, row);
         }
+        List<PlayerChange> changes = new ArrayList<>(updateChanges(ratingUpdates));
+        boolean opensSquadVersion = overwriteExisting && (!changes.isEmpty() || !basePlayers.isEmpty());
+        int archivedPlayers = opensSquadVersion ? archiveLatestSquadVersion(gameVersionId) : 0;
         batch("""
                 INSERT INTO base_player (ea_resource_id, full_name, dob, nationality_id, height_cm, weight_kg, preferred_foot, gender)
                 VALUES (:ea, :name, :dob, :nat, :height, :weight, :foot, :gender)""", basePlayers);
 
-        List<PlayerChange> changes = new ArrayList<>(updateChanges(ratingUpdates));
         batch(BASE_UPDATE_SQL, baseUpdates);
         batch(RATING_UPDATE_SQL, ratingUpdates);
         renameNameless(players, names, edited);
@@ -169,13 +205,58 @@ public class BaseCatalogImporter {
         } else {
             log.info("Partial catalog file: missing players are NOT marked REMOVED; unknown players are upserted created : {}", ratings.size());
         }
-        int recorded = versioningService.recordCatalogVersion(gameVersionId, "LIVE_EDITOR_EXPORT", label, full, changes).isPresent() ? changes.size() : 0;
+        SquadSnapshot squad = opensSquadVersion ? openSquadVersion(gameVersionId, label, source, archivedPlayers) : NO_SQUAD_VERSION;
+        Optional<Long> datasetVersionId = versioningService.recordCatalogVersion(gameVersionId, "LIVE_EDITOR_EXPORT", label, full, changes);
+        int recorded = datasetVersionId.isPresent() ? changes.size() : 0;
+        if (datasetVersionId.isPresent() && Objects.nonNull(squad.id())) {
+            jdbc.update(LINK_DATASET_VERSION_SQL, Map.of("squad", squad.id(), "id", datasetVersionId.get()));
+        }
 
         int profiles = saveClubProfiles(tables, gameVersionId, excludedTeams);
-        log.info("Base catalog import players : {} created : {} existing : {} noTeam : {} noPosition : {} changes : {} clubProfiles : {}",
-                players.size(), ratings.size(), already, noTeam, noPosition, recorded, profiles);
+        log.info("Base catalog import players : {} created : {} existing : {} noTeam : {} noPosition : {} changes : {} clubProfiles : {} squadVersionId : {}",
+                players.size(), ratings.size(), already, noTeam, noPosition, recorded, profiles, squad.id());
         return new BaseImportResult(players.size(), already, ratings.size(), noTeam, noPosition,
-                nationalities.created(), clubs.createdClubs(), clubs.createdLeagues(), ratingUpdates.size(), recorded);
+                nationalities.created(), clubs.createdClubs(), clubs.createdLeagues(), ratingUpdates.size(), recorded,
+                squad.id(), squad.versionNo(), squad.archivedPlayers());
+    }
+
+    private int archiveLatestSquadVersion(short gameVersionId) {
+        Optional<SquadVersion> latest = squadVersionRepository.findLatest(gameVersionId);
+        if (latest.isEmpty()) {
+            log.info("No squad version to archive gameVersionId : {}", gameVersionId);
+            return 0;
+        }
+        long latestId = latest.get().id();
+        if (isArchived(latestId)) {
+            log.info("Squad version already archived squadVersionId : {}", latestId);
+            return 0;
+        }
+        return squadVersionRepository.archiveCurrent(latestId, gameVersionId).players();
+    }
+
+    private boolean isArchived(long squadVersionId) {
+        return Boolean.TRUE.equals(jdbc.queryForObject(IS_ARCHIVED_SQL, Map.of("id", squadVersionId), Boolean.class));
+    }
+
+    private SquadSnapshot openSquadVersion(short gameVersionId, String label, LeExportV2Parser.LeContext source, int archivedPlayers) {
+        LocalDateTime realTime = Objects.isNull(source) ? null : source.realTime();
+        String gameBuild = Objects.isNull(source) ? null : source.gameBuild();
+        Instant exportedAt = Objects.isNull(realTime) ? null : realTime.atZone(LE_LOCAL_ZONE).toInstant();
+        String squadLabel = Objects.isNull(label) || label.isBlank() ? buildSquadLabel(realTime, gameBuild) : label.trim();
+        Integer playerCount = jdbc.queryForObject(CATALOG_PLAYER_COUNT_SQL, Map.of("gv", gameVersionId), Integer.class);
+        SquadVersion created = squadVersionRepository.create(gameVersionId, squadLabel, gameBuild, exportedAt, Objects.requireNonNullElse(playerCount, 0));
+        return new SquadSnapshot(created.id(), created.versionNo(), archivedPlayers);
+    }
+
+    private String buildSquadLabel(LocalDateTime realTime, String gameBuild) {
+        LocalDate date = Objects.isNull(realTime) ? LocalDate.now(clock.withZone(LE_LOCAL_ZONE)) : realTime.toLocalDate();
+        String label = SQUAD_LABEL_PREFIX + SQUAD_LABEL_DATE.format(date);
+        if (Objects.isNull(gameBuild)) {
+            return label;
+        }
+        String[] parts = gameBuild.split("\\.");
+        String shortBuild = String.join(".", java.util.Arrays.asList(parts).subList(0, Math.min(SHORT_BUILD_PARTS, parts.length)));
+        return label + " (" + shortBuild + ")";
     }
 
 
