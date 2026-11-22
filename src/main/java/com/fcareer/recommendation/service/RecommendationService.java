@@ -70,7 +70,7 @@ public class RecommendationService {
         IntentProfile intent = tacticResolver.slotIntent(SLOT_ID, request.getPosition(), null, request.getRoleId(), request.getTags(), request.getSetup());
         Short gender = Objects.isNull(request.getGender()) ? DEFAULT_PREVIEW_GENDER : request.getGender();
         PlayerSearchRequest search = candidateSearch(role, request, request.getGameVersionId(), gender);
-        Map<Long, PlayerSummaryResponse> summaries = playerService.search(search).getItems().stream()
+        Map<Long, PlayerSummaryResponse> summaries = playerService.searchItems(search).stream()
                 .collect(Collectors.toMap(PlayerSummaryResponse::getId, c -> c));
         RecommendSlotRequest capped = RecommendSlotRequest.builder().roleId(request.getRoleId()).position(request.getPosition())
                 .limit(Math.min(Objects.isNull(request.getLimit()) ? PREVIEW_LIMIT : request.getLimit(), PREVIEW_LIMIT)).build();

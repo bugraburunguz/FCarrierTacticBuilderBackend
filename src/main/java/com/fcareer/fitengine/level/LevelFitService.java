@@ -1,6 +1,7 @@
 package com.fcareer.fitengine.level;
 
 import com.fcareer.fitengine.service.FitEngineV3;
+import com.fcareer.fitengine.service.LineupSolveCache;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +16,7 @@ import java.util.TreeMap;
 public class LevelFitService {
 
     private final FitLevelNormsRepository repository;
+    private final LineupSolveCache lineupSolveCache;
     private volatile Map<String, TreeMap<Integer, FitLevelNormsRepository.Row>> cache;
 
     public record LevelFit(double value, int bandLo, int bandHi, int sampleCount) {
@@ -36,6 +38,7 @@ public class LevelFitService {
 
     public void refresh() {
         cache = null;
+        lineupSolveCache.clear();
     }
 
     private Map<String, TreeMap<Integer, FitLevelNormsRepository.Row>> norms() {

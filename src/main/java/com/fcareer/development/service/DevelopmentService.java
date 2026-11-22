@@ -100,7 +100,7 @@ public class DevelopmentService {
         FitRole role = Objects.isNull(query.getRoleId()) || query.getRoleId().isBlank() ? null : roleService.getFitRole(query.getRoleId());
         List<PlayerSummaryResponse> pool = new ArrayList<>();
         for (int page = 0; page < POOL_PAGES; page++) {
-            List<PlayerSummaryResponse> items = playerService.search(searchRequest(query, page)).getItems();
+            List<PlayerSummaryResponse> items = playerService.searchItems(searchRequest(query, page));
             pool.addAll(items);
             if (items.size() < POOL_PAGE_SIZE) {
                 break;

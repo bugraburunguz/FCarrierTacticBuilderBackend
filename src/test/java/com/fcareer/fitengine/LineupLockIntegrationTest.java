@@ -89,6 +89,20 @@ class LineupLockIntegrationTest {
     }
 
     @Test
+    void aRepeatedLineupIsStableAndASquadChangeIsNotServedStale() throws Exception {
+        String token = support.register();
+        long careerId = support.premiumCareer(token, null);
+        Map<String, Long> first = lineup(token, careerId, null);
+
+        assertThat(lineup(token, careerId, null)).isEqualTo(first);
+
+        long gone = first.get("GK");
+        jdbc.update("DELETE FROM user_player_state WHERE career_id = ? AND base_player_id = ?", careerId, gone);
+
+        assertThat(lineup(token, careerId, null).values()).doesNotContain(gone);
+    }
+
+    @Test
     void locksForPlayersOutsideTheSquadOrUnknownSlotsAreIgnored() throws Exception {
         String token = support.register();
         long careerId = support.premiumCareer(token, null);
