@@ -41,7 +41,7 @@ public final class ManagerModels {
     }
 
     /** profile null → kayıtlı profil. leagueId/gender filtreleri verilirse profildekinin yerine geçer. */
-    public record RecommendationRequest(@jakarta.validation.Valid ManagerProfile profile, Integer leagueId, @Min(0) @Max(1) Integer gender) {
+    public record RecommendationRequest(@jakarta.validation.Valid ManagerProfile profile, Integer leagueId, @Min(0) @Max(1) Integer gender, Long squadVersionId) {
     }
 
     /** Kart: kategori, kulüp, lig, zorluk, 3 kanıt satırı, beklenti metni; uyum için kullanılan formasyon/tarz, Takım gücü ve ortalama Rol oturması. */

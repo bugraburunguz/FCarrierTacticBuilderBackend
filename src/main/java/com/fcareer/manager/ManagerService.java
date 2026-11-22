@@ -78,7 +78,7 @@ public class ManagerService {
     }
 
     public Recommendations recommend(Long userId, RecommendationRequest request) {
-        return recommend(userId, request, null);
+        return recommend(userId, request, Objects.isNull(request) ? null : request.squadVersionId());
     }
 
     public Recommendations recommend(Long userId, RecommendationRequest request, Long squadVersionId) {

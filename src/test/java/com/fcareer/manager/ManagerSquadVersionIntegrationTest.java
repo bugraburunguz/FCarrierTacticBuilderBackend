@@ -87,16 +87,18 @@ class ManagerSquadVersionIntegrationTest {
     @Test
     void recommendationsReadTheClubProfilesOfTheChosenVersion() {
         jdbc.update("DELETE FROM club_profile");
-        RecommendationRequest request = new RecommendationRequest(PROFILE, null, null);
+        RecommendationRequest request = new RecommendationRequest(PROFILE, null, null, null);
 
         Recommendations latest = service.recommend(USER, request, null);
         Recommendations explicitLatest = service.recommend(USER, request, fresh.id());
         Recommendations archived = service.recommend(USER, request, old.id());
+        Recommendations archivedFromBody = service.recommend(USER, new RecommendationRequest(PROFILE, null, null, old.id()));
 
         assertThat(latest.catalogReady()).as("en yeni sürümde kulüp profili yok").isFalse();
         assertThat(explicitLatest.catalogReady()).isFalse();
         assertThat(archived.catalogReady()).as("eski sürümün kulüp profilleri arşivde").isTrue();
         assertThat(archived.cards()).isNotEmpty();
+        assertThat(archivedFromBody.catalogReady()).as("istek gövdesindeki squadVersionId uca kadar taşınır").isTrue();
         assertThatThrownBy(() -> service.recommend(USER, request, -1L)).isInstanceOf(IllegalArgumentException.class);
     }
 
