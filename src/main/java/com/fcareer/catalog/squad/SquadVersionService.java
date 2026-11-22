@@ -3,7 +3,10 @@ package com.fcareer.catalog.squad;
 import com.fcareer.career.model.response.CareerSquadVersionResponse;
 import com.fcareer.catalog.configuration.CatalogProperties;
 import com.fcareer.catalog.entity.PlayerRatingEntity;
+import com.fcareer.catalog.entity.PlayerValuationEntity;
+import com.fcareer.catalog.model.enums.ValuationSource;
 import com.fcareer.catalog.repository.PlayerRatingRepository;
+import com.fcareer.catalog.repository.PlayerValuationRepository;
 import com.fcareer.common.exception.FcareerRuntimeException;
 import com.fcareer.common.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +38,7 @@ public class SquadVersionService {
 
     private final SquadVersionRepository squadVersionRepository;
     private final PlayerRatingRepository playerRatingRepository;
+    private final PlayerValuationRepository playerValuationRepository;
     private final CatalogProperties catalogProperties;
 
     public List<SquadVersionResponse> list() {
@@ -80,6 +84,27 @@ public class SquadVersionService {
             return playerRatingRepository.findByBasePlayerIdAndGameVersionId(basePlayerId, gameVersionId);
         }
         return squadVersionRepository.findArchivedCatalogRating(basePlayerId, squadVersionId);
+    }
+
+    public Optional<Long> findArchivedSquadVersionOfCareer(Long careerId) {
+        if (Objects.isNull(careerId)) {
+            return Optional.empty();
+        }
+        return squadVersionRepository.findArchivedSquadVersionOfCareer(careerId);
+    }
+
+    public List<PlayerRatingEntity> findCatalogRatings(Collection<Long> basePlayerIds, short gameVersionId, Long archivedSquadVersionId, Long careerId) {
+        if (Objects.isNull(archivedSquadVersionId)) {
+            return playerRatingRepository.findByBasePlayerIdInAndGameVersionId(basePlayerIds, gameVersionId);
+        }
+        return squadVersionRepository.findVersionedRatings(basePlayerIds, archivedSquadVersionId, gameVersionId, careerId);
+    }
+
+    public List<PlayerValuationEntity> findCatalogValuations(Collection<Long> basePlayerIds, short gameVersionId, Long archivedSquadVersionId, Long careerId) {
+        if (Objects.isNull(archivedSquadVersionId)) {
+            return playerValuationRepository.findByBasePlayerIdInAndGameVersionIdAndSourceAndOwnerUserIdIsNull(basePlayerIds, gameVersionId, ValuationSource.MODELED);
+        }
+        return squadVersionRepository.findVersionedValuations(basePlayerIds, archivedSquadVersionId, gameVersionId, careerId);
     }
 
     private SquadVersion findOrCreateLatest(short gameVersionId) {

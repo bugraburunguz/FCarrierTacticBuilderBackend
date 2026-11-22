@@ -5,12 +5,16 @@ import com.fcareer.fitengine.model.Attr;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+import static com.fcareer.catalog.squad.SquadVersionSqlConstants.buildCareerValuationsSql;
+
 /** Kariyer araması: yalnız kariyerin kendi oyuncu tablosu (tek doğruluk kaynağı); katalog derece tablosuna dokunmaz. */
 final class CareerSearchProfile implements SearchProfile {
 
     static final CareerSearchProfile INSTANCE = new CareerSearchProfile();
 
     private static final Attr[] ATTRS = Attr.values();
+    private static final String VALUATIONS_TOKEN = "{valuations}";
+    private static final String CAREER_VALUATIONS = buildCareerValuationsSql("CAST(:careerId AS BIGINT)");
     private static final String ATTRS_JSON = "jsonb_build_object(" + Arrays.stream(ATTRS).map((a) -> "'" + a.getColumn() + "', cp.attrs[" + (a.ordinal() + 1) + "]")
             .collect(Collectors.joining(", ")) + ")::text";
 
@@ -27,11 +31,10 @@ final class CareerSearchProfile implements SearchProfile {
                  LEFT JOIN club c ON c.id = cp.club_id
                  LEFT JOIN league l ON l.id = c.league_id
                  LEFT JOIN nationality n ON n.id = b.nationality_id
-                 LEFT JOIN player_valuation v ON v.base_player_id = cp.player_id
-                      AND v.game_version_id = k.game_version_id AND v.source = 'MODELED' AND v.owner_user_id IS NULL
+                 LEFT JOIN {valuations} v ON v.base_player_id = cp.player_id AND v.game_version_id = k.game_version_id
                  LEFT JOIN player_valuation vi ON vi.base_player_id = cp.player_id
                       AND vi.game_version_id = k.game_version_id AND vi.source = 'IMPORT' AND vi.owner_user_id = k.user_id
-                """;
+                """.replace(VALUATIONS_TOKEN, CAREER_VALUATIONS);
     }
 
     @Override
@@ -121,7 +124,7 @@ final class CareerSearchProfile implements SearchProfile {
 
     @Override
     public String estimated() {
-        return "(NOT cp.live AND vi.id IS NULL AND v.id IS NOT NULL)";
+        return "(NOT cp.live AND vi.id IS NULL AND v.base_player_id IS NOT NULL)";
     }
 
     @Override

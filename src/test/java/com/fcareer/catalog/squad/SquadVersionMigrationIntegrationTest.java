@@ -59,6 +59,61 @@ class SquadVersionMigrationIntegrationTest {
     }
 
     @Test
+    void migrationBackfillsTheValuationArchiveOfAlreadyArchivedVersionsOnly() {
+        try {
+            migrateScratch("52");
+            String s = SCRATCH_SCHEMA + ".";
+            long catalog = jdbc.queryForObject("INSERT INTO " + s + "base_player (full_name) VALUES ('Deger A') RETURNING id", Long.class);
+            long generated = jdbc.queryForObject("INSERT INTO " + s + "base_player (full_name, owner_career_id) VALUES ('Deger Uretilen', NULL) RETURNING id", Long.class);
+            long career = jdbc.queryForObject("INSERT INTO " + s + "career (game_version_id, name, squad_version_id) VALUES (27, 'sahip', "
+                    + "(SELECT id FROM " + s + "squad_version WHERE game_version_id = 27)) RETURNING id", Long.class);
+            jdbc.update("UPDATE " + s + "base_player SET owner_career_id = ? WHERE id = ?", career, generated);
+            jdbc.update("INSERT INTO " + s + "player_valuation (base_player_id, game_version_id, source, potential, value_eur, model_version) VALUES "
+                    + "(?, 27, 'MODELED', 88, 5000000, 'm1'), (?, 27, 'MODELED', 70, 100000, 'm1')", catalog, generated);
+            long archived = jdbc.queryForObject("SELECT id FROM " + s + "squad_version WHERE game_version_id = 27", Long.class);
+            jdbc.update("INSERT INTO " + s + "player_rating_archive (squad_version_id, base_player_id, game_version_id, overall, positions) VALUES (?, ?, 27, 80, ARRAY['ST'])",
+                    archived, catalog);
+            long latest = jdbc.queryForObject("INSERT INTO " + s + "squad_version (game_version_id, version_no, label) VALUES (27, 2, 'yeni') RETURNING id", Long.class);
+
+            migrateScratch("53");
+
+            assertThat(jdbc.queryForList("SELECT potential FROM " + s + "player_valuation_archive WHERE squad_version_id = ? AND base_player_id = ?", Integer.class,
+                    archived, catalog)).as("arşivli sürüm canlı değerlemeyle dolar").containsExactly(88);
+            assertThat(jdbc.queryForObject("SELECT count(*) FROM " + s + "player_valuation_archive WHERE base_player_id = ?", Integer.class, generated))
+                    .as("kariyer oyuncusu arşive girmez").isZero();
+            assertThat(jdbc.queryForObject("SELECT count(*) FROM " + s + "player_valuation_archive WHERE squad_version_id = ?", Integer.class, latest))
+                    .as("arşivi olmayan (en yeni) sürüm doldurulmaz").isZero();
+        } finally {
+            jdbc.execute("DROP SCHEMA IF EXISTS " + SCRATCH_SCHEMA + " CASCADE");
+        }
+    }
+
+    @Test
+    @Transactional
+    void archiveCurrentAlsoArchivesOnlyPublicModeledValuationsOfCatalogPlayers() {
+        jdbc.update("INSERT INTO game_version (id, code) VALUES (?, 'TEST99')", TEST_GAME);
+        long ownerCareer = jdbc.queryForObject("INSERT INTO career (game_version_id, name, squad_version_id) VALUES (27, 'sahip', "
+                + "(SELECT max(id) FROM squad_version WHERE game_version_id = 27)) RETURNING id", Long.class);
+        long user = jdbc.queryForObject("INSERT INTO app_user (email, password_hash) VALUES (?, 'x') RETURNING id", Long.class, "fca31-" + System.nanoTime() + "@test.local");
+        long catalog = basePlayer("Deger Katalog", null);
+        long generated = basePlayer("Deger Uretilen", ownerCareer);
+        jdbc.update("INSERT INTO player_rating (base_player_id, game_version_id, overall, positions) VALUES (?, ?, 75, ARRAY['ST']), (?, ?, 60, ARRAY['CM'])",
+                catalog, TEST_GAME, generated, TEST_GAME);
+        jdbc.update("INSERT INTO player_valuation (base_player_id, game_version_id, source, owner_user_id, potential, value_eur, wage_eur, model_version) VALUES "
+                + "(?, ?, 'MODELED', NULL, 86, 4000000, 20000, 'm1'), (?, ?, 'IMPORT', ?, 91, 9000000, NULL, NULL), (?, ?, 'MODELED', NULL, 72, 50000, NULL, 'm1')",
+                catalog, TEST_GAME, catalog, TEST_GAME, user, generated, TEST_GAME);
+        SquadVersion version = squadVersions.create(TEST_GAME, "Birinci", null, null, 1);
+
+        SquadArchiveResult result = squadVersions.archiveCurrent(version.id(), TEST_GAME);
+
+        assertThat(result.valuations()).isEqualTo(1);
+        List<Object[]> rows = jdbc.query("SELECT base_player_id, potential, value_eur, wage_eur, model_version FROM player_valuation_archive WHERE squad_version_id = ?",
+                (rs, i) -> new Object[] {rs.getLong(1), rs.getInt(2), rs.getLong(3), rs.getLong(4), rs.getString(5)}, version.id());
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0)).containsExactly(catalog, 86, 4_000_000L, 20_000L, "m1");
+    }
+
+    @Test
     void liveSchemaHasVersionOneForTheDefaultGame() {
         assertThat(squadVersions.findLatest((short) 27)).isPresent();
         assertThat(jdbc.queryForObject("SELECT label FROM squad_version WHERE game_version_id = 27 AND version_no = 1", String.class)).isEqualTo("İlk kadro (Sürüm 1)");

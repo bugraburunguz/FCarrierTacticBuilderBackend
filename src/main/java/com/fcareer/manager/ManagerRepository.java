@@ -26,6 +26,11 @@ public class ManagerRepository {
 
     private static final String RATINGS_TOKEN = "{ratings}";
     private static final String PROFILES_TOKEN = "{profiles}";
+    private static final String VALUATIONS_TOKEN = "{valuations}";
+    private static final String LIVE_VALUATIONS = """
+            (SELECT base_player_id, game_version_id, potential, value_eur FROM player_valuation WHERE source = 'MODELED' AND owner_user_id IS NULL)""";
+    private static final String ARCHIVED_VALUATIONS = """
+            (SELECT base_player_id, game_version_id, potential, value_eur FROM player_valuation_archive WHERE squad_version_id = :sv)""";
     private static final String ARCHIVED_CATALOG_PREFIX = "sv-";
     private static final String ARCHIVED_RATINGS = "(SELECT base_player_id, game_version_id, club_id, overall FROM player_rating_archive WHERE squad_version_id = :sv)";
     private static final String ARCHIVED_PROFILES = "(SELECT * FROM club_profile_archive WHERE squad_version_id = :sv)";
@@ -100,8 +105,7 @@ public class ManagerRepository {
                          row_number() OVER (PARTITION BY r.club_id ORDER BY r.overall DESC, r.base_player_id) AS rn
                     FROM {ratings} r
                     JOIN base_player b ON b.id = r.base_player_id AND b.owner_career_id IS NULL
-                    LEFT JOIN player_valuation pv ON pv.base_player_id = r.base_player_id AND pv.game_version_id = r.game_version_id
-                         AND pv.source = 'MODELED' AND pv.owner_user_id IS NULL
+                    LEFT JOIN {valuations} pv ON pv.base_player_id = r.base_player_id AND pv.game_version_id = r.game_version_id
                    WHERE r.game_version_id = :gv AND r.club_id IN (SELECT cp.club_id FROM {profiles} cp WHERE cp.game_version_id = :gv))
                 SELECT p.club_id, c.name, c.league_id, l.name AS league, p.domestic_prestige, p.international_prestige, p.league_level, p.youth_development,
                        p.club_worth_eur, count(s.club_id) AS players,
@@ -115,7 +119,8 @@ public class ManagerRepository {
                   LEFT JOIN squad s ON s.club_id = p.club_id
                  WHERE p.game_version_id = :gv AND COALESCE(c.gender, 0) = :gender
                  GROUP BY p.club_id, c.name, c.league_id, l.name, p.domestic_prestige, p.international_prestige, p.league_level, p.youth_development, p.club_worth_eur
-                HAVING count(s.club_id) >= 11""".replace(RATINGS_TOKEN, ratings(archivedSquadVersionId)).replace(PROFILES_TOKEN, profiles(archivedSquadVersionId)),
+                HAVING count(s.club_id) >= 11""".replace(RATINGS_TOKEN, ratings(archivedSquadVersionId)).replace(PROFILES_TOKEN, profiles(archivedSquadVersionId))
+                        .replace(VALUATIONS_TOKEN, buildValuationsSql(archivedSquadVersionId)),
                 withSquadVersion(new MapSqlParameterSource().addValue("gv", gameVersionId).addValue("gender", gender).addValue("strengthTop", p.getStrengthTop())
                         .addValue("budgetTop", p.getBudgetTop()).addValue("youngAge", p.getYoungMaxAge()).addValue("headroom", p.getYoungMinHeadroom()),
                         archivedSquadVersionId),
@@ -126,6 +131,10 @@ public class ManagerRepository {
 
     private static String ratings(Long archivedSquadVersionId) {
         return Objects.isNull(archivedSquadVersionId) ? "player_rating" : ARCHIVED_RATINGS;
+    }
+
+    private static String buildValuationsSql(Long archivedSquadVersionId) {
+        return Objects.isNull(archivedSquadVersionId) ? LIVE_VALUATIONS : ARCHIVED_VALUATIONS;
     }
 
     private static String profiles(Long archivedSquadVersionId) {

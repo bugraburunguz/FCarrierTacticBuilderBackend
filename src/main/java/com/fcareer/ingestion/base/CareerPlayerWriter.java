@@ -27,6 +27,9 @@ import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import static com.fcareer.catalog.squad.SquadVersionSqlConstants.buildCareerOnLatestSquadVersionSql;
+import static com.fcareer.catalog.squad.SquadVersionSqlConstants.buildCareerValuationsSql;
+
 /**
  * Kariyerin tek doğruluk kaynağı `career_player`'ı yazar (E3-2). Katalog (`player_rating`) ve LE overlay'inden (`career_player_data`, `career_player_rating`)
  * TÜRETİR: içe aktarıcı ve masa düzenlemeleri eski tabloları yazmaya devam eder (çift yazma), ardından bu sınıf kariyer satırlarını tazeler.
@@ -73,7 +76,7 @@ public class CareerPlayerWriter {
               LEFT JOIN career_player_data cpd ON cpd.base_player_id = r.base_player_id AND cpd.career_id = k.id
               LEFT JOIN career_player_rating cpr ON cpr.base_player_id = r.base_player_id AND cpr.career_id = k.id AND cpr.game_version_id = r.game_version_id
               LEFT JOIN LATERAL (SELECT id FROM club WHERE ea_team_id = cpd.team_id ORDER BY id LIMIT 1) tc ON cpd.base_player_id IS NOT NULL
-              LEFT JOIN player_valuation v ON v.base_player_id = r.base_player_id AND v.game_version_id = r.game_version_id AND v.source = 'MODELED' AND v.owner_user_id IS NULL
+              LEFT JOIN {valuations} v ON v.base_player_id = r.base_player_id AND v.game_version_id = r.game_version_id
              WHERE r.game_version_id = k.game_version_id AND (b.owner_career_id IS NULL OR b.owner_career_id = k.id) AND b.retired_at IS NULL
             """;
 
@@ -86,9 +89,9 @@ public class CareerPlayerWriter {
             positions = EXCLUDED.positions, attrs = EXCLUDED.attrs, playstyles = EXCLUDED.playstyles, run_style1 = EXCLUDED.run_style1, run_style2 = EXCLUDED.run_style2,
             face_stats = EXCLUDED.face_stats""";
     private static final String ONLY_IDS = " AND cp.player_id IN (:ids)";
-    private static final String CATALOG_VALUATION = """
-            FROM player_valuation v WHERE v.base_player_id = cp.player_id AND v.game_version_id = k.game_version_id AND v.source = 'MODELED'
-               AND v.owner_user_id IS NULL AND v.value_eur IS NOT NULL""";
+    private static final String CAREER_VALUATIONS = buildCareerValuationsSql(":c");
+    private static final String CATALOG_VALUATION = "FROM " + CAREER_VALUATIONS
+            + " v WHERE v.base_player_id = cp.player_id AND v.game_version_id = k.game_version_id AND v.value_eur IS NOT NULL";
     private static final String CAREER_VALUE_INPUTS = """
             SELECT cp.player_id, cp.ovr, cp.pot, date_part('year', age(cp.as_of, cp.dob)) AS age, l.tier AS tier
               FROM career_player cp
@@ -100,18 +103,17 @@ public class CareerPlayerWriter {
             UPDATE career_player cp SET value_eur = NULL, value_source = NULL FROM career k
              WHERE k.id = cp.career_id AND cp.career_id = :c AND cp.value_eur IS NOT NULL AND NOT EXISTS (SELECT 1\s""" + CATALOG_VALUATION + ")%s";
     private static final String RATINGS_TOKEN = "{ratings}";
+    private static final String VALUATIONS_TOKEN = "{valuations}";
     private static final String BASE_RATING_COLUMNS = "base_player_id, game_version_id, club_id, overall, positions, weak_foot, skill_moves, accelerate, body_type, "
             + "playstyles, run_style1, run_style2, face_stats, " + Arrays.stream(Attr.values()).map(Attr::getColumn).collect(Collectors.joining(", "));
-    private static final String ON_LATEST_SQUAD_VERSION = """
-            EXISTS (SELECT 1 FROM career lk JOIN squad_version ls ON ls.id = lk.squad_version_id WHERE lk.id = :c
-              AND NOT EXISTS (SELECT 1 FROM squad_version lo WHERE lo.game_version_id = ls.game_version_id AND lo.version_no > ls.version_no))""";
+    private static final String ON_LATEST_SQUAD_VERSION = buildCareerOnLatestSquadVersionSql(":c");
     private static final String VERSIONED_RATINGS = "(SELECT " + BASE_RATING_COLUMNS + " FROM player_rating WHERE " + ON_LATEST_SQUAD_VERSION
             + " UNION ALL SELECT " + BASE_RATING_COLUMNS + " FROM player_rating_archive"
             + " WHERE squad_version_id = (SELECT squad_version_id FROM career WHERE id = :c) AND NOT " + ON_LATEST_SQUAD_VERSION
             + " UNION ALL SELECT " + BASE_RATING_COLUMNS + " FROM player_rating"
             + " WHERE base_player_id IN (SELECT id FROM base_player WHERE owner_career_id = :c) AND NOT " + ON_LATEST_SQUAD_VERSION + ")";
     private static final String UPSERT = ("INSERT INTO career_player (" + COLUMNS + ") SELECT " + COLUMNS + " FROM (" + SELECT + ") src %s ON CONFLICT (career_id, player_id) DO UPDATE SET "
-            + UPDATE_SET).replace(RATINGS_TOKEN, VERSIONED_RATINGS);
+            + UPDATE_SET).replace(RATINGS_TOKEN, VERSIONED_RATINGS).replace(VALUATIONS_TOKEN, CAREER_VALUATIONS);
 
     private final NamedParameterJdbcTemplate jdbc;
     private final ObjectMapper objectMapper;
