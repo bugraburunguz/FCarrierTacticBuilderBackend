@@ -24,7 +24,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -103,14 +102,16 @@ public class CareerPlayerWriter {
     private static final String RATINGS_TOKEN = "{ratings}";
     private static final String BASE_RATING_COLUMNS = "base_player_id, game_version_id, club_id, overall, positions, weak_foot, skill_moves, accelerate, body_type, "
             + "playstyles, run_style1, run_style2, face_stats, " + Arrays.stream(Attr.values()).map(Attr::getColumn).collect(Collectors.joining(", "));
-    private static final String ARCHIVED_RATINGS = "(SELECT " + BASE_RATING_COLUMNS + " FROM player_rating_archive WHERE squad_version_id = :sv"
-            + " UNION ALL SELECT " + BASE_RATING_COLUMNS + " FROM player_rating WHERE base_player_id IN (SELECT id FROM base_player WHERE owner_career_id = :c))";
-    private static final String ARCHIVED_SQUAD_VERSION = """
-            SELECT s.id FROM career k JOIN squad_version s ON s.id = k.squad_version_id
-             WHERE k.id = :c AND EXISTS (SELECT 1 FROM squad_version o WHERE o.game_version_id = s.game_version_id AND o.version_no > s.version_no)""";
-    private static final String UPSERT_TEMPLATE = "INSERT INTO career_player (" + COLUMNS + ") SELECT " + COLUMNS + " FROM (" + SELECT + ") src %s ON CONFLICT (career_id, player_id) DO UPDATE SET " + UPDATE_SET;
-    private static final String UPSERT = UPSERT_TEMPLATE.replace(RATINGS_TOKEN, "player_rating");
-    private static final String UPSERT_ARCHIVED = UPSERT_TEMPLATE.replace(RATINGS_TOKEN, ARCHIVED_RATINGS);
+    private static final String ON_LATEST_SQUAD_VERSION = """
+            EXISTS (SELECT 1 FROM career lk JOIN squad_version ls ON ls.id = lk.squad_version_id WHERE lk.id = :c
+              AND NOT EXISTS (SELECT 1 FROM squad_version lo WHERE lo.game_version_id = ls.game_version_id AND lo.version_no > ls.version_no))""";
+    private static final String VERSIONED_RATINGS = "(SELECT " + BASE_RATING_COLUMNS + " FROM player_rating WHERE " + ON_LATEST_SQUAD_VERSION
+            + " UNION ALL SELECT " + BASE_RATING_COLUMNS + " FROM player_rating_archive"
+            + " WHERE squad_version_id = (SELECT squad_version_id FROM career WHERE id = :c) AND NOT " + ON_LATEST_SQUAD_VERSION
+            + " UNION ALL SELECT " + BASE_RATING_COLUMNS + " FROM player_rating"
+            + " WHERE base_player_id IN (SELECT id FROM base_player WHERE owner_career_id = :c) AND NOT " + ON_LATEST_SQUAD_VERSION + ")";
+    private static final String UPSERT = ("INSERT INTO career_player (" + COLUMNS + ") SELECT " + COLUMNS + " FROM (" + SELECT + ") src %s ON CONFLICT (career_id, player_id) DO UPDATE SET "
+            + UPDATE_SET).replace(RATINGS_TOKEN, VERSIONED_RATINGS);
 
     private final NamedParameterJdbcTemplate jdbc;
     private final ObjectMapper objectMapper;
@@ -148,15 +149,7 @@ public class CareerPlayerWriter {
     }
 
     private int upsertRows(MapSqlParameterSource params, String filter) {
-        Optional<Long> archivedVersion = findArchivedSquadVersion(params.getValue("c"));
-        if (archivedVersion.isEmpty()) {
-            return jdbc.update(String.format(UPSERT, filter), params);
-        }
-        return jdbc.update(String.format(UPSERT_ARCHIVED, filter), new MapSqlParameterSource(params.getValues()).addValue("sv", archivedVersion.get()));
-    }
-
-    private Optional<Long> findArchivedSquadVersion(Object careerId) {
-        return jdbc.queryForList(ARCHIVED_SQUAD_VERSION, Map.of("c", careerId), Long.class).stream().findFirst();
+        return jdbc.update(String.format(UPSERT, filter), params);
     }
 
     private void applyCareerValues(MapSqlParameterSource params, String onlyIds) {
