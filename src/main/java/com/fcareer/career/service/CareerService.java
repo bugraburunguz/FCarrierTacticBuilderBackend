@@ -18,7 +18,8 @@ import com.fcareer.catalog.configuration.CatalogProperties;
 import com.fcareer.catalog.entity.BasePlayerEntity;
 import com.fcareer.catalog.entity.ClubEntity;
 import com.fcareer.catalog.squad.SquadVersion;
-import com.fcareer.catalog.squad.SquadVersionRepository;
+import com.fcareer.catalog.squad.SquadVersionService;
+import com.fcareer.career.model.response.CareerSquadVersionResponse;
 import com.fcareer.catalog.entity.PlayerRatingEntity;
 import com.fcareer.catalog.entity.PlayerValuationEntity;
 import com.fcareer.catalog.model.enums.ValuationSource;
@@ -58,7 +59,6 @@ public class CareerService {
     private static final String EVENT = "roster_event";
     private static final String GAME_VERSION = "game_version";
     private static final String PLAYER = "player";
-    private static final String SQUAD_VERSION = "squad_version";
     private static final int FIRST_SEASON = 1;
     private static final long NO_FEE = 0L;
 
@@ -78,7 +78,7 @@ public class CareerService {
     private final com.fcareer.career.desk.SpoilerPolicy spoilerPolicy;
     private final com.fcareer.ingestion.base.CareerPlayerWriter careerPlayerWriter;
     private final CareerLimiter careerLimiter;
-    private final SquadVersionRepository squadVersionRepository;
+    private final SquadVersionService squadVersionService;
 
     public CareerResponse create(Long userId, CreateCareerRequest request) {
         short gameVersion = Objects.isNull(request.getGameVersionId())
@@ -88,13 +88,14 @@ public class CareerService {
         }
         ClubEntity club = clubRepository.findById(request.getClubId())
                 .orElseThrow(() -> new NotFoundException(CLUB, request.getClubId()));
+        SquadVersion squadVersion = squadVersionService.resolveForNewCareer(gameVersion, request.getSquadVersionId());
         // Sınır doğrulamadan sonra: geçersiz istek günlük kotayı tüketmez (GUV-2).
         careerLimiter.checkCreate(userId);
 
         CareerEntity career = new CareerEntity();
         career.setUserId(userId);
         career.setGameVersionId(gameVersion);
-        career.setSquadVersionId(findLatestSquadVersionId(gameVersion));
+        career.setSquadVersionId(squadVersion.id());
         career.setClubId(club.getId());
         career.setName(cleanName(request.getName()));
         career.setSeason(Objects.isNull(request.getSeason()) ? FIRST_SEASON : request.getSeason());
@@ -107,7 +108,8 @@ public class CareerService {
             addToSquad(career, rating.getBasePlayerId(), false);
         }
         log.info("Career created careerId : {} userId : {} squadSize : {}", career.getId(), userId, ratings.size());
-        return careerMapper.toResponse(career, club.getName(), club.getGender(), ratings.size());
+        return careerMapper.toResponse(career, club.getName(), club.getGender(), ratings.size(),
+                findSquadVersions(List.of(career)).get(career.getSquadVersionId()));
     }
 
     public CareerResponse update(Long userId, Long careerId, UpdateCareerRequest request) {
@@ -158,7 +160,9 @@ public class CareerService {
 
     @Transactional(readOnly = true)
     public List<CareerResponse> list(Long userId) {
-        return careerRepository.findByUserIdOrderByIdDesc(userId).stream().map(this::toResponse).toList();
+        List<CareerEntity> careers = careerRepository.findByUserIdOrderByIdDesc(userId);
+        Map<Long, CareerSquadVersionResponse> squadVersions = findSquadVersions(careers);
+        return careers.stream().map(career -> toResponse(career, squadVersions)).toList();
     }
 
     @Transactional(readOnly = true)
@@ -433,22 +437,23 @@ public class CareerService {
     }
 
     private CareerResponse toResponse(CareerEntity career) {
+        return toResponse(career, findSquadVersions(List.of(career)));
+    }
+
+    private CareerResponse toResponse(CareerEntity career, Map<Long, CareerSquadVersionResponse> squadVersions) {
         ClubEntity club = clubRepository.findById(career.getClubId()).orElse(null);
         return careerMapper.toResponse(career, Objects.isNull(club) ? null : club.getName(),
                 Objects.isNull(club) ? null : club.getGender(),
-                userPlayerStateRepository.findByCareerIdOrderByIdAsc(career.getId()).size());
+                userPlayerStateRepository.findByCareerIdOrderByIdAsc(career.getId()).size(),
+                squadVersions.get(career.getSquadVersionId()));
+    }
+
+    private Map<Long, CareerSquadVersionResponse> findSquadVersions(List<CareerEntity> careers) {
+        return squadVersionService.findCareerVersions(careers.stream().map(CareerEntity::getGameVersionId).toList());
     }
 
     private Short clubGender(Integer clubId) {
         return clubRepository.findById(clubId).map(ClubEntity::getGender).orElse(null);
-    }
-
-    private Long findLatestSquadVersionId(short gameVersion) {
-        return squadVersionRepository.findLatest(gameVersion).map(SquadVersion::id)
-                .orElseThrow(() -> {
-                    log.warn("Squad version missing gameVersionId : {}", gameVersion);
-                    return new NotFoundException(SQUAD_VERSION, gameVersion);
-                });
     }
 
     private static String cleanName(String name) {

@@ -29,4 +29,5 @@ public class CareerResponse {
     private java.time.LocalDate gameDate;
     private String challengeId;
     private Instant createdAt;
+    private CareerSquadVersionResponse squadVersion;
 }

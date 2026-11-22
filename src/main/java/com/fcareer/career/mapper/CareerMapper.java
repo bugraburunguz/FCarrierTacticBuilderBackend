@@ -5,6 +5,7 @@ import com.fcareer.career.entity.RosterEventEntity;
 import com.fcareer.career.entity.UserPlayerStateEntity;
 import com.fcareer.career.model.response.CareerPlayerResponse;
 import com.fcareer.career.model.response.CareerResponse;
+import com.fcareer.career.model.response.CareerSquadVersionResponse;
 import com.fcareer.career.model.response.RosterEventResponse;
 import com.fcareer.catalog.model.response.PlayerSummaryResponse;
 import org.springframework.stereotype.Component;
@@ -15,7 +16,8 @@ import java.util.Objects;
 @Component
 public class CareerMapper {
 
-    public CareerResponse toResponse(CareerEntity career, String clubName, Short clubGender, int squadSize) {
+    public CareerResponse toResponse(CareerEntity career, String clubName, Short clubGender, int squadSize,
+                                     CareerSquadVersionResponse squadVersion) {
         return CareerResponse.builder()
                 .id(career.getId())
                 .name(career.getName())
@@ -32,6 +34,7 @@ public class CareerMapper {
                 .gameDate(career.getGameDate())
                 .challengeId(career.getChallengeId())
                 .createdAt(career.getCreatedAt())
+                .squadVersion(squadVersion)
                 .build();
     }
 

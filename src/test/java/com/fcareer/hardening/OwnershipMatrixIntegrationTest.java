@@ -154,6 +154,20 @@ class OwnershipMatrixIntegrationTest {
         assertThat(missingRoutes).as("sahibi 404 almamalı (yol var, 404 sahiplikten)").isEmpty();
     }
 
+    @Test
+    void careerAgnosticEndpointsNeedASessionButNoCareer() throws Exception {
+        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
+        String user = support.register();
+        List<Call> calls = List.of(new Call(HttpMethod.GET, "/api/v1/squad-versions", null));
+
+        for (Call call : calls) {
+            int anonymous = mockMvc.perform(MockMvcRequestBuilders.request(call.method(), call.path()).accept(MediaType.APPLICATION_JSON))
+                    .andReturn().getResponse().getStatus();
+            assertThat(anonymous).as("anonim " + call).isEqualTo(401);
+            assertThat(status(call, user)).as("kariyersiz kullanıcı " + call).isEqualTo(200);
+        }
+    }
+
     private int status(Call call, String token) throws Exception {
         if (call.body() instanceof MockMultipartFile file) {
             return mockMvc.perform(MockMvcRequestBuilders.multipart(call.path()).file(file).header("Authorization", "Bearer " + token)
