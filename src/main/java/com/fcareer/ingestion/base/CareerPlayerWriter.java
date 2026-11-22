@@ -123,19 +123,20 @@ public class CareerPlayerWriter {
 
     /** Kariyerin tüm satırlarını eski tablolardan tazeler; artık kapsamda olmayanları (emekli vb.) düşürür. data_version artar. */
     public int syncCareer(long careerId) {
+        return syncCareer(careerId, true);
+    }
+
+    public int seedNewCareer(long careerId) {
         return syncCareer(careerId, false);
     }
 
-    private int syncCareer(long careerId, boolean seeding) {
+    private int syncCareer(long careerId, boolean bump) {
         int upserted = upsertRows(new MapSqlParameterSource("c", careerId), "");
         jdbc.update("""
                 DELETE FROM career_player cp WHERE cp.career_id = :c AND NOT EXISTS (
                   SELECT 1 FROM base_player b WHERE b.id = cp.player_id AND b.retired_at IS NULL AND (b.owner_career_id IS NULL OR b.owner_career_id = :c))""", Map.of("c", careerId));
-        if (seeding) {
-            jdbc.getJdbcTemplate().execute("ANALYZE career_player");
-        }
         applyCareerValues(new MapSqlParameterSource("c", careerId), "");
-        if (!seeding) {
+        if (bump) {
             bumpVersion(careerId);
         }
         log.info("career_player synced careerId : {} rows : {}", careerId, upserted);
@@ -190,7 +191,7 @@ public class CareerPlayerWriter {
         if (hasCareerPlayers(careerId)) {
             return;
         }
-        syncCareer(careerId, true);
+        syncCareer(careerId, false);
     }
 
     private boolean hasCareerPlayers(long careerId) {

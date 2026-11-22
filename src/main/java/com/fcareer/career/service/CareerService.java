@@ -105,6 +105,8 @@ public class CareerService {
         for (PlayerRatingEntity rating : ratings) {
             addToSquad(career, rating.getBasePlayerId(), false);
         }
+        careerRepository.flush();
+        careerPlayerWriter.seedNewCareer(career.getId());
         log.info("Career created careerId : {} userId : {} squadSize : {}", career.getId(), userId, ratings.size());
         return careerMapper.toResponse(career, club.getName(), club.getGender(), ratings.size(),
                 findSquadVersions(List.of(career)).get(career.getSquadVersionId()));
