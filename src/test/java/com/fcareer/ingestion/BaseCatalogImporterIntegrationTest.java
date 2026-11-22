@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -101,7 +102,7 @@ class BaseCatalogImporterIntegrationTest {
 
     @Test
     void createsMissingPlayersWithMappedFieldsAndSkipsExistingAndUnlinked() {
-        BaseImportResult result = importer.importMissing(tables(), (short) 27, false, true);
+        BaseImportResult result = importer.importMissing(tables(), (short) 27, false, true, false, null, null);
 
         assertThat(result.created()).isEqualTo(2);
         assertThat(result.existing()).isEqualTo(1);
@@ -142,7 +143,7 @@ class BaseCatalogImporterIntegrationTest {
         tables.put("teamplayerlinks", List.of(Map.of("playerid", String.valueOf(edited), "teamid", "5000")));
         tables.put("editedplayernames", List.of(Map.of("playerid", String.valueOf(edited), "firstname", "Edward", "surname", "Beckett", "commonname", "")));
 
-        importer.importMissing(tables, (short) 27, false, true);
+        importer.importMissing(tables, (short) 27, false, true, false, null, null);
 
         assertThat(jdbc.queryForObject("SELECT full_name FROM base_player WHERE ea_resource_id = ?", String.class, edited)).isEqualTo("Edward Beckett");
     }
@@ -154,18 +155,19 @@ class BaseCatalogImporterIntegrationTest {
         tables.put("players", List.of(player(created, 25, "", null)));
         tables.put("teamplayerlinks", List.of(Map.of("playerid", String.valueOf(created), "teamid", "5000")));
 
-        importer.importMissing(tables, (short) 27, false, true);
+        importer.importMissing(tables, (short) 27, false, true, false, null, null);
 
         assertThat(basePlayerRepository.findByEaResourceId(created)).isEmpty();
     }
 
     @Test
+    @Transactional
     void overwriteReplacesRatingsOfExistingPlayersButKeepsTheirName() {
         Map<String, List<Map<String, String>>> tables = tables();
         tables.get("players").get(3).put("overallrating", "99");
         tables.get("players").get(3).put("preferredposition1", "14");
 
-        BaseImportResult result = importer.importMissing(tables, (short) 27, true, false);
+        BaseImportResult result = importer.importMissing(tables, (short) 27, true, false, false, null, null);
 
         assertThat(result.updated()).isGreaterThanOrEqualTo(1);
         Map<String, Object> row = jdbc.queryForMap("""

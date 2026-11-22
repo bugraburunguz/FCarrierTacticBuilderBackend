@@ -7,6 +7,7 @@ import com.fcareer.ingestion.service.IngestionService;
 import com.fcareer.ingestion.service.OpenDatasetImporter;
 import com.fcareer.ingestion.base.BaseCatalogImporter;
 import com.fcareer.ingestion.base.BaseUploads;
+import com.fcareer.ingestion.base.LeExportV2Parser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -56,7 +57,9 @@ public class IngestionAdminController {
         csvs.put("teamplayerlinks", links);
         csvs.put("leagueteamlinks", leagueLinks);
         csvs.put("leagues", leagues);
-        return baseCatalogImporter.importMissing(BaseUploads.toTables(log, csvs), catalogProperties.getDefaultGameVersion(), overwrite, createMissing, full, label);
+        BaseUploads.Upload upload = BaseUploads.toUpload(log, csvs, LeExportV2Parser.Prefer.BASE);
+        return baseCatalogImporter.importMissing(upload.tables(), catalogProperties.getDefaultGameVersion(), overwrite, createMissing, full, label,
+                upload.context());
     }
 
     @PostMapping("/open-dataset")

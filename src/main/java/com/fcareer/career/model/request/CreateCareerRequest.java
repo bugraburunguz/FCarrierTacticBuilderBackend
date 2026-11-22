@@ -30,4 +30,6 @@ public class CreateCareerRequest {
 
     @Size(max = 60)
     private String name;
+
+    private Long squadVersionId;
 }

@@ -15,6 +15,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -28,6 +30,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.fcareer.common.constants.ErrorCodes.IMPORT_PARSE_ERROR;
 
@@ -54,13 +58,21 @@ public final class LeExportV2Parser {
     /** Bu uzunluğa kadar değerler (sayılar, kısa kodlar) tablo içinde tek kopya tutulur. */
     private static final int SHORT_VALUE = 8;
     private static final ObjectMapper JSON = new ObjectMapper();
+    private static final String GAME_VERSION_MARK = "Game Version:";
+    private static final Pattern GAME_VERSION = Pattern.compile("Game Version:\\s*(\\d+(?:\\.\\d+)+)");
+    private static final DateTimeFormatter REAL_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm[:ss]");
 
     private LeExportV2Parser() {
     }
 
     /** Dışa aktarımın bağlamı (07 §4.1 `context`). */
     /** transferBudget: betik 2.0.2'den (GetUserTransferBudget, oyun içi para birimi); yoksa null. */
-    public record LeContext(boolean inCareer, String mode, LocalDate gameDate, Integer userTeamId, String saveUid, Long transferBudget) {
+    public record LeContext(boolean inCareer, String mode, LocalDate gameDate, Integer userTeamId, String saveUid, Long transferBudget,
+                            String gameBuild, LocalDateTime realTime) {
+
+        public LeContext(boolean inCareer, String mode, LocalDate gameDate, Integer userTeamId, String saveUid, Long transferBudget) {
+            this(inCareer, mode, gameDate, userTeamId, saveUid, transferBudget, null, null);
+        }
     }
 
     public record LeExport(String exportId, LeContext context, Map<String, List<Map<String, String>>> tables, List<String> warnings) {
@@ -116,6 +128,7 @@ public final class LeExportV2Parser {
         private final List<String> warnings = new ArrayList<>();
         private JsonNode context;
         private String metaLine;
+        private String gameBuild;
         private int index;
     }
 
@@ -128,12 +141,17 @@ public final class LeExportV2Parser {
         // ~22 bin oyuncu satırıyla belleği tüketebilirdi.
         Selection selection = new Selection(prefer);
         Block block = null;
+        String lastBuild = null;
         // Log Latin-1 okunur: her karakter tam bir ham bayttır. Özet Lua'daki gibi ham baytlar üzerinden hesaplanır; metin ardından UTF-8'e
         // çevrilir. Bellekten okunan dizgelerde geçersiz UTF-8 bayt olabiliyor (2.0.3 nations.isocountrycode); UTF-8 okumada U+FFFD olup özeti bozuyordu.
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.ISO_8859_1), 1 << 16)) {
             String rawLine;
             while (Objects.nonNull(rawLine = reader.readLine())) {
                 if (!rawLine.contains(MARK)) {
+                    String build = findGameBuild(rawLine);
+                    if (Objects.nonNull(build)) {
+                        lastBuild = build;
+                    }
                     continue;
                 }
                 String[] rawParts = rawLine.split("\t", MAX_FIELDS);
@@ -149,6 +167,7 @@ public final class LeExportV2Parser {
                         selection.offer(block);
                     }
                     block = new Block();
+                    block.gameBuild = lastBuild;
                     block.metaLine = parts.length > TABLE ? parts[TABLE] : "";
                     JsonNode meta = readJson(block.metaLine, "META");
                     int version = meta.path("schemaVersion").asInt(-1);
@@ -185,7 +204,16 @@ public final class LeExportV2Parser {
         if (selection.seen > 1) {
             log.info("FCX2 log has exports : {} prefer : {} chosen : {}", selection.seen, prefer, chosen.index);
         }
-        return finish(chosen.tables, chosen.warnings, chosen.context, chosen.metaLine, isCareer(chosen));
+        String gameBuild = Objects.nonNull(chosen.gameBuild) ? chosen.gameBuild : lastBuild;
+        return finish(chosen.tables, chosen.warnings, chosen.context, chosen.metaLine, isCareer(chosen), gameBuild);
+    }
+
+    private static String findGameBuild(String line) {
+        if (!line.contains(GAME_VERSION_MARK)) {
+            return null;
+        }
+        Matcher matcher = GAME_VERSION.matcher(line);
+        return matcher.find() ? matcher.group(1) : null;
     }
 
     /**
@@ -246,7 +274,8 @@ public final class LeExportV2Parser {
         return block.context.hasNonNull("gameDate") || block.tables.containsKey("career_calendar") || block.tables.containsKey("career_users");
     }
 
-    private static LeExport finish(Map<String, Table> tables, List<String> warnings, JsonNode context, String metaLine, boolean inCareer) {
+    private static LeExport finish(Map<String, Table> tables, List<String> warnings, JsonNode context, String metaLine, boolean inCareer,
+                                   String gameBuild) {
         List<String> missing = new ArrayList<>();
         Map<String, List<Map<String, String>>> result = new HashMap<>();
         Map<String, String> checksums = new TreeMap<>();
@@ -267,7 +296,7 @@ public final class LeExportV2Parser {
             result.put(name, table.rows);
             checksums.put(name, table.checksum);
         });
-        return new LeExport(exportId(metaLine, checksums), context(context, inCareer), result, List.copyOf(warnings));
+        return new LeExport(exportId(metaLine, checksums), context(context, inCareer, gameBuild), result, List.copyOf(warnings));
     }
 
     private static Table table(Map<String, Table> tables, String[] parts) {
@@ -433,7 +462,7 @@ public final class LeExportV2Parser {
         return values;
     }
 
-    private static LeContext context(JsonNode node, boolean inCareer) {
+    private static LeContext context(JsonNode node, boolean inCareer, String gameBuild) {
         LocalDate date = null;
         String text = node.path("gameDate").asText(null);
         if (Objects.nonNull(text)) {
@@ -447,7 +476,20 @@ public final class LeExportV2Parser {
         Integer userTeam = team.isNumber() && team.asInt() > 0 ? team.asInt() : null;
         JsonNode budget = node.path("transferBudget");
         Long transferBudget = budget.isNumber() && budget.asLong() >= 0 ? budget.asLong() : null;
-        return new LeContext(inCareer, node.path("mode").asText(null), date, userTeam, node.path("saveUid").asText(null), transferBudget);
+        return new LeContext(inCareer, node.path("mode").asText(null), date, userTeam, node.path("saveUid").asText(null), transferBudget,
+                gameBuild, parseRealTime(node.path("realTime").asText(null)));
+    }
+
+    private static LocalDateTime parseRealTime(String text) {
+        if (Objects.isNull(text)) {
+            return null;
+        }
+        try {
+            return LocalDateTime.parse(text.trim(), REAL_TIME_FORMAT);
+        } catch (DateTimeParseException e) {
+            log.warn("FCX2 realTime unreadable value : {}", text);
+            return null;
+        }
     }
 
     /** Aynı veriden aynı kimlik: META + tablo checksum'larının SHA-1 özeti (aynı dosyanın tekrar yüklenmesi tanınır). */

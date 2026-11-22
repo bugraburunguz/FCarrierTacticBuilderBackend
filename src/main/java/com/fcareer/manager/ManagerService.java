@@ -1,6 +1,8 @@
 package com.fcareer.manager;
 
 import com.fcareer.catalog.service.PlayerService;
+import com.fcareer.catalog.squad.SquadVersion;
+import com.fcareer.catalog.squad.SquadVersionRepository;
 import com.fcareer.common.exception.NotFoundException;
 import com.fcareer.manager.ManagerModels.Card;
 import com.fcareer.manager.ManagerModels.ManagerProfile;
@@ -42,6 +44,7 @@ public class ManagerService {
     private final ManagerProperties properties;
     private final ClubFitCalculator fitCalculator;
     private final PlayerService playerService;
+    private final SquadVersionRepository squadVersions;
 
     /** Profil yoksa null (yanıtta data null, hata değil; ana taktikteki kural). */
     @Transactional(readOnly = true)
@@ -75,6 +78,10 @@ public class ManagerService {
     }
 
     public Recommendations recommend(Long userId, RecommendationRequest request) {
+        return recommend(userId, request, Objects.isNull(request) ? null : request.squadVersionId());
+    }
+
+    public Recommendations recommend(Long userId, RecommendationRequest request, Long squadVersionId) {
         ManagerProfile profile = Objects.nonNull(request) && Objects.nonNull(request.profile()) ? request.profile()
                 : repository.profile(userId).orElseThrow(() -> new NotFoundException(PROFILE, userId));
         validate(profile);
@@ -85,10 +92,11 @@ public class ManagerService {
         }
         int gender = Objects.nonNull(request) && Objects.nonNull(request.gender()) ? request.gender() : Objects.requireNonNullElse(profile.gender(), MEN);
         short gv = playerService.resolveGameVersion(null);
-        if (repository.profileCount(gv) == 0) {
+        Long archived = resolveArchivedSquadVersion(gv, squadVersionId);
+        if (repository.profileCount(gv, archived) == 0) {
             return new Recommendations(reputation, rules.band(reputation), false, List.of(), List.of());
         }
-        List<ClubStat> stats = repository.clubStats(gv, gender, properties);
+        List<ClubStat> stats = repository.clubStats(gv, gender, properties, archived);
         Map<Long, Integer> needs = rules.needs(stats.stream().map((s) -> new ManagerRules.Prestige(s.clubId(), s.domestic(), s.international(), s.leagueLevel())).toList());
         Map<Long, Integer> strengthPct = ManagerRules.percentiles(stats.stream().collect(Collectors.toMap(ClubStat::clubId, ClubStat::avgOvr)));
         Map<Long, Integer> squadRank = new HashMap<>();
@@ -111,7 +119,7 @@ public class ManagerService {
         });
 
         // Aday havuzu: itibar aralığı (ilgi + hayal) ve filtreler; kaba sıra ihtiyacın itibara yakınlığı; ilk poolSize kulüp için uyum.
-        String version = repository.catalogVersion(gv);
+        String version = repository.catalogVersion(gv, archived);
         Map<Long, ClubStat> byId = stats.stream().collect(Collectors.toMap(ClubStat::clubId, (s) -> s));
         Map<Long, Integer> filtered = new HashMap<>();
         stats.stream().filter((s) -> Objects.isNull(leagueId) || leagueId.equals(s.leagueId())).forEach((s) -> filtered.put(s.clubId(), needs.get(s.clubId())));
@@ -119,7 +127,7 @@ public class ManagerService {
         List<Candidate> candidates = new ArrayList<>();
         Map<Long, ClubFitCalculator.ClubFit> fits = new HashMap<>();
         for (ClubStat s : pool) {
-            ClubFitCalculator.ClubFit fit = fitCalculator.fit((int) s.clubId(), gv, profile.formation(), profile.style(), version);
+            ClubFitCalculator.ClubFit fit = fitCalculator.fit((int) s.clubId(), gv, profile.formation(), profile.style(), version, archived);
             if (Objects.isNull(fit.squadFit())) {
                 continue;
             }
@@ -142,5 +150,17 @@ public class ManagerService {
         List<MissingCategory> missing = selection.missing().stream().map((m) -> new MissingCategory(m.category(), m.reason())).toList();
         log.info("Manager club recommendations userId : {} reputation : {} pool : {} candidates : {} cards : {}", userId, reputation, pool.size(), candidates.size(), cards.size());
         return new Recommendations(reputation, rules.band(reputation), true, cards, missing);
+    }
+
+    private Long resolveArchivedSquadVersion(short gameVersionId, Long squadVersionId) {
+        if (Objects.isNull(squadVersionId)) {
+            return null;
+        }
+        SquadVersion version = squadVersions.findById(squadVersionId).filter((v) -> v.gameVersionId() == gameVersionId).orElse(null);
+        if (Objects.isNull(version)) {
+            log.warn("Manager club recommendations unknown squad version squadVersionId : {} gameVersionId : {}", squadVersionId, gameVersionId);
+            throw new IllegalArgumentException("squadVersionId: bilinmeyen kadro sürümü " + squadVersionId);
+        }
+        return squadVersions.isLatest(version.id()) ? null : version.id();
     }
 }

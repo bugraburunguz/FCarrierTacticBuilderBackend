@@ -276,6 +276,31 @@ class LeExportV2ParserTest {
     }
 
     @Test
+    void readsTheGameBuildFromThePlainLogLineAndTheExportRealTime() {
+        List<String> log = new ArrayList<>();
+        log.add("11:49:31.399109\tINFO\tGame Version:            1.0.142.20665");
+        List<String> good = goodLog();
+        good.set(1, PREFIX + "META\t" + META.replace("\"userTeamIdMem\":121", "\"userTeamIdMem\":121,\"realTime\":\"2026-11-22 11:49:31\""));
+        log.addAll(good);
+
+        LeExport export = parse(log);
+
+        assertThat(export.context().gameBuild()).isEqualTo("1.0.142.20665");
+        assertThat(export.context().realTime()).isEqualTo(java.time.LocalDateTime.of(2026, 11, 22, 11, 49, 31));
+    }
+
+    @Test
+    void minuteOnlyRealTimeIsReadAndAMissingBuildIsNull() {
+        List<String> good = goodLog();
+        good.set(1, PREFIX + "META\t" + META.replace("\"userTeamIdMem\":121", "\"userTeamIdMem\":121,\"realTime\":\"2026-11-10 21:34\""));
+
+        LeExport export = parse(good);
+
+        assertThat(export.context().gameBuild()).isNull();
+        assertThat(export.context().realTime()).isEqualTo(java.time.LocalDateTime.of(2026, 11, 10, 21, 34));
+    }
+
+    @Test
     void aLogWithoutAnyFcx2MetaIsNotAV2Export() {
         assertThat(LeExportV2Parser.isV2(new ByteArrayInputStream("10:00\tINFO\t[LUA API] FCDUMP\tBEGIN\tplayers\tfields=3".getBytes(StandardCharsets.UTF_8)))).isFalse();
         assertThat(LeExportV2Parser.isV2(new ByteArrayInputStream(String.join("\n", goodLog()).getBytes(StandardCharsets.UTF_8)))).isTrue();
