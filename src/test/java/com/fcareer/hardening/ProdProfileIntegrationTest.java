@@ -46,6 +46,13 @@ class ProdProfileIntegrationTest {
     private ObjectMapper objectMapper;
     @MockitoBean
     private JavaMailSender mailSender;
+    @Autowired
+    private org.springframework.core.env.Environment environment;
+
+    @Test
+    void connectionPoolHoldsTwentyConnections() {
+        assertThat(environment.getProperty("spring.datasource.hikari.maximum-pool-size", Integer.class)).isEqualTo(20);
+    }
 
     @Test
     void corsAllowsOnlyTheWebBaseUrl() throws Exception {
