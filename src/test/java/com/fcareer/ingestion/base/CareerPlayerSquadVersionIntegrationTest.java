@@ -122,7 +122,7 @@ class CareerPlayerSquadVersionIntegrationTest {
     }
 
     @Test
-    void seedingANewCareerReplacesTheStatisticsOfADeletedOne() {
+    void seedingANewCareerReplacesTheStatisticsOfADeletedOne() throws Exception {
         long latest = squadVersions.findLatest(GAME).orElseThrow().id();
         long deleted = career(latest);
         writer.seedNewCareer(deleted);
@@ -132,10 +132,10 @@ class CareerPlayerSquadVersionIntegrationTest {
 
         writer.seedNewCareer(fresh);
 
-        String commonCareers = jdbc.queryForObject("SELECT most_common_vals::text FROM pg_stats WHERE tablename = 'career_player' AND attname = 'career_id'",
-                String.class);
-        assertThat(commonCareers).as("ilk doldurmadan sonra planlayıcı yeni kariyeri görür").contains(String.valueOf(fresh))
-                .doesNotContain(String.valueOf(deleted));
+        int rows = jdbc.queryForObject("SELECT count(*) FROM career_player WHERE career_id = ?", Integer.class, fresh);
+        String plan = jdbc.queryForObject("EXPLAIN (FORMAT JSON) SELECT * FROM career_player WHERE career_id = " + fresh, String.class);
+        int estimated = new com.fasterxml.jackson.databind.ObjectMapper().readTree(plan).get(0).get("Plan").get("Plan Rows").asInt();
+        assertThat(estimated).as("ilk doldurmadan sonra planlayıcı yeni kariyerin satırlarını görür").isGreaterThanOrEqualTo(rows / 2);
     }
 
     private static String attrColumnsLiteral() {

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
@@ -47,11 +48,12 @@ class ProdProfileIntegrationTest {
     @MockitoBean
     private JavaMailSender mailSender;
     @Autowired
-    private org.springframework.core.env.Environment environment;
+    private Environment environment;
 
     @Test
-    void connectionPoolHoldsTwentyConnections() {
+    void connectionPoolHoldsTwentyConnectionsAndKeepsFiveIdle() {
         assertThat(environment.getProperty("spring.datasource.hikari.maximum-pool-size", Integer.class)).isEqualTo(20);
+        assertThat(environment.getProperty("spring.datasource.hikari.minimum-idle", Integer.class)).isEqualTo(5);
     }
 
     @Test
