@@ -102,17 +102,6 @@ public class BaseCatalogImporter {
     private final SquadVersionRepository squadVersionRepository;
     private final Clock clock;
 
-    public BaseImportResult importMissing(Map<String, List<Map<String, String>>> tables, short gameVersionId, boolean overwriteExisting,
-                                         boolean createMissing) {
-        return importMissing(tables, gameVersionId, overwriteExisting, createMissing, false, null);
-    }
-
-    @Transactional
-    public BaseImportResult importMissing(Map<String, List<Map<String, String>>> tables, short gameVersionId, boolean overwriteExisting,
-                                         boolean createMissing, boolean full, String label) {
-        return importMissing(tables, gameVersionId, overwriteExisting, createMissing, full, label, null);
-    }
-
     /**
      * full=true yalnızca dosya katalogun tamamını içeriyorsa verilmeli: dosyada olmayan oyuncular REMOVED işaretlenir.
      * Kısmi dosyada (varsayılan) eksiklik silme sayılmaz; bilinmeyen oyuncu upsert edilir. İkisi de loglanır.

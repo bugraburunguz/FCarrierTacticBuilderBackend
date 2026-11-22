@@ -85,7 +85,7 @@ class LeExportFixtureIntegrationTest {
         assertThat(otherMen).isNotEmpty();
         assertThat(national).isNotEmpty();
 
-        BaseCatalogImporter.BaseImportResult result = importer.importMissing(tables, GAME_VERSION, false, true);
+        BaseCatalogImporter.BaseImportResult result = importer.importMissing(tables, GAME_VERSION, false, true, false, null, null);
 
         assertThat(result.created()).isPositive();
         assertThat(clubsWithEaTeam(otherMen)).as("76 Erkekler - Diğer kulüpleri katalogdan dışlanır").isZero();
@@ -101,7 +101,7 @@ class LeExportFixtureIntegrationTest {
     @Test
     void catalogImportFillsClubProfiles() throws Exception {
         Map<String, List<Map<String, String>>> tables = tables();
-        importer.importMissing(tables, GAME_VERSION, false, true);
+        importer.importMissing(tables, GAME_VERSION, false, true, false, null, null);
         Map<String, String> arsenal = tables.get("teams").stream().filter((r) -> "1".equals(r.get("teamid"))).findFirst().orElseThrow();
         Map<String, Object> profile = jdbc.queryForMap("""
                 SELECT p.* FROM club_profile p JOIN club c ON c.id = p.club_id WHERE c.ea_team_id = 1 AND p.game_version_id = ?""", GAME_VERSION);
@@ -118,7 +118,7 @@ class LeExportFixtureIntegrationTest {
         assertThat(jdbc.queryForObject("SELECT count(*) FROM club_profile p JOIN club c ON c.id = p.club_id WHERE c.ea_team_id IN ("
                 + excluded.stream().map(String::valueOf).collect(Collectors.joining(",")) + ")", Integer.class)).isZero();
         // Yeniden içe aktarma güncellenir, çoğaltmaz.
-        importer.importMissing(tables, GAME_VERSION, false, true);
+        importer.importMissing(tables, GAME_VERSION, false, true, false, null, null);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM club_profile p JOIN club c ON c.id = p.club_id WHERE c.ea_team_id = 1", Integer.class)).isEqualTo(1);
     }
 
@@ -139,7 +139,7 @@ class LeExportFixtureIntegrationTest {
         tables.put("leagueteamlinks", append(tables.get("leagueteamlinks"), Map.of("teamid", String.valueOf(legendTeam), "leagueid", "2255")));
         tables.put("teamplayerlinks", append(tables.get("teamplayerlinks"), Map.of("playerid", String.valueOf(legend), "teamid", String.valueOf(legendTeam))));
 
-        importer.importMissing(tables, GAME_VERSION, false, true);
+        importer.importMissing(tables, GAME_VERSION, false, true, false, null, null);
 
         assertThat(clubsWithEaTeam(Set.of(legendTeam))).as("Klasik Lig takımı kulüp olmaz").isZero();
         assertThat(jdbc.queryForObject("SELECT count(*) FROM base_player WHERE ea_resource_id = ?", Integer.class, legend)).as("efsane kataloğa girmez").isZero();
@@ -154,7 +154,7 @@ class LeExportFixtureIntegrationTest {
 
     @Test
     void freeAgentsAndRealClubsCarryEaIds() throws Exception {
-        importer.importMissing(tables(), GAME_VERSION, false, true);
+        importer.importMissing(tables(), GAME_VERSION, false, true, false, null, null);
 
         for (int teamId : new int[]{111592, 131368}) {
             Map<String, Object> club = jdbc.queryForMap("SELECT c.name, l.name AS league, l.ea_league_id FROM club c JOIN league l ON l.id = c.league_id WHERE c.ea_team_id = ?", teamId);
@@ -170,11 +170,11 @@ class LeExportFixtureIntegrationTest {
 
     @Test
     void importingTwiceDoesNotDuplicateClubsOrLeagues() throws Exception {
-        importer.importMissing(tables(), GAME_VERSION, false, true);
+        importer.importMissing(tables(), GAME_VERSION, false, true, false, null, null);
         int clubs = jdbc.queryForObject("SELECT count(*) FROM club", Integer.class);
         int leagues = jdbc.queryForObject("SELECT count(*) FROM league", Integer.class);
 
-        importer.importMissing(tables(), GAME_VERSION, false, true);
+        importer.importMissing(tables(), GAME_VERSION, false, true, false, null, null);
 
         assertThat(jdbc.queryForObject("SELECT count(*) FROM club", Integer.class)).isEqualTo(clubs);
         assertThat(jdbc.queryForObject("SELECT count(*) FROM league", Integer.class)).isEqualTo(leagues);
