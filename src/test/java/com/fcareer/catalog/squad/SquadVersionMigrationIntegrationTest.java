@@ -72,6 +72,14 @@ class SquadVersionMigrationIntegrationTest {
     }
 
     @Test
+    void archiveIsIndexedByVersionAndClubWithoutARedundantVersionIndex() {
+        List<String> indexes = jdbc.queryForList("SELECT indexdef FROM pg_indexes WHERE tablename = 'player_rating_archive'", String.class);
+
+        assertThat(indexes).anyMatch((d) -> d.contains("(squad_version_id, club_id)"));
+        assertThat(indexes).noneMatch((d) -> d.endsWith("(squad_version_id)"));
+    }
+
+    @Test
     @Transactional
     void createListsNewestFirstAndTracksLatest() {
         jdbc.update("INSERT INTO game_version (id, code) VALUES (?, 'TEST99')", TEST_GAME);

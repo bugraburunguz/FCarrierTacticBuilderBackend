@@ -20,7 +20,7 @@ ALTER TABLE player_rating_archive ADD COLUMN id BIGSERIAL PRIMARY KEY;
 ALTER TABLE player_rating_archive ADD COLUMN squad_version_id BIGINT NOT NULL REFERENCES squad_version(id) ON DELETE CASCADE;
 ALTER TABLE player_rating_archive ADD CONSTRAINT fk_rating_archive_player FOREIGN KEY (base_player_id) REFERENCES base_player(id);
 ALTER TABLE player_rating_archive ADD CONSTRAINT ux_rating_archive UNIQUE (squad_version_id, base_player_id);
-CREATE INDEX ix_rating_archive_version ON player_rating_archive(squad_version_id);
+CREATE INDEX ix_rating_archive_version_club ON player_rating_archive(squad_version_id, club_id);
 
 CREATE TABLE club_profile_archive (LIKE club_profile INCLUDING DEFAULTS);
 ALTER TABLE club_profile_archive ADD COLUMN squad_version_id BIGINT NOT NULL REFERENCES squad_version(id) ON DELETE CASCADE;
