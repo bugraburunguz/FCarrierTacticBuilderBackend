@@ -46,6 +46,7 @@ public class CareerPlayerWriter {
     private static final int MAX_YEAR = 2100;
     private static final int SEASON_END_MONTH = 6;
     private static final int SEASON_END_DAY = 30;
+    private static final int SEED_LOCK_NAMESPACE = 7302;
     private static final String ATTRS_FROM_OVERLAY = Arrays.stream(Attr.values())
             .map((a) -> "COALESCE(cpr." + a.getColumn() + ", r." + a.getColumn() + ")").collect(Collectors.joining(", "));
 
@@ -125,6 +126,10 @@ public class CareerPlayerWriter {
         return syncCareer(careerId, true);
     }
 
+    public int seedNewCareer(long careerId) {
+        return syncCareer(careerId, false);
+    }
+
     private int syncCareer(long careerId, boolean bump) {
         int upserted = upsertRows(new MapSqlParameterSource("c", careerId), "");
         jdbc.update("""
@@ -174,12 +179,23 @@ public class CareerPlayerWriter {
 
     /** Satırı hiç olmayan kariyeri (içe aktarma yapılmamış ya da geçiş öncesi) katalogdan tohumlar. */
     public void ensureSeeded(long careerId) {
-        Boolean any = jdbc.queryForObject("SELECT EXISTS (SELECT 1 FROM career_player WHERE career_id = :c)", Map.of("c", careerId), Boolean.class);
-        if (!Boolean.TRUE.equals(any)) {
-            // Okuma yolları salt-okunur işlem içinde olabilir: tohumlama kendi işleminde yazılır (career satırına dokunmaz, kilit çakışması yok).
-            new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(TransactionDefinition.PROPAGATION_REQUIRES_NEW))
-                    .executeWithoutResult((status) -> syncCareer(careerId, false));
+        if (hasCareerPlayers(careerId)) {
+            return;
         }
+        new TransactionTemplate(transactionManager, new DefaultTransactionDefinition(TransactionDefinition.PROPAGATION_REQUIRES_NEW))
+                .executeWithoutResult((status) -> seedOnce(careerId));
+    }
+
+    private void seedOnce(long careerId) {
+        jdbc.query("SELECT pg_advisory_xact_lock(" + SEED_LOCK_NAMESPACE + ", CAST(:c AS integer))", Map.of("c", careerId), (rs) -> { });
+        if (hasCareerPlayers(careerId)) {
+            return;
+        }
+        syncCareer(careerId, false);
+    }
+
+    private boolean hasCareerPlayers(long careerId) {
+        return Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS (SELECT 1 FROM career_player WHERE career_id = :c)", Map.of("c", careerId), Boolean.class));
     }
 
     /** Kariyer silinirken: kariyerin oyuncu verisi ve kariyerde üretilmiş (owner_career_id) oyuncular. */
