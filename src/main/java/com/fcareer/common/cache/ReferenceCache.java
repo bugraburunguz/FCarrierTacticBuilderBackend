@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -77,6 +79,19 @@ public class ReferenceCache {
             return;
         }
         entries.removeIf((key, entry) -> entry.expiresAtMillis() <= now);
+    }
+
+    public void evictPrefixAfterCommit(String prefix) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            evictPrefix(prefix);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                evictPrefix(prefix);
+            }
+        });
     }
 
     public void evictPrefix(String prefix) {

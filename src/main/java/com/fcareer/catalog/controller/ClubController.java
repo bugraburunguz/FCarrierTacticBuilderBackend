@@ -5,6 +5,7 @@ import com.fcareer.catalog.model.response.LookupItem;
 import com.fcareer.catalog.service.ClubService;
 import com.fcareer.catalog.service.LookupService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 import static com.fcareer.common.constants.ApiConstants.API_V1;
+import static com.fcareer.common.model.CatalogResponses.toPublicCached;
 
 @RestController
 @RequestMapping(API_V1)
@@ -31,12 +33,12 @@ public class ClubController {
     }
 
     @GetMapping("/leagues")
-    public List<LookupItem> leagues(@RequestParam(name = "gender", required = false) Integer gender) {
-        return lookupService.leagues(gender);
+    public ResponseEntity<List<LookupItem>> leagues(@RequestParam(name = "gender", required = false) Integer gender) {
+        return toPublicCached(lookupService.leagues(gender));
     }
 
     @GetMapping("/nationalities")
-    public List<LookupItem> nationalities() {
-        return lookupService.nationalities();
+    public ResponseEntity<List<LookupItem>> nationalities() {
+        return toPublicCached(lookupService.nationalities());
     }
 }

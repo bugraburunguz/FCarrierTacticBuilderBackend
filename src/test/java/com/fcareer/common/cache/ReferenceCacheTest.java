@@ -85,6 +85,31 @@ class ReferenceCacheTest {
     }
 
     @Test
+    void evictionInsideATransactionWaitsForTheCommit() {
+        cache.put("fc:cache:lookup:leagues", List.of("a"), Duration.ofHours(1));
+        org.springframework.transaction.support.TransactionSynchronizationManager.initSynchronization();
+        try {
+            cache.evictPrefixAfterCommit("fc:cache:lookup:");
+            assertThat(cache.get("fc:cache:lookup:leagues", LIST)).as("commit öncesi").isPresent();
+
+            org.springframework.transaction.support.TransactionSynchronizationManager.getSynchronizations().forEach((s) -> s.afterCommit());
+        } finally {
+            org.springframework.transaction.support.TransactionSynchronizationManager.clearSynchronization();
+        }
+
+        assertThat(cache.get("fc:cache:lookup:leagues", LIST)).isEmpty();
+    }
+
+    @Test
+    void evictionWithoutATransactionIsImmediate() {
+        cache.put("fc:cache:lookup:leagues", List.of("a"), Duration.ofHours(1));
+
+        cache.evictPrefixAfterCommit("fc:cache:lookup:");
+
+        assertThat(cache.get("fc:cache:lookup:leagues", LIST)).isEmpty();
+    }
+
+    @Test
     void keepsAtMostTheMaximumEntriesDroppingTheLeastRecentlyUsed() {
         cache.put("kept", List.of("k"), Duration.ofHours(1));
         for (int i = 0; i < ReferenceCache.MAX_ENTRIES; i++) {

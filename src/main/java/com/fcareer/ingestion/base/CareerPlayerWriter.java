@@ -2,6 +2,7 @@ package com.fcareer.ingestion.base;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fcareer.common.cache.ReferenceCache;
 import com.fcareer.fitengine.model.Attr;
 import com.fcareer.mlclient.service.ModeledValueFormula;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 
 import static com.fcareer.catalog.squad.SquadVersionSqlConstants.buildCareerOnLatestSquadVersionSql;
 import static com.fcareer.catalog.squad.SquadVersionSqlConstants.buildCareerValuationsSql;
+import static com.fcareer.common.constants.KeyConstants.CACHE_LOOKUP_PREFIX;
 
 /**
  * Kariyerin tek doğruluk kaynağı `career_player`'ı yazar (E3-2). Katalog (`player_rating`) ve LE overlay'inden (`career_player_data`, `career_player_rating`)
@@ -125,6 +127,7 @@ public class CareerPlayerWriter {
     private final ObjectMapper objectMapper;
     private final LePlaystyleBits playstyleBits;
     private final PlatformTransactionManager transactionManager;
+    private final ReferenceCache referenceCache;
 
     /** Kariyerin tüm satırlarını eski tablolardan tazeler; artık kapsamda olmayanları (emekli vb.) düşürür. data_version artar. */
     public int syncCareer(long careerId) {
@@ -214,6 +217,7 @@ public class CareerPlayerWriter {
         jdbc.update("DELETE FROM player_valuation WHERE base_player_id IN (SELECT id FROM base_player WHERE owner_career_id = :c)", params);
         jdbc.update("DELETE FROM player_rating WHERE base_player_id IN (SELECT id FROM base_player WHERE owner_career_id = :c)", params);
         jdbc.update("DELETE FROM base_player WHERE owner_career_id = :c", params);
+        referenceCache.evictPrefixAfterCommit(CACHE_LOOKUP_PREFIX);
     }
 
     /** LE'ye özgü alanlar: role1..9 (aşinalık) ve trait2 gizli özellikleri + bilinmeyen bitler. Yalnız satırı olan oyuncular güncellenir. */

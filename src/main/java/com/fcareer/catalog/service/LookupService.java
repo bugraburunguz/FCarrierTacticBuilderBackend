@@ -1,6 +1,8 @@
 package com.fcareer.catalog.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fcareer.catalog.model.response.LookupItem;
+import com.fcareer.common.cache.ReferenceCache;
 import com.fcareer.ingestion.base.BaseCatalogImporter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -8,13 +10,25 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+
+import static com.fcareer.common.constants.KeyConstants.CACHE_LOOKUP_PREFIX;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class LookupService {
+
+    private static final String LEAGUES_KEY = "leagues:";
+    private static final String NATIONALITIES_KEY = "nationalities";
+    private static final String ALL_GENDERS = "all";
+    private static final Set<Integer> CACHED_GENDERS = Set.of(0, 1);
+    private static final Duration TTL = Duration.ofHours(1);
+    private static final TypeReference<List<LookupItem>> ITEMS = new TypeReference<>() {
+    };
 
     private static final String LEAGUES = """
             SELECT l.id, l.name, l.ea_league_id, MIN(c.gender) AS gender, COUNT(DISTINCT c.id) AS clubs
@@ -33,8 +47,20 @@ public class LookupService {
             """;
 
     private final NamedParameterJdbcTemplate jdbc;
+    private final ReferenceCache referenceCache;
 
     public List<LookupItem> leagues(Integer gender) {
+        if (Objects.nonNull(gender) && !CACHED_GENDERS.contains(gender)) {
+            return findLeagues(gender);
+        }
+        return referenceCache.getOrLoad(CACHE_LOOKUP_PREFIX + LEAGUES_KEY + Objects.requireNonNullElse(gender, ALL_GENDERS), ITEMS, TTL, () -> findLeagues(gender));
+    }
+
+    public List<LookupItem> nationalities() {
+        return referenceCache.getOrLoad(CACHE_LOOKUP_PREFIX + NATIONALITIES_KEY, ITEMS, TTL, this::findNationalities);
+    }
+
+    private List<LookupItem> findLeagues(Integer gender) {
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("gender", gender, java.sql.Types.INTEGER);
         return jdbc.query(LEAGUES, params, (rs, i) -> LookupItem.builder()
                 .id(rs.getInt("id"))
@@ -44,7 +70,7 @@ public class LookupService {
                 .build());
     }
 
-    public List<LookupItem> nationalities() {
+    private List<LookupItem> findNationalities() {
         return jdbc.query(NATIONALITIES, (rs, i) -> LookupItem.builder()
                 .id(rs.getInt("id"))
                 .name(rs.getString("name"))

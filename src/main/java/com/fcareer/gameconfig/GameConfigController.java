@@ -2,11 +2,13 @@ package com.fcareer.gameconfig;
 
 import com.fcareer.gameconfig.GameConfigService.KeyAttributes;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import static com.fcareer.common.constants.ApiConstants.API_V1;
+import static com.fcareer.common.model.CatalogResponses.toPublicCached;
 
 @RestController
 @RequestMapping(API_V1 + "/config")
@@ -16,7 +18,7 @@ public class GameConfigController {
     private final GameConfigService gameConfigService;
 
     @GetMapping("/key-attributes")
-    public KeyAttributes keyAttributes() {
-        return gameConfigService.keyAttributes();
+    public ResponseEntity<KeyAttributes> keyAttributes() {
+        return toPublicCached(gameConfigService.keyAttributes());
     }
 }

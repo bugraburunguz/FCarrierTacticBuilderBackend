@@ -8,6 +8,7 @@ public final class KeyConstants {
     public static final String CACHE_BEHAVIOR_TAGS = "fc:cache:behavior-tags";
     public static final String CACHE_PRESETS = "fc:cache:presets";
     public static final String CACHE_MANAGER_PREFIX = "mgr-";
+    public static final String CACHE_LOOKUP_PREFIX = "fc:cache:lookup:";
     public static final String CACHE_MANAGER_FIT = CACHE_MANAGER_PREFIX + "fit:";
     public static final String CACHE_MANAGER_STATS = CACHE_MANAGER_PREFIX + "stats:";
 

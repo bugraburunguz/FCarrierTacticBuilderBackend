@@ -1,5 +1,6 @@
 package com.fcareer.ut.repository;
 
+import com.fcareer.common.cache.ReferenceCache;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -9,12 +10,15 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.fcareer.common.constants.KeyConstants.CACHE_LOOKUP_PREFIX;
+
 /** EA kimliği → katalog adı eşlemeleri (SBC şartlarını bizim kulüp/lig/ülke adlarımıza çevirmek için). */
 @Repository
 @RequiredArgsConstructor
 public class EaIdRepository {
 
     private final NamedParameterJdbcTemplate jdbc;
+    private final ReferenceCache referenceCache;
 
     public Map<Integer, String> clubNames(Collection<Integer> eaIds) {
         return names("SELECT ea_team_id AS ea, name FROM club WHERE ea_team_id IN (:ids) ORDER BY id DESC", eaIds);
@@ -84,6 +88,9 @@ public class EaIdRepository {
                 ? jdbc.update("UPDATE league SET ea_league_id = :id WHERE name = :name AND ea_league_id IS NULL AND NOT EXISTS (SELECT 1 FROM league WHERE ea_league_id = :id)", params)
                 : jdbc.update("UPDATE nationality SET ea_nation_id = :id WHERE name = :name AND ea_nation_id IS NULL AND NOT EXISTS (SELECT 1 FROM nationality WHERE ea_nation_id = :id)", params);
         jdbc.update("UPDATE ea_id_suggestion SET applied = true WHERE kind = :k AND ea_id = :id AND name = :name", params);
+        if (updated > 0) {
+            referenceCache.evictPrefixAfterCommit(CACHE_LOOKUP_PREFIX);
+        }
         return updated;
     }
 

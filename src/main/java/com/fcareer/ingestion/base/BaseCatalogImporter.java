@@ -41,6 +41,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static com.fcareer.career.importer.CsvStream.toInt;
+import static com.fcareer.common.constants.KeyConstants.CACHE_LOOKUP_PREFIX;
 import static com.fcareer.common.constants.KeyConstants.CACHE_MANAGER_PREFIX;
 import static com.fcareer.career.importer.CsvStream.toLong;
 
@@ -223,6 +224,7 @@ public class BaseCatalogImporter {
 
         int profiles = saveClubProfiles(tables, gameVersionId, excludedTeams);
         referenceCache.evictPrefix(CACHE_MANAGER_PREFIX);
+        referenceCache.evictPrefixAfterCommit(CACHE_LOOKUP_PREFIX);
         log.info("Base catalog import players : {} created : {} existing : {} noTeam : {} noPosition : {} changes : {} clubProfiles : {} squadVersionId : {}",
                 players.size(), ratings.size(), already, noTeam, noPosition, recorded, profiles, squad.id());
         return new BaseImportResult(players.size(), already, ratings.size(), noTeam, noPosition,
@@ -547,6 +549,7 @@ public class BaseCatalogImporter {
         fresh.forEach((sourceId, row) -> ratings.add(ratingParams(all.get(sourceId), row, gameVersionId,
                 catalogClub(ctx, ctx.playerTeam().get(sourceId)))));
         batch(RATING_SQL, ratings);
+        referenceCache.evictPrefixAfterCommit(CACHE_LOOKUP_PREFIX);
         log.info("Career generated players careerId : {} created : {} updated : {}", careerId, ratings.size(), ratingUpdates.size());
         return all;
     }
