@@ -2,6 +2,7 @@ package com.fcareer.catalog;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fcareer.CareerTestSupport;
 import com.fcareer.IntegrationTest;
 import com.fcareer.catalog.repository.BasePlayerRepository;
 import com.fcareer.common.cache.ReferenceCache;
@@ -70,12 +71,11 @@ class CatalogListsIntegrationTest {
         Integer emptyLeague = jdbc.queryForObject("INSERT INTO league (name, ea_league_id) VALUES ('ACB Klasik Lig', 92255) RETURNING id", Integer.class);
         jdbc.update("INSERT INTO club (name, league_id, gender, ea_team_id) VALUES ('ACB Classic XI', ?, 0, 9132670)", emptyLeague);
         // Yalnız kariyerin ürettiği oyuncusu olan kulüp de boş sayılır (üretilmiş oyuncu herkese açık listeye sızmaz).
-        Long career = jdbc.queryForObject("SELECT id FROM career ORDER BY id LIMIT 1", Long.class);
+        CareerTestSupport support = new CareerTestSupport(mockMvc, objectMapper, jdbc);
+        long career = support.premiumCareer(support.register(), null);
         Integer generatedOnly = jdbc.queryForObject("INSERT INTO club (name, league_id, gender) VALUES ('ACB Üretilmiş FC', ?, 0) RETURNING id", Integer.class, emptyLeague);
-        if (career != null) {
-            Long generated = jdbc.queryForObject("INSERT INTO base_player (full_name, owner_career_id) VALUES ('ACB Genç', ?) RETURNING id", Long.class, career);
-            jdbc.update("INSERT INTO player_rating (base_player_id, game_version_id, club_id, overall, positions) VALUES (?, 27, ?, 50, '{ST}')", generated, generatedOnly);
-        }
+        Long generated = jdbc.queryForObject("INSERT INTO base_player (full_name, owner_career_id) VALUES ('ACB Genç', ?) RETURNING id", Long.class, career);
+        jdbc.update("INSERT INTO player_rating (base_player_id, game_version_id, club_id, overall, positions) VALUES (?, 27, ?, 50, '{ST}')", generated, generatedOnly);
 
         assertThat(names(data("/api/v1/clubs?q=ACB&limit=50"))).isEmpty();
         assertThat(names(data("/api/v1/leagues"))).doesNotContain("ACB Klasik Lig");
