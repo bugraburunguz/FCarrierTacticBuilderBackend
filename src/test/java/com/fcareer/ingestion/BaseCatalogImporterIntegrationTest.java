@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -160,6 +161,7 @@ class BaseCatalogImporterIntegrationTest {
     }
 
     @Test
+    @Transactional
     void overwriteReplacesRatingsOfExistingPlayersButKeepsTheirName() {
         Map<String, List<Map<String, String>>> tables = tables();
         tables.get("players").get(3).put("overallrating", "99");
