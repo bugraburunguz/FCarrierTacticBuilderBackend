@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -44,6 +45,8 @@ class ApiFlowIntegrationTest {
     private ClubRepository clubRepository;
     @Autowired
     private PlayerRatingRepository playerRatingRepository;
+    @Autowired
+    private JdbcTemplate jdbc;
     @Autowired
     private CreditService creditService;
     @Autowired
@@ -413,9 +416,11 @@ class ApiFlowIntegrationTest {
         java.util.Set<Long> inSquad = new java.util.HashSet<>();
         squad.at("/data").forEach(p -> inSquad.add(p.at("/player/id").asLong()));
         int squadGender = squad.at("/data/0/player/gender").asInt();
-        return basePlayerRepository.findAll().stream()
-                .filter(p -> p.getGender() == squadGender && !inSquad.contains(p.getId()))
-                .map(p -> p.getId()).findFirst().orElseThrow();
+        return jdbc.queryForList("""
+                SELECT b.id FROM base_player b JOIN player_rating r ON r.base_player_id = b.id AND r.game_version_id = 27
+                 WHERE b.owner_career_id IS NULL AND b.retired_at IS NULL AND b.gender = ? ORDER BY b.id""", Long.class, squadGender).stream()
+                .filter(id -> !inSquad.contains(id))
+                .findFirst().orElseThrow();
     }
 
     private String registerAndGetToken() throws Exception {
