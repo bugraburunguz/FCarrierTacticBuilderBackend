@@ -105,9 +105,13 @@ public class CareerService {
         for (PlayerRatingEntity rating : ratings) {
             addToSquad(career, rating.getBasePlayerId(), Objects.nonNull(rating.getLoanFromTeamId()));
         }
+        List<PlayerRatingEntity> loanedOut = findLoanedOut(squadVersion.id(), club, gameVersion);
+        for (PlayerRatingEntity rating : loanedOut) {
+            addToSquad(career, rating.getBasePlayerId(), false, true);
+        }
         careerRepository.flush();
         careerPlayerWriter.seedNewCareer(career.getId());
-        log.info("Career created careerId : {} userId : {} squadSize : {}", career.getId(), userId, ratings.size());
+        log.info("Career created careerId : {} userId : {} squadSize : {} loanedOut : {}", career.getId(), userId, ratings.size(), loanedOut.size());
         return careerMapper.toResponse(career, club.getName(), club.getGender(), ratings.size(),
                 findSquadVersions(List.of(career)).get(career.getSquadVersionId()));
     }
@@ -412,6 +416,19 @@ public class CareerService {
     }
 
     private void addToSquad(CareerEntity career, Long playerId, boolean onLoan) {
+        addToSquad(career, playerId, onLoan, false);
+    }
+
+    private List<PlayerRatingEntity> findLoanedOut(long squadVersionId, ClubEntity club, short gameVersionId) {
+        if (Objects.isNull(club.getEaTeamId())) {
+            return List.of();
+        }
+        return squadVersionService.findCatalogLoanedOut(squadVersionId, club.getEaTeamId(), gameVersionId).stream()
+                .filter((rating) -> !Objects.equals(rating.getClubId(), club.getId()))
+                .toList();
+    }
+
+    private void addToSquad(CareerEntity career, Long playerId, boolean onLoan, boolean loanedOut) {
         PlayerValuationEntity valuation = playerValuationRepository
                 .findByBasePlayerIdAndGameVersionIdAndSourceAndOwnerUserIdIsNull(
                         playerId, career.getGameVersionId(), ValuationSource.MODELED)
@@ -422,6 +439,7 @@ public class CareerService {
         state.setBasePlayerId(playerId);
         state.setClubId(career.getClubId());
         state.setOnLoan(onLoan);
+        state.setLoanedOut(loanedOut);
         state.setAcquiredAt(now);
         state.setUpdatedAt(now);
         if (Objects.nonNull(valuation)) {
