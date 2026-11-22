@@ -19,6 +19,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -114,6 +115,36 @@ class CareerSeedConcurrencyIntegrationTest {
 
         assertThat(jdbc.queryForObject("SELECT count(*) FROM career_player WHERE career_id = ?", Integer.class, careerId))
                 .as("kariyer açılırken career_player dolu").isPositive();
+    }
+
+    @Test
+    void creatingACareerMarksTheCatalogLoansOfItsSquad() {
+        Map<String, Object> pick = jdbc.queryForMap("""
+                SELECT r.club_id, r.base_player_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id
+                 WHERE r.game_version_id = 27 AND r.club_id IS NOT NULL AND b.owner_career_id IS NULL AND b.retired_at IS NULL
+                 ORDER BY r.club_id, r.base_player_id LIMIT 1""");
+        long loaned = ((Number) pick.get("base_player_id")).longValue();
+        jdbc.update("UPDATE player_rating SET loan_from_team_id = 777, loan_until = DATE '2027-06-30' WHERE base_player_id = ? AND game_version_id = 27", loaned);
+        try {
+            CreateCareerRequest request = new CreateCareerRequest();
+            request.setClubId(((Number) pick.get("club_id")).intValue());
+            request.setName("kiralik");
+
+            long careerId = careerService.create(userId, request).getId();
+            careerIds.add(careerId);
+
+            assertThat(jdbc.queryForObject("SELECT on_loan FROM user_player_state WHERE career_id = ? AND base_player_id = ?", Boolean.class, careerId, loaned))
+                    .as("katalogda kiralık oyuncu kadroda kiralık").isTrue();
+            assertThat(jdbc.queryForMap("SELECT loan_from_team_id, loan_until FROM career_player WHERE career_id = ? AND player_id = ?", careerId, loaned))
+                    .containsEntry("loan_from_team_id", 777).containsEntry("loan_until", java.sql.Date.valueOf("2027-06-30"));
+            assertThat(careerService.squad(userId, careerId)).filteredOn((row) -> row.getPlayer().getId() == loaned).singleElement()
+                    .satisfies((row) -> {
+                        assertThat(row.isOnLoan()).isTrue();
+                        assertThat(row.getLoanUntil()).isEqualTo(java.time.LocalDate.of(2027, 6, 30));
+                    });
+        } finally {
+            jdbc.update("UPDATE player_rating SET loan_from_team_id = NULL, loan_until = NULL WHERE base_player_id = ? AND game_version_id = 27", loaned);
+        }
     }
 
     private long insertBareCareer() {

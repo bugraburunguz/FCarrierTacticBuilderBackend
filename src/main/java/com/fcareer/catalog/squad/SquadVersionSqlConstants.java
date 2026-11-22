@@ -44,7 +44,7 @@ public final class SquadVersionSqlConstants {
             acceleration, sprint_speed, agility, balance, reactions, ball_control, dribbling, composure, vision, short_passing, long_passing, crossing,
             curve, fk_accuracy, finishing, shot_power, long_shots, volleys, penalties, att_position, heading, def_awareness, standing_tackle, sliding_tackle,
             interceptions, jumping, stamina, strength, aggression, gk_diving, gk_handling, gk_kicking, gk_positioning, gk_reflexes,
-            playstyles, run_style1, run_style2, face_stats""";
+            playstyles, run_style1, run_style2, face_stats, loan_from_team_id, loan_until""";
 
     static final String ARCHIVE_RATINGS = "INSERT INTO player_rating_archive (squad_version_id, " + RATING_COLUMNS + ") "
             + "SELECT :squadVersionId, " + RATING_COLUMNS + " FROM player_rating r"

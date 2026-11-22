@@ -93,6 +93,15 @@ public class BaseCatalogImporter {
             SELECT EXISTS (SELECT 1 FROM player_rating_archive WHERE squad_version_id = :id)
                 OR EXISTS (SELECT 1 FROM club_profile_archive WHERE squad_version_id = :id)""";
     private static final String LINK_DATASET_VERSION_SQL = "UPDATE dataset_version SET squad_version_id = :squad WHERE id = :id";
+    private static final String PLAYER_LOANS = "playerloans";
+    private static final String CLEAR_BASE_LOANS_SQL = """
+            UPDATE player_rating r SET loan_from_team_id = NULL, loan_until = NULL
+             WHERE r.game_version_id = :gv AND r.loan_from_team_id IS NOT NULL
+               AND EXISTS (SELECT 1 FROM base_player b WHERE b.id = r.base_player_id AND b.owner_career_id IS NULL)""";
+    private static final String SET_BASE_LOAN_SQL = """
+            UPDATE player_rating r SET loan_from_team_id = :from, loan_until = :until
+              FROM base_player b
+             WHERE b.id = r.base_player_id AND b.ea_resource_id = :ea AND b.owner_career_id IS NULL AND r.game_version_id = :gv""";
 
     private final NamedParameterJdbcTemplate jdbc;
     private final AcceleRateDeriver acceleRateDeriver;
@@ -188,6 +197,7 @@ public class BaseCatalogImporter {
             }
         }
         batch(RATING_SQL, ratings);
+        applyBaseLoans(tables.get(PLAYER_LOANS), gameVersionId);
         ratings.forEach(params -> changes.add(new PlayerChange(((Number) params.getValue("base")).longValue(), ChangeType.NEW, null, snapshotOf(params), List.of(), null)));
         if (full) {
             changes.addAll(removedChanges(players, existing));
@@ -711,6 +721,26 @@ public class BaseCatalogImporter {
                     });
         }
         return map;
+    }
+
+    private void applyBaseLoans(List<Map<String, String>> loans, short gameVersionId) {
+        if (Objects.isNull(loans)) {
+            return;
+        }
+        jdbc.update(CLEAR_BASE_LOANS_SQL, Map.of("gv", gameVersionId));
+        List<SqlParameterSource> rows = new ArrayList<>();
+        for (Map<String, String> row : loans) {
+            Long eaId = toLong(row.get("playerid"));
+            Integer from = toInt(row.get("teamidloanedfrom"));
+            if (Objects.isNull(eaId) || Objects.isNull(from)) {
+                continue;
+            }
+            Long days = toLong(row.get("loandateend"));
+            rows.add(new MapSqlParameterSource().addValue("ea", eaId).addValue("gv", gameVersionId).addValue("from", from)
+                    .addValue("until", Objects.isNull(days) ? null : java.sql.Date.valueOf(DumpMappings.LE_DATE_EPOCH.plusDays(days)), java.sql.Types.DATE));
+        }
+        batch(SET_BASE_LOAN_SQL, rows);
+        log.info("Base loans applied gameVersionId : {} loans : {}", gameVersionId, rows.size());
     }
 
     private void batch(String sql, List<SqlParameterSource> rows) {

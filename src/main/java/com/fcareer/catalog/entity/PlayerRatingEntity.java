@@ -27,4 +27,8 @@ public class PlayerRatingEntity extends RatingColumns {
 
     private Integer clubId;
 
+    private Integer loanFromTeamId;
+
+    private java.time.LocalDate loanUntil;
+
 }

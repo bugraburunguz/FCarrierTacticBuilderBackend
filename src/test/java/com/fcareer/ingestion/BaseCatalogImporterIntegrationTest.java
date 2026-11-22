@@ -136,6 +136,36 @@ class BaseCatalogImporterIntegrationTest {
     }
 
     @Test
+    @Transactional
+    void storesBaseLoansOnTheRatingOfNewAndOverwrittenPlayers() {
+        Map<String, List<Map<String, String>>> tables = new HashMap<>(tables());
+        tables.put("playerloans", List.of(
+                Map.of("playerid", String.valueOf(NEW_STRIKER), "teamidloanedfrom", "6000", "loandateend", "161000"),
+                Map.of("playerid", String.valueOf(EXISTING_MOCK_ID), "teamidloanedfrom", "6001", "loandateend", "161100")));
+
+        importer.importMissing(tables, (short) 27, true, true, false, null, null);
+
+        assertThat(loan(NEW_STRIKER)).containsEntry("loan_from_team_id", 6000)
+                .containsEntry("loan_until", java.sql.Date.valueOf(java.time.LocalDate.of(1582, 10, 14).plusDays(161000)));
+        assertThat(loan(EXISTING_MOCK_ID)).containsEntry("loan_from_team_id", 6001);
+        assertThat(loan(NEW_KEEPER)).containsEntry("loan_from_team_id", null).containsEntry("loan_until", null);
+    }
+
+    @Test
+    @Transactional
+    void baseUploadWithoutLoansLeavesLoanColumnsEmpty() {
+        importer.importMissing(tables(), (short) 27, true, true, false, null, null);
+
+        assertThat(loan(NEW_STRIKER)).containsEntry("loan_from_team_id", null).containsEntry("loan_until", null);
+    }
+
+    private Map<String, Object> loan(long eaId) {
+        return jdbc.queryForMap("""
+                SELECT r.loan_from_team_id, r.loan_until FROM base_player b JOIN player_rating r ON r.base_player_id = b.id
+                 WHERE b.ea_resource_id = ? AND r.game_version_id = 27""", eaId);
+    }
+
+    @Test
     void usesEditedPlayerNamesForGeneratedPlayers() {
         long edited = 199_003L;
         Map<String, List<Map<String, String>>> tables = new HashMap<>(tables());

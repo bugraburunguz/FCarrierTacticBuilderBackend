@@ -103,7 +103,7 @@ public class CareerService {
 
         List<PlayerRatingEntity> ratings = squadVersionService.findCatalogSquad(squadVersion.id(), club.getId(), gameVersion);
         for (PlayerRatingEntity rating : ratings) {
-            addToSquad(career, rating.getBasePlayerId(), false);
+            addToSquad(career, rating.getBasePlayerId(), Objects.nonNull(rating.getLoanFromTeamId()));
         }
         careerRepository.flush();
         careerPlayerWriter.seedNewCareer(career.getId());
@@ -184,6 +184,7 @@ public class CareerService {
         Map<Long, PlayerSummaryResponse> summaries = playerService.summaries(
                 states.stream().map(UserPlayerStateEntity::getBasePlayerId).toList(), career.getGameVersionId(), careerId);
         Map<Long, Imported> overlay = importedRatings(careerId, states);
+        Map<Long, java.time.LocalDate> loanEnds = findLoanEnds(careerId, states);
         boolean ranged = spoilerPolicy.ranged(careerId);
         return states.stream()
                 .filter(s -> summaries.containsKey(s.getBasePlayerId()))
@@ -197,8 +198,8 @@ public class CareerService {
                     }
                     spoilerPolicy.mask(ranged, summary);
                     CareerPlayerResponse row = careerMapper.toPlayer(s, summary);
+                    row.setLoanUntil(loanEnds.get(s.getBasePlayerId()));
                     if (Objects.nonNull(imported)) {
-                        row.setLoanUntil(imported.loanUntil());
                         row.setWageEur(imported.wageEur());
                     }
                     if (ranged) {
@@ -210,7 +211,7 @@ public class CareerService {
     }
 
     /** İçe aktarılan kayıt satırı: reyting + kiralık bitişi + maaş (KARIYER-UX FAZ 2; null = bilinmiyor). */
-    private record Imported(int overall, int potential, java.time.LocalDate loanUntil, Long wageEur) {
+    private record Imported(int overall, int potential, Long wageEur) {
     }
 
     private Map<Long, Imported> importedRatings(Long careerId, List<UserPlayerStateEntity> states) {
@@ -218,15 +219,30 @@ public class CareerService {
         if (states.isEmpty()) {
             return overlay;
         }
-        jdbc.query("SELECT player_id AS base_player_id, ovr AS overall, pot AS potential, loan_until, wage_eur FROM career_player WHERE career_id = :c AND live AND player_id IN (:ids)",
+        jdbc.query("SELECT player_id AS base_player_id, ovr AS overall, pot AS potential, wage_eur FROM career_player WHERE career_id = :c AND live AND player_id IN (:ids)",
                 new org.springframework.jdbc.core.namedparam.MapSqlParameterSource()
                         .addValue("c", careerId)
                         .addValue("ids", states.stream().map(UserPlayerStateEntity::getBasePlayerId).toList()),
                 rs -> {
                     overlay.put(rs.getLong("base_player_id"), new Imported(rs.getInt("overall"), rs.getInt("potential"),
-                            rs.getObject("loan_until", java.time.LocalDate.class), rs.getObject("wage_eur", Long.class)));
+                            rs.getObject("wage_eur", Long.class)));
                 });
         return overlay;
+    }
+
+    private Map<Long, java.time.LocalDate> findLoanEnds(Long careerId, List<UserPlayerStateEntity> states) {
+        Map<Long, java.time.LocalDate> ends = new java.util.HashMap<>();
+        if (states.isEmpty()) {
+            return ends;
+        }
+        jdbc.query("SELECT player_id, loan_until FROM career_player WHERE career_id = :c AND loan_until IS NOT NULL AND player_id IN (:ids)",
+                new org.springframework.jdbc.core.namedparam.MapSqlParameterSource()
+                        .addValue("c", careerId)
+                        .addValue("ids", states.stream().map(UserPlayerStateEntity::getBasePlayerId).toList()),
+                rs -> {
+                    ends.put(rs.getLong("player_id"), rs.getObject("loan_until", java.time.LocalDate.class));
+                });
+        return ends;
     }
 
     @Transactional(readOnly = true)

@@ -154,6 +154,8 @@ public class SquadVersionRepository {
         rating.setBasePlayerId(rs.getLong("base_player_id"));
         rating.setGameVersionId(rs.getShort("game_version_id"));
         rating.setClubId(rs.getObject("club_id", Integer.class));
+        rating.setLoanFromTeamId(rs.getObject("loan_from_team_id", Integer.class));
+        rating.setLoanUntil(rs.getObject("loan_until", java.time.LocalDate.class));
         rating.setOverall(rs.getShort("overall"));
         rating.setPositions(Arrays.asList((String[]) rs.getArray("positions").getArray()));
         rating.setAccelerate(rs.getString("accelerate"));
