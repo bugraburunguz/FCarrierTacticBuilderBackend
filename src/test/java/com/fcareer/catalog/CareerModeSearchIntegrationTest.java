@@ -59,7 +59,8 @@ class CareerModeSearchIntegrationTest {
         jdbc.update("UPDATE player_rating SET finishing = 50, weak_foot = 2, skill_moves = 2 WHERE base_player_id = ? AND game_version_id = 27", playerId);
 
         long clubForCareer = catalogClub;
-        careerId = jdbc.queryForObject("INSERT INTO career (user_id, club_id, game_version_id, season) VALUES (?, ?, 27, 1) RETURNING id", Long.class, userId, clubForCareer);
+        careerId = jdbc.queryForObject("INSERT INTO career (user_id, club_id, game_version_id, season, squad_version_id) VALUES (?, ?, 27, 1, "
+                + "(SELECT max(id) FROM squad_version WHERE game_version_id = 27)) RETURNING id", Long.class, userId, clubForCareer);
         jdbc.update("INSERT INTO career_player_data (career_id, base_player_id, overall, potential, team_id) VALUES (?, ?, 70, 80, ?)", careerId, playerId, CAREER_TEAM_ID);
         jdbc.update("INSERT INTO career_player_rating (career_id, base_player_id, game_version_id, club_id, overall, positions, finishing, weak_foot, skill_moves) VALUES (?, ?, 27, ?, 70, ARRAY['ST'], 99, 5, 5)",
                 careerId, playerId, catalogClub);

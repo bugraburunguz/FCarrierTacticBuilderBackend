@@ -82,7 +82,8 @@ class FaceStatsApiIntegrationTest {
         jdbc.update("UPDATE player_rating SET face_stats = ARRAY[1,1,1,1,1,1]::smallint[], finishing = 50 WHERE base_player_id = ? AND game_version_id = 27", outfield);
         long userId = jdbc.queryForObject("INSERT INTO app_user (email, password_hash, subscription_type) VALUES (?, 'x', 'FREE') RETURNING id", Long.class, "face-" + System.nanoTime() + "@example.com");
         int clubId = jdbc.queryForObject("SELECT id FROM club ORDER BY id LIMIT 1", Integer.class);
-        long careerId = jdbc.queryForObject("INSERT INTO career (user_id, club_id, game_version_id, season) VALUES (?, ?, 27, 1) RETURNING id", Long.class, userId, clubId);
+        long careerId = jdbc.queryForObject("INSERT INTO career (user_id, club_id, game_version_id, season, squad_version_id) VALUES (?, ?, 27, 1, "
+                + "(SELECT max(id) FROM squad_version WHERE game_version_id = 27)) RETURNING id", Long.class, userId, clubId);
         jdbc.update("INSERT INTO career_player_data (career_id, base_player_id, overall, potential, team_id) VALUES (?, ?, 70, 80, 1)", careerId, outfield);
         jdbc.update("INSERT INTO career_player_rating (career_id, base_player_id, game_version_id, overall, positions, finishing) VALUES (?, ?, 27, 70, ARRAY['ST'], 99)", careerId, outfield);
 

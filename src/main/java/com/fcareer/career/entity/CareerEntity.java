@@ -29,6 +29,9 @@ public class CareerEntity {
 
     private Short gameVersionId;
 
+    @Column(nullable = false)
+    private Long squadVersionId;
+
     private Integer clubId;
 
     private Integer season;

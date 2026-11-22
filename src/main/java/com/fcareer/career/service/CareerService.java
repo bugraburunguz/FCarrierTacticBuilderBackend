@@ -17,6 +17,8 @@ import com.fcareer.career.repository.UserPlayerStateRepository;
 import com.fcareer.catalog.configuration.CatalogProperties;
 import com.fcareer.catalog.entity.BasePlayerEntity;
 import com.fcareer.catalog.entity.ClubEntity;
+import com.fcareer.catalog.squad.SquadVersion;
+import com.fcareer.catalog.squad.SquadVersionRepository;
 import com.fcareer.catalog.entity.PlayerRatingEntity;
 import com.fcareer.catalog.entity.PlayerValuationEntity;
 import com.fcareer.catalog.model.enums.ValuationSource;
@@ -56,6 +58,7 @@ public class CareerService {
     private static final String EVENT = "roster_event";
     private static final String GAME_VERSION = "game_version";
     private static final String PLAYER = "player";
+    private static final String SQUAD_VERSION = "squad_version";
     private static final int FIRST_SEASON = 1;
     private static final long NO_FEE = 0L;
 
@@ -75,6 +78,7 @@ public class CareerService {
     private final com.fcareer.career.desk.SpoilerPolicy spoilerPolicy;
     private final com.fcareer.ingestion.base.CareerPlayerWriter careerPlayerWriter;
     private final CareerLimiter careerLimiter;
+    private final SquadVersionRepository squadVersionRepository;
 
     public CareerResponse create(Long userId, CreateCareerRequest request) {
         short gameVersion = Objects.isNull(request.getGameVersionId())
@@ -90,6 +94,7 @@ public class CareerService {
         CareerEntity career = new CareerEntity();
         career.setUserId(userId);
         career.setGameVersionId(gameVersion);
+        career.setSquadVersionId(findLatestSquadVersionId(gameVersion));
         career.setClubId(club.getId());
         career.setName(cleanName(request.getName()));
         career.setSeason(Objects.isNull(request.getSeason()) ? FIRST_SEASON : request.getSeason());
@@ -436,6 +441,14 @@ public class CareerService {
 
     private Short clubGender(Integer clubId) {
         return clubRepository.findById(clubId).map(ClubEntity::getGender).orElse(null);
+    }
+
+    private Long findLatestSquadVersionId(short gameVersion) {
+        return squadVersionRepository.findLatest(gameVersion).map(SquadVersion::id)
+                .orElseThrow(() -> {
+                    log.warn("Squad version missing gameVersionId : {}", gameVersion);
+                    return new NotFoundException(SQUAD_VERSION, gameVersion);
+                });
     }
 
     private static String cleanName(String name) {

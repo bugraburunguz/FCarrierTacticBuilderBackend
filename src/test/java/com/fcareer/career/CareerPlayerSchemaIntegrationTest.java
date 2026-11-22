@@ -46,7 +46,8 @@ class CareerPlayerSchemaIntegrationTest {
     @Test
     void availableIsDerivedFromTheLoanState() {
         Long userId = jdbc.queryForObject("INSERT INTO app_user (email, password_hash) VALUES ('arch-schema@test.local', 'x') RETURNING id", Long.class);
-        Long careerId = jdbc.queryForObject("INSERT INTO career (user_id, game_version_id, name) VALUES (?, 27, 'schema') RETURNING id", Long.class, userId);
+        Long careerId = jdbc.queryForObject("INSERT INTO career (user_id, game_version_id, name, squad_version_id) VALUES (?, 27, 'schema', "
+                + "(SELECT max(id) FROM squad_version WHERE game_version_id = 27)) RETURNING id", Long.class, userId);
         Long playerId = jdbc.queryForObject("INSERT INTO base_player (full_name, gender) VALUES ('Schema Probe', 0) RETURNING id", Long.class);
         jdbc.update("INSERT INTO career_player (career_id, player_id, as_of, ovr, pot, positions, attrs, loan_from_team_id) VALUES (?, ?, DATE '2026-07-01', 60, 70, ARRAY['ST'], ARRAY[1], NULL)", careerId, playerId);
         assertThat(jdbc.queryForObject("SELECT available FROM career_player WHERE career_id = ? AND player_id = ?", Boolean.class, careerId, playerId)).isTrue();
