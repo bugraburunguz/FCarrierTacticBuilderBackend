@@ -27,7 +27,6 @@ import com.fcareer.catalog.model.response.PlayerSummaryResponse;
 import com.fcareer.catalog.repository.BasePlayerRepository;
 import com.fcareer.catalog.repository.ClubRepository;
 import com.fcareer.catalog.repository.GameVersionRepository;
-import com.fcareer.catalog.repository.PlayerRatingRepository;
 import com.fcareer.catalog.repository.PlayerValuationRepository;
 import com.fcareer.catalog.service.PlayerService;
 import com.fcareer.common.exception.InsufficientBudgetException;
@@ -68,7 +67,6 @@ public class CareerService {
     private final ClubRepository clubRepository;
     private final BasePlayerRepository basePlayerRepository;
     private final GameVersionRepository gameVersionRepository;
-    private final PlayerRatingRepository playerRatingRepository;
     private final PlayerValuationRepository playerValuationRepository;
     private final PlayerService playerService;
     private final CatalogProperties catalogProperties;
@@ -103,7 +101,7 @@ public class CareerService {
         career.setBudgetEur(request.getBudgetEur());
         career = careerRepository.save(career);
 
-        List<PlayerRatingEntity> ratings = playerRatingRepository.findCatalogSquad(club.getId(), gameVersion);
+        List<PlayerRatingEntity> ratings = squadVersionService.findCatalogSquad(squadVersion.id(), club.getId(), gameVersion);
         for (PlayerRatingEntity rating : ratings) {
             addToSquad(career, rating.getBasePlayerId(), false);
         }
@@ -384,7 +382,7 @@ public class CareerService {
         if (!basePlayerRepository.findForeignOwnedIds(List.of(playerId), career.getId()).isEmpty()) {
             throw new NotFoundException(PLAYER, playerId);
         }
-        return playerRatingRepository.findByBasePlayerIdAndGameVersionId(playerId, career.getGameVersionId())
+        return squadVersionService.findCatalogRating(career.getSquadVersionId(), playerId, career.getGameVersionId())
                 .orElseThrow(() -> new NotFoundException(PLAYER, playerId));
     }
 

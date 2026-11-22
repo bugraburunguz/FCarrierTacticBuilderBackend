@@ -122,6 +122,84 @@ class CareerControllerIntegrationTest {
         assertThat(boundVersion(careerId)).isEqualTo(older.id());
     }
 
+    @Test
+    void olderSquadVersionSeedsTheStartingSquadFromTheArchive() throws Exception {
+        int clubA = CareerTestSupport.catalogClubId(jdbc);
+        long movedPlayer = catalogPlayerOutside(clubA);
+        SquadVersion older = squadVersions.findLatest(DEFAULT_GAME).orElseThrow();
+        squadVersions.archiveCurrent(older.id(), DEFAULT_GAME);
+        jdbc.update("UPDATE player_rating_archive SET club_id = ? WHERE squad_version_id = ? AND base_player_id = ?", clubA, older.id(), movedPlayer);
+        SquadVersion newest = squadVersions.create(DEFAULT_GAME, "Yeni", null, null, 3);
+        int liveSize = catalogSquadSize(clubA);
+
+        JsonNode onOlder = createCareer(older.id());
+        JsonNode onNewest = createCareer(newest.id());
+
+        assertThat(onOlder.at("/data/squadSize").asInt()).as(onOlder.toString()).isEqualTo(liveSize + 1);
+        assertThat(squadIds(onOlder.at("/data/id").asLong())).as("eski sürümde oyuncu A kulübünde").contains(movedPlayer).hasSize(liveSize + 1);
+        assertThat(onNewest.at("/data/squadSize").asInt()).isEqualTo(liveSize);
+        assertThat(squadIds(onNewest.at("/data/id").asLong())).as("en yeni sürümde oyuncu B kulübünde").doesNotContain(movedPlayer).hasSize(liveSize);
+    }
+
+    @Test
+    void rosterEventsAcceptPlayersOfTheCareersOwnSquadVersion() throws Exception {
+        int clubA = CareerTestSupport.catalogClubId(jdbc);
+        long retired = catalogPlayerOutside(clubA);
+        SquadVersion older = squadVersions.findLatest(DEFAULT_GAME).orElseThrow();
+        squadVersions.archiveCurrent(older.id(), DEFAULT_GAME);
+        SquadVersion newest = squadVersions.create(DEFAULT_GAME, "Yeni", null, null, 3);
+        jdbc.update("DELETE FROM player_rating WHERE base_player_id = ? AND game_version_id = ?", retired, DEFAULT_GAME);
+        long onOlder = createCareer(older.id()).at("/data/id").asLong();
+        long onNewest = createCareer(newest.id()).at("/data/id").asLong();
+
+        assertThat(promoteStatus(onOlder, retired)).as("eski sürümde var olan oyuncu").isEqualTo(200);
+        assertThat(promoteStatus(onNewest, retired)).as("en yeni sürümde yok").isEqualTo(404);
+    }
+
+    @Test
+    void firstCareerOfAGameWithoutSquadVersionsCreatesTheFirstVersion() throws Exception {
+        jdbc.update("INSERT INTO game_version (id, code) VALUES (?, 'TEST98')", OTHER_GAME);
+        jdbc.update("""
+                INSERT INTO player_rating (base_player_id, game_version_id, club_id, overall, positions)
+                SELECT r.base_player_id, ?, r.club_id, r.overall, r.positions FROM player_rating r
+                 WHERE r.game_version_id = ? AND r.club_id = ?""", OTHER_GAME, DEFAULT_GAME, CareerTestSupport.catalogClubId(jdbc));
+        int ratings = jdbc.queryForObject("SELECT count(*) FROM player_rating WHERE game_version_id = ?", Integer.class, OTHER_GAME);
+        Map<String, Object> body = body(null);
+        body.put("gameVersionId", OTHER_GAME);
+
+        JsonNode career = support.json(json(post("/api/v1/careers"), body), token);
+
+        assertThat(career.at("/success").asBoolean()).as(career.toString()).isTrue();
+        SquadVersion first = squadVersions.findLatest(OTHER_GAME).orElseThrow();
+        assertThat(first.versionNo()).isEqualTo(1);
+        assertThat(first.label()).isEqualTo("İlk kadro (Sürüm 1)");
+        assertThat(first.playerCount()).isEqualTo(ratings);
+        assertThat(career.at("/data/squadVersion/id").asLong()).isEqualTo(first.id());
+        assertThat(career.at("/data/squadSize").asInt()).isEqualTo(ratings);
+    }
+
+    private long catalogPlayerOutside(int clubId) {
+        return jdbc.queryForObject("""
+                SELECT r.base_player_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id JOIN club c ON c.id = r.club_id
+                 WHERE r.game_version_id = 27 AND b.owner_career_id IS NULL AND r.club_id <> ? AND c.gender = 0
+                 ORDER BY r.base_player_id LIMIT 1""", Long.class, clubId);
+    }
+
+    private int catalogSquadSize(int clubId) {
+        return jdbc.queryForObject("""
+                SELECT count(*) FROM player_rating r JOIN base_player b ON b.id = r.base_player_id
+                 WHERE r.game_version_id = 27 AND b.owner_career_id IS NULL AND r.club_id = ?""", Integer.class, clubId);
+    }
+
+    private java.util.List<Long> squadIds(long careerId) {
+        return jdbc.queryForList("SELECT base_player_id FROM user_player_state WHERE career_id = ?", Long.class, careerId);
+    }
+
+    private int promoteStatus(long careerId, long playerId) throws Exception {
+        return mockMvc.perform(json(post("/api/v1/careers/" + careerId + "/events"), Map.of("type", "PROMOTE", "playerId", playerId))
+                .header("Authorization", "Bearer " + token)).andReturn().getResponse().getStatus();
+    }
+
     private JsonNode createCareer(Long squadVersionId) throws Exception {
         return support.json(json(post("/api/v1/careers"), body(squadVersionId)), token);
     }

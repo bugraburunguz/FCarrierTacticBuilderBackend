@@ -1,11 +1,5 @@
 package com.fcareer.manager;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fcareer.catalog.entity.PlayerRatingEntity;
-import com.fcareer.catalog.mapper.RatingAttrAccessor;
-import com.fcareer.fitengine.model.Attr;
 import com.fcareer.manager.ManagerModels.Background;
 import com.fcareer.manager.ManagerModels.Difficulty;
 import com.fcareer.manager.ManagerModels.Licence;
@@ -18,11 +12,8 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Array;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -40,8 +31,6 @@ public class ManagerRepository {
     private static final String ARCHIVED_PROFILES = "(SELECT * FROM club_profile_archive WHERE squad_version_id = :sv)";
 
     private final NamedParameterJdbcTemplate jdbc;
-    private final ObjectMapper objectMapper;
-    private final RatingAttrAccessor ratingAttrAccessor;
 
     /**
      * Kulüp istatistiği: prestijler, lig seviyesi, altyapı gelişimi; katalog kadrosundan (üretilmiş oyuncular hariç) oyuncu sayısı, en iyi
@@ -133,47 +122,6 @@ public class ManagerRepository {
                 (rs, i) -> new ClubStat(rs.getLong("club_id"), rs.getString("name"), rs.getObject("league_id", Integer.class), rs.getString("league"),
                         rs.getInt("domestic_prestige"), rs.getInt("international_prestige"), Math.max(1, rs.getInt("league_level")), rs.getInt("youth_development"),
                         rs.getObject("club_worth_eur", Long.class), rs.getInt("players"), rs.getDouble("avg_ovr"), rs.getLong("top_value"), rs.getInt("young")));
-    }
-
-    public List<PlayerRatingEntity> findArchivedCatalogSquad(int clubId, long archivedSquadVersionId) {
-        return jdbc.query("""
-                SELECT a.* FROM player_rating_archive a JOIN base_player b ON b.id = a.base_player_id
-                 WHERE a.squad_version_id = :sv AND a.club_id = :club AND b.owner_career_id IS NULL""",
-                new MapSqlParameterSource("sv", archivedSquadVersionId).addValue("club", clubId), (rs, i) -> toArchivedRating(rs));
-    }
-
-    private PlayerRatingEntity toArchivedRating(ResultSet rs) throws SQLException {
-        PlayerRatingEntity rating = new PlayerRatingEntity();
-        rating.setBasePlayerId(rs.getLong("base_player_id"));
-        rating.setGameVersionId(rs.getShort("game_version_id"));
-        rating.setClubId(rs.getObject("club_id", Integer.class));
-        rating.setOverall(rs.getShort("overall"));
-        rating.setPositions(Arrays.asList((String[]) rs.getArray("positions").getArray()));
-        rating.setAccelerate(rs.getString("accelerate"));
-        rating.setWeakFoot(rs.getObject("weak_foot", Short.class));
-        rating.setSkillMoves(rs.getObject("skill_moves", Short.class));
-        rating.setBodyType(rs.getString("body_type"));
-        rating.setPlaystyles(readPlaystyles(rs.getString("playstyles")));
-        Map<Attr, Integer> attrs = new EnumMap<>(Attr.class);
-        for (Attr attr : Attr.values()) {
-            Integer value = rs.getObject(attr.getColumn(), Integer.class);
-            if (Objects.nonNull(value)) {
-                attrs.put(attr, value);
-            }
-        }
-        ratingAttrAccessor.write(rating, attrs);
-        return rating;
-    }
-
-    private Map<String, Integer> readPlaystyles(String json) {
-        if (Objects.isNull(json)) {
-            return new HashMap<>();
-        }
-        try {
-            return objectMapper.readValue(json, new TypeReference<Map<String, Integer>>() { });
-        } catch (JsonProcessingException e) {
-            throw new IllegalStateException("player_rating_archive playstyles unreadable", e);
-        }
     }
 
     private static String ratings(Long archivedSquadVersionId) {

@@ -24,6 +24,21 @@ public final class SquadVersionSqlConstants {
             FROM squad_version WHERE game_version_id = :gameVersionId
             RETURNING\s""" + COLUMNS;
 
+    static final String CREATE_FIRST = """
+            INSERT INTO squad_version (game_version_id, version_no, label, player_count)
+            SELECT :gameVersionId, 1, :label,
+                   (SELECT count(*) FROM player_rating r JOIN base_player b ON b.id = r.base_player_id
+                     WHERE r.game_version_id = :gameVersionId AND b.owner_career_id IS NULL)
+            ON CONFLICT (game_version_id, version_no) DO NOTHING""";
+
+    static final String FIND_ARCHIVED_CATALOG_SQUAD = """
+            SELECT a.* FROM player_rating_archive a JOIN base_player b ON b.id = a.base_player_id
+             WHERE a.squad_version_id = :squadVersionId AND a.club_id = :clubId AND b.owner_career_id IS NULL""";
+
+    static final String FIND_ARCHIVED_CATALOG_RATING = """
+            SELECT a.* FROM player_rating_archive a JOIN base_player b ON b.id = a.base_player_id
+             WHERE a.squad_version_id = :squadVersionId AND a.base_player_id = :basePlayerId AND b.owner_career_id IS NULL""";
+
     private static final String RATING_COLUMNS = """
             base_player_id, game_version_id, club_id, overall, positions, accelerate, weak_foot, skill_moves, intl_reputation, att_wr, def_wr, body_type,
             acceleration, sprint_speed, agility, balance, reactions, ball_control, dribbling, composure, vision, short_passing, long_passing, crossing,

@@ -13,6 +13,7 @@ import com.fcareer.catalog.repository.BasePlayerRepository;
 import com.fcareer.catalog.repository.PlayerRatingRepository;
 import com.fcareer.catalog.repository.PlayerValuationRepository;
 import com.fcareer.catalog.service.PlayerService;
+import com.fcareer.catalog.squad.SquadVersionRepository;
 import com.fcareer.common.cache.ReferenceCache;
 import com.fcareer.fitengine.configuration.FitEngineProperties;
 import com.fcareer.fitengine.model.FitPlayer;
@@ -55,7 +56,7 @@ public class ClubFitCalculator {
     private final SquadFitService squadFitService;
     private final FitEngineProperties fitProperties;
     private final ReferenceCache cache;
-    private final ManagerRepository managerRepository;
+    private final SquadVersionRepository squadVersionRepository;
     private final BasePlayerRepository basePlayerRepository;
     private final PlayerValuationRepository valuationRepository;
     private final PlayerMapper playerMapper;
@@ -108,7 +109,7 @@ public class ClubFitCalculator {
     }
 
     private List<FitPlayer> findArchivedSquad(int clubId, short gameVersionId, long archivedSquadVersionId) {
-        List<PlayerRatingEntity> squad = managerRepository.findArchivedCatalogSquad(clubId, archivedSquadVersionId);
+        List<PlayerRatingEntity> squad = squadVersionRepository.findArchivedCatalogSquad(clubId, archivedSquadVersionId);
         if (squad.size() < MIN_PLAYERS) {
             return List.of();
         }
