@@ -2,6 +2,7 @@ package com.fcareer.tacticanalysis;
 
 import com.fcareer.catalog.repository.CareerPlayerRepository;
 import com.fcareer.catalog.repository.CatalogLevelRepository;
+import com.fcareer.common.cache.LruCache;
 import com.fcareer.tacticanalysis.LevelSql.Median;
 import com.fcareer.tacticanalysis.LevelSql.Medians;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +15,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Seviye referansı (E3-7b): kariyerde kullanıcının ligindeki aynı mevki medyanı (`career.data_version` değişince yenilenir), kariyer dışında takımın ilk 11 ortalama OVR bandının katalog medyanı.
@@ -29,6 +29,8 @@ public class LevelReferenceService {
     public static final String BUILDUP_SAFETY_REF = "BUILDUP_SAFETY_REF";
     public static final String AERIAL_REF = "AERIAL_REF";
     private static final String TEAM_KEY_PREFIX = "T:";
+    private static final int CAREER_CACHE_MAX = 500;
+    private static final int CATALOG_CACHE_MAX = 200;
 
     /** refs boş olabilir; label: "EFL League Two" ya da "OVR 66-74 katalog bandı". */
     public record LevelRefs(Map<String, Double> refs, String label) {
@@ -44,8 +46,8 @@ public class LevelReferenceService {
     private final TacticRules rules;
     private final TacticAnalysisProperties properties;
     private final JdbcTemplate jdbc;
-    private final Map<String, Cached> careerCache = new ConcurrentHashMap<>();
-    private final Map<String, LevelRefs> catalogCache = new ConcurrentHashMap<>();
+    private final LruCache<String, Cached> careerCache = new LruCache<>(CAREER_CACHE_MAX);
+    private final LruCache<String, LevelRefs> catalogCache = new LruCache<>(CATALOG_CACHE_MAX);
 
     /** Önbellek (kariyer, lig) başına ve `career.data_version` değişince yenilenir; lig, ownedIds'in oynadığı takımdan çözülür. */
     public LevelRefs forCareer(long careerId, Collection<Long> ownedIds) {
