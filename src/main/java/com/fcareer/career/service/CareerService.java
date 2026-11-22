@@ -235,7 +235,7 @@ public class CareerService {
         if (states.isEmpty()) {
             return ends;
         }
-        jdbc.query("SELECT player_id, loan_until FROM career_player WHERE career_id = :c AND loan_until IS NOT NULL AND player_id IN (:ids)",
+        jdbc.query("SELECT player_id, loan_until FROM career_player WHERE career_id = :c AND (live OR loan_from_team_id IS NOT NULL) AND loan_until IS NOT NULL AND player_id IN (:ids)",
                 new org.springframework.jdbc.core.namedparam.MapSqlParameterSource()
                         .addValue("c", careerId)
                         .addValue("ids", states.stream().map(UserPlayerStateEntity::getBasePlayerId).toList()),

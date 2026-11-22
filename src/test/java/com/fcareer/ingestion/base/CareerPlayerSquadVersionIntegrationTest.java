@@ -149,6 +149,22 @@ class CareerPlayerSquadVersionIntegrationTest {
     }
 
     @Test
+    void aSeededLoanEndsWhenTheImportedCareerShowsThePlayerBack() {
+        long player = jdbc.queryForObject("""
+                SELECT r.base_player_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id
+                 WHERE r.game_version_id = 27 AND b.owner_career_id IS NULL AND b.retired_at IS NULL ORDER BY r.base_player_id LIMIT 1""", Long.class);
+        jdbc.update("UPDATE player_rating SET loan_from_team_id = 777, loan_until = DATE '2027-06-30' WHERE base_player_id = ? AND game_version_id = 27", player);
+        long careerId = career(squadVersions.findLatest(GAME).orElseThrow().id());
+        writer.seedNewCareer(careerId);
+        jdbc.update("INSERT INTO career_player_data (career_id, base_player_id, overall, potential, team_id) VALUES (?, ?, 70, 75, 777)", careerId, player);
+
+        writer.syncCareer(careerId);
+
+        assertThat(jdbc.queryForMap("SELECT loan_from_team_id, loan_until FROM career_player WHERE career_id = ? AND player_id = ?", careerId, player))
+                .containsEntry("loan_from_team_id", null).containsEntry("loan_until", null);
+    }
+
+    @Test
     void careerOverlayStillWinsOverTheArchivedBase() {
         long player = jdbc.queryForObject("""
                 SELECT r.base_player_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id

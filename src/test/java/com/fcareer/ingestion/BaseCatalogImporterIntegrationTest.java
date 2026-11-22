@@ -159,6 +159,42 @@ class BaseCatalogImporterIntegrationTest {
         assertThat(loan(NEW_STRIKER)).containsEntry("loan_from_team_id", null).containsEntry("loan_until", null);
     }
 
+    @Test
+    @Transactional
+    void aLoanOnlyChangeOpensANewSquadVersionAndArchivesThePreviousLoans() {
+        Map<String, List<Map<String, String>>> tables = new HashMap<>(tables());
+        tables.put("playerloans", List.of(Map.of("playerid", String.valueOf(NEW_STRIKER), "teamidloanedfrom", "6000", "loandateend", "161000")));
+        importer.importMissing(tables, (short) 27, true, true, false, null, null);
+        long before = latestSquadVersion();
+
+        tables.put("playerloans", List.of(Map.of("playerid", String.valueOf(NEW_STRIKER), "teamidloanedfrom", "6002", "loandateend", "161000")));
+        importer.importMissing(tables, (short) 27, true, true, false, null, null);
+
+        assertThat(latestSquadVersion()).as("yalnız kiralık değişti: yeni kadro sürümü").isGreaterThan(before);
+        assertThat(jdbc.queryForObject("""
+                SELECT a.loan_from_team_id FROM player_rating_archive a JOIN base_player b ON b.id = a.base_player_id
+                 WHERE a.squad_version_id = ? AND b.ea_resource_id = ?""", Integer.class, before, NEW_STRIKER))
+                .as("eski sürüm eski kiralığı korur").isEqualTo(6000);
+        assertThat(loan(NEW_STRIKER)).containsEntry("loan_from_team_id", 6002);
+    }
+
+    @Test
+    @Transactional
+    void anUploadWithoutOverwriteLeavesCatalogLoansAlone() {
+        Map<String, List<Map<String, String>>> tables = new HashMap<>(tables());
+        tables.put("playerloans", List.of(Map.of("playerid", String.valueOf(NEW_STRIKER), "teamidloanedfrom", "6000", "loandateend", "161000")));
+        importer.importMissing(tables, (short) 27, true, true, false, null, null);
+
+        tables.put("playerloans", List.of());
+        importer.importMissing(tables, (short) 27, false, true, false, null, null);
+
+        assertThat(loan(NEW_STRIKER)).containsEntry("loan_from_team_id", 6000);
+    }
+
+    private long latestSquadVersion() {
+        return jdbc.queryForObject("SELECT max(id) FROM squad_version WHERE game_version_id = 27", Long.class);
+    }
+
     private Map<String, Object> loan(long eaId) {
         return jdbc.queryForMap("""
                 SELECT r.loan_from_team_id, r.loan_until FROM base_player b JOIN player_rating r ON r.base_player_id = b.id

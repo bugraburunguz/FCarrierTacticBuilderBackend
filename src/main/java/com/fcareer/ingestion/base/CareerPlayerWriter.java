@@ -58,8 +58,8 @@ public class CareerPlayerWriter {
     private static final String SELECT = """
             SELECT CAST(:c AS BIGINT) AS career_id, b.id AS player_id, COALESCE(k.current_game_date, CURRENT_DATE) AS as_of,
                    cpd.team_id AS team_id, COALESCE(cpd.free_agent, false) AS free_agent,
-                   CASE WHEN cpd.base_player_id IS NOT NULL THEN cpd.loan_from_team_id ELSE r.loan_from_team_id END AS loan_from_team_id,
-                   CASE WHEN cpd.base_player_id IS NULL THEN r.loan_until END AS loan_until,
+                   CASE WHEN cpd.base_player_id IS NOT NULL THEN cpd.loan_from_team_id WHEN le.none THEN r.loan_from_team_id END AS loan_from_team_id,
+                   CASE WHEN cpd.base_player_id IS NULL AND le.none THEN r.loan_until END AS loan_until,
                    CASE WHEN cpd.team_id IS NOT NULL THEN tc.id ELSE r.club_id END AS club_id,
                    CASE WHEN b.owner_career_id IS NULL THEN r.club_id END AS base_club_id,
                    (cpd.team_id IS NOT NULL) AS live,
@@ -77,6 +77,7 @@ public class CareerPlayerWriter {
               FROM {ratings} r
               JOIN base_player b ON b.id = r.base_player_id
               JOIN career k ON k.id = :c
+              CROSS JOIN (SELECT NOT EXISTS (SELECT 1 FROM career_player_data x WHERE x.career_id = :c) AS none) le
               LEFT JOIN career_player_data cpd ON cpd.base_player_id = r.base_player_id AND cpd.career_id = k.id
               LEFT JOIN career_player_rating cpr ON cpr.base_player_id = r.base_player_id AND cpr.career_id = k.id AND cpr.game_version_id = r.game_version_id
               LEFT JOIN LATERAL (SELECT id FROM club WHERE ea_team_id = cpd.team_id ORDER BY id LIMIT 1) tc ON cpd.base_player_id IS NOT NULL
@@ -88,7 +89,7 @@ public class CareerPlayerWriter {
             + "skill_moves, accelerate, body_type, ovr, pot, positions, attrs, playstyles, run_style1, run_style2, face_stats";
     private static final String UPDATE_SET = """
             as_of = EXCLUDED.as_of, team_id = EXCLUDED.team_id, free_agent = EXCLUDED.free_agent, loan_from_team_id = EXCLUDED.loan_from_team_id,
-            loan_until = CASE WHEN EXCLUDED.live THEN career_player.loan_until ELSE EXCLUDED.loan_until END, club_id = EXCLUDED.club_id, base_club_id = EXCLUDED.base_club_id, live = EXCLUDED.live,
+            loan_until = CASE WHEN EXCLUDED.loan_from_team_id IS NULL THEN NULL WHEN EXCLUDED.live THEN career_player.loan_until ELSE EXCLUDED.loan_until END, club_id = EXCLUDED.club_id, base_club_id = EXCLUDED.base_club_id, live = EXCLUDED.live,
             dob = EXCLUDED.dob, height_cm = EXCLUDED.height_cm, weight_kg = EXCLUDED.weight_kg, preferred_foot = EXCLUDED.preferred_foot, weak_foot = EXCLUDED.weak_foot,
             skill_moves = EXCLUDED.skill_moves, accelerate = EXCLUDED.accelerate, body_type = EXCLUDED.body_type, ovr = EXCLUDED.ovr, pot = EXCLUDED.pot,
             positions = EXCLUDED.positions, attrs = EXCLUDED.attrs, playstyles = EXCLUDED.playstyles, run_style1 = EXCLUDED.run_style1, run_style2 = EXCLUDED.run_style2,
