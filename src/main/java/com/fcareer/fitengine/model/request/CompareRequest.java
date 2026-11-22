@@ -2,6 +2,7 @@ package com.fcareer.fitengine.model.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,7 +21,7 @@ import java.util.List;
 public class CompareRequest {
 
     @NotEmpty
-    @Size(max = 20)
+    @Size(max = 40)
     private List<Long> ids;
 
     @NotBlank
@@ -29,6 +30,9 @@ public class CompareRequest {
     private Short gameVersionId;
 
     private String position;
+
+    @Pattern(regexp = "v1|v3")
+    private String engineVersion;
 
     @Size(max = 6)
     @Builder.Default

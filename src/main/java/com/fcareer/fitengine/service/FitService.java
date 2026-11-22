@@ -108,8 +108,9 @@ public class FitService {
 
     public List<FitRoleResult> compare(CompareRequest request) {
         List<FitPlayer> players = playerService.fitPlayers(request.getIds(), request.getGameVersionId());
+        String engineVersion = Objects.nonNull(request.getEngineVersion()) ? request.getEngineVersion() : fitProperties.getEngineVersion();
         return players.stream()
-                .map(p -> evaluate(p, request.getRoleId(), request.getPosition(), request.getTags(), fitProperties.getEngineVersion()))
+                .map(p -> evaluate(p, request.getRoleId(), request.getPosition(), request.getTags(), engineVersion))
                 .sorted(Comparator.comparingDouble((FitRoleResult r) -> r.getRoleFit().getScore()).reversed())
                 .toList();
     }
