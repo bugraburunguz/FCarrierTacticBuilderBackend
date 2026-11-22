@@ -32,7 +32,7 @@ class LeExportScriptTest {
     void speaksTheV2ProtocolTheBackendParses() throws Exception {
         String lua = script();
 
-        assertThat(lua).contains("\"FCX2\"").contains("\"FCX2\", \"2.0.5\", 2,").contains("fccareer.le-export");
+        assertThat(lua).contains("\"FCX2\"").contains("\"FCX2\", \"2.0.6\", 2,").contains("fccareer.le-export");
         for (String kind : new String[]{"META", "HEADER", "CHUNK", "END", "ERROR", "DONE"}) {
             assertThat(lua).contains("emit(\"" + kind + "\"");
         }
@@ -53,6 +53,11 @@ class LeExportScriptTest {
     }
 
     /** 2.0.3: kariyer kiralıkları hiçbir tabloda yok; kalıcı transferi ayırmak için previousteam (oyuncunun ayrıldığı kulüp) kariyerde dışa aktarılır. */
+    @Test
+    void exportsPlayerLoansOutsideCareerToo() throws Exception {
+        assertThat(script()).contains("{\"playerloans\",0}").doesNotContain("{\"playerloans\",0,1}");
+    }
+
     @Test
     void exportsPreviousTeamInCareer() throws Exception {
         assertThat(script()).contains("{\"previousteam\",0,1}");
