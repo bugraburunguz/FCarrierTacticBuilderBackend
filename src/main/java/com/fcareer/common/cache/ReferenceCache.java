@@ -11,10 +11,8 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import java.time.Clock;
 import java.time.Duration;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
@@ -33,8 +31,9 @@ public class ReferenceCache {
     private final ObjectMapper objectMapper;
     private final Clock clock;
     public static final Duration SWEEP_INTERVAL = Duration.ofMinutes(10);
+    public static final int MAX_ENTRIES = 5000;
 
-    private final Map<String, Entry> entries = new ConcurrentHashMap<>();
+    private final LruCache<String, Entry> entries = new LruCache<>(MAX_ENTRIES);
     private final AtomicLong lastSweepMillis = new AtomicLong();
 
     public <T> T getOrLoad(String key, TypeReference<T> type, Duration ttl, Supplier<T> loader) {
@@ -79,7 +78,7 @@ public class ReferenceCache {
         if (now - last < SWEEP_INTERVAL.toMillis() || !lastSweepMillis.compareAndSet(last, now)) {
             return;
         }
-        entries.values().removeIf((entry) -> entry.expiresAtMillis() <= now);
+        entries.removeIf((key, entry) -> entry.expiresAtMillis() <= now);
     }
 
     public void evictPrefixAfterCommit(String prefix) {
@@ -96,7 +95,7 @@ public class ReferenceCache {
     }
 
     public void evictPrefix(String prefix) {
-        entries.keySet().removeIf((key) -> key.startsWith(prefix));
+        entries.removeIf((key, entry) -> key.startsWith(prefix));
     }
 
     public void evict(String... keys) {

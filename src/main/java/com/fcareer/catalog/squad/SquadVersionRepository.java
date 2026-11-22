@@ -37,6 +37,7 @@ import static com.fcareer.catalog.squad.SquadVersionSqlConstants.FIND_VERSIONED_
 import static com.fcareer.catalog.squad.SquadVersionSqlConstants.FIND_VERSIONED_VALUATIONS;
 import static com.fcareer.catalog.squad.SquadVersionSqlConstants.CREATE;
 import static com.fcareer.catalog.squad.SquadVersionSqlConstants.CREATE_FIRST;
+import static com.fcareer.catalog.squad.SquadVersionSqlConstants.FIND_ARCHIVED_CATALOG_LOANED_OUT;
 import static com.fcareer.catalog.squad.SquadVersionSqlConstants.FIND_ARCHIVED_CATALOG_RATING;
 import static com.fcareer.catalog.squad.SquadVersionSqlConstants.FIND_ARCHIVED_CATALOG_SQUAD;
 import static com.fcareer.catalog.squad.SquadVersionSqlConstants.FIND_ALL_BY_GAME_VERSION;
@@ -53,6 +54,7 @@ public class SquadVersionRepository {
     private static final String GAME_VERSION_ID = "gameVersionId";
     private static final String SQUAD_VERSION_ID = "squadVersionId";
     private static final String CLUB_ID = "clubId";
+    private static final String EA_TEAM_ID = "eaTeamId";
     private static final String BASE_PLAYER_ID = "basePlayerId";
     private static final String CAREER_ID = "careerId";
     private static final String IDS = "ids";
@@ -141,6 +143,11 @@ public class SquadVersionRepository {
 
     public List<PlayerRatingEntity> findArchivedCatalogSquad(int clubId, long squadVersionId) {
         return jdbc.query(FIND_ARCHIVED_CATALOG_SQUAD, new MapSqlParameterSource(SQUAD_VERSION_ID, squadVersionId).addValue(CLUB_ID, clubId),
+                (rs, i) -> toArchivedRating(rs));
+    }
+
+    public List<PlayerRatingEntity> findArchivedCatalogLoanedOut(int eaTeamId, long squadVersionId) {
+        return jdbc.query(FIND_ARCHIVED_CATALOG_LOANED_OUT, new MapSqlParameterSource(SQUAD_VERSION_ID, squadVersionId).addValue(EA_TEAM_ID, eaTeamId),
                 (rs, i) -> toArchivedRating(rs));
     }
 

@@ -79,6 +79,13 @@ public class SquadVersionService {
         return squadVersionRepository.findArchivedCatalogSquad(clubId, squadVersionId);
     }
 
+    public List<PlayerRatingEntity> findCatalogLoanedOut(long squadVersionId, int eaTeamId, short gameVersionId) {
+        if (squadVersionRepository.isLatest(squadVersionId)) {
+            return playerRatingRepository.findCatalogLoanedOut(eaTeamId, gameVersionId);
+        }
+        return squadVersionRepository.findArchivedCatalogLoanedOut(eaTeamId, squadVersionId);
+    }
+
     public Optional<PlayerRatingEntity> findCatalogRating(long squadVersionId, long basePlayerId, short gameVersionId) {
         if (squadVersionRepository.isLatest(squadVersionId)) {
             return playerRatingRepository.findByBasePlayerIdAndGameVersionId(basePlayerId, gameVersionId);

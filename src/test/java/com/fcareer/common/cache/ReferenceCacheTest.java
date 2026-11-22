@@ -110,6 +110,19 @@ class ReferenceCacheTest {
     }
 
     @Test
+    void keepsAtMostTheMaximumEntriesDroppingTheLeastRecentlyUsed() {
+        cache.put("kept", List.of("k"), Duration.ofHours(1));
+        for (int i = 0; i < ReferenceCache.MAX_ENTRIES; i++) {
+            cache.get("kept", LIST);
+            cache.put("k" + i, List.of("v"), Duration.ofHours(1));
+        }
+
+        assertThat(cache.size()).isEqualTo(ReferenceCache.MAX_ENTRIES);
+        assertThat(cache.get("kept", LIST)).contains(List.of("k"));
+        assertThat(cache.get("k0", LIST)).isEmpty();
+    }
+
+    @Test
     void evictsEveryKeyWithAPrefix() {
         cache.put("mgr-fit:1", List.of("a"), Duration.ofHours(1));
         cache.put("mgr-stats:1", List.of("b"), Duration.ofHours(1));

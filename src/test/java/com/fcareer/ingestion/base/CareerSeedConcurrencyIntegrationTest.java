@@ -147,6 +147,77 @@ class CareerSeedConcurrencyIntegrationTest {
         }
     }
 
+    @Test
+    void creatingACareerListsThePlayersTheClubLoanedOut() {
+        Map<String, Object> pick = jdbc.queryForMap("""
+                SELECT r.club_id, c.ea_team_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id JOIN club c ON c.id = r.club_id
+                 WHERE r.game_version_id = 27 AND b.owner_career_id IS NULL AND b.retired_at IS NULL ORDER BY r.club_id LIMIT 1""");
+        int clubId = ((Number) pick.get("club_id")).intValue();
+        Object previousEaTeam = pick.get("ea_team_id");
+        long awayPlayer = jdbc.queryForObject("""
+                SELECT r.base_player_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id
+                 WHERE r.game_version_id = 27 AND r.club_id <> ? AND b.owner_career_id IS NULL AND b.retired_at IS NULL ORDER BY r.base_player_id LIMIT 1""",
+                Long.class, clubId);
+        long homePlayer = jdbc.queryForObject("""
+                SELECT r.base_player_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id
+                 WHERE r.game_version_id = 27 AND r.club_id = ? AND b.owner_career_id IS NULL ORDER BY r.base_player_id LIMIT 1""", Long.class, clubId);
+        jdbc.update("UPDATE club SET ea_team_id = 9100000 WHERE id = ?", clubId);
+        jdbc.update("UPDATE player_rating SET loan_from_team_id = 9100000, loan_until = DATE '2027-06-30' WHERE base_player_id IN (?, ?) AND game_version_id = 27",
+                awayPlayer, homePlayer);
+        try {
+            CreateCareerRequest request = new CreateCareerRequest();
+            request.setClubId(clubId);
+            request.setName("kiraya");
+
+            var created = careerService.create(userId, request);
+            long careerId = created.getId();
+            careerIds.add(careerId);
+
+            assertThat(created.getSquadSize()).as("oluşturma yanıtı kiraya verilenleri de sayar")
+                    .isEqualTo(jdbc.queryForObject("SELECT count(*) FROM user_player_state WHERE career_id = ?", Integer.class, careerId));
+            assertThat(jdbc.queryForObject("SELECT count(*) FROM user_player_state WHERE career_id = ? AND base_player_id = ?", Integer.class, careerId, homePlayer))
+                    .as("kendi kulübündeki oyuncu bir kez").isEqualTo(1);
+
+            assertThat(jdbc.queryForMap("SELECT on_loan, loaned_out FROM user_player_state WHERE career_id = ? AND base_player_id = ?", careerId, awayPlayer))
+                    .as("kiraya verilen oyuncu kadroda, bizden kiralıkta").containsEntry("on_loan", false).containsEntry("loaned_out", true);
+            assertThat(careerService.squad(userId, careerId)).filteredOn((row) -> row.getPlayer().getId() == awayPlayer).singleElement()
+                    .satisfies((row) -> {
+                        assertThat(row.isLoanedOut()).isTrue();
+                        assertThat(row.isOnLoan()).isFalse();
+                    });
+        } finally {
+            jdbc.update("UPDATE player_rating SET loan_from_team_id = NULL, loan_until = NULL WHERE base_player_id IN (?, ?) AND game_version_id = 27",
+                    awayPlayer, homePlayer);
+            jdbc.update("UPDATE club SET ea_team_id = ? WHERE id = ?", previousEaTeam, clubId);
+        }
+    }
+
+    @Test
+    void creatingACareerForAClubWithoutEaTeamIdKeepsTheCatalogSquad() {
+        Map<String, Object> pick = jdbc.queryForMap("""
+                SELECT r.club_id, c.ea_team_id FROM player_rating r JOIN base_player b ON b.id = r.base_player_id JOIN club c ON c.id = r.club_id
+                 WHERE r.game_version_id = 27 AND b.owner_career_id IS NULL AND b.retired_at IS NULL ORDER BY r.club_id LIMIT 1""");
+        int clubId = ((Number) pick.get("club_id")).intValue();
+        Object previousEaTeam = pick.get("ea_team_id");
+        jdbc.update("UPDATE club SET ea_team_id = NULL WHERE id = ?", clubId);
+        try {
+            CreateCareerRequest request = new CreateCareerRequest();
+            request.setClubId(clubId);
+            request.setName("eaid-yok");
+
+            long careerId = careerService.create(userId, request).getId();
+            careerIds.add(careerId);
+
+            assertThat(jdbc.queryForObject("SELECT count(*) FROM user_player_state WHERE career_id = ? AND loaned_out", Integer.class, careerId)).isZero();
+            assertThat(jdbc.queryForObject("SELECT count(*) FROM user_player_state WHERE career_id = ?", Integer.class, careerId))
+                    .isEqualTo(jdbc.queryForObject("""
+                            SELECT count(*) FROM player_rating r JOIN base_player b ON b.id = r.base_player_id
+                             WHERE r.club_id = ? AND r.game_version_id = 27 AND b.owner_career_id IS NULL""", Integer.class, clubId));
+        } finally {
+            jdbc.update("UPDATE club SET ea_team_id = ? WHERE id = ?", previousEaTeam, clubId);
+        }
+    }
+
     private long insertBareCareer() {
         long squadVersionId = squadVersions.findLatest(GAME).orElseThrow().id();
         long careerId = jdbc.queryForObject("INSERT INTO career (user_id, game_version_id, name, squad_version_id) VALUES (?, 27, 'race', ?) RETURNING id",
