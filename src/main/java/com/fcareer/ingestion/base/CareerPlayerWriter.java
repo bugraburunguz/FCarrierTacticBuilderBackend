@@ -47,6 +47,7 @@ public class CareerPlayerWriter {
     private static final int SEASON_END_MONTH = 6;
     private static final int SEASON_END_DAY = 30;
     private static final int SEED_LOCK_NAMESPACE = 7302;
+    private static final String ANALYZE_CAREER_PLAYER = "ANALYZE career_player";
     private static final String ATTRS_FROM_OVERLAY = Arrays.stream(Attr.values())
             .map((a) -> "COALESCE(cpr." + a.getColumn() + ", r." + a.getColumn() + ")").collect(Collectors.joining(", "));
 
@@ -130,13 +131,16 @@ public class CareerPlayerWriter {
         return syncCareer(careerId, false);
     }
 
-    private int syncCareer(long careerId, boolean bump) {
+    private int syncCareer(long careerId, boolean refresh) {
         int upserted = upsertRows(new MapSqlParameterSource("c", careerId), "");
         jdbc.update("""
                 DELETE FROM career_player cp WHERE cp.career_id = :c AND NOT EXISTS (
                   SELECT 1 FROM base_player b WHERE b.id = cp.player_id AND b.retired_at IS NULL AND (b.owner_career_id IS NULL OR b.owner_career_id = :c))""", Map.of("c", careerId));
+        if (!refresh) {
+            jdbc.getJdbcTemplate().execute(ANALYZE_CAREER_PLAYER);
+        }
         applyCareerValues(new MapSqlParameterSource("c", careerId), "");
-        if (bump) {
+        if (refresh) {
             bumpVersion(careerId);
         }
         log.info("career_player synced careerId : {} rows : {}", careerId, upserted);
