@@ -75,6 +75,42 @@ class FitEngineVersionIntegrationTest {
     }
 
     @Test
+    void compareWithV3ScoresLikeRoleFitV3AndReportsTheEngine() throws Exception {
+        levelNormsBuilder.rebuild((short) 27);
+        long id = playerId();
+        JsonNode single = call(post("/api/v1/fit/role"), Map.of("playerId", id, "roleId", "winger_attack", "position", "RW", "engineVersion", "v3"), 200);
+
+        JsonNode compared = call(post("/api/v1/players/compare"), Map.of("ids", java.util.List.of(id), "roleId", "winger_attack", "position", "RW", "engineVersion", "v3"), 200);
+
+        assertThat(compared.at("/data/0/roleFit/engineVersion").asText()).isEqualTo("v3");
+        assertThat(compared.at("/data/0/roleFit/score").asDouble()).isEqualTo(single.at("/data/roleFit/score").asDouble());
+    }
+
+    @Test
+    void compareWithoutEngineKeepsTheConfiguredEngineAndReportsIt() throws Exception {
+        JsonNode compared = call(post("/api/v1/players/compare"), Map.of("ids", java.util.List.of(playerId()), "roleId", "winger_attack", "position", "RW"), 200);
+
+        assertThat(compared.at("/data/0/roleFit/engineVersion").asText()).isEqualTo("v1");
+    }
+
+    @Test
+    void compareAcceptsFortyIdsAndRejectsFortyOne() throws Exception {
+        java.util.List<Long> ids = new java.util.ArrayList<>();
+        call(get("/api/v1/players?size=41"), null, 200).at("/data/items").forEach((p) -> ids.add(p.get("id").asLong()));
+        assertThat(ids).hasSize(41);
+
+        JsonNode forty = call(post("/api/v1/players/compare"), Map.of("ids", ids.subList(0, 40), "roleId", "winger_attack", "position", "RW", "engineVersion", "v3"), 200);
+        assertThat(forty.at("/data").size()).isEqualTo(40);
+        call(post("/api/v1/players/compare"), Map.of("ids", ids, "roleId", "winger_attack", "position", "RW"), 400);
+    }
+
+    @Test
+    void compareRejectsAnUnknownEngine() throws Exception {
+        JsonNode compared = call(post("/api/v1/players/compare"), Map.of("ids", java.util.List.of(playerId()), "roleId", "winger_attack", "engineVersion", "v9"), 400);
+        assertThat(compared.at("/success").asBoolean()).isFalse();
+    }
+
+    @Test
     void anUnknownEngineVersionIsRejected() throws Exception {
         JsonNode fit = call(post("/api/v1/fit/role"), Map.of("playerId", playerId(), "roleId", "winger_attack", "engineVersion", "v9"), 400);
         assertThat(fit.at("/success").asBoolean()).isFalse();
