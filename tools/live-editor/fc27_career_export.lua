@@ -12,7 +12,7 @@ local UserMgr = require 'imports/career_mode/FCECareerModeUserManager'
 local SYNC_URL, SYNC_TOKEN = nil, nil          -- site kişisel script üretirken doldurur (opsiyonel)
 local PROBE = false                            -- true = yalnız tüm tabloların şemasını dök
 local AUTO_MONTHLY = true                      -- true = her ay başında otomatik dışa aktarım
-local MARK, VER, SCHEMA_V, MAX_CHUNK = "FCX2", "2.0.5", 2, 16000   -- 2.0.1: boolean'lar JSON'da; 2.0.2: bütçe, kadro kiralık/ön sözleşme, DBMAP; 2.0.3: previousteam; 2.0.4: maç notu ve gelişim geçmişi (GTR-a); 2.0.5: etiket, ay başı otomatik, gelişim olayları (FCA-17)
+local MARK, VER, SCHEMA_V, MAX_CHUNK = "FCX2", "2.0.6", 2, 16000   -- 2.0.1: boolean'lar JSON'da; 2.0.2: bütçe, kadro kiralık/ön sözleşme, DBMAP; 2.0.3: previousteam; 2.0.4: maç notu ve gelişim geçmişi (GTR-a); 2.0.5: etiket, ay başı otomatik, gelişim olayları (FCA-17); 2.0.6: genel kadroda da playerloans (FCA-37)
 -- 2.0.5: olay numaraları LE sürümüne göre kayıyor (27.1.0'da ad farklıydı); ad yoksa 27.1.9 numarası.
 local EV_MONTH = ENUM_CM_EVENT_MSG_MONTH_PASSED or ENUM_FCEGameModesCM_EVENT_MSG_MONTH_PASSED or 17
 local EV_GROWTH = ENUM_CM_EVENT_MSG_PLAYER_GROWTH or ENUM_FCEGameModesCM_EVENT_MSG_PLAYER_GROWTH or 53
@@ -59,7 +59,7 @@ if PROBE then
   MessageBox("FC27 şema taraması", "Bitti. Log dosyasını siteye yükle.") return end
 
 local TABLES = { {"players",1}, {"teams",1}, {"teamplayerlinks",1}, {"leagues"}, {"leagueteamlinks"}, {"nations"},
-  {"editedplayernames"}, {"dcplayernames"}, {"manager"}, {"formations"}, {"playerloans",0,1}, {"career_users",0,1},
+  {"editedplayernames"}, {"dcplayernames"}, {"manager"}, {"formations"}, {"playerloans",0}, {"career_users",0,1},
   {"career_calendar",0,1}, {"career_playercontract",0,1}, {"career_presignedcontract",0,1}, {"career_youthplayers",0,1},
   -- 2.0.3: oyun kariyer kiralıklarını tabloya yazmaz; kalıcı transferde previousteam'e ayrıldığı kulübü yazar (sunucu kiralığı buradan ayırır).
   {"previousteam",0,1},

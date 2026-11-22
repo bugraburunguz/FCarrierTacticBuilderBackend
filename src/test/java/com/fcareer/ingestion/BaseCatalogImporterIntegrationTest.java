@@ -136,6 +136,72 @@ class BaseCatalogImporterIntegrationTest {
     }
 
     @Test
+    @Transactional
+    void storesBaseLoansOnTheRatingOfNewAndOverwrittenPlayers() {
+        Map<String, List<Map<String, String>>> tables = new HashMap<>(tables());
+        tables.put("playerloans", List.of(
+                Map.of("playerid", String.valueOf(NEW_STRIKER), "teamidloanedfrom", "6000", "loandateend", "161000"),
+                Map.of("playerid", String.valueOf(EXISTING_MOCK_ID), "teamidloanedfrom", "6001", "loandateend", "161100")));
+
+        importer.importMissing(tables, (short) 27, true, true, false, null, null);
+
+        assertThat(loan(NEW_STRIKER)).containsEntry("loan_from_team_id", 6000)
+                .containsEntry("loan_until", java.sql.Date.valueOf(java.time.LocalDate.of(1582, 10, 14).plusDays(161000)));
+        assertThat(loan(EXISTING_MOCK_ID)).containsEntry("loan_from_team_id", 6001);
+        assertThat(loan(NEW_KEEPER)).containsEntry("loan_from_team_id", null).containsEntry("loan_until", null);
+    }
+
+    @Test
+    @Transactional
+    void baseUploadWithoutLoansLeavesLoanColumnsEmpty() {
+        importer.importMissing(tables(), (short) 27, true, true, false, null, null);
+
+        assertThat(loan(NEW_STRIKER)).containsEntry("loan_from_team_id", null).containsEntry("loan_until", null);
+    }
+
+    @Test
+    @Transactional
+    void aLoanOnlyChangeOpensANewSquadVersionAndArchivesThePreviousLoans() {
+        Map<String, List<Map<String, String>>> tables = new HashMap<>(tables());
+        tables.put("playerloans", List.of(Map.of("playerid", String.valueOf(NEW_STRIKER), "teamidloanedfrom", "6000", "loandateend", "161000")));
+        importer.importMissing(tables, (short) 27, true, true, false, null, null);
+        long before = latestSquadVersion();
+
+        tables.put("playerloans", List.of(Map.of("playerid", String.valueOf(NEW_STRIKER), "teamidloanedfrom", "6002", "loandateend", "161000")));
+        importer.importMissing(tables, (short) 27, true, true, false, null, null);
+
+        assertThat(latestSquadVersion()).as("yalnız kiralık değişti: yeni kadro sürümü").isGreaterThan(before);
+        assertThat(jdbc.queryForObject("""
+                SELECT a.loan_from_team_id FROM player_rating_archive a JOIN base_player b ON b.id = a.base_player_id
+                 WHERE a.squad_version_id = ? AND b.ea_resource_id = ?""", Integer.class, before, NEW_STRIKER))
+                .as("eski sürüm eski kiralığı korur").isEqualTo(6000);
+        assertThat(loan(NEW_STRIKER)).containsEntry("loan_from_team_id", 6002);
+    }
+
+    @Test
+    @Transactional
+    void anUploadWithoutOverwriteLeavesCatalogLoansAlone() {
+        Map<String, List<Map<String, String>>> tables = new HashMap<>(tables());
+        tables.put("playerloans", List.of(Map.of("playerid", String.valueOf(NEW_STRIKER), "teamidloanedfrom", "6000", "loandateend", "161000")));
+        importer.importMissing(tables, (short) 27, true, true, false, null, null);
+
+        tables.put("playerloans", List.of());
+        importer.importMissing(tables, (short) 27, false, true, false, null, null);
+
+        assertThat(loan(NEW_STRIKER)).containsEntry("loan_from_team_id", 6000);
+    }
+
+    private long latestSquadVersion() {
+        return jdbc.queryForObject("SELECT max(id) FROM squad_version WHERE game_version_id = 27", Long.class);
+    }
+
+    private Map<String, Object> loan(long eaId) {
+        return jdbc.queryForMap("""
+                SELECT r.loan_from_team_id, r.loan_until FROM base_player b JOIN player_rating r ON r.base_player_id = b.id
+                 WHERE b.ea_resource_id = ? AND r.game_version_id = 27""", eaId);
+    }
+
+    @Test
     void usesEditedPlayerNamesForGeneratedPlayers() {
         long edited = 199_003L;
         Map<String, List<Map<String, String>>> tables = new HashMap<>(tables());

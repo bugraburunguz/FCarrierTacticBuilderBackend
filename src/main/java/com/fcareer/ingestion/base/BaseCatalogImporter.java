@@ -93,6 +93,21 @@ public class BaseCatalogImporter {
             SELECT EXISTS (SELECT 1 FROM player_rating_archive WHERE squad_version_id = :id)
                 OR EXISTS (SELECT 1 FROM club_profile_archive WHERE squad_version_id = :id)""";
     private static final String LINK_DATASET_VERSION_SQL = "UPDATE dataset_version SET squad_version_id = :squad WHERE id = :id";
+    private static final String PLAYER_LOANS = "playerloans";
+    private static final String CLEAR_BASE_LOANS_SQL = """
+            UPDATE player_rating r SET loan_from_team_id = NULL, loan_until = NULL
+             WHERE r.game_version_id = :gv AND r.loan_from_team_id IS NOT NULL
+               AND EXISTS (SELECT 1 FROM base_player b WHERE b.id = r.base_player_id AND b.owner_career_id IS NULL)""";
+    private static final String FIND_BASE_LOANS_SQL = """
+            SELECT b.ea_resource_id, r.loan_from_team_id, r.loan_until FROM player_rating r JOIN base_player b ON b.id = r.base_player_id
+             WHERE r.game_version_id = :gv AND r.loan_from_team_id IS NOT NULL AND b.owner_career_id IS NULL""";
+    private static final String FIND_KNOWN_EA_IDS_SQL = """
+            SELECT b.ea_resource_id FROM base_player b JOIN player_rating r ON r.base_player_id = b.id
+             WHERE r.game_version_id = :gv AND b.owner_career_id IS NULL AND b.ea_resource_id IN (:ids)""";
+    private static final String SET_BASE_LOAN_SQL = """
+            UPDATE player_rating r SET loan_from_team_id = :from, loan_until = :until
+              FROM base_player b
+             WHERE b.id = r.base_player_id AND b.ea_resource_id = :ea AND b.owner_career_id IS NULL AND r.game_version_id = :gv""";
 
     private final NamedParameterJdbcTemplate jdbc;
     private final AcceleRateDeriver acceleRateDeriver;
@@ -169,7 +184,8 @@ public class BaseCatalogImporter {
             pending.put(eaId, row);
         }
         List<PlayerChange> changes = new ArrayList<>(updateChanges(ratingUpdates));
-        boolean opensSquadVersion = overwriteExisting && (!changes.isEmpty() || !basePlayers.isEmpty());
+        Map<Long, BaseLoan> loans = overwriteExisting ? readBaseLoans(tables.get(PLAYER_LOANS)) : null;
+        boolean opensSquadVersion = overwriteExisting && (!changes.isEmpty() || !basePlayers.isEmpty() || hasLoanChanges(loans, gameVersionId));
         int archivedPlayers = opensSquadVersion ? archiveLatestSquadVersion(gameVersionId) : 0;
         batch("""
                 INSERT INTO base_player (ea_resource_id, full_name, dob, nationality_id, height_cm, weight_kg, preferred_foot, gender)
@@ -188,6 +204,7 @@ public class BaseCatalogImporter {
             }
         }
         batch(RATING_SQL, ratings);
+        applyBaseLoans(loans, gameVersionId);
         ratings.forEach(params -> changes.add(new PlayerChange(((Number) params.getValue("base")).longValue(), ChangeType.NEW, null, snapshotOf(params), List.of(), null)));
         if (full) {
             changes.addAll(removedChanges(players, existing));
@@ -711,6 +728,58 @@ public class BaseCatalogImporter {
                     });
         }
         return map;
+    }
+
+    private record BaseLoan(Integer fromTeamId, LocalDate until) {
+    }
+
+    private Map<Long, BaseLoan> readBaseLoans(List<Map<String, String>> rows) {
+        if (Objects.isNull(rows)) {
+            return null;
+        }
+        Map<Long, BaseLoan> loans = new HashMap<>();
+        for (Map<String, String> row : rows) {
+            Long eaId = toLong(row.get("playerid"));
+            Integer from = toInt(row.get("teamidloanedfrom"));
+            if (Objects.isNull(eaId) || Objects.isNull(from)) {
+                continue;
+            }
+            Long days = toLong(row.get("loandateend"));
+            loans.put(eaId, new BaseLoan(from, Objects.isNull(days) ? null : DumpMappings.LE_DATE_EPOCH.plusDays(days)));
+        }
+        return loans;
+    }
+
+    private boolean hasLoanChanges(Map<Long, BaseLoan> loans, short gameVersionId) {
+        if (Objects.isNull(loans)) {
+            return false;
+        }
+        Map<Long, BaseLoan> current = new HashMap<>();
+        jdbc.query(FIND_BASE_LOANS_SQL, Map.of("gv", gameVersionId), (rs) -> {
+            current.put(rs.getLong("ea_resource_id"), new BaseLoan(rs.getInt("loan_from_team_id"), rs.getObject("loan_until", LocalDate.class)));
+        });
+        Map<Long, BaseLoan> known = new HashMap<>(loans);
+        known.keySet().retainAll(findKnownEaIds(loans.keySet(), gameVersionId));
+        return !known.equals(current);
+    }
+
+    private Set<Long> findKnownEaIds(Set<Long> eaIds, short gameVersionId) {
+        if (eaIds.isEmpty()) {
+            return Set.of();
+        }
+        return new HashSet<>(jdbc.queryForList(FIND_KNOWN_EA_IDS_SQL, new MapSqlParameterSource("ids", eaIds).addValue("gv", gameVersionId), Long.class));
+    }
+
+    private void applyBaseLoans(Map<Long, BaseLoan> loans, short gameVersionId) {
+        if (Objects.isNull(loans)) {
+            return;
+        }
+        jdbc.update(CLEAR_BASE_LOANS_SQL, Map.of("gv", gameVersionId));
+        List<SqlParameterSource> rows = new ArrayList<>();
+        loans.forEach((eaId, loan) -> rows.add(new MapSqlParameterSource().addValue("ea", eaId).addValue("gv", gameVersionId).addValue("from", loan.fromTeamId())
+                .addValue("until", Objects.isNull(loan.until()) ? null : java.sql.Date.valueOf(loan.until()), java.sql.Types.DATE)));
+        batch(SET_BASE_LOAN_SQL, rows);
+        log.info("Base loans applied gameVersionId : {} loans : {}", gameVersionId, rows.size());
     }
 
     private void batch(String sql, List<SqlParameterSource> rows) {

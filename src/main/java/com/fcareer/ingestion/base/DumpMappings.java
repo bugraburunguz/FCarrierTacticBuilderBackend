@@ -13,6 +13,7 @@ public final class DumpMappings {
 
     /** birthdate (gün sayısı) + bu sabit = 1970-01-01'den beri gün. */
     public static final long BIRTHDATE_EPOCH_OFFSET = -141428L;
+    public static final java.time.LocalDate LE_DATE_EPOCH = java.time.LocalDate.of(1582, 10, 14);
 
     public static final int RIGHT_FOOT = 1;
     public static final int LEFT_FOOT = 2;
