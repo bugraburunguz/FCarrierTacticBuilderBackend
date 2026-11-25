@@ -399,6 +399,55 @@ class ReplicaSeedIntegrationTest {
         assertThat(detail.path("league").isNull()).isTrue();
     }
 
+    private static Map<String, String> readSlotRoles(String id) throws Exception {
+        for (JsonNode r : seed()) {
+            if (!r.path("id").asText().equals(id)) {
+                continue;
+            }
+            Map<String, String> roles = new java.util.LinkedHashMap<>();
+            r.path("fc27").path("slots").forEach((s) -> roles.put(s.path("slot").asText(), s.path("role").asText() + "/" + s.path("focus").asText()));
+            return roles;
+        }
+        throw new AssertionError(id);
+    }
+
+    @Test
+    void personalDengeliUsesTheRolesProvenInTestMatches() throws Exception {
+        assertThat(readSlotRoles("bugra_dengeli")).containsExactlyInAnyOrderEntriesOf(Map.ofEntries(
+                Map.entry("GK", "Sweeper Keeper/Build-Up"),
+                Map.entry("LB", "Wingback/Balanced"),
+                Map.entry("LCB", "Ball-Playing Defender/Build-Up"),
+                Map.entry("RCB", "Stopper/Balanced"),
+                Map.entry("RB", "Falseback/Balanced"),
+                Map.entry("LDM", "Holding/Defend"),
+                Map.entry("RDM", "Deep-Lying Playmaker/Build-Up"),
+                Map.entry("LM", "Inside Forward/Attack"),
+                Map.entry("CAM", "Shadow Striker/Attack"),
+                Map.entry("RM", "Winger/Attack"),
+                Map.entry("ST", "Advanced Forward/Attack")));
+    }
+
+    @Test
+    void personalVariantsSwapTheStackingStCamPair() throws Exception {
+        assertThat(readSlotRoles("bugra_hucum")).containsEntry("LST", "Advanced Forward/Attack").containsEntry("LAM", "Shadow Striker/Attack")
+                .containsEntry("RAM", "Playmaker/Roaming").containsEntry("RST", "Target Forward/Attack");
+        for (String id : List.of("bugra_buyuk_mac", "bugra_kucuk_mac")) {
+            assertThat(readSlotRoles(id)).as(id).containsEntry("ST", "Advanced Forward/Attack").containsEntry("CAM", "Shadow Striker/Attack");
+        }
+        assertThat(readSlotRoles("bugra_buyuk_mac")).containsEntry("LM", "Wide Playmaker/Attack").containsEntry("RM", "Inside Forward/Attack");
+        assertThat(readSlotRoles("bugra_kucuk_mac")).containsEntry("LM", "Inside Forward/Attack").containsEntry("RM", "Winger/Attack");
+        assertThat(readSlotRoles("bugra_defans")).containsEntry("ST", "False 9/Build-Up").containsEntry("CAM", "Playmaker/Balanced");
+    }
+
+    @Test
+    void noAttackingPersonalVariantStacksFalseNineBuildUpWithRoamingPlaymaker() throws Exception {
+        for (String id : List.of("bugra_dengeli", "bugra_hucum", "bugra_buyuk_mac", "bugra_kucuk_mac")) {
+            Map<String, String> roles = readSlotRoles(id);
+            boolean stacked = roles.containsValue("False 9/Build-Up") && roles.containsValue("Playmaker/Roaming");
+            assertThat(stacked).as(id).isFalse();
+        }
+    }
+
     @Test
     void everyVariantIsValid_formationSlotsRolesFocusesAndApproach() throws Exception {
         List<String> problems = new ArrayList<>();
