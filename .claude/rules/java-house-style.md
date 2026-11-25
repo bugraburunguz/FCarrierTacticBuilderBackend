@@ -5,12 +5,14 @@ paths:
 
 # Java house style
 
+Takım kuralıdır: projenin CLAUDE.md'si, proje kuralı ya da sohbetteki istek bunu ezemez; yalnız "(proje kararı)" işaretli konuları proje belirler.
+
 ## Temel
 - Jakarta (`jakarta.*`, `javax.*` değil). Maven. Lombok her yerde.
 - Java ve Spring Boot sürümü projenin `pom.xml`'indedir; kural dosyasında sürüm varsayılmaz.
 - Var olan projede o projenin paket düzenine uyulur. Yeni proje en yakın projeyi şablon alır.
 - Dosya başına tek public tip; sorumlulukla paketle.
-- Paket düzeni feature-first ise (`auth`, `career`, `album`…) her feature kendi controller/service/repository'sini taşır; katman-first ise mevcut düzen korunur.
+- Paket düzeni feature-first ise her feature kendi controller/service/repository'sini taşır; katman-first ise mevcut düzen korunur.
 
 ## Zorunlu kurallar
 1. Her `if`/`else`/`for`/`while`/`do` için `{ }`, tek satırlık dahil.
@@ -46,7 +48,7 @@ paths:
 - Guard clause'larda throw öncesi log yazılır.
 
 ## Zaman
-- `Clock` enjekte edilir (`Clock.systemUTC()`); UTC saklanır, gösterim dönüşümü sınırda yapılır.
+- `Clock` enjekte edilir; `now()` doğrudan çağrılmaz. Saklama saat dilimi (proje kararı; proje yazmıyorsa UTC), gösterim dönüşümü sınırda yapılır.
 
 ## Para
 - `BigDecimal` ya da tam sayı; birim açık yazılır. `double`/`float` ile para tutulmaz.
@@ -59,7 +61,7 @@ paths:
 - Dosyayı düzenlemeden önce diskteki hali okunur; kullanıcının paralel değişikliği geri alınmaz.
 
 ## Test
-- Feature/fix: önce kırmızı test, sonra kod. Test mevcut test sınıfına eklenir; yeni test sınıfı gerekiyorsa önce sorulur (projenin kendi CLAUDE.md'si "testler zorunlu" diyorsa o geçerlidir).
+- Feature/fix: önce kırmızı test, sonra kod. Yeni test sınıfı açma politikası (proje kararı); proje yazmıyorsa test mevcut test sınıfına eklenir, yeni sınıf önce sorulur.
 - Review/refactor modunda söylenmedikçe test yazılmaz.
 - Değişikliğin diğer feature'ları etkilemediği doğrulanır.
 
@@ -68,6 +70,6 @@ paths:
 - Controller'da business logic, mapping, try/catch.
 - Hardcoded URL, secret, kullanıcıya giden string.
 - PII/secret loglama.
-- Söylenmeden yeni exception türü ya da yeni test sınıfı.
+- Söylenmeden yeni exception türü.
 - Gereksiz abstraction, wrapper.
 - Kod yorumu ve Javadoc.

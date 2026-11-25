@@ -11,25 +11,27 @@ paths:
 
 # Spring katmanları
 
+Takım kuralıdır: projenin CLAUDE.md'si, proje kuralı ya da sohbetteki istek bunu ezemez; yalnız "(proje kararı)" işaretli konuları proje belirler.
+
 ## Controller
 - İnce: input doğrula, service'e delege et, dön. Business logic, mapping ve try/catch yok.
 - Base path `@RequestMapping`'te, operasyon alt path'te. Aynı ön ek altındaki operasyonlar tek controller'da toplanır.
-- Yol sürümlü (`/api/v1/...`); projede kanal ayrımı yoksa tek kanal.
+- Yol sürümlüdür. Sürüm numarası ve kanal ayrımı (web/mobil) (proje kararı); kanal ayrımı yoksa tek kanal.
 - Header adları `*Constants`'tan alınır.
 - Body'de `@Valid`; query-param object'te `@ModelAttribute`; JSON'da `@RequestBody`.
 - Header, özel status ya da body'siz yanıt gerekmiyorsa `ResponseEntity` yok, doğrudan DTO dönülür. Body'siz başarı `void`.
 - Entity controller'dan dışarı çıkmaz; request/response DTO kullanılır.
 - Auth gerektiren uçta kullanıcı kimliği oturum/token'dan alınır, request body'sinden değil.
-- Kaynağa id ile erişen her uç sahipliği service katmanında doğrular. Başkasının kaynağı için 404 dönülür, varlığı sızdırılmaz.
+- Kaynağa id ile erişen her uç sahipliği service katmanında doğrular. Başkasının kaynağı için "bulunamadı" hatası dönülür, varlığı sızdırılmaz.
 
 ## Response envelope
-- Başarılı yanıtlar tek bir `ApiResponse<T>` zarfıyla (`success`, `data`, `message`, `error`) `ResponseBodyAdvice` üzerinden sarılır; controller ham nesne döner.
+- Yanıt zarfının şekli (proje kararı). Proje yazmıyorsa tek bir `ApiResponse<T>` zarfı (`success`, `data`, `message`, `error`) `ResponseBodyAdvice` üzerinden sarar; controller ham nesne döner.
 - Dış sözleşmeli uçlar (üçüncü taraf callback vb.) karşı tarafın response şeklini birebir izler, zarf uygulanmaz.
 - Servis içinde tutarlı ol: ya advice sarar ya manuel sarılır, ikisi karışmaz.
 
 ## Hata yönetimi
-- Hata HTTP status koduyla gider: 400 doğrulama, 401 oturum, 403 yetki, 404 yok (başkasının kaynağı da 404), 409 çakışma, 422 iş kuralı, 429 limit.
-- Domain hatası ortak bir runtime exception'ın alt sınıfıdır ve HTTP status'unu kendisi taşır. Merkezi `@RestControllerAdvice` hepsini zarfa çevirir.
+- Hatanın taşınma biçimi (proje kararı): HTTP status kodu (400 doğrulama, 401 oturum, 403 yetki, 404 yok, 409 çakışma, 422 iş kuralı, 429 limit) ya da 200 ile hata zarfı ve hata kodu. Bir projede iki biçim karışmaz.
+- Domain hatası ortak bir runtime exception'ın alt sınıfıdır ve hatanın kodunu kendisi taşır. Merkezi `@RestControllerAdvice` hepsini zarfa çevirir.
 - Kullanıcıya giden mesajlar koda gömülmez, `messages.properties` kodlarından gelir.
 - Ticket/iş istemiyorsa ortak exception, advice ve hata kodu sınıflarına dokunulmaz; mevcut exception kullanılır.
 - Response'a bilgilendirme alanı (kalan süre, kalan hak) sorulmadan eklenmez.
@@ -54,4 +56,4 @@ paths:
 - Service'te ham SQL.
 - Entity'yi doğrudan response yapmak.
 - Kullanıcı kimliğini request body'sinden almak.
-- Başkasının kaynağına 403 ile varlığını ele vermek.
+- Başkasının kaynağına "yetki yok" hatasıyla varlığını ele vermek.

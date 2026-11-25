@@ -15,11 +15,13 @@ paths:
 
 # Persistence, migration ve configuration
 
+Takım kuralıdır: projenin CLAUDE.md'si, proje kuralı ya da sohbetteki istek bunu ezemez; yalnız "(proje kararı)" işaretli konuları proje belirler.
+
 ## Entity
 - `@Entity @Table(name = "snake_case")`, `@Getter @Setter`, `@Data` yok.
 - Id: `@GeneratedValue(strategy = IDENTITY)` ile `Long`; özel kolonlarda attribute converter.
 - Auditing: `@CreatedDate` (`updatable = false`) ve `@LastModifiedDate`, sınıfta `@EntityListeners(AuditingEntityListener.class)`.
-- Zaman kolonları UTC saklanır.
+- Zaman kolonlarının saat dilimi (proje kararı); proje yazmıyorsa UTC. Bir projede tek dilim kullanılır.
 - Entity ⇆ DTO dönüşümü `*Converter`'da (static metotlu, `@NoArgsConstructor(access = PRIVATE)`) ya da bağımlılığı varsa `@Component` mapper'da. Dönüşüm service'te durmaz.
 
 ## Repository
