@@ -12378,9 +12378,9 @@
     {
      "slot": "LAM",
      "position": "CAM",
-     "role": "Playmaker",
+     "role": "Half Winger",
      "focus": "Roaming",
-     "profile": "Florian Wirtz tipi: yarı alanda dönen, ara pası ve gol",
+     "profile": "Florian Wirtz tipi: sol yarı alanda dönen, ara pası veren ve ceza sahasına girip gol atan 10",
      "keyAttributes": [
       "Dribbling",
       "Vision",
@@ -12482,7 +12482,8 @@
    "Transfermarkt maç raporları: AL finali Atalanta (22.05.2024) · Stuttgart (27.04.2024) · Frankfurt (05.05.2024) — diziliş ve ilk 11, kontrol 2026-10"
   ],
   "verify": [
-   "Sol yan stoper: Hincapié / Kossounou rotasyonu"
+   "Sol yan stoper: Hincapié / Kossounou rotasyonu",
+   "FCA-44: 10 numara Playmaker/Roaming yerine Half Winger/Roaming oldu (katalog verisi, oyunda denenmedi); oyunda kutuya giriyor mu?"
   ]
  },
  {
@@ -23242,9 +23243,9 @@
     {
      "slot": "CAM",
      "position": "CAM",
-     "role": "Playmaker",
+     "role": "Half Winger",
      "focus": "Roaming",
-     "profile": "Szymański tipi: yarı alanlar arası dolaşan, şut ve son pas veren 10",
+     "profile": "Szymański tipi: yarı alanlar arası dolaşan, yarı alandan ceza sahasına giren, şut ve son pas veren 10",
      "keyAttributes": [
       "Vision",
       "Long Shots",
@@ -23336,7 +23337,9 @@
   "sources": [
    "Transfermarkt maç raporları: FB-BJK 2-1 (27.04.2024) · GS-FB 0-1 (19.05.2024) — diziliş ve ilk 11, kontrol 2026-10"
   ],
-  "verify": [],
+  "verify": [
+   "FCA-44: 10 numara Playmaker/Roaming yerine Half Winger/Roaming oldu (katalog verisi, oyunda denenmedi); oyunda kutuya giriyor mu?"
+  ],
   "alternatives": [
    {
     "season": "2012-13",

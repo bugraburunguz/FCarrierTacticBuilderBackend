@@ -232,7 +232,7 @@ class ReplicaSeedIntegrationTest {
             assertThat(r.path("verified").asBoolean()).as(r.path("id").asText()).isEqualTo(detail.path("verified").asBoolean());
             verified += r.path("verified").asBoolean() ? 1 : 0;
         }
-        assertThat(verified).isEqualTo(73);
+        assertThat(verified).isEqualTo(72);
     }
 
     @Test
@@ -446,6 +446,12 @@ class ReplicaSeedIntegrationTest {
             boolean stacked = roles.containsValue("False 9/Build-Up") && roles.containsValue("Playmaker/Roaming");
             assertThat(stacked).as(id).isFalse();
         }
+    }
+
+    @Test
+    void goalScoringHalfSpaceTensUseHalfWingerRoaming() throws Exception {
+        assertThat(readSlotRoles("kartal_fenerbahce_2024")).containsEntry("CAM", "Half Winger/Roaming").containsEntry("ST", "Target Forward/Balanced");
+        assertThat(readSlotRoles("alonso_leverkusen_2024")).containsEntry("LAM", "Half Winger/Roaming").containsEntry("RAM", "Half Winger/Roaming");
     }
 
     @Test
