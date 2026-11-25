@@ -63,7 +63,7 @@ public class FitEngineProperties {
         private double qualityLowerFraction = 1.0 / 3;
     }
 
-    /** FIT-2 madde 6 (verified:false): "Daha uygun rol" rozeti için en iyi rolün mevcut rolden en az bu kadar puan daha iyi oturması gerekir. */
+    /** FIT-2 madde 6 (verified:false): "Daha uygun rol" rozeti için en güçlü rolün Güç'ü (currentFit) mevcut rolden en az bu kadar puan yüksek olmalı (FCA-43). */
     @Getter
     @Setter
     public static class RoleSuggest {
