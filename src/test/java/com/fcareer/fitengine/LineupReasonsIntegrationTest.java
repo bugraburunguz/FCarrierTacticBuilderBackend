@@ -154,20 +154,13 @@ class LineupReasonsIntegrationTest {
             JsonNode alts = s.get("roleAlternatives");
             assertThat(alts.isArray() && alts.size() >= 2).as(slotId).isTrue();
             List<String> ids = new ArrayList<>();
-            List<Double> normed = new ArrayList<>();
-            List<Double> unnormed = new ArrayList<>();
+            List<Double> strengths = new ArrayList<>();
             alts.forEach(a -> {
                 ids.add(a.get("roleId").asText());
-                if (a.hasNonNull("levelFit")) {
-                    assertThat(unnormed).as(slotId + " normsuz roller sonda").isEmpty();
-                    normed.add(a.get("levelFit").asDouble());
-                } else {
-                    unnormed.add(a.get("currentFit").asDouble());
-                }
+                strengths.add(a.get("currentFit").asDouble());
             });
             assertThat(ids).as(slotId + " mevcut rol listede").contains(s.get("roleId").asText());
-            assertThat(normed).as(slotId + " oturma azalan").isSortedAccordingTo(java.util.Comparator.reverseOrder());
-            assertThat(unnormed).as(slotId + " normsuzlar Güç azalan").isSortedAccordingTo(java.util.Comparator.reverseOrder());
+            assertThat(strengths).as(slotId + " Güç azalan (FCA-43)").isSortedAccordingTo(java.util.Comparator.reverseOrder());
             JsonNode current = alts.get(ids.indexOf(s.get("roleId").asText()));
             assertThat(current.get("currentFit").asDouble()).as(slotId + " mevcut rolün Güç'ü slotla aynı").isEqualTo(s.at("/roleFit/currentFit").asDouble());
             if (s.hasNonNull("betterRole")) {
