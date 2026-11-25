@@ -27483,13 +27483,13 @@
   "honours": [],
   "whyIconic": "Buğra'nın temel futbol felsefesi, fiziksel dirençle desteklenen yaratıcı ve üretken hücum futboludur. Kontrollü oyun kurulur, uygun boşluk bulunduğunda hızla dikeyleşilir; kanatlarda asimetrik hareketlilik ve merkezde yaratıcı bir 10 numara kullanılır. Topa sahip olmak amaç değil, tehlikeli hücumlar üretmenin aracıdır.",
   "realShape": {
-   "inPossession": "Temel yapı 4-2-3-1'dir. Stoperler, Makelele tipi ön libero ve iki yönlü 8 numarayla kontrollü çıkılır. Sağda çizgiyi kullanan hızlı kanat oyuncusuna Dani Alves tipi bek içeriden veya dışarıdan destek verir. Solda Henry tipi oyuncu içeri kat ederken Ashley Cole tipi bek genişlik sağlar. Sergen tipi 10 numara kanatlara yaklaşarak bağlantı kurar, Benzema tipi santrfor geriye gelip pas istasyonu olur. Topun konumuna göre 3-2-5 benzeri hücum yerleşimleri oluşabilir.",
+   "inPossession": "Temel yapı 4-2-3-1'dir. Stoperler, Makelele tipi ön libero ve iki yönlü 8 numarayla kontrollü çıkılır. Sağda çizgiyi kullanan hızlı kanat oyuncusuna Dani Alves tipi bek içeriden veya dışarıdan destek verir. Solda Henry tipi oyuncu içeri kat ederken Ashley Cole tipi bek genişlik sağlar. Sergen tipi 10 numara santrforun arkasından ceza sahasına koşar, Benzema tipi santrfor ceza sahasında kalır ve gerektiğinde düşüp pas istasyonu olur. Topun konumuna göre 3-2-5 benzeri hücum yerleşimleri oluşabilir.",
    "outOfPossession": "Orta-yüksek savunma çizgisi ve kompakt 4-2-3-1 veya 4-4-1-1 savunma yerleşimi kullanılır. Santrfor baskıyı bir tarafa yönlendirir, 10 numara rakibin merkez pas bağlantısını kapatır. Top rakip beke ulaştığında kanat, bek ve merkez orta saha birlikte baskı tuzağı kurar. Top kaybında yakın oyuncular koşullu karşı pres yapar; kazanma ihtimali düşükse takım kompakt orta bloğa döner.",
    "keyMechanisms": [
     "Stoperler ve çift pivot üzerinden kontrollü oyun kurma",
     "Sağ kanatta çizgi genişliği, bek ve 10 numarayla üçgenler",
     "Sol kanatta içeri kat eden bitirici ve bindiren bek",
-    "Geriye gelen santrfor ile savunma arkasına koşan kanat arasındaki bağlantı",
+    "Ceza sahasında kalan santrfor, arkasından koşan 10 numara ve arka direğe gelen kanat",
     "Rakibi kanada yönlendiren pres tuzakları",
     "Makelele tipi ön liberoyla savunma geçişi ve ikinci top güvenliği"
    ]
@@ -27499,7 +27499,7 @@
    "cannotReplicate": [
     "Beklerin topun bulunduğu tarafa ve rakibin konumuna göre anlık olarak hücum, içe kat etme ve geride kalma görevlerini değiştirmesi birebir tanımlanamıyor; asimetrik bek rolleri kullanıldı.",
     "Makelele tipi ön liberonun yalnızca iki bek birden ileri çıktığında stoperlerin arasına girmesi koşullu olarak ayarlanamıyor; Holding/Defend kullanıldı.",
-    "Sergen tipi 10 numaranın serbest yaratıcılığı ile kanada kayma hareketi aynı anda tam karşılanamıyor; Playmaker/Roaming kullanıldı.",
+    "Sergen tipi 10 numaranın serbest yaratıcılığı birebir karşılanamıyor; Playmaker/Roaming santrfor ve iç forvetle aynı cebe yığılıp ceza sahasını boşalttığı için (FCA-42 test maçları) Shadow Striker/Attack kullanıldı.",
     "Pres kırıldığında Ramos tipi stoperin kanada açılması ve ön liberonun onun yerini doldurması otomatik bir zincir olarak tanımlanamıyor.",
     "FC27 rol ve PlayStyle davranışlarının gerçek oyun içi etkisi ayrıca doğrulanmalıdır."
    ]
@@ -27512,7 +27512,7 @@
    "fb_asymmetric",
    "double_pivot",
    "cdm_anchor",
-   "cam_drift_wide",
+   "cam_run_beyond",
    "st_link_up",
    "w_cut_inside",
    "press_traps",
@@ -27567,9 +27567,9 @@
     {
      "slot": "LCB",
      "position": "CB",
-     "role": "Defender",
-     "focus": "Defend",
-     "profile": "Alessandro Nesta tipi: pozisyon bilgisi, müdahale zamanlaması ve savunma organizasyonu üst düzey stoper.",
+     "role": "Ball-Playing Defender",
+     "focus": "Build-Up",
+     "profile": "Alessandro Nesta tipi: pozisyon bilgisi ve müdahale zamanlaması üst düzey, oyun kuruluşuna stoperden sakin paslarla katılan stoper.",
      "keyAttributes": [
       "Defensive Awareness",
       "Interceptions",
@@ -27681,9 +27681,9 @@
     {
      "slot": "CAM",
      "position": "CAM",
-     "role": "Playmaker",
-     "focus": "Roaming",
-     "profile": "Sergen Yalçın tipi: yüksek oyun zekâsı, yaratıcı son paslar, dar alan tekniği ve kanatlara serbest hareketlilik sunan 10 numara.",
+     "role": "Shadow Striker",
+     "focus": "Attack",
+     "profile": "Sergen Yalçın tipi: santrforun arkasından ceza sahasına koşan, son pas ve şut bölgesinde oynayan 10 numara; cepte değil kutunun ağzında.",
      "keyAttributes": [
       "Vision",
       "Ball Control",
@@ -27701,8 +27701,8 @@
      "slot": "RM",
      "position": "RM",
      "role": "Winger",
-     "focus": "Balanced",
-     "profile": "Shaun Wright-Phillips tipi: çizgide genişlik sağlayan, bire birde hızlı, orta ve geriye pas üreten çalışkan kanat.",
+     "focus": "Attack",
+     "profile": "Shaun Wright-Phillips tipi: çizgide genişlik sağlayan, bire birde hızlı, orta açan ve arka direğe koşan kanat.",
      "keyAttributes": [
       "Acceleration",
       "Sprint Speed",
@@ -27719,9 +27719,9 @@
     {
      "slot": "ST",
      "position": "ST",
-     "role": "False 9",
-     "focus": "Build-Up",
-     "profile": "Karim Benzema tipi: geriye gelip bağlantı kuran, kanat koşularını besleyen, aynı zamanda gol bitirebilen komple santrfor.",
+     "role": "Advanced Forward",
+     "focus": "Attack",
+     "profile": "Karim Benzema tipi: ceza sahasında kalıp bitiren, gerektiğinde düşüp pas istasyonu olan komple santrfor.",
      "keyAttributes": [
       "Ball Control",
       "Vision",
@@ -27759,11 +27759,11 @@
    "tacticCode": null
   },
   "sources": [
-   "Kişisel oyun anlayışı sohbeti, 2026-11"
+   "Kişisel oyun anlayışı sohbeti, 2026-11",
+   "Dengeli test maçları (3 maç, ısı haritaları), 2026-11-25: Claude outputs/replika-analiz/"
   ],
   "verify": [
    "Varsayılan takımda sağ bekin içe kat etmesini mi, yoksa bindirmesini mi daha sık tercih edersin?",
-   "Hibrit 8 numaranın uzun pas özelliklerini korumak için CDM Deep-Lying Playmaker kullanılması uygun mu?",
    "Varsayılan savunma çizgisi için 60 değeri istediğin orta-yüksek çizgiye uyuyor mu?"
   ]
  },
@@ -27779,7 +27779,7 @@
   "honours": [],
   "whyIconic": "Gol gerektiğinde hücumcu kimlikten vazgeçilmez; ceza sahasında ikinci santrfor, kanatlarda yaratıcılık ve merkezde ikinci topları kazanacak güvenlik oluşturulur. Benzema tipi bağlantı santrforunun yanına Drogba tipi fiziksel bitirici eklenir. Risk artırılır ancak savunma geçişi tamamen terk edilmez.",
   "realShape": {
-   "inPossession": "4-2-2-2 yapısında iki santrfor birbirini tamamlar: bağlantı oyuncusu geriye gelir, hedef santrfor stoperleri meşgul ederek ceza sahasında kalır. Messi ve Kaká tipi iki yaratıcı hücumcu iç koridorlardan pozisyon üretir. Genişliği bekler sırayla sağlar; top tarafındaki bek ileri çıkarken diğer bek içeri daralır. Ön libero uzaklaştırılan topları ve merkezdeki kontratak koridorunu kontrol eder.",
+   "inPossession": "4-2-2-2 yapısında iki santrfor ceza sahasında kalır: Benzema tipi gerektiğinde düşüp bağlantı kurar, hedef santrfor stoperleri meşgul eder. Messi tipi sağ iç koridorda yaratıcı kalır, Kaká tipi sol iç koridordan ceza sahasına koşar. Genişliği bekler sırayla sağlar; top tarafındaki bek ileri çıkarken diğer bek içeri daralır. Ön libero uzaklaştırılan topları ve merkezdeki kontratak koridorunu kontrol eder.",
    "outOfPossession": "Savunma çizgisi yükselir, rakip yarı sahada yönlendirilmiş pres uygulanır. Yakın oyuncular top kaybında hızlıca baskı kurar. İki santrfor ilk pas bağlantılarını sınırlar; iki hücumcu orta saha pas kanallarına baskı desteği verir. Baskı kırıldığında ön libero ve gerideki bek savunma güvenliğini sağlar.",
    "keyMechanisms": [
     "Bağlantı santrforu ve fiziksel hedef santrfor birlikteliği",
@@ -27794,10 +27794,10 @@
    "score": 3,
    "cannotReplicate": [
     "Buğra'nın tercih ettiği ikinci santrfor hamlesi normalde maç içinde yapılan bir değişikliktir; HUCUM varyantında başlangıç dizilişi olarak modellendi.",
-    "4-2-2-2 dizilişinde iki yaratıcı hücumcunun kanat genişliği ile iç koridor serbestliğini aynı anda kusursuz korumak mümkün değil; LAM/RAM Playmaker/Roaming kullanıldı.",
+    "4-2-2-2 dizilişinde iki yaratıcı hücumcunun kanat genişliği ile iç koridor serbestliğini aynı anda kusursuz korumak mümkün değil; RAM Playmaker/Roaming, LAM Shadow Striker/Attack kullanıldı (iki gezici yaratıcı False 9 ile aynı cebe yığılıyordu, FCA-42).",
     "Top tarafındaki bekin çıkıp diğer bekin üçüncü stoper gibi daralması otomatik ve koşullu olarak ayarlanamıyor.",
     "Makelele tipi oyuncunun hangi ikinci topa çıkıp hangisinde savunma güvenliğini koruyacağını oyun içi rol tek başına belirleyemiyor.",
-    "Benzema tipi santrforun False 9 davranışı ile Drogba tipi Target Forward ceza sahası varlığı seçildi."
+    "Benzema tipi santrfor için False 9 yerine Advanced Forward/Attack seçildi; Drogba tipi Target Forward ile ceza sahasında iki forvet kalır."
    ]
   },
   "behaviorTags": [
@@ -27951,9 +27951,9 @@
     {
      "slot": "LAM",
      "position": "CAM",
-     "role": "Playmaker",
-     "focus": "Roaming",
-     "profile": "Kaká tipi: sol iç koridordan dikine hızlanan, savunma arkasına koşan yaratıcı hücumcu.",
+     "role": "Shadow Striker",
+     "focus": "Attack",
+     "profile": "Kaká tipi: sol iç koridordan dikine hızlanan, santrforların arkasından ceza sahasına koşan ikinci forvet.",
      "keyAttributes": [
       "Acceleration",
       "Dribbling",
@@ -27988,9 +27988,9 @@
     {
      "slot": "LST",
      "position": "ST",
-     "role": "False 9",
-     "focus": "Build-Up",
-     "profile": "Benzema tipi: geriye gelerek pas bağlantısı kuran, ikinci santrfora pozisyon hazırlayan forvet.",
+     "role": "Advanced Forward",
+     "focus": "Attack",
+     "profile": "Benzema tipi: Drogba tipi hedef santrforla ceza sahasında ikili oluşturan, gerektiğinde düşüp bağlantı kuran forvet.",
      "keyAttributes": [
       "Vision",
       "Short Passing",
@@ -28051,7 +28051,8 @@
   "verify": [
    "HUCUM varyantında başlangıçtan itibaren çift santrfor mu istersin, yoksa 4-2-3-1 başlayıp sonradan mı geçmek istersin?",
    "İki santrforlu düzende Messi ve Kaká tipi oyuncuların iç koridorlarda oynaması senin tercihin mi?",
-   "Hücum varyantında 70 savunma çizgisi yeterli mi, yoksa daha yüksek mi olmalı?"
+   "Hücum varyantında 70 savunma çizgisi yeterli mi, yoksa daha yüksek mi olmalı?",
+   "FCA-42 ile forvet Advanced Forward/Attack, 10 numara Shadow Striker/Attack oldu (Dengeli test maçlarına dayanır); bu varyantta oyunda ceza sahası doluyor mu?"
   ]
  },
  {
@@ -28351,13 +28352,13 @@
   "honours": [],
   "whyIconic": "Derbi ve finallerde güçlü rakibin orta sahasına fiziksel dirençle karşılık verilir, ancak hücumdaki yıldızların yaratıcılığından vazgeçilmez. Rakip merkezde üstünlük kurarsa önce pres görevleri, ardından oyuncuların pozisyonları değiştirilir; kadro değişikliği son aşamadır. Bu varyant, Buğra'nın hücumcu kimliğini pragmatik maç yönetimiyle birleştirir.",
   "realShape": {
-   "inPossession": "4-2-3-1 dizilişinde Makelele ve Essien tipi fiziksel çift pivot savunma güvenliği sağlar. Ronaldinho tipi sol kanat, Messi tipi sağ kanat ve Kaká tipi 10 numara özgür hücum bağlantıları kurar. Benzema tipi santrfor geriye gelerek yaratıcı oyunculara alan açar. Kontrollü ilk paslardan sonra uygun boşlukta hızla dikeyleşilir. Rakibin merkez baskısı aşırı güçlenirse 10 numara geriye yaklaşıp orta saha üçlüsü oluşturur.",
+   "inPossession": "4-2-3-1 dizilişinde Makelele ve Essien tipi fiziksel çift pivot savunma güvenliği sağlar. Ronaldinho tipi sol kanat, Messi tipi sağ kanat ve Kaká tipi 10 numara özgür hücum bağlantıları kurar. Benzema tipi santrfor ceza sahasında kalır, Kaká tipi 10 numara arkasından koşar. Kontrollü ilk paslardan sonra uygun boşlukta hızla dikeyleşilir. Rakibin merkez baskısı aşırı güçlenirse plan B ile orta saha üçlüsüne geçilir.",
    "outOfPossession": "Orta-yüksek çizgi ve rakibin oyun kurucularını hedefleyen yönlendirilmiş baskı uygulanır. Santrfor ilk pası bir kanada yönlendirir, 10 numara merkez bağlantısını kapatır. Essien tipi oyuncu rakibin oyun kurucusuna agresif baskı yaparken Makelele tipi oyuncu arkasındaki alanı korur. Baskı kırıldığında kompakt orta bloğa dönülür. Stoperler hızlı kanat koşularına karşı savunma çizgisini gereksiz terk etmez.",
    "keyMechanisms": [
     "Fiziksel çift pivotla yıldız hücumcuların özgürlüğünü koruma",
     "Rakibin merkez oyun kurucularına yönlendirilmiş baskı",
     "Top kazanıldığında yaratıcı oyuncularla hızlı dikey hücum",
-    "Benzema tipi santrforun geriye gelmesiyle kanatların savunma arkasına koşması",
+    "Ceza sahasında kalan Benzema tipi santrfor ve arkasından koşan Kaká tipi 10 numara",
     "Önce pres, sonra pozisyon, son olarak oyuncu değişikliği",
     "Merkez baskısı çözülemezse Xabi Alonso tipi pasörle üçlü orta sahaya geçme"
    ]
@@ -28543,9 +28544,9 @@
     {
      "slot": "CAM",
      "position": "CAM",
-     "role": "Playmaker",
-     "focus": "Roaming",
-     "profile": "Kaká tipi: merkezden hızla dikine giden, ara pas ve şut tehdidi taşıyan yaratıcı 10 numara.",
+     "role": "Shadow Striker",
+     "focus": "Attack",
+     "profile": "Kaká tipi: merkezden hızla dikine giden, santrforun arkasından ceza sahasına koşan, ara pas ve şut tehdidi taşıyan 10 numara.",
      "keyAttributes": [
       "Acceleration",
       "Dribbling",
@@ -28581,9 +28582,9 @@
     {
      "slot": "ST",
      "position": "ST",
-     "role": "False 9",
-     "focus": "Build-Up",
-     "profile": "Benzema tipi: geriye gelip yıldız hücumcularla bağlantı kuran, stoperleri yerinden çıkaran komple santrfor.",
+     "role": "Advanced Forward",
+     "focus": "Attack",
+     "profile": "Benzema tipi: ceza sahasında kalıp yıldız hücumcuların paslarını bitiren, gerektiğinde düşüp bağlantı kuran santrfor.",
      "keyAttributes": [
       "Ball Control",
       "Vision",
@@ -28626,7 +28627,8 @@
   "verify": [
    "BUYUK_MAC varyantında Sergen tipi oyuncu yerine Kaká tipi 10 numaranın kullanılması uygun mu?",
    "Ronaldinho-Messi-Kaká gibi üç yaratıcı yıldız yoksa bu varyantı Henry-Sergen-Wright-Phillips profilleriyle mi uygulamak istersin?",
-   "Büyük maçlarda varsayılan 57 çizgi yüksekliği istediğin risk düzeyini yansıtıyor mu?"
+   "Büyük maçlarda varsayılan 57 çizgi yüksekliği istediğin risk düzeyini yansıtıyor mu?",
+   "FCA-42 ile forvet Advanced Forward/Attack, 10 numara Shadow Striker/Attack oldu (Dengeli test maçlarına dayanır); bu varyantta oyunda ceza sahası doluyor mu?"
   ]
  },
  {
@@ -28641,14 +28643,14 @@
   "honours": [],
   "whyIconic": "Kapanan rakibe karşı topa sahip olmak tek başına yeterli değildir; genişlik, çapraz koşular, uzaktan şutlar ve ceza sahasında farklı bitiriş seçenekleri kullanılır. Bekler daha fazla hücum desteği verirken yaratıcı orta saha pas temposunu belirler. Bu varyant Buğra'nın sabırlı fakat steril olmayan hücum anlayışını temsil eder.",
   "realShape": {
-   "inPossession": "4-2-3-1 temelinde stoperler ve pasör ön libero kontrollü oyun kurar. Bekler rakip savunmayı genişletir; sağ kanat çizgiyi tutarken sol kanat içeri kat eder. Sergen tipi 10 numara kanatlara yaklaşır ve merkezde yaratıcı bağlantılar kurar. Benzema tipi santrfor geriye gelerek savunma hattını bozar. Hibrit 8 numara uzun pas, yön değiştirme ve uzaktan şut tehdidi sunar. Rakip çok derinde kaldığında orta, alçak orta, ikinci top ve gerektiğinde ikinci santrfor kullanılır.",
+   "inPossession": "4-2-3-1 temelinde stoperler ve pasör ön libero kontrollü oyun kurar. Bekler rakip savunmayı genişletir; sağ kanat çizgiyi tutarken sol kanat içeri kat eder. Sergen tipi 10 numara santrforun arkasından ceza sahasına koşar. Benzema tipi santrfor ceza sahasında kalır, gerektiğinde düşüp savunma hattını bozar. Hibrit 8 numara uzun pas, yön değiştirme ve uzaktan şut tehdidi sunar. Rakip çok derinde kaldığında orta, alçak orta, ikinci top ve gerektiğinde ikinci santrfor kullanılır.",
    "outOfPossession": "Yüksek savunma çizgisiyle rakip yarı sahada alan daraltılır. Santrfor rakibin ilk pasını yönlendirir, kanat ve bekler pres tuzaklarına katılır. Ön libero ve hibrit 8 uzaklaştırılan topları kontrol eder. İki bek ileri çıktığında ön libero gerektiğinde stoperlerin arasına yaklaşarak savunma geçişini güvenceye alır.",
    "keyMechanisms": [
     "Bekler ve kanatlarla savunmayı yatay olarak genişletme",
     "10 numara ve kanat oyuncularıyla bölgesel sayısal üstünlük",
     "Uzun diagonal paslarla oyunun yönünü değiştirme",
     "Ceza sahası çevresinden uzaktan şut ve ikinci top tehdidi",
-    "Geriye gelen santrfor ile savunma arkasına koşan iç kanat",
+    "Ceza sahasında kalan santrfor, arkasından koşan 10 numara ve içeri kat eden kanat",
     "Kilidin açılamadığı maçlarda fiziksel ikinci santrfor kullanma"
    ]
   },
@@ -28669,7 +28671,7 @@
    "flank_overload",
    "fullback_width",
    "fb_overlap",
-   "cam_drift_wide",
+   "cam_run_beyond",
    "cm_long_shot",
    "cdm_deep_build",
    "st_link_up",
@@ -28832,9 +28834,9 @@
     {
      "slot": "CAM",
      "position": "CAM",
-     "role": "Playmaker",
-     "focus": "Roaming",
-     "profile": "Sergen Yalçın tipi: kapanan savunmalara karşı yaratıcı ara paslar veren, kanatlarda bağlantı kuran serbest 10 numara.",
+     "role": "Shadow Striker",
+     "focus": "Attack",
+     "profile": "Sergen Yalçın tipi: kapanan savunmalara karşı santrforun arkasından ceza sahasına koşan, dar alanda son pas ve şut üreten 10 numara.",
      "keyAttributes": [
       "Vision",
       "Ball Control",
@@ -28869,9 +28871,9 @@
     {
      "slot": "ST",
      "position": "ST",
-     "role": "False 9",
-     "focus": "Build-Up",
-     "profile": "Benzema tipi: geriye gelip stoperleri yerinden çıkaran, kanatların içeri koşularını besleyen yaratıcı santrfor.",
+     "role": "Advanced Forward",
+     "focus": "Attack",
+     "profile": "Benzema tipi: kapanan rakibe karşı ceza sahasında kalıp ortaları ve ara pasları bitiren, gerektiğinde düşüp bağlantı kuran santrfor.",
      "keyAttributes": [
       "Vision",
       "Short Passing",
@@ -28915,7 +28917,8 @@
   "verify": [
    "Kapanan rakibe karşı 72 savunma çizgisi uygun mu?",
    "Zayıf rakibe karşı hibrit 8 yerine Xavi-Iniesta tarzında daha teknik orta saha tercih eder misin?",
-   "İki bekin hücum katkısı arttığında Makelele tipi oyuncunun daha sık stoperlerin arasına girmesini ister misin?"
+   "İki bekin hücum katkısı arttığında Makelele tipi oyuncunun daha sık stoperlerin arasına girmesini ister misin?",
+   "FCA-42 ile forvet Advanced Forward/Attack, 10 numara Shadow Striker/Attack oldu (Dengeli test maçlarına dayanır); bu varyantta oyunda ceza sahası doluyor mu?"
   ]
  }
 ]
